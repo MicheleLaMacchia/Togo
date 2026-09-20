@@ -1,0 +1,39 @@
+# Configurazioni personali BMAD
+_bmad/config.user.toml
+_bmad/custom/config.user.toml
+
+# Output temporanei/renderizzati
+_bmad/render/*
+!_bmad/render/.gitignore
+
+# Log temporanei delle sessioni BMAD
+_bmad-output/**/.memlog.md
+
+# Configurazioni locali Codex/editor
+.codex/
+.vscode/
+.idea/
+
+# File personali del sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# File temporanei
+*.tmp
+*.temp
+*.swp
+*.bak
+
+# Segreti e variabili d'ambiente
+.env
+.env.*
+!.env.example
+
+# Build Android/progetto futuro
+.gradle/
+build/
+app/build/
+*.apk
+*.aab
+*.iml
