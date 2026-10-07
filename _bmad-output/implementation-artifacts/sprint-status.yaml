@@ -1,0 +1,88 @@
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created, ready for development
+#   - in-progress: Developer actively working on implementation
+#   - review: Implementation complete, ready for review
+#   - done: Story completed
+
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+
+# Action Item Status:
+#   - open: Committed during a retrospective, not yet addressed
+#   - in-progress: Actively being worked on
+#   - done: Completed
+
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when its first story starts (via build's sprint sync)
+# - Stories can be worked in parallel if team capacity allows
+# - Developer typically creates the next story after the previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+# - Retrospective appends its action items to action_items; the status view surfaces open ones
+generated: 10-07-2026 16:00
+last_updated: 10-07-2026 16:00
+project: Togo
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output\implementation-artifacts
+development_status:
+  epic-1: backlog
+  1-1-setup-progetto-android-e-struttura-clean-architecture: backlog
+  1-2-configurazione-koin-e-moduli-di: backlog
+  1-3-database-room-e-schema-entità-core: backlog
+  1-4-catalogo-preinstallato-da-asset: backlog
+  1-5-design-system-material3-token-colore-e-tipografia: backlog
+  epic-1-retrospective: optional
+
+  epic-2: backlog
+  2-1-schermata-lista-attiva-con-visualizzazione-per-categoria: backlog
+  2-2-inserimento-manuale-prodotto: backlog
+  2-3-modifica-e-rimozione-voce-dalla-lista: backlog
+  2-4-spunta-prodotto-acquistato-e-sezione-presi-n: backlog
+  2-5-conclusione-spesa-checkout-atomico-verso-storico: backlog
+  epic-2-retrospective: optional
+
+  epic-3: backlog
+  3-1-ricerca-full-text-nel-catalogo: backlog
+  3-2-normalizzazione-quantità-e-conversioni-autorizzate: backlog
+  3-3-risoluzione-sinonimi-verso-prodotto-canonico: backlog
+  3-4-attributi-prodotto-contestuali-marca-variante-conservazione: backlog
+  3-5-rilevamento-duplicati-e-dialog-risoluzione: backlog
+  3-6-assegnazione-categoria-canonica-e-correzione-con-regole-appr: backlog
+  3-7-wizard-categorizzazione-prodotto-sconosciuto: backlog
+  epic-3-retrospective: optional
+
+  epic-4: backlog
+  4-1-voicerecognitiongateway-e-recognizerintent-it-it: backlog
+  4-2-voicefab-e-voicebottomsheet-ui: backlog
+  4-3-parsing-comando-vocale-e-scomposizione-strutturata: backlog
+  4-4-conferma-annullamento-e-chiarimento-ambiguità-vocale: backlog
+  4-5-fallback-e-resilienza-vocale: backlog
+  epic-4-retrospective: optional
+
+  epic-5: backlog
+  5-1-schermata-storico-con-ricerca-e-riaggiunta: backlog
+  5-2-gestione-regole-apprese: backlog
+  5-3-condivisione-lista-attiva-via-sharesheet: backlog
+  epic-5-retrospective: optional
+
+  epic-6: backlog
+  6-1-etichette-talkback-e-semantica-accessibile: backlog
+  6-2-target-touch-e-dynamic-type: backlog
+  6-3-dark-mode-completa: backlog
+  6-4-privacy-audio-e-audit-performance: backlog
+  epic-6-retrospective: optional
+
+  epic-7: backlog
+  7-1-aggiunta-nuovo-prodotto-canonico-su-categoria-esistente: backlog
+  7-2-proposta-nuovo-livello-3-sotto-un-livello-2-esistente: backlog
+  epic-7-retrospective: optional
