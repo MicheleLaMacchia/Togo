@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TOGO - Lista Attiva (Spesa)</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #0B0F17;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    /* Android frame: 1080x2400 aspect ratio (9:20) */
+    .device-frame {
+      width: 412px;
+      height: 915px;
+      background: #FFFFFF;
+      border-radius: 40px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45), 0 0 0 10px #1E293B;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      border: 3px solid #0F172A;
+    }
+
+    /* System Status Bar */
+    .status-bar {
+      height: 38px;
+      background: #FFFFFF;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 24px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #0F172A;
+      border-bottom: 1px solid #F1F5F9;
+      z-index: 10;
+    }
+
+    .status-icons {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    /* App Bar */
+    .app-bar {
+      background: #FFFFFF;
+      padding: 14px 20px 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #0F172A;
+      z-index: 10;
+    }
+
+    .app-title-group h1 {
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      color: #0F172A;
+      line-height: 1.1;
+    }
+
+    .app-title-group .subtitle {
+      font-size: 13px;
+      font-weight: 700;
+      color: #475569;
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .badge-counter {
+      background: #0F172A;
+      color: #FFFFFF;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 12px;
+      letter-spacing: 0.3px;
+    }
+
+    .app-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .icon-btn {
+      min-width: 48px;
+      min-height: 48px;
+      background: #F8FAFC;
+      border: 2px solid #0F172A;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #0F172A;
+      font-weight: 700;
+      transition: all 0.15s ease;
+      box-shadow: 2px 2px 0px #0F172A;
+    }
+
+    .icon-btn svg {
+      width: 22px;
+      height: 22px;
+      stroke-width: 2.2;
+    }
+
+    /* Main Scroll Area */
+    .content-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 16px 100px 16px;
+      background: #F8FAFC;
+    }
+
+    /* Category Section */
+    .category-group {
+      background: #FFFFFF;
+      border: 2px solid #0F172A;
+      border-radius: 16px;
+      margin-bottom: 16px;
+      box-shadow: 3px 3px 0px #0F172A;
+      overflow: hidden;
+    }
+
+    .category-header {
+      background: #F1F5F9;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 800;
+      color: #0F172A;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid #0F172A;
+      letter-spacing: -0.2px;
+      text-transform: uppercase;
+    }
+
+    .category-tag {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .category-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #0F172A;
+      border: 1px solid #0F172A;
+    }
+
+    .item-list {
+      list-style: none;
+    }
+
+    .item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      min-height: 56px;
+      border-bottom: 1.5px solid #E2E8F0;
+      background: #FFFFFF;
+    }
+
+    .item-row:last-child {
+      border-bottom: none;
+    }
+
+    .item-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+    }
+
+    .checkbox-touch {
+      width: 48px;
+      height: 48px;
+      margin: -8px -6px -8px -8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .custom-checkbox {
+      width: 24px;
+      height: 24px;
+      border: 2.2px solid #0F172A;
+      border-radius: 6px;
+      background: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.1s ease;
+    }
+
+    .custom-checkbox.checked {
+      background: #0F172A;
+    }
+
+    .custom-checkbox.checked svg {
+      stroke: #FFFFFF;
+      display: block;
+    }
+
+    .custom-checkbox svg {
+      display: none;
+      width: 16px;
+      height: 16px;
+      stroke-width: 3.5;
+    }
+
+    .item-details {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .item-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0F172A;
+      line-height: 1.25;
+    }
+
+    .item-struck .item-name {
+      text-decoration: line-through;
+      color: #94A3B8;
+      font-weight: 600;
+    }
+
+    .qty-badge {
+      background: #0F172A;
+      color: #FFFFFF;
+      font-size: 13px;
+      font-weight: 800;
+      padding: 5px 11px;
+      border-radius: 8px;
+      white-space: nowrap;
+      letter-spacing: 0.2px;
+    }
+
+    .qty-badge.muted {
+      background: #CBD5E1;
+      color: #475569;
+    }
+
+    /* Presi Section (Collapsible) */
+    .presi-container {
+      background: #F1F5F9;
+      border: 2px dashed #0F172A;
+      border-radius: 16px;
+      margin-top: 20px;
+      padding: 4px;
+    }
+
+    .presi-header {
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+
+    .presi-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: #334155;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .presi-badge {
+      background: #334155;
+      color: #FFFFFF;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 10px;
+    }
+
+    .conclude-btn {
+      width: 100%;
+      height: 52px;
+      background: #0F172A;
+      color: #FFFFFF;
+      border: 2px solid #0F172A;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 10px;
+      margin-bottom: 6px;
+      cursor: pointer;
+      box-shadow: 2px 2px 0px rgba(0,0,0,0.3);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .conclude-btn svg {
+      width: 18px;
+      height: 18px;
+      stroke-width: 2.5;
+    }
+
+    /* Bottom Actions Bar */
+    .bottom-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 84px;
+      background: #FFFFFF;
+      border-top: 2px solid #0F172A;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 20;
+    }
+
+    .voice-main-btn {
+      position: absolute;
+      top: -24px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 68px;
+      height: 68px;
+      background: #0F172A;
+      border: 3px solid #FFFFFF;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.4), 0 0 0 2px #0F172A;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #FFFFFF;
+      transition: transform 0.1s ease;
+    }
+
+    .voice-main-btn svg {
+      width: 32px;
+      height: 32px;
+      stroke-width: 2.3;
+    }
+
+    .voice-label {
+      position: absolute;
+      bottom: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      font-weight: 800;
+      color: #0F172A;
+      letter-spacing: 0.2px;
+    }
+
+    .quick-add-btn {
+      min-width: 48px;
+      min-height: 48px;
+      background: #FFFFFF;
+      border: 2px solid #0F172A;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #0F172A;
+      font-weight: 800;
+      box-shadow: 2px 2px 0px #0F172A;
+    }
+
+    .quick-add-btn svg {
+      width: 22px;
+      height: 22px;
+      stroke-width: 2.5;
+    }
+
+    .quick-add-label {
+      font-size: 12px;
+      font-weight: 800;
+      color: #0F172A;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .spacer-side {
+      width: 80px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="device-frame">
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <span>10:42</span>
+      <div class="status-icons">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="18" height="11" rx="2" ry="2"/><line x1="22" y1="11" x2="22" y2="14"/></svg>
+      </div>
+    </div>
+
+    <!-- App Bar -->
+    <div class="app-bar">
+      <div class="app-title-group">
+        <h1>Spesa</h1>
+        <div class="subtitle">
+          <span class="badge-counter">4 DA PRENDERE</span>
+          <span>• Aisle Order</span>
+        </div>
+      </div>
+      <div class="app-actions">
+        <!-- Storico Icon Button (Touch Target 48dp) -->
+        <button class="icon-btn" title="Storico prodotti" aria-label="Storico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </button>
+        <!-- Condividi Icon Button (Touch Target 48dp) -->
+        <button class="icon-btn" title="Condividi lista" aria-label="Condividi">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="18" cy="5" r="3"/>
+            <circle cx="6" cy="12" r="3"/>
+            <circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="content-scroll">
+      
+      <!-- Categoria 1: Ortofrutta -->
+      <div class="category-group">
+        <div class="category-header">
+          <div class="category-tag">
+            <div class="category-dot"></div>
+            <span>Ortofrutta</span>
+          </div>
+          <span style="font-size: 12px; font-weight: 800; color: #475569;">2 VOCI</span>
+        </div>
+        <ul class="item-list">
+          <li class="item-row">
+            <div class="item-left">
+              <div class="checkbox-touch">
+                <div class="custom-checkbox"></div>
+              </div>
+              <div class="item-details">
+                <span class="item-name">Mele Gala</span>
+              </div>
+            </div>
+            <span class="qty-badge">1 kg</span>
+          </li>
+          <li class="item-row">
+            <div class="item-left">
+              <div class="checkbox-touch">
+                <div class="custom-checkbox"></div>
+              </div>
+              <div class="item-details">
+                <span class="item-name">Banane</span>
+              </div>
+            </div>
+            <span class="qty-badge">6 pz</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Categoria 2: Banco Frigo / Latticini -->
+      <div class="category-group">
+        <div class="category-header">
+          <div class="category-tag">
+            <div class="category-dot"></div>
+            <span>Banco Frigo / Latticini</span>
+          </div>
+          <span style="font-size: 12px; font-weight: 800; color: #475569;">2 VOCI</span>
+        </div>
+        <ul class="item-list">
+          <li class="item-row">
+            <div class="item-left">
+              <div class="checkbox-touch">
+                <div class="custom-checkbox"></div>
+              </div>
+              <div class="item-details">
+                <span class="item-name">Latte parzialmente scremato</span>
+              </div>
+            </div>
+            <span class="qty-badge">2 l</span>
+          </li>
+          <li class="item-row">
+            <div class="item-left">
+              <div class="checkbox-touch">
+                <div class="custom-checkbox"></div>
+              </div>
+              <div class="item-details">
+                <span class="item-name">Mozzarella di bufala</span>
+              </div>
+            </div>
+            <span class="qty-badge">250 g</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Categoria 3: Dispensa -->
+      <div class="category-group">
+        <div class="category-header">
+          <div class="category-tag">
+            <div class="category-dot"></div>
+            <span>Dispensa</span>
+          </div>
+          <span style="font-size: 12px; font-weight: 800; color: #475569;">1 VOCE</span>
+        </div>
+        <ul class="item-list">
+          <li class="item-row">
+            <div class="item-left">
+              <div class="checkbox-touch">
+                <div class="custom-checkbox"></div>
+              </div>
+              <div class="item-details">
+                <span class="item-name">Pasta spaghetti n.5</span>
+              </div>
+            </div>
+            <span class="qty-badge">1 kg</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Sezione Presi (Collapsible Section, Option B) -->
+      <div class="presi-container">
+        <div class="presi-header">
+          <div class="presi-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#334155" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            <span>PRESI</span>
+            <span class="presi-badge">2</span>
+          </div>
+          <span style="font-size: 12px; font-weight: 700; color: #64748B;">Tocca per nascondere</span>
+        </div>
+
+        <ul class="item-list" style="margin-top: 4px;">
+          <li class="item-row item-struck" style="background: #F8FAFC; border-radius: 8px; margin-bottom: 4px;">
+            <div class="item-left">
+              <div class="checkbox-touch">
+                <div class="custom-checkbox checked">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+              </div>
+              <div class="item-details">
+                <span class="item-name">Parmigiano Reggiano 24m</span>
+              </div>
+            </div>
+            <span class="qty-badge muted">300 g</span>
+          </li>
+
+          <li class="item-row item-struck" style="background: #F8FAFC; border-radius: 8px;">
+            <div class="item-left">
+              <div class="checkbox-touch">
+                <div class="custom-checkbox checked">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+              </div>
+              <div class="item-details">
+                <span class="item-name">Caffè macinato</span>
+              </div>
+            </div>
+            <span class="qty-badge muted">250 g</span>
+          </li>
+        </ul>
+
+        <!-- Concludi Spesa Action Button -->
+        <button class="conclude-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Concludi Spesa (Archivia 2)
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Bottom Action Bar with Big Mic & Quick Add -->
+    <div class="bottom-bar">
+      <!-- Quick Add (Touch Target 48dp) -->
+      <div class="quick-add-label">
+        <button class="quick-add-btn" aria-label="Aggiungi manualmente">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </button>
+        <span>Testo</span>
+      </div>
+
+      <!-- Large Center Voice Action -->
+      <button class="voice-main-btn" aria-label="Ascolto vocale">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          <line x1="12" y1="19" x2="12" y2="23"/>
+          <line x1="8" y1="23" x2="16" y2="23"/>
+        </svg>
+      </button>
+      <span class="voice-label">VOCE</span>
+
+      <!-- Right spacer for balanced ergonomics -->
+      <div class="spacer-side" style="display: flex; justify-content: flex-end; align-items: center;">
+        <span style="font-size: 11px; font-weight: 800; color: #64748B;">OFFLINE ✓</span>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

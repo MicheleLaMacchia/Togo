@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TOGO - Risoluzione Duplicati</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #0B0F17;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .device-frame {
+      width: 412px;
+      height: 915px;
+      background: #FFFFFF;
+      border-radius: 40px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45), 0 0 0 10px #1E293B;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      border: 3px solid #0F172A;
+    }
+
+    /* Background Dimmed */
+    .bg-list {
+      flex: 1;
+      background: #F8FAFC;
+      opacity: 0.25;
+      filter: blur(2px);
+      pointer-events: none;
+      padding: 16px;
+    }
+
+    .dummy-header {
+      height: 50px;
+      border-bottom: 2px solid #0F172A;
+      margin-bottom: 16px;
+    }
+
+    .dummy-card {
+      background: #E2E8F0;
+      border: 2px solid #0F172A;
+      border-radius: 12px;
+      height: 80px;
+      margin-bottom: 12px;
+    }
+
+    /* Modal Backdrop */
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 23, 42, 0.7);
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    /* High-contrast Modal Box */
+    .dialog-card {
+      width: 100%;
+      background: #FFFFFF;
+      border: 3px solid #0F172A;
+      border-radius: 24px;
+      box-shadow: 6px 6px 0px #0F172A;
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header with Warning / Info Badge */
+    .dialog-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .icon-badge {
+      width: 44px;
+      height: 44px;
+      background: #FEF3C7;
+      border: 2px solid #D97706;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #B45309;
+      flex-shrink: 0;
+    }
+
+    .icon-badge svg {
+      width: 26px;
+      height: 26px;
+      stroke-width: 2.3;
+    }
+
+    .dialog-title {
+      font-size: 20px;
+      font-weight: 900;
+      color: #0F172A;
+      line-height: 1.2;
+      letter-spacing: -0.3px;
+    }
+
+    /* Message Description */
+    .dialog-body {
+      font-size: 14px;
+      font-weight: 600;
+      color: #334155;
+      line-height: 1.45;
+      margin-bottom: 20px;
+      background: #F8FAFC;
+      border: 1.5px solid #CBD5E1;
+      padding: 12px 14px;
+      border-radius: 12px;
+    }
+
+    .highlight-product {
+      font-weight: 800;
+      color: #0F172A;
+    }
+
+    .highlight-qty {
+      display: inline-block;
+      background: #0F172A;
+      color: #FFFFFF;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 800;
+      margin: 0 2px;
+    }
+
+    /* Actions Stack */
+    .dialog-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* Action 1: Recommended Primary */
+    .action-btn-primary {
+      min-height: 54px;
+      background: #0F172A;
+      color: #FFFFFF;
+      border: 2px solid #0F172A;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      cursor: pointer;
+      box-shadow: 2px 2px 0px rgba(0,0,0,0.4);
+      transition: all 0.1s ease;
+    }
+
+    .badge-recommended {
+      background: #16A34A;
+      color: #FFFFFF;
+      font-size: 10px;
+      font-weight: 900;
+      padding: 3px 6px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Action 2 & 3: Secondary Options */
+    .action-btn-secondary {
+      min-height: 50px;
+      background: #FFFFFF;
+      color: #0F172A;
+      border: 2px solid #0F172A;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 10px;
+      padding: 0 16px;
+      cursor: pointer;
+      box-shadow: 2px 2px 0px #0F172A;
+    }
+
+    .action-btn-secondary svg {
+      width: 18px;
+      height: 18px;
+      stroke-width: 2.2;
+    }
+
+    /* Action 4: Cancel Text Button */
+    .action-btn-cancel {
+      min-height: 44px;
+      background: transparent;
+      color: #64748B;
+      border: none;
+      font-size: 14px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="device-frame">
+    <!-- Dimmed List Background -->
+    <div class="bg-list">
+      <div class="dummy-header"></div>
+      <div class="dummy-card"></div>
+      <div class="dummy-card"></div>
+      <div class="dummy-card"></div>
+    </div>
+
+    <!-- Modal Dialog Backdrop -->
+    <div class="modal-overlay">
+      <div class="dialog-card">
+        
+        <!-- Header -->
+        <div class="dialog-header">
+          <div class="icon-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
+          <div>
+            <div class="dialog-title">Prodotto già in lista</div>
+          </div>
+        </div>
+
+        <!-- Explanation Message -->
+        <div class="dialog-body">
+          <span class="highlight-product">«Latte parzialmente scremato»</span> è già presente con <span class="highlight-qty">1 l</span> nella categoria <strong>Banco Frigo</strong>.<br><br>
+          Cosa vuoi fare con la nuova aggiunta di <span class="highlight-qty">1 l</span>?
+        </div>
+
+        <!-- High-Contrast Decision Actions -->
+        <div class="dialog-actions">
+          <!-- Option 1: Sum quantities (Recommended) -->
+          <button class="action-btn-primary">
+            <span>Somma quantità (+1 l → 2 l)</span>
+            <span class="badge-recommended">CONSIGLIATO</span>
+          </button>
+
+          <!-- Option 2: Replace quantity -->
+          <button class="action-btn-secondary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <polyline points="1 4 1 10 7 10"/>
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+            </svg>
+            <span>Sostituisci quantità (1 l)</span>
+          </button>
+
+          <!-- Option 3: Separate item -->
+          <button class="action-btn-secondary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <span>Crea voce separata</span>
+          </button>
+
+          <!-- Option 4: Cancel -->
+          <button class="action-btn-cancel">
+            Annulla
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

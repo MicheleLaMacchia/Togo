@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TOGO - Voice Input Bottom Sheet</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #0B0F17;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .device-frame {
+      width: 412px;
+      height: 915px;
+      background: #FFFFFF;
+      border-radius: 40px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45), 0 0 0 10px #1E293B;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      border: 3px solid #0F172A;
+    }
+
+    /* Background Active List (Dimmed & Blurred slightly) */
+    .bg-list {
+      flex: 1;
+      background: #F8FAFC;
+      opacity: 0.35;
+      filter: blur(1.5px);
+      pointer-events: none;
+      padding: 16px;
+      overflow: hidden;
+    }
+
+    .dummy-header {
+      height: 60px;
+      border-bottom: 2px solid #0F172A;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .dummy-card {
+      background: #FFFFFF;
+      border: 2px solid #0F172A;
+      border-radius: 12px;
+      height: 90px;
+      margin-bottom: 14px;
+    }
+
+    /* Scrim Overlay */
+    .scrim {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 23, 42, 0.65);
+      z-index: 30;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    /* Bottom Sheet Container */
+    .bottom-sheet {
+      background: #FFFFFF;
+      border-top: 3px solid #0F172A;
+      border-top-left-radius: 28px;
+      border-top-right-radius: 28px;
+      box-shadow: 0 -10px 40px rgba(0,0,0,0.35);
+      padding: 18px 20px 32px 20px;
+      position: relative;
+      animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Sheet Handle bar */
+    .sheet-handle {
+      width: 44px;
+      height: 5px;
+      background: #94A3B8;
+      border-radius: 4px;
+      margin: 0 auto 16px auto;
+    }
+
+    /* Listening wave / status indicator */
+    .status-listening {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding: 8px 14px;
+      background: #EFF6FF;
+      border: 2px solid #2563EB;
+      border-radius: 12px;
+    }
+
+    .status-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .wave-bars {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      height: 18px;
+    }
+
+    .wave-bar {
+      width: 4px;
+      background: #2563EB;
+      border-radius: 2px;
+    }
+
+    .b1 { height: 8px; }
+    .b2 { height: 18px; }
+    .b3 { height: 12px; }
+    .b4 { height: 16px; }
+    .b5 { height: 9px; }
+
+    .status-text {
+      font-size: 13px;
+      font-weight: 800;
+      color: #1E40AF;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    .mic-live-icon {
+      width: 28px;
+      height: 28px;
+      background: #2563EB;
+      color: #FFFFFF;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mic-live-icon svg {
+      width: 16px;
+      height: 16px;
+      stroke-width: 2.5;
+    }
+
+    /* Live Transcription Box */
+    .transcription-box {
+      margin-bottom: 16px;
+      padding: 12px 14px;
+      background: #F8FAFC;
+      border: 2px solid #0F172A;
+      border-radius: 12px;
+    }
+
+    .transcription-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: #64748B;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      letter-spacing: 0.4px;
+    }
+
+    .transcription-text {
+      font-size: 18px;
+      font-weight: 800;
+      color: #0F172A;
+      font-style: italic;
+      line-height: 1.3;
+    }
+
+    /* Structured Interpretation Card */
+    .parsed-card {
+      background: #FFFFFF;
+      border: 2px solid #0F172A;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 3px 3px 0px #0F172A;
+      margin-bottom: 22px;
+    }
+
+    .parsed-header {
+      font-size: 12px;
+      font-weight: 800;
+      color: #16A34A;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .parsed-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1.5px solid #E2E8F0;
+    }
+
+    .parsed-row:last-child {
+      border-bottom: none;
+      padding-bottom: 2px;
+    }
+
+    .parsed-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #64748B;
+    }
+
+    .parsed-value {
+      font-size: 16px;
+      font-weight: 800;
+      color: #0F172A;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .qty-tag {
+      background: #0F172A;
+      color: #FFFFFF;
+      padding: 3px 9px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .category-chip {
+      background: #F1F5F9;
+      border: 1.5px solid #0F172A;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #0F172A;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .edit-icon-btn {
+      width: 28px;
+      height: 28px;
+      background: #FFFFFF;
+      border: 1.5px solid #0F172A;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      margin-left: 4px;
+    }
+
+    .edit-icon-btn svg {
+      width: 14px;
+      height: 14px;
+      stroke-width: 2.2;
+    }
+
+    /* Bottom Action Buttons */
+    .actions-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .confirm-btn {
+      width: 100%;
+      height: 56px;
+      background: #0F172A;
+      color: #FFFFFF;
+      border: 2px solid #0F172A;
+      border-radius: 14px;
+      font-size: 17px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      box-shadow: 3px 3px 0px #0F172A;
+      letter-spacing: 0.3px;
+    }
+
+    .confirm-btn svg {
+      width: 22px;
+      height: 22px;
+      stroke-width: 2.5;
+    }
+
+    .cancel-btn {
+      width: 100%;
+      height: 48px;
+      background: transparent;
+      color: #475569;
+      border: none;
+      font-size: 15px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      letter-spacing: 0.2px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="device-frame">
+    <!-- Dimmed List Content in Background -->
+    <div class="bg-list">
+      <div class="dummy-header">
+        <div style="font-size: 24px; font-weight: 900;">Spesa</div>
+      </div>
+      <div class="dummy-card"></div>
+      <div class="dummy-card"></div>
+      <div class="dummy-card"></div>
+      <div class="dummy-card"></div>
+    </div>
+
+    <!-- Scrim Modal Layer -->
+    <div class="scrim">
+      
+      <!-- Slender Bottom Sheet -->
+      <div class="bottom-sheet">
+        <!-- Handle -->
+        <div class="sheet-handle"></div>
+
+        <!-- Listening wave & live status -->
+        <div class="status-listening">
+          <div class="status-left">
+            <div class="wave-bars">
+              <div class="wave-bar b1"></div>
+              <div class="wave-bar b2"></div>
+              <div class="wave-bar b3"></div>
+              <div class="wave-bar b4"></div>
+              <div class="wave-bar b5"></div>
+            </div>
+            <span class="status-text">In ascolto &amp; Riconoscimento...</span>
+          </div>
+          <div class="mic-live-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Transcribed Phrase -->
+        <div class="transcription-box">
+          <div class="transcription-label">Trascrizione vocale rilevata:</div>
+          <div class="transcription-text">«due litri di latte parzialmente scremato»</div>
+        </div>
+
+        <!-- Structured Parsed Card -->
+        <div class="parsed-card">
+          <div class="parsed-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <span>Interpretazione completata</span>
+          </div>
+
+          <!-- Prodotto -->
+          <div class="parsed-row">
+            <span class="parsed-label">Prodotto</span>
+            <span class="parsed-value">Latte parzialmente scremato</span>
+          </div>
+
+          <!-- Quantità -->
+          <div class="parsed-row">
+            <span class="parsed-label">Quantità</span>
+            <span class="parsed-value">
+              <span class="qty-tag">2 l</span>
+            </span>
+          </div>
+
+          <!-- Categoria con Quick Edit Icon -->
+          <div class="parsed-row">
+            <span class="parsed-label">Categoria</span>
+            <div class="parsed-value">
+              <span class="category-chip">
+                Banco Frigo / Latticini
+              </span>
+              <button class="edit-icon-btn" title="Modifica categoria" aria-label="Modifica categoria">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M12 20h9"/>
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions-group">
+          <!-- Primary Action (Touch target 56dp) -->
+          <button class="confirm-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Conferma e aggiungi
+          </button>
+          
+          <!-- Secondary Action (Touch target 48dp) -->
+          <button class="cancel-btn">
+            Annulla
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>
