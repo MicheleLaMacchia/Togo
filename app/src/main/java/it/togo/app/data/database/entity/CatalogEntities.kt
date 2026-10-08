@@ -25,7 +25,7 @@ data class TaxonomyLevel1Entity(
 @Entity(
     tableName = "TAXONOMY_LEVEL_2",
     indices = [
-        Index(value = ["level1Id"], name = "idx_taxonomy_l2_l1"),
+        Index(value = ["level1_id"], name = "idx_taxonomy_l2_l1"),
         Index(value = ["sortOrder"], name = "idx_taxonomy_l2_sort")
     ]
 )
@@ -48,9 +48,9 @@ data class TaxonomyLevel2Entity(
 @Entity(
     tableName = "TAXONOMY_LEVEL_3",
     indices = [
-        Index(value = ["level2Id"], name = "idx_taxonomy_l3_l2"),
+        Index(value = ["level2_id"], name = "idx_taxonomy_l3_l2"),
         Index(value = ["sortOrder"], name = "idx_taxonomy_l3_sort"),
-        Index(value = ["isUserDefined"], name = "idx_taxonomy_l3_user_defined")
+        Index(value = ["is_user_defined"], name = "idx_taxonomy_l3_user_defined")
     ]
 )
 data class TaxonomyLevel3Entity(
@@ -75,9 +75,9 @@ data class TaxonomyLevel3Entity(
 @Entity(
     tableName = "CANONICAL_PRODUCT",
     indices = [
-        Index(value = ["level3Id"], name = "idx_canonical_product_l3"),
+        Index(value = ["level3_id"], name = "idx_canonical_product_l3"),
         Index(value = ["name"], name = "idx_canonical_product_name"),
-        Index(value = ["isUserDefined"], name = "idx_canonical_product_user_defined")
+        Index(value = ["is_user_defined"], name = "idx_canonical_product_user_defined")
     ]
 )
 data class CanonicalProductEntity(
@@ -100,7 +100,7 @@ data class CanonicalProductEntity(
 @Entity(
     tableName = "SYNONYM",
     indices = [
-        Index(value = ["productId"], name = "idx_synonym_product_id"),
+        Index(value = ["product_id"], name = "idx_synonym_product_id"),
         Index(value = ["term"], name = "idx_synonym_term")
     ]
 )

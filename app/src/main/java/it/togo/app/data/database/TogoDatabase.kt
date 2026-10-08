@@ -5,8 +5,6 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import androidx.room.migration.Migration
-import androidx.sqlite.db.SupportSQLiteDatabase
 import it.togo.app.data.database.dao.CatalogDao
 import it.togo.app.data.database.dao.HistoryDao
 import it.togo.app.data.database.dao.LearnedRulesDao
@@ -53,13 +51,14 @@ abstract class TogoDatabase : RoomDatabase() {
                     TogoDatabase::class.java,
                     "togo.db"
                 )
+                    // Story 1.4: catalogo precompilato copiato dagli asset al primo avvio (AD-3).
+                    // Nota (pre-release): l'asset viene copiato solo alla CREAZIONE del DB;
+                    // un DB "togo.db" già esistente (es. da build di sviluppo della Story 1.3,
+                    // version = 1 senza catalogo) NON riceve l'asset (createFromAsset non
+                    // riesegue e fallbackToDestructiveMigration scatta solo al cambio di
+                    // versione). Per i soli ambienti dev: disinstallare o cancellare i dati.
+                    .createFromAsset("catalog.db")
                     .fallbackToDestructiveMigration()
-                    .addCallback(object : RoomDatabase.Callback() {
-                        override fun onCreate(db: SupportSQLiteDatabase) {
-                            super.onCreate(db)
-                            // Catalog seed will be handled in Story 1.4 via createFromAsset()
-                        }
-                    })
                     .build()
                 INSTANCE = instance
                 instance

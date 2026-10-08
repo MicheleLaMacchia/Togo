@@ -34,3 +34,7 @@ app/build/
 *.apk
 *.aab
 *.iml
+
+# Cache Python generatore catalogo
+__pycache__/
+*.pyc

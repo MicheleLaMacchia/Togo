@@ -150,7 +150,9 @@ flowchart LR
 | Name | Version |
 | --- | --- |
 | Kotlin | 2.4.20 |
-| Android Gradle Plugin (AGP) | 8.8.0 |
+| Android Gradle Plugin (AGP) | 8.12.3 (min. richiesto da KSP 2.3.x — `addKspConfigurations`) |
+| Gradle | 8.13 |
+| KSP (Room codegen) | 2.3.12 (standalone; richiede AGP ≥ 8.12) |
 | Android SDK (Compile & Target) | 35 |
 | Android SDK (Min API) | 24 |
 | Jetpack Compose BOM | 2026.09.00 |
