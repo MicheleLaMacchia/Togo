@@ -80,4 +80,7 @@ sealed interface UiEvent {
 
     /** Aggiungi voce manuale (pulsante stato vuoto) */
     object AddItemManual : UiEvent
+
+    /** Annulla eliminazione (Snackbar undo) */
+    object UndoDelete : UiEvent
 }

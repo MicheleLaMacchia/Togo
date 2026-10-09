@@ -48,19 +48,24 @@ import android.content.Context
 import android.os.VibrationEffect
 
 /**
- * Bottom Sheet "Aggiungi Voce Manuale" - flusso multi-step.
+ * Bottom Sheet "Aggiungi/Modifica Voce Manuale" - flusso multi-step.
  *
  * Step:
  * 1. Ricerca prodotto (autocomplete catalogo)
  * 2. Quantità + Unità compatibili
  * 3. Attributi opzionali (marca, variante, conservazione)
  * 4. Conferma
+ *
+ * Supporta due modalità:
+ * - INSERT: nuova voce (parte da step 1)
+ * - EDIT: modifica voce esistente (parte da step 2, pre-popolato)
  */
 @Composable
 fun AddItemBottomSheet(
     sheetState: ModalBottomSheetState,
     onConfirm: (it.togo.app.presentation.additem.AddItemConfirmed) -> Unit,
     onDismiss: () -> Unit,
+    isEditMode: Boolean = false,
 ) {
     val viewModel = androidx.lifecycle.viewmodel.compose.viewModel<AddItemViewModel>()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -108,11 +113,11 @@ fun AddItemBottomSheet(
                 ) {
                     Text(
                         text = when (uiState.currentStep) {
-                            1 -> "Cerca prodotto"
+                            1 -> if (viewModel.isEditMode) "Modifica voce" else "Cerca prodotto"
                             2 -> "Quantità e unità"
                             3 -> "Attributi (opzionali)"
                             4 -> "Conferma"
-                            else -> "Aggiungi voce"
+                            else -> if (viewModel.isEditMode) "Modifica voce" else "Aggiungi voce"
                         },
                         style = typography.titleScreen,
                         color = colors.inkPrimary,
@@ -139,9 +144,14 @@ fun AddItemBottomSheet(
                         .padding(horizontal = spacing.space4, bottom = spacing.space2),
                     horizontalArrangement = Arrangement.spacedBy(spacing.space2),
                 ) {
-                    (1..4).forEach { step ->
+                    val totalSteps = if (viewModel.isEditMode) 3 else 4
+                    val startStep = if (viewModel.isEditMode) 2 else 1
+                    
+                    (startStep..4).forEach { step ->
                         val isActive = uiState.currentStep >= step
                         val isCurrent = uiState.currentStep == step
+                        val effectiveIndex = step - startStep
+                        
                         Row(
                             modifier = Modifier.weight(1f),
                             horizontalArrangement = Arrangement.spacedBy(spacing.space1),
@@ -152,7 +162,7 @@ fun AddItemBottomSheet(
                                     modifier = Modifier
                                         .weight(1f)
                                         .height(2.dp)
-                                        .background(if (isActive) colors.accentHighlight else colors.borderHairline),
+                                        .background(if (uiState.currentStep >= step) colors.accentHighlight else colors.borderHairline),
                                 )
                             }
                             // Circle step
@@ -160,14 +170,14 @@ fun AddItemBottomSheet(
                                 modifier = Modifier
                                     .size(24.dp)
                                     .background(
-                                        color = if (isCurrent) colors.accentHighlight else if (isActive) colors.inkPrimary else colors.borderHairline,
+                                        color = if (uiState.currentStep == step) colors.accentHighlight else if (uiState.currentStep >= step) colors.inkPrimary else colors.borderHairline,
                                         shape = androidx.compose.foundation.shape.CircleShape,
                                     ),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Text(
-                                    text = step.toString(),
-                                    style = typography.caption.copy(color = if (isCurrent || isActive) colors.inkInverse else colors.inkMuted),
+                                    text = (step - startStep + 1).toString(),
+                                    style = typography.caption.copy(color = if (uiState.currentStep >= step) colors.inkInverse else colors.inkMuted),
                                 )
                             }
                         }
@@ -183,7 +193,7 @@ fun AddItemBottomSheet(
                     verticalArrangement = Arrangement.spacedBy(spacing.space3),
                 ) {
                     when (uiState.currentStep) {
-                        1 -> SearchStep(
+                        1 -> if (!viewModel.isEditMode) SearchStep(
                             query = uiState.searchQuery,
                             onQueryChange = { viewModel.onEvent(AddItemUiEvent.SearchQueryChanged(it)) },
                             results = uiState.searchResults,
@@ -226,6 +236,9 @@ fun AddItemBottomSheet(
                                     viewModel.onEvent(AddItemUiEvent.Confirm)
                                 },
                                 onBack = { viewModel.onEvent(AddItemUiEvent.PreviousStep) },
+                                colors = togoColors(),
+                                typography = togoTypography(),
+                                spacing = togoSpacing(),
                             )
                         }
                     }
@@ -238,7 +251,8 @@ fun AddItemBottomSheet(
                         .padding(top = spacing.space3, horizontal = spacing.space4),
                     horizontalArrangement = Arrangement.spacedBy(spacing.space2),
                 ) {
-                    if (uiState.currentStep > 1) {
+                    val minStep = if (viewModel.isEditMode) 2 else 1
+                    if (uiState.currentStep > minStep) {
                         Button(
                             onClick = { viewModel.onEvent(AddItemUiEvent.PreviousStep) },
                             modifier = Modifier.weight(1f),
@@ -285,7 +299,11 @@ fun AddItemBottomSheet(
                                 contentColor = if (uiState.isValidForConfirm) colors.inkInverse else colors.inkMuted,
                             ),
                         ) {
-                            Text("Aggiungi", style = typography.sectionHeader, color = if (uiState.isValidForConfirm) colors.inkInverse else colors.inkMuted)
+                            Text(
+                                text = if (viewModel.isEditMode) "Salva" else "Aggiungi",
+                                style = typography.sectionHeader,
+                                color = if (uiState.isValidForConfirm) colors.inkInverse else colors.inkMuted
+                            )
                         }
                     }
                 }
@@ -381,38 +399,41 @@ fun ConfirmStep(
     condition: String,
     onConfirm: () -> Unit,
     onBack: () -> Unit,
+    colors: it.togo.app.ui.theme.TogoColorScheme,
+    typography: it.togo.app.ui.theme.TogoTypography,
+    spacing: it.togo.app.ui.theme.TogoSpacing,
 ) {
-    val colors = togoColors()
-    val typography = togoTypography()
-    val spacing = togoSpacing()
+    val colorsLocal = colors
+    val typographyLocal = typography
+    val spacingLocal = spacing
 
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(spacing.space3),
+        verticalArrangement = Arrangement.spacedBy(spacingLocal.space3),
     ) {
-        Text("Riepilogo", style = togoTypography().sectionHeader, color = togoColors().inkPrimary)
+        Text("Riepilogo", style = typographyLocal.sectionHeader, color = colorsLocal.inkPrimary)
 
         // Riepilogo prodotto
         Column(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            SummaryRow("Prodotto", product.name)
-            SummaryRow("Quantità", "${quantity.toString().trimEnd('0').trimEnd('.')} ${unit.displayName}")
-            if (brand.isNotBlank()) SummaryRow("Marca", brand)
-            if (variant.isNotBlank()) SummaryRow("Variante", variant)
-            if (condition.isNotBlank()) SummaryRow("Conservazione", condition)
+            SummaryRow("Prodotto", product.name, colorsLocal, typographyLocal)
+            SummaryRow("Quantità", "${quantity.toString().trimEnd('0').trimEnd('.')} ${unit.displayName}", colorsLocal, typographyLocal)
+            if (brand.isNotBlank()) SummaryRow("Marca", brand, colorsLocal, typographyLocal)
+            if (variant.isNotBlank()) SummaryRow("Variante", variant, colorsLocal, typographyLocal)
+            if (condition.isNotBlank()) SummaryRow("Conservazione", condition, colorsLocal, typographyLocal)
         }
     }
 }
 
 @Composable
-private fun SummaryRow(label: String, value: String) {
+private fun SummaryRow(label: String, value: String, colors: it.togo.app.ui.theme.TogoColorScheme, typography: it.togo.app.ui.theme.TogoTypography) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(label, style = togoTypography().itemMeta, color = togoColors().inkSecondary)
-        Text(value, style = togoTypography().itemMeta.copy(color = togoColors().inkPrimary))
+        Text(label, style = typography.itemMeta, color = colors.inkSecondary)
+        Text(value, style = typography.itemMeta.copy(color = colors.inkPrimary))
     }
 }

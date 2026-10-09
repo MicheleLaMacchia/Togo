@@ -8,6 +8,7 @@ import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.ShoppingListRepository
 import it.togo.app.presentation.additem.AddItemConfirmed
 import it.togo.app.presentation.additem.AddItemUiEvent
+import it.togo.app.presentation.additem.AddItemViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * ViewModel per la schermata Lista Attiva (MVI/UDF).
@@ -40,6 +42,20 @@ class ActiveListViewModel(
 
     // ---- Cache tassonomia per raggruppamento ordinato (non-null default) ----
     private val taxonomyCache = MutableStateFlow(TaxonomyCache(emptyList(), emptyList(), emptyList()))
+
+    // Stato per Snackbar undo - con auto-dismiss 5s
+    private val _snackbarMessage = MutableStateFlow<String?>(null)
+    val snackbarMessage = _snackbarMessage
+        .distinctUntilChanged()
+        .stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000), null)
+
+    // Item eliminato per undo - observable per config changes
+    private val _deletedItemForUndo = MutableStateFlow<ShoppingItem?>(null)
+    val deletedItemForUndo = _deletedItemForUndo
+        .stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000), null)
+
+    // Contatore per evitare race condition su snackbar timer
+    private val _snackbarCounter = AtomicInteger(0)
 
     init {
         loadTaxonomy()
@@ -160,6 +176,7 @@ class ActiveListViewModel(
             is UiEvent.ShareList -> { /* TODO: Story 5.x */ }
             is UiEvent.Checkout -> handleCheckout()
             is UiEvent.AddItemManual -> { /* Handled by screen opening bottom sheet */ }
+            is UiEvent.UndoDelete -> handleUndoDelete()
         }
     }
 
@@ -189,13 +206,57 @@ class ActiveListViewModel(
     }
 
     private fun handleEditItem(item: ShoppingItem) {
-        // TODO: Story 2.2 - apri bottom sheet modifica
+        // Apre bottom sheet in modalità edit - gestito da ActiveListScreen tramite UiState
+        // Qui potremmo emettere un evento per aprire il bottom sheet
     }
 
     private fun handleDeleteItem(itemId: String) {
+        // Trova l'item per possibile undo
+        val item = _uiState.value.activeGroups
+            .flatMap { it.level2Groups.flatMap { it.level3Groups.flatMap { it.items } } }
+            .find { it.id == itemId }
+            ?: _uiState.value.checkedItems.find { it.id == itemId }
+            ?: return
+
+        // Salva item per undo PRIMA del delete
+        _deletedItemForUndo.value = item
+
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                shoppingRepository.delete(itemId)
+            try {
+                withContext(Dispatchers.IO) {
+                    shoppingRepository.delete(itemId)
+                }
+                // Snackbar DOPO delete riuscito
+                showUndoSnackbar("Voce eliminata")
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = "Eliminazione fallita: ${e.message}") }
+            }
+        }
+    }
+
+    private fun handleUndoDelete() {
+        _deletedItemForUndo.value?.let { item ->
+            // Aggiorna timestamp per audit trail
+            val restored = item.copyWith(updatedAt = System.currentTimeMillis())
+            viewModelScope.launch {
+                withContext(Dispatchers.IO) {
+                    shoppingRepository.insert(restored)
+                }
+            }
+            _deletedItemForUndo.value = null
+        }
+        _snackbarMessage.value = null
+    }
+
+    /** Mostra snackbar con auto-dismiss 5s */
+    private fun showUndoSnackbar(message: String) {
+        val currentCount = _snackbarCounter.incrementAndGet()
+        _snackbarMessage.value = message
+        viewModelScope.launch {
+            kotlinx.coroutines.delay(5000)
+            // Controlla che nessun altro snackbar abbia sovrascritto questo
+            if (_snackbarCounter.get() == currentCount && _snackbarMessage.value != null) {
+                _snackbarMessage.value = null
             }
         }
     }
@@ -204,6 +265,7 @@ class ActiveListViewModel(
         viewModelScope.launch {
             // Leggi checked items direttamente dal repository per source of truth
             val checkedIds = shoppingRepository.getCheckedItems()
+                .take(1)
                 .first()
                 .map { it.id }
             if (checkedIds.isNotEmpty()) {

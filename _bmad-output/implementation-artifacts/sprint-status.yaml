@@ -46,7 +46,7 @@ development_status:
   epic-2: in-progress
   2-1-schermata-lista-attiva-con-visualizzazione-per-categoria: done
   2-2-inserimento-manuale-prodotto: done
-  2-3-modifica-e-rimozione-voce-dalla-lista: backlog
+  2-3-modifica-e-rimozione-voce-dalla-lista: done
   2-4-spunta-prodotto-acquistato-e-sezione-presi-n: backlog
   2-5-conclusione-spesa-checkout-atomico-verso-storico: backlog
   epic-2-retrospective: optional
