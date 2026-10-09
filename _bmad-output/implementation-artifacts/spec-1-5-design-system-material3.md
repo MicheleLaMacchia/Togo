@@ -2,7 +2,7 @@
 title: 'Story 1.5: Design System Material3 — Token Colore e Tipografia'
 type: 'feature'
 created: '2026-10-08'
-status: 'review'
+status: 'done'
 route: 'dispatch'
 review_loop_iteration: 0
 context:
