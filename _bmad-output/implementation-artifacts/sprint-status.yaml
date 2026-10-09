@@ -35,16 +35,16 @@ project_key: NOKEY
 tracking_system: file-system
 story_location: _bmad-output\implementation-artifacts
 development_status:
-  epic-1: in-progress
+  epic-1: done
   1-1-setup-progetto-android-e-struttura-clean-architecture: done
   1-2-configurazione-koin-e-moduli-di: done
   1-3-database-room-e-schema-entità-core: done
   1-4-catalogo-preinstallato-da-asset: done
-  1-5-design-system-material3-token-colore-e-tipografia: backlog
+  1-5-design-system-material3-token-colore-e-tipografia: done
   epic-1-retrospective: optional
 
-  epic-2: backlog
-  2-1-schermata-lista-attiva-con-visualizzazione-per-categoria: backlog
+  epic-2: in-progress
+  2-1-schermata-lista-attiva-con-visualizzazione-per-categoria: ready-for-dev
   2-2-inserimento-manuale-prodotto: backlog
   2-3-modifica-e-rimozione-voce-dalla-lista: backlog
   2-4-spunta-prodotto-acquistato-e-sezione-presi-n: backlog
