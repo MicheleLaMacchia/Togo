@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface ShoppingListRepository {
     fun getActiveItems(): Flow<List<ShoppingItem>>
+    fun getCheckedItems(): Flow<List<ShoppingItem>>
     suspend fun insert(item: ShoppingItem)
     suspend fun update(item: ShoppingItem)
     suspend fun delete(itemId: String)

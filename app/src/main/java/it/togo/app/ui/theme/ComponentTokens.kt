@@ -30,7 +30,7 @@ data class ItemRowTokens(
 )
 
 data class CheckboxUtilityTokens(
-    val size: Dp = 26.dp,
+    val size: Dp = 48.dp,
     val borderWidth: Dp = 2.dp,
     val borderColor: Color,
     val radius: androidx.compose.ui.graphics.RoundedCornerSize,

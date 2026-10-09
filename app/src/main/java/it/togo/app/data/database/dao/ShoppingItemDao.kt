@@ -12,11 +12,14 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ShoppingItemDao {
 
-    @Query("SELECT * FROM SHOPPING_ITEM WHERE isChecked = 0 ORDER BY createdAt ASC")
-    fun getActive(): Flow<List<ShoppingItemEntity>>
+    @Query("SELECT * FROM SHOPPING_ITEM ORDER BY createdAt ASC")
+    fun getAll(): Flow<List<ShoppingItemEntity>>
 
     @Query("SELECT * FROM SHOPPING_ITEM WHERE productId = :productId AND isChecked = 0 LIMIT 1")
     suspend fun getActiveByProductId(productId: Long): ShoppingItemEntity?
+
+    @Query("SELECT * FROM SHOPPING_ITEM WHERE isChecked = 1 ORDER BY updatedAt DESC")
+    fun getChecked(): Flow<List<ShoppingItemEntity>>
 
     @Query("SELECT * FROM SHOPPING_ITEM WHERE id = :id LIMIT 1")
     suspend fun getById(id: String): ShoppingItemEntity?

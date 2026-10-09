@@ -44,8 +44,8 @@ development_status:
   epic-1-retrospective: optional
 
   epic-2: in-progress
-  2-1-schermata-lista-attiva-con-visualizzazione-per-categoria: ready-for-dev
-  2-2-inserimento-manuale-prodotto: backlog
+  2-1-schermata-lista-attiva-con-visualizzazione-per-categoria: done
+  2-2-inserimento-manuale-prodotto: ready-for-dev
   2-3-modifica-e-rimozione-voce-dalla-lista: backlog
   2-4-spunta-prodotto-acquistato-e-sezione-presi-n: backlog
   2-5-conclusione-spesa-checkout-atomico-verso-storico: backlog

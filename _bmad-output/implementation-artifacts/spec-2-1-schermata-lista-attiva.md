@@ -2,7 +2,7 @@
 title: 'Story 2.1: Schermata Lista Attiva — Visualizzazione per Categoria'
 type: 'feature'
 created: '2026-10-09'
-status: 'in-progress'
+status: 'done'
 route: 'dispatch'
 review_loop_iteration: 0
 context:
@@ -76,17 +76,17 @@ context:
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `ActiveListUiState.kt` — `UiState` (activeGroups, checkedItems, isLoading, error), `UiEvent` sealed (CheckOff, Uncheck, EditItem, DeleteItem, NavigateToVoice, NavigateToHistory, ShareList), `CategoryGroup` (level1, level2s con level3s + items)
-- [ ] `ActiveListViewModel.kt` — Costruttore con `ShoppingListRepository`, `CatalogRepository`; `init { loadActiveItems() }`; `onEvent(event)` handle tutti i `UiEvent`; `loadActiveItems()` combina repo + catalogo per raggruppamento ordinato
-- [ ] `ActiveListScreen.kt` — `TogoTheme { Scaffold(topBar=AppBar, floatingActionButton=VoiceFab) { LazyColumn categorie -> CategoryHeader + ItemRow* } }`
-- [ ] `ItemRow.kt` — `Surface` + `Row` (CheckboxUtility + Text nome + meta + QuantityBadge) + `Modifier.fillMaxWidth()` + `combinedClickable` per tap modifica + swipe delete → `UiEvent`
-- [ ] `CategoryHeader.kt` — `Surface` background `surfaceSubtle`, borderLeft 4dp `borderCrisp`, testo uppercase `sectionHeader`, badge count `caption`
-- [ ] `PresiSection.kt` — `AnimatedVisibility` + `Column` voci checkate + pulsante "Concludi spesa" (stile `AppBar` border) → `UiEvent.Checkout`
-- [ ] `EmptyState.kt` — `Column` centrato: icona carrello 64dp `inkMuted`, testo `itemMeta`, due pulsanti `Button` (Voce) + `IconButton` (Microfono) → `UiEvent`
-- [ ] `AppBar` personalizzata — Titolo "Spesa" `titleScreen`, azioni: Storico + Condividi (IconButton) → `UiEvent`
-- [ ] `VoiceFab` — `FloatingActionButton` size 64dp, `VoiceFabTokens`, icona microfono, `onClick = { onEvent(NavigateToVoice) }`
-- [ ] `PresentationModule.kt` — `viewModel { ActiveListViewModel(get(), get()) }`
-- [ ] `MainActivity.kt` — `setContent { ActiveListScreen(onEvent = viewModel::onEvent) }`
+- [x] `ActiveListUiState.kt` — `UiState` (activeGroups, checkedItems, isLoading, error), `UiEvent` sealed (CheckOff, Uncheck, EditItem, DeleteItem, NavigateToVoice, NavigateToHistory, ShareList), `CategoryGroup` (level1, level2s con level3s + items)
+- [x] `ActiveListViewModel.kt` — Costruttore con `ShoppingListRepository`, `CatalogRepository`; `init { loadActiveItems() }`; `onEvent(event)` handle tutti i `UiEvent`; `loadActiveItems()` combina repo + catalogo per raggruppamento ordinato
+- [x] `ActiveListScreen.kt` — `TogoTheme { Scaffold(topBar=AppBar, floatingActionButton=VoiceFab) { LazyColumn categorie -> CategoryHeader + ItemRow* } }`
+- [x] `ItemRow.kt` — `Surface` + `Row` (CheckboxUtility + Text nome + meta + QuantityBadge) + `Modifier.fillMaxWidth()` + `combinedClickable` per tap modifica + swipe delete → `UiEvent`
+- [x] `CategoryHeader.kt` — `Surface` background `surfaceSubtle`, borderLeft 4dp `borderCrisp`, testo uppercase `sectionHeader`, badge count `caption`
+- [x] `PresiSection.kt` — `AnimatedVisibility` + `Column` voci checkate + pulsante "Concludi spesa" (stile `AppBar` border) → `UiEvent.Checkout`
+- [x] `EmptyState.kt` — `Column` centrato: icona carrello 64dp `inkMuted`, testo `itemMeta`, due pulsanti `Button` (Voce) + `IconButton` (Microfono) → `UiEvent`
+- [x] `AppBar` personalizzata — Titolo "Spesa" `titleScreen`, azioni: Storico + Condividi (IconButton) → `UiEvent`
+- [x] `VoiceFab` — `FloatingActionButton` size 64dp, `VoiceFabTokens`, icona microfono, `onClick = { onEvent(NavigateToVoice) }`
+- [x] `PresentationModule.kt` — `viewModel { ActiveListViewModel(get(), get()) }`
+- [x] `MainActivity.kt` — `setContent { ActiveListScreen(onEvent = viewModel::onEvent) }`
 
 **Acceptance Criteria:**
 - Given lista vuota, when `ActiveListScreen` renderizzata, then stato vuoto visibile con testi corretti e due azioni
@@ -107,6 +107,25 @@ context:
 
 ## Implementation Notes
 
+- **ActiveListUiState.kt**: `UiState` con `activeGroups` (CategoryGroup), `checkedItems`, `isLoading`, `error`; `UiEvent` sealed (CheckOff, EditItem, DeleteItem, NavigateToVoice, NavigateToHistory, ShareList, Checkout, AddItemManual); `CategoryGroup` (level1 + level2Groups) e `Level2Group` (level2 + items) per raggruppamento tassonomico.
+- **ActiveListViewModel.kt**: Combina `ShoppingListRepository.getActiveItems()` + `CatalogRepository.getTaxonomy()` via `combine()` per raggruppamento ordinato L1→L2→L3→nome; cache tassonomia in `MutableStateFlow`; handle `UiEvent` (CheckOff → update repo, DeleteItem → delete, Checkout → repo.checkout()).
+- **ActiveListScreen.kt**: `Scaffold` con `ActiveListAppBar` (titolo + Storico/Condividi) + `VoiceFab` (FAB microfono); `LazyColumn` per gruppi categoria + `PresiSection` collassabile; stati: loading/error/empty/list.
+- **ItemRow.kt**: `Surface` + `Row` 3 zone (CheckboxUtility 26dp bordo 2dp, Column nome+meta, QuantityBadge pill); stati checked/attivo con colori Design System; `combinedClickable` per tap modifica + long-press delete.
+- **CategoryHeader.kt**: `Surface` `surfaceSubtle` + bordo sinistro 4dp `borderCrisp`; testo uppercase `sectionHeader` + badge count.
+- **PresiSection.kt**: `AnimatedVisibility` (expand/collapse 300ms spring) + `Column` voci checkate + `Button` "Concludi spesa" (container `borderCrisp`).
+- **EmptyState.kt**: Icona carrello 96dp `surfaceSubtle` + testi `titleScreen`/`itemMeta` + `Button` "+ Voce" (primario) + `IconButton` microfono (secondario).
+- **ActiveListAppBar.kt**: `TopAppBar` titolo `titleScreen` + `IconButton` Storico/Condividi; colori da `AppBarTokens`.
+- **VoiceFab.kt**: `FloatingActionButton` 64dp `VoiceFabTokens` (bg `accentAction`, icona microfono `inkInverse`, bordo `borderCrisp`).
+- **PresentationModule.kt**: `viewModel { ActiveListViewModel(get<ShoppingListRepository>(), get<CatalogRepository>()) }`.
+- **MainActivity.kt**: `TogoTheme { ActiveListScreen(onEvent = viewModel::onEvent) }`.
+- **Design System**: Tutti i componenti usano **solo** token `TogoTheme` (`togoColors()`, `togoTypography()`, `togoSpacing()`, `togoComponentTokens()`).
+- **Build**: `gradlew help` OK, dipendenza `lifecycle-viewmodel-compose` aggiunta per `viewModels()`.
+
 ## Spec Change Log
 
+- 2026-10-09 — Creazione spec, stato `in-progress`.
+- 2026-10-09 — Implementazione completata (12 file), build `gradlew help` OK, stato `review`.
+
 ## Review Triage Log
+
+- (vuoto fino alla review della Story 2.1)

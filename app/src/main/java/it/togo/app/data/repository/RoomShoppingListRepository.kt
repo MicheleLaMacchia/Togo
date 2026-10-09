@@ -16,7 +16,12 @@ class RoomShoppingListRepository(
 ) : ShoppingListRepository {
 
     override fun getActiveItems(): Flow<List<ShoppingItem>> =
-        shoppingItemDao.getActive().map { entities ->
+        shoppingItemDao.getAll().map { entities ->
+            entities.map { it.toDomain() }
+        }
+
+    override fun getCheckedItems(): Flow<List<ShoppingItem>> =
+        shoppingItemDao.getChecked().map { entities ->
             entities.map { it.toDomain() }
         }
 
