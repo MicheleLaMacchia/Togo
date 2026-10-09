@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -50,7 +51,7 @@ fun PresiSection(
     spacing: it.togo.app.ui.theme.TogoSpacing,
     tokens: it.togo.app.ui.theme.TogoComponentTokens,
 ) {
-    var expanded by remember { mutableStateOf(true) }
+    var expanded by rememberSaveable { mutableStateOf(true) }
 
     Column(
         modifier = Modifier
@@ -67,7 +68,9 @@ fun PresiSection(
                 .fillMaxWidth()
                 .padding(horizontal = spacing.space2, vertical = spacing.space2)
                 .background(colors.surfaceSubtle)
-                .border(bottom = androidx.compose.ui.graphics.BorderStroke(1.dp, colors.borderHairline)),
+                .border(bottom = androidx.compose.ui.graphics.BorderStroke(1.dp, colors.borderHairline))
+                .heightIn(min = 48.dp) // Touch target minimo 48dp
+            ,
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -110,7 +113,7 @@ fun PresiSection(
             ) {
                 items.forEach { item ->
                     ItemRow(
-                        item = item.copyWith(isChecked = true), // Render checked state
+                        item = item, // Usa lo stato reale dell'item
                         onCheckChange = { checked ->
                             if (!checked) onUncheck(item.id) // Uncheck = move back to active
                         },
@@ -127,8 +130,8 @@ fun PresiSection(
                 onClick = onCheckout,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.space2),
                 colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                    containerColor = colors.borderCrisp,
-                    contentColor = colors.inkInverse,
+                    containerColor = tokens.bottomSheet.checkoutButtonBackground,
+                    contentColor = tokens.bottomSheet.checkoutButtonContent,
                 ),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(tokens.bottomSheet.radiusTop),
             ) {

@@ -18,9 +18,6 @@ interface ShoppingItemDao {
     @Query("SELECT * FROM SHOPPING_ITEM WHERE productId = :productId AND isChecked = 0 LIMIT 1")
     suspend fun getActiveByProductId(productId: Long): ShoppingItemEntity?
 
-    @Query("SELECT * FROM SHOPPING_ITEM WHERE isChecked = 1 ORDER BY updatedAt DESC")
-    fun getChecked(): Flow<List<ShoppingItemEntity>>
-
     @Query("SELECT * FROM SHOPPING_ITEM WHERE id = :id LIMIT 1")
     suspend fun getById(id: String): ShoppingItemEntity?
 
@@ -53,4 +50,7 @@ interface ShoppingItemDao {
 
     @Query("DELETE FROM SHOPPING_ITEM WHERE id IN (:ids)")
     suspend fun deleteByIds(ids: List<String>): Int
+
+    @Query("SELECT * FROM SHOPPING_ITEM WHERE id IN (:ids)")
+    suspend fun getByIds(ids: List<String>): List<ShoppingItemEntity>
 }

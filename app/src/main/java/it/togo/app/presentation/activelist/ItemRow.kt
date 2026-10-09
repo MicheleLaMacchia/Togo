@@ -85,7 +85,7 @@ fun ItemRow(
                 resistance = { _ -> 10f },
             )
             .background(
-                color = colors.accentSuccess,
+                color = tokens.itemRow.swipeDeleteBackground,
                 shape = RoundedCornerShape(tokens.itemRow.radius),
             ) {
                 Box(
@@ -97,7 +97,7 @@ fun ItemRow(
                     Icon(
                         imageVector = androidx.compose.material.icons.Icons.Filled.Delete,
                         contentDescription = "Elimina",
-                        tint = colors.inkInverse,
+                        tint = tokens.itemRow.swipeDeleteIconColor,
                     )
                 }
             }
@@ -236,7 +236,7 @@ private fun QuantityBadge(
         ,
         shape = RoundedCornerShape(tokens.radius),
         color = backgroundColor,
-        border = androidx.compose.ui.graphics.BorderStroke(1.dp, textColor),
+        border = androidx.compose.ui.graphics.BorderStroke(1.dp, tokens.quantityBadge.borderColor),
     ) {
         Text(
             text = text,

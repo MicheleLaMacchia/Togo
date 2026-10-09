@@ -8,7 +8,9 @@ import it.togo.app.domain.repository.ShoppingListRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.withContext
+import androidx.room.Transaction
 
 class RoomShoppingListRepository(
     private val shoppingItemDao: ShoppingItemDao,
@@ -16,14 +18,18 @@ class RoomShoppingListRepository(
 ) : ShoppingListRepository {
 
     override fun getActiveItems(): Flow<List<ShoppingItem>> =
-        shoppingItemDao.getAll().map { entities ->
-            entities.map { it.toDomain() }
-        }
+        shoppingItemDao.getAll()
+            .map { entities ->
+                entities.map { it.toDomain() }
+            }
+            .map { items -> items.filter { !it.isChecked } }
 
     override fun getCheckedItems(): Flow<List<ShoppingItem>> =
-        shoppingItemDao.getChecked().map { entities ->
-            entities.map { it.toDomain() }
-        }
+        shoppingItemDao.getAll()
+            .map { entities ->
+                entities.map { it.toDomain() }
+            }
+            .map { items -> items.filter { it.isChecked } }
 
     override suspend fun insert(item: ShoppingItem) {
         withContext(Dispatchers.IO) {
@@ -48,34 +54,36 @@ class RoomShoppingListRepository(
             shoppingItemDao.getActiveByProductId(productId)?.toDomain()
         }
 
+    @Transaction
     override suspend fun checkout(checkedItemIds: List<String>): Boolean {
         if (checkedItemIds.isEmpty()) return true
 
         return withContext(Dispatchers.IO) {
-            val checkedItems = checkedItemIds.mapNotNull { id ->
-                shoppingItemDao.getById(id)
-            }
+            // Batch read all checked items in one query
+            val checkedItems = shoppingItemDao.getByIds(checkedItemIds)
+                .map { it.toDomain() }
 
             if (checkedItems.isEmpty()) return@withContext true
 
-            val now = System.currentTimeMillis()
+            // Batch read history items
+            val productIds = checkedItems.map { it.productId }.distinct()
+            val historyMap = historyDao.getByProductIds(productIds)
+                .associateBy { it.productId }
 
-            // Convert to historical items (upsert - increment purchase_count)
-            val historicalItems = checkedItems.map { entity ->
-                val existing = historyDao.getByProductId(entity.productId)
+            val now = System.currentTimeMillis()
+            val historicalItems = checkedItems.map { item ->
+                val existing = historyMap[item.productId]
                 if (existing != null) {
-                    existing.toDomain().increment(entity.quantity, entity.unit).toEntity()
+                    existing.toDomain().increment(item.quantity, item.unit).toEntity()
                 } else {
-                    entity.toDomain().let { domain ->
-                        it.togo.app.domain.model.HistoricalItem(
-                            id = entity.id,
-                            productId = entity.productId,
-                            lastQuantity = entity.quantity,
-                            lastUnit = entity.unit,
-                            purchasedAt = now,
-                            purchaseCount = 1
-                        ).toEntity()
-                    }
+                    it.togo.app.domain.model.HistoricalItem(
+                        id = item.id,
+                        productId = item.productId,
+                        lastQuantity = item.quantity,
+                        lastUnit = item.unit,
+                        purchasedAt = System.currentTimeMillis(),
+                        purchaseCount = 1
+                    ).toEntity()
                 }
             }
 

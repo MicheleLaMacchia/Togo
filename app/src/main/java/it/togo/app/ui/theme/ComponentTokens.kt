@@ -27,6 +27,8 @@ data class ItemRowTokens(
     val paddingHorizontal: Dp = 16.dp,
     val paddingVertical: Dp = 12.dp,
     val radius: androidx.compose.ui.graphics.RoundedCornerSize,
+    val swipeDeleteBackground: Color,
+    val swipeDeleteIconColor: Color,
 )
 
 data class CheckboxUtilityTokens(
@@ -49,6 +51,7 @@ data class CategoryHeaderTokens(
 data class QuantityBadgeTokens(
     val background: Color,
     val textColor: Color,
+    val borderColor: Color,
     val radius: androidx.compose.ui.graphics.RoundedCornerSize,
     val paddingHorizontal: Dp = 8.dp,
     val paddingVertical: Dp = 4.dp,
@@ -68,6 +71,8 @@ data class BottomSheetTokens(
     val borderTopWidth: Dp = 2.dp,
     val borderTopColor: Color,
     val radiusTop: androidx.compose.ui.graphics.RoundedCornerSize,
+    val checkoutButtonBackground: Color = Color.Unspecified,
+    val checkoutButtonContent: Color = Color.Unspecified,
 )
 
 data class DuplicateDialogTokens(
@@ -103,6 +108,8 @@ object TogoComponentTokens {
             borderColor = colors.borderCrisp,
             background = colors.surfaceCard,
             radius = shapes.md,
+            swipeDeleteBackground = colors.accentSuccess,
+            swipeDeleteIconColor = colors.inkInverse,
         ),
         checkboxUtility = CheckboxUtilityTokens(
             borderColor = colors.borderCrisp,
@@ -117,6 +124,7 @@ object TogoComponentTokens {
         quantityBadge = QuantityBadgeTokens(
             background = colors.badgeBg,
             textColor = colors.badgeInk,
+            borderColor = colors.borderCrisp,
             radius = shapes.sm,
         ),
         voiceFab = VoiceFabTokens(
@@ -129,6 +137,8 @@ object TogoComponentTokens {
             background = colors.surfaceBase,
             borderTopColor = colors.borderCrisp,
             radiusTop = shapes.lg,
+            checkoutButtonBackground = colors.accentSuccess,
+            checkoutButtonContent = colors.inkInverse,
         ),
         duplicateDialog = DuplicateDialogTokens(
             background = colors.surfaceBase,

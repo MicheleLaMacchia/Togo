@@ -14,13 +14,18 @@ import kotlinx.coroutines.flow.Flow
 data class ActiveListUiState(
     val activeGroups: List<CategoryGroup> = emptyList(),
     val checkedItems: List<ShoppingItem> = emptyList(),
-    val error: String? = null
+    val error: String? = null,
+    val checkingOffItemId: String? = null,      // Item in corso di animazione check-off
+    val pendingCheckOffItemId: String? = null,  // Item in attesa di check-off (300ms delay)
 ) {
     /** Totale voci attive (non checkate) */
     val activeCount: Int = activeGroups.sumOf { it.items.size }
 
     /** Sezione "Presi" visibile solo se ci sono elementi checkati */
     val hasCheckedItems: Boolean = checkedItems.isNotEmpty()
+
+    /** Se c'è un'animazione in corso */
+    val isAnimating: Boolean = checkingOffItemId != null || pendingCheckOffItemId != null
 }
 
 /**

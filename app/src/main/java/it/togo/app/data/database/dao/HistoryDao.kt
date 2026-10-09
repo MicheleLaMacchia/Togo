@@ -17,6 +17,9 @@ interface HistoryDao {
     @Query("SELECT * FROM HISTORICAL_ITEM WHERE productId = :productId LIMIT 1")
     suspend fun getByProductId(productId: Long): HistoricalItemEntity?
 
+    @Query("SELECT * FROM HISTORICAL_ITEM WHERE productId IN (:productIds)")
+    suspend fun getByProductIds(productIds: List<Long>): List<HistoricalItemEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(item: HistoricalItemEntity): Long
 
