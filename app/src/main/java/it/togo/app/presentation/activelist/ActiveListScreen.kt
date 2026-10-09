@@ -12,13 +12,20 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.ModalBottomSheetLayout
+import androidx.compose.material3.ModalBottomSheetState
+import androidx.compose.material3.ModalBottomSheetValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsStateWithLifecycle
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import it.togo.app.presentation.additem.AddItemBottomSheet
+import it.togo.app.presentation.additem.AddItemConfirmed
 import it.togo.app.ui.theme.TogoTheme
 import it.togo.app.ui.theme.componentTokens
 import it.togo.app.ui.theme.togoColors
@@ -32,6 +39,8 @@ import it.togo.app.ui.theme.togoTypography
  * - Scaffold con AppBar custom (titolo + azioni Storico/Condividi)
  * - LazyColumn: EmptyState OPPURE gruppi categoria + sezione Presi
  * - FAB microfono per cattura vocale
+ * - FAB "+" per inserimento manuale
+ * - ModalBottomSheetLayout per AddItemBottomSheet
  */
 @Composable
 fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
@@ -43,14 +52,63 @@ fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
     val spacing = togoSpacing()
     val tokens = componentTokens()
 
-    Scaffold(
-        topBar = { ActiveListAppBar(
-            onHistoryClick = { onEvent(UiEvent.NavigateToHistory) },
-            onShareClick = { onEvent(UiEvent.ShareList) },
-            activeCount = uiState.activeCount,
-        ) },
-        floatingActionButton = {
-            VoiceFab(onClick = { onEvent(UiEvent.NavigateToVoice) })
+    // Bottom sheet state
+    val sheetState = remember { ModalBottomSheetState(ModalBottomSheetValue.Hidden) }
+    val scope = rememberCoroutineScope()
+    val sheetContent = remember { derivedStateOf { sheetState.value != ModalBottomSheetValue.Hidden } }
+
+    ModalBottomSheetLayout(
+        sheetState = sheetState,
+        sheetContent = {
+            AddItemBottomSheet(
+                sheetState = sheetState,
+                onConfirm = { confirmed ->
+                    viewModel.onAddItemConfirmed(confirmed)
+                },
+                onDismiss = { /* sheet hides automatically */ }
+            )
+        },
+        sheetBackgroundColor = colors.surfaceBase,
+        sheetShape = androidx.compose.foundation.shape.RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+        sheetPeekHeight = 0.dp,
+        confirmStateChange = { it == ModalBottomSheetValue.Expanded },
+    ) {
+        Scaffold(
+            topBar = { ActiveListAppBar(
+                onHistoryClick = { onEvent(UiEvent.NavigateToHistory) },
+                onShareClick = { onEvent(UiEvent.ShareList) },
+                activeCount = uiState.activeCount,
+            ) },
+            floatingActionButton = {
+                // Dual FAB: Voice + Add Item
+                androidx.compose.foundation.layout.Box(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .align(androidx.compose.ui.Alignment.BottomEnd),
+                ) {
+                    androidx.compose.foundation.layout.Column(
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalAlignment = Alignment.End,
+                    ) {
+                        // Voice FAB
+                        VoiceFab(onClick = { onEvent(UiEvent.NavigateToVoice) })
+                        
+                        // Add Item FAB
+                        androidx.compose.material3.FloatingActionButton(
+                            onClick = { scope.launch { sheetState.show() } },
+                            containerColor = colors.accentAction,
+                            contentColor = colors.inkInverse,
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                        ) {
+                            Icon(
+                                imageVector = androidx.compose.material.icons.Icons.Filled.Add,
+                                contentDescription = "Aggiungi voce",
+                                tint = colors.inkInverse,
+                            )
+                        }
+                    }
+                }
+            }
         },
         floatingActionButtonPosition = androidx.compose.material3.FabPosition.End,
         content = { innerPadding ->
@@ -58,14 +116,11 @@ fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
                 modifier = androidx.compose.foundation.layout.padding(innerPadding).fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(spacing.space2)
             ) {
-                if (uiState.isLoading) {
-                    // Teoricamente non si vede mai (Room Flow istantaneo)
-                    LoadingPlaceholder(colors, typography, spacing)
-                } else if (uiState.error != null) {
+                if (uiState.error != null) {
                     ErrorPlaceholder(uiState.error!!, colors, typography, spacing)
                 } else if (uiState.activeGroups.isEmpty()) {
                     EmptyState(
-                        onAddManual = { onEvent(UiEvent.AddItemManual) },
+                        onAddManual = { scope.launch { sheetState.show() } },
                         onVoice = { onEvent(UiEvent.NavigateToVoice) },
                         colors = colors,
                         typography = typography,
@@ -109,94 +164,4 @@ fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
             }
         }
     )
-}
-
-/** AppBar personalizzata con titolo e azioni */
-@Composable
-fun ActiveListAppBar(
-    onHistoryClick: () -> Unit,
-    onShareClick: () -> Unit,
-    activeCount: Int,
-) {
-    val colors = togoColors()
-    val typography = togoTypography()
-    val tokens = componentTokens()
-
-    androidx.compose.material3.TopAppBar(
-        title = {
-            Text(
-                text = "Spesa",
-                style = typography.titleScreen,
-                color = colors.inkPrimary,
-            )
-        },
-        navigationIcon = {
-            IconButton(onClick = onHistoryClick) {
-                Icon(
-                    imageVector = androidx.compose.material.icons.Icons.Filled.History,
-                    contentDescription = "Storico",
-                    tint = colors.inkPrimary,
-                )
-            }
-        },
-        actions = {
-            IconButton(onClick = onShareClick, enabled = activeCount > 0) {
-                Icon(
-                    imageVector = androidx.compose.material.icons.Icons.Filled.Share,
-                    contentDescription = "Condividi lista",
-                    tint = colors.inkPrimary,
-                )
-            }
-        },
-        colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(
-            containerColor = tokens.appBar.background,
-            titleContentColor = colors.inkPrimary,
-        ),
-        modifier = Modifier.fillMaxWidth(),
-    )
-}
-
-/** Placeholder caricamento (teorico) */
-@Composable
-private fun LoadingPlaceholder(
-    colors: it.togo.app.ui.theme.TogoColorScheme,
-    typography: it.togo.app.ui.theme.TogoTypography,
-    spacing: it.togo.app.ui.theme.TogoSpacing,
-) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
-    ) {
-        androidx.compose.material3.CircularProgressIndicator(
-            color = colors.accentHighlight,
-            strokeWidth = 2.dp,
-        )
-        androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(spacing.space3))
-        Text("Caricamento lista...", style = typography.itemMeta, color = colors.inkSecondary)
-    }
-}
-
-/** Placeholder errore */
-@Composable
-private fun ErrorPlaceholder(
-    message: String,
-    colors: it.togo.app.ui.theme.TogoColorScheme,
-    typography: it.togo.app.ui.theme.TogoTypography,
-    spacing: it.togo.app.ui.theme.TogoSpacing,
-) {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(spacing.space4),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
-    ) {
-        Icon(
-            imageVector = androidx.compose.material.icons.Icons.Filled.ErrorOutline,
-            contentDescription = "Errore",
-            tint = colors.accentWarning,
-            modifier = Modifier.size(48.dp),
-        )
-        androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(spacing.space2))
-        Text(message, style = typography.itemMeta, color = colors.accentWarning, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-    }
 }

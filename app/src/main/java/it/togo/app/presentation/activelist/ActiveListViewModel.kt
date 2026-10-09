@@ -6,6 +6,8 @@ import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.ShoppingListRepository
+import it.togo.app.presentation.additem.AddItemConfirmed
+import it.togo.app.presentation.additem.AddItemUiEvent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -157,7 +159,16 @@ class ActiveListViewModel(
             is UiEvent.NavigateToHistory -> { /* TODO: Story 5.x */ }
             is UiEvent.ShareList -> { /* TODO: Story 5.x */ }
             is UiEvent.Checkout -> handleCheckout()
-            is UiEvent.AddItemManual -> { /* TODO: Story 2.2 */ }
+            is UiEvent.AddItemManual -> { /* Handled by screen opening bottom sheet */ }
+        }
+    }
+
+    /** Handle confirmed item from AddItemBottomSheet */
+    fun onAddItemConfirmed(confirmed: AddItemConfirmed) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                shoppingRepository.insert(confirmed.item)
+            }
         }
     }
 
