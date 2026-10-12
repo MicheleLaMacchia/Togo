@@ -1,221 +1,188 @@
 package it.togo.app.presentation.additem
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import it.togo.app.domain.model.CanonicalProduct
+import it.togo.app.domain.model.ProductAttribute
 import it.togo.app.ui.theme.componentTokens
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
 
 /**
- * Sezione attributi opzionali per il prodotto selezionato.
+ * Sezione attributi contestuali per il prodotto selezionato.
  *
- * Mostra solo attributi pertinenti al Level3:
- * - Marca: dropdown con valori comuni + free text
- * - Variante: free text
- * - Conservazione: dropdown valori controllati
+ * Mostra solo gli attributi pertinenti al Livello 3 del prodotto:
+ * - Marca: dropdown con suggerimenti + free text
+ * - Variante: campo testo libero
+ * - Conservazione: dropdown con valori controllati
+ *
+ * Se il L3 non supporta attributi, la sezione non viene renderizzata.
  */
 @Composable
 fun AttributeSection(
+    product: CanonicalProduct,
     brand: String,
     onBrandChange: (String) -> Unit,
     variant: String,
     onVariantChange: (String) -> Unit,
     condition: String,
     onConditionChange: (String) -> Unit,
-    showBrand: Boolean = true,
-    showVariant: Boolean = true,
-    showCondition: Boolean = true,
-    commonBrands: List<String> = emptyList(),
-    commonConditions: List<String> = emptyList(),
 ) {
     val colors = togoColors()
     val typography = togoTypography()
     val spacing = togoSpacing()
-    val tokens = componentTokens()
+
+    val attributeDef = ProductAttribute.forLevel3(product.level3Id, product.name)
+
+    if (!attributeDef.hasAnyAttribute) return
 
     Column(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.space2),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = spacing.space4),
         verticalArrangement = Arrangement.spacedBy(spacing.space3),
     ) {
-        Text("Attributi (opzionali)", style = typography.sectionHeader, color = togoColors().inkPrimary)
+        Text(
+            text = "Attributi (opzionali)",
+            style = typography.sectionHeader,
+            color = colors.inkPrimary,
+        )
 
-        // --- Marca ---
-        if (showBrand) {
-            AttributeField(
-                label = "Marca",
+        // Marca
+        AnimatedVisibility(visible = attributeDef.hasBrand) {
+            BrandField(
                 value = brand,
                 onValueChange = onBrandChange,
-                placeholder = "Es. Coop, Consilia, Mulino Bianco...",
-                suggestions = commonBrands,
-                isRequired = false,
+                suggestions = attributeDef.brandSuggestions,
             )
         }
 
-        // --- Variante ---
-        if (showVariant) {
-            AttributeField(
-                label = "Variante",
+        // Variante
+        AnimatedVisibility(visible = attributeDef.hasVariant) {
+            OutlinedTextField(
                 value = variant,
                 onValueChange = onVariantChange,
-                placeholder = "Es. integrale, biologico, senza lattosio...",
-                suggestions = emptyList(),
-                isRequired = false,
+                label = { Text("Variante", style = typography.caption) },
+                placeholder = { Text("Es. integrale, biologico…", style = typography.itemMeta) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
 
-        // --- Conservazione ---
-        if (showCondition) {
-            AttributeField(
-                label = "Conservazione",
+        // Conservazione
+        AnimatedVisibility(visible = attributeDef.hasCondition) {
+            ConditionDropdown(
                 value = condition,
                 onValueChange = onConditionChange,
-                placeholder = "Seleziona o digita...",
-                suggestions = commonConditions,
-                isRequired = false,
+                options = attributeDef.conditionOptions,
             )
         }
     }
 }
 
-/** Campo attributo con dropdown suggerimenti opzionale */
+/** Campo marca con dropdown suggerimenti + input libero */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AttributeField(
-    label: String,
+private fun BrandField(
     value: String,
     onValueChange: (String) -> Unit,
-    placeholder: String,
     suggestions: List<String>,
-    isRequired: Boolean,
 ) {
     val colors = togoColors()
     val typography = togoTypography()
-    val spacing = togoSpacing()
-    val tokens = componentTokens()
+    var expanded by remember { mutableStateOf(false) }
 
-    val expanded = remember { mutableStateOf(false) }
-
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(spacing.space1),
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
     ) {
-        // Label + campo
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(spacing.space1),
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            label = { Text("Marca", style = typography.caption) },
+            placeholder = { Text("Seleziona o digita…", style = typography.itemMeta) },
+            singleLine = true,
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(),
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
         ) {
-            Text(label, style = typography.sectionHeader, color = togoColors().inkPrimary)
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        color = togoColors().surfaceCard,
-                        shape = RoundedCornerShape(8.dp),
-                    )
-                    .border(
-                        width = 1.dp,
-                        color = togoColors().borderHairline,
-                        shape = RoundedCornerShape(8.dp),
-                    ),
-                contentAlignment = Alignment.CenterStart,
-            ) {
-                TextField(
-                    value = value,
-                    onValueChange = { if (it.length <= 100) onValueChange(it) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    placeholder = { Text(placeholder, style = togoTypography().itemMeta, color = togoColors().inkMuted) },
-                    singleLine = true,
-                    textStyle = togoTypography().itemName,
-                    colors = androidx.compose.material3.TextFieldDefaults.textFieldColors(
-                        textColor = togoColors().inkPrimary,
-                        cursorColor = togoColors().accentHighlight,
-                        backgroundColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        disabledIndicatorColor = Color.Transparent,
-                    ),
+            suggestions.forEach { brand ->
+                DropdownMenuItem(
+                    text = { Text(brand, style = typography.itemMeta) },
+                    onClick = {
+                        onValueChange(brand)
+                        expanded = false
+                    },
                 )
-
-                // Toggle suggerimenti
-                if (suggestions.isNotEmpty()) {
-                    Icon(
-                        imageVector = if (expanded.value)
-                            androidx.compose.material.icons.Icons.Filled.ExpandLess
-                        else
-                            androidx.compose.material.icons.Icons.Filled.ExpandMore,
-                        contentDescription = if (expanded.value) "Nascondi suggerimenti" else "Mostra suggerimenti",
-                        tint = togoColors().inkSecondary,
-                        modifier = Modifier
-                            .size(24.dp)
-                            .padding(end = 16.dp)
-                            .fillMaxHeight()
-                            .wrapContentSize(Alignment.CenterEnd),
-                    )
-                        .combinedClickable(onClick = { expanded.value = !expanded.value })
-                }
             }
         }
+    }
+}
 
-        // Suggerimenti dropdown
-        androidx.compose.animation.AnimatedVisibility(
-            visible = expanded.value,
-            enter = androidx.compose.animation.expandVertically(
-                animationSpec = androidx.compose.animation.core.spring(dampingRatio = 0.9f, stiffness = 200.0f)
-            ),
-            exit = androidx.compose.animation.shrinkVertically(
-                animationSpec = androidx.compose.animation.core.spring(dampingRatio = 0.9f, stiffness = 200.0f)
-            ),
+/** Dropdown conservazione con valori controllati */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ConditionDropdown(
+    value: String,
+    onValueChange: (String) -> Unit,
+    options: List<String>,
+) {
+    val typography = togoTypography()
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
+    ) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Conservazione", style = typography.caption) },
+            placeholder = { Text("Seleziona…", style = typography.itemMeta) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(),
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
         ) {
-            if (suggestions.isNotEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = spacing.space1)
-                        .background(
-                            color = togoColors().surfaceCard,
-                            shape = RoundedCornerShape(8.dp),
-                        )
-                        .border(1.dp, togoColors().borderHairline, RoundedCornerShape(8.dp)),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    suggestions.forEach { suggestion ->
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 12.dp)
-                                .background(Color.Transparent)
-                                .combinedClickable(onClick = { onValueChange(suggestion) }),
-                            contentAlignment = Alignment.CenterStart,
-                        ) {
-                            Text(suggestion, style = togoTypography().itemMeta, color = togoColors().inkSecondary)
-                        }
-                    }
-                }
+            options.forEach { condition ->
+                DropdownMenuItem(
+                    text = { Text(condition, style = typography.itemMeta) },
+                    onClick = {
+                        onValueChange(condition)
+                        expanded = false
+                    },
+                )
             }
         }
     }
