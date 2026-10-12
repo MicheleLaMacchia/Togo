@@ -55,8 +55,8 @@ development_status:
   3-1-ricerca-full-text-nel-catalogo: done
   3-2-normalizzazione-quantità-e-conversioni-autorizzate: done
   3-3-risoluzione-sinonimi-verso-prodotto-canonico: done
-  3-4-attributi-prodotto-contestuali-marca-variante-conservazione: backlog
-  3-5-rilevamento-duplicati-e-dialog-risoluzione: backlog
+  3-4-attributi-prodotto-contestuali-marca-variante-conservazione: done
+  3-5-rilevamento-duplicati-e-dialog-risoluzione: done
   3-6-assegnazione-categoria-canonica-e-correzione-con-regole-appr: backlog
   3-7-wizard-categorizzazione-prodotto-sconosciuto: backlog
   epic-3-retrospective: optional
