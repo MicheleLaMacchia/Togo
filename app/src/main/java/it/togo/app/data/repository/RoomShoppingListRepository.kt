@@ -72,31 +72,25 @@ class RoomShoppingListRepository(
         val now = System.currentTimeMillis()
         val historicalItems = checkedItems.groupBy { it.productId }.map { (productId, items) ->
             val existing = historyMap[productId]
-            val totalQuantity = items.sumOf { it.quantity }
-            val firstItem = items.first()
-            
-            if (historyMap[productIds.first()] != null) {
-                // Find existing historical item for this product
-                val existing = historyMap[productId]
-                if (existing != null) {
-                    // Use first item as reference, sum quantities
-                    val totalQuantity = items.sumOf { it.quantity }
-                    val firstItem = items.first()
-                    existing.toDomain().increment(totalQuantity, firstItem.unit).toEntity()
-                } else {
-                    // Create new historical item with summed quantities
-                    val totalQuantity = items.sumOf { it.quantity }
-                    val firstItem = items.first()
-                    it.togo.app.domain.model.HistoricalItem(
-                        id = firstItem.id,
-                        productId = firstItem.productId,
-                        lastQuantity = totalQuantity,
-                        lastUnit = firstItem.unit,
-                        purchasedAt = System.currentTimeMillis(),
-                        purchaseCount = 1
-                    ).toEntity()
-                }
-            }.toList()
+            if (existing != null) {
+                // Use first item as reference, sum quantities
+                val totalQuantity = items.sumOf { it.quantity }
+                val firstItem = items.first()
+                existing.toDomain().increment(totalQuantity, firstItem.unit).toEntity()
+            } else {
+                // Create new historical item with summed quantities
+                val totalQuantity = items.sumOf { it.quantity }
+                val firstItem = items.first()
+                it.togo.app.domain.model.HistoricalItem(
+                    id = firstItem.id,
+                    productId = firstItem.productId,
+                    lastQuantity = totalQuantity,
+                    lastUnit = firstItem.unit,
+                    purchasedAt = now,
+                    purchaseCount = 1
+                ).toEntity()
+            }
+        }.toList()
 
         // Upsert to history
         historicalItems.forEach { historyDao.upsertHistorical(it) }

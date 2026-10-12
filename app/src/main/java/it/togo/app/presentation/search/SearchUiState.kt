@@ -17,7 +17,6 @@ data class SearchUiState(
     val results: List<CanonicalProduct> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
-    val recentQueries: List<String> = emptyList(),
 ) {
     /** Query normalizzata non vuota */
     val hasQuery: Boolean

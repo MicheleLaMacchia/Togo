@@ -2,7 +2,7 @@
 title: 'Story 3.1: Ricerca Full-Text nel Catalogo'
 type: 'feature'
 created: '2026-10-12'
-status: 'review'
+status: 'done'
 route: 'dispatch'
 review_loop_iteration: 0
 context:
