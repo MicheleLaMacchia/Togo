@@ -48,7 +48,7 @@ development_status:
   2-2-inserimento-manuale-prodotto: done
   2-3-modifica-e-rimozione-voce-dalla-lista: done
   2-4-spunta-prodotto-acquistato-e-sezione-presi-n: done
-  2-5-conclusione-spesa-checkout-atomico-verso-storico: backlog
+  2-5-conclusione-spesa-checkout-atomico-verso-storico: done
   epic-2-retrospective: optional
 
   epic-3: backlog

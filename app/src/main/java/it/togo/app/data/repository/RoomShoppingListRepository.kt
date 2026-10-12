@@ -58,42 +58,55 @@ class RoomShoppingListRepository(
     override suspend fun checkout(checkedItemIds: List<String>): Boolean {
         if (checkedItemIds.isEmpty()) return true
 
-        return withContext(Dispatchers.IO) {
-            // Batch read all checked items in one query
-            val checkedItems = shoppingItemDao.getByIds(checkedItemIds)
-                .map { it.toDomain() }
+        // Batch read all checked items in one query
+        val checkedItems = shoppingItemDao.getByIds(checkedItemIds)
+            .map { it.toDomain() }
 
-            if (checkedItems.isEmpty()) return@withContext true
+        if (checkedItems.isEmpty()) return true
 
-            // Batch read history items
-            val productIds = checkedItems.map { it.productId }.distinct()
-            val historyMap = historyDao.getByProductIds(productIds)
-                .associateBy { it.productId }
+        // Batch read history items - use distinct productIds to avoid duplicates
+        val productIds = checkedItems.map { it.productId }.distinct()
+        val historyMap = historyDao.getByProductIds(productIds)
+            .associateBy { it.productId }
 
-            val now = System.currentTimeMillis()
-            val historicalItems = checkedItems.map { item ->
-                val existing = historyMap[item.productId]
+        val now = System.currentTimeMillis()
+        val historicalItems = checkedItems.groupBy { it.productId }.map { (productId, items) ->
+            val existing = historyMap[productId]
+            val totalQuantity = items.sumOf { it.quantity }
+            val firstItem = items.first()
+            
+            if (historyMap[productIds.first()] != null) {
+                // Find existing historical item for this product
+                val existing = historyMap[productId]
                 if (existing != null) {
-                    existing.toDomain().increment(item.quantity, item.unit).toEntity()
+                    // Use first item as reference, sum quantities
+                    val totalQuantity = items.sumOf { it.quantity }
+                    val firstItem = items.first()
+                    existing.toDomain().increment(totalQuantity, firstItem.unit).toEntity()
                 } else {
+                    // Create new historical item with summed quantities
+                    val totalQuantity = items.sumOf { it.quantity }
+                    val firstItem = items.first()
                     it.togo.app.domain.model.HistoricalItem(
-                        id = item.id,
-                        productId = item.productId,
-                        lastQuantity = item.quantity,
-                        lastUnit = item.unit,
+                        id = firstItem.id,
+                        productId = firstItem.productId,
+                        lastQuantity = totalQuantity,
+                        lastUnit = firstItem.unit,
                         purchasedAt = System.currentTimeMillis(),
                         purchaseCount = 1
                     ).toEntity()
                 }
-            }
+            }.toList()
 
-            // Upsert to history
-            historicalItems.forEach { historyDao.upsertHistorical(it) }
+        // Upsert to history
+        historicalItems.forEach { historyDao.upsertHistorical(it) }
 
-            // Delete from shopping list
-            shoppingItemDao.deleteByIds(checkedItemIds)
-
-            true
+        // Delete from shopping list - verify all items deleted
+        val deletedCount = shoppingItemDao.deleteByIds(checkedItemIds)
+        if (deletedCount != checkedItemIds.size) {
+            throw IllegalStateException("Expected to delete ${checkedItemIds.size} items but deleted $deletedCount")
         }
+
+        true
     }
 }

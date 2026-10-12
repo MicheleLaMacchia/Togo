@@ -17,6 +17,8 @@ data class ActiveListUiState(
     val error: String? = null,
     val checkingOffItemId: String? = null,      // Item in corso di animazione check-off
     val pendingCheckOffItemId: String? = null,  // Item in attesa di check-off (300ms delay)
+    val checkoutSnackbarMessage: String? = null, // Messaggio snackbar per checkout undo
+    val checkedItemsForUndo: List<ShoppingItem> = emptyList(), // Item per undo checkout
 ) {
     /** Totale voci attive (non checkate) */
     val activeCount: Int = activeGroups.sumOf { it.items.size }
@@ -88,4 +90,7 @@ sealed interface UiEvent {
 
     /** Annulla eliminazione (Snackbar undo) */
     object UndoDelete : UiEvent
+
+    /** Annulla checkout (Snackbar undo) */
+    object UndoCheckout : UiEvent
 }

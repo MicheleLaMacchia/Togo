@@ -36,6 +36,10 @@ import it.togo.app.ui.theme.componentTokens
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarAction
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 
 /**
  * Schermata principale Lista Attiva (Spesa).
@@ -145,12 +149,26 @@ fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
                 }
             },
             floatingActionButtonPosition = androidx.compose.material3.FabPosition.End,
-            snackbarHost = { SnackbarHost(SnackbarHostState()) },
+            snackbarHost = { SnackbarHost(remember { SnackbarHostState() }) },
             content = { innerPadding ->
+                val checkoutSnackbarMessage by viewModel.uiState.collectAsStateWithLifecycle { it.checkoutSnackbarMessage }
                 Column(
                     modifier = androidx.compose.foundation.layout.padding(innerPadding).fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(spacing.space2)
                 ) {
+                    if (checkoutSnackbarMessage != null) {
+                        Snackbar(
+                            modifier = Modifier.fillMaxWidth(),
+                            action = { SnackbarAction(
+                                label = "Annulla",
+                                onClick = { onEvent(UiEvent.UndoCheckout) },
+                                contentColor = colors.accentHighlight,
+                            ) },
+                        ) {
+                            Text(checkoutSnackbarMessage, style = typography.itemMeta, color = colors.inkInverse)
+                        }
+                    }
+
                     if (uiState.error != null) {
                         ErrorPlaceholder(uiState.error!!, colors, typography, spacing)
                     } else if (uiState.activeGroups.isEmpty()) {

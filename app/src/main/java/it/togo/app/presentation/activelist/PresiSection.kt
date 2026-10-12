@@ -32,6 +32,9 @@ import it.togo.app.ui.theme.componentTokens
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
+import android.os.Vibrator
+import android.content.Context
+import android.os.VibrationEffect
 
 /**
  * Sezione collassabile "Presi (N)" in fondo alla lista.
@@ -125,22 +128,32 @@ fun PresiSection(
             .padding(horizontal = spacing.space2)
             .padding(bottom = spacing.space3)
 
-            // Pulsante "Concludi spesa"
-            Button(
-                onClick = onCheckout,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.space2),
-                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                    containerColor = tokens.bottomSheet.checkoutButtonBackground,
-                    contentColor = tokens.bottomSheet.checkoutButtonContent,
-                ),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(tokens.bottomSheet.radiusTop),
-            ) {
-                Text(
-                    text = "Concludi spesa",
-                    style = typography.sectionHeader.copy(color = colors.inkInverse),
-                )
+            // Pulsante "Concludi spesa" - nascosto se items vuoto
+            if (items.isNotEmpty()) {
+                Button(
+                    onClick = {
+                        // Haptic feedback 15ms
+                        val context = androidx.compose.ui.platform.LocalContext.current
+                        val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+                        if (vibrator != null && vibrator.hasVibrator()) {
+                            vibrator.vibrate(VibrationEffect.createOneShot(15, VibrationEffect.DEFAULT_AMPLITUDE))
+                        }
+                        onCheckout()
+                    },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.space2),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = tokens.bottomSheet.checkoutButtonBackground,
+                        contentColor = tokens.bottomSheet.checkoutButtonContent,
+                    ),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(tokens.bottomSheet.radiusTop),
+                ) {
+                    Text(
+                        text = "Concludi spesa",
+                        style = typography.sectionHeader.copy(color = tokens.bottomSheet.checkoutButtonContent),
+                    )
+                }
+                    .padding(bottom = spacing.space2)
             }
-                .padding(bottom = spacing.space2)
         }
     }
 }

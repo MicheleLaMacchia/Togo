@@ -54,8 +54,12 @@ class ActiveListViewModel(
     val deletedItemForUndo = _deletedItemForUndo
         .stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000), null)
 
-    // Contatore per evitare race condition su snackbar timer
+    // Contatori separati per evitare race condition su snackbar timer
     private val _snackbarCounter = AtomicInteger(0)
+    private val _checkoutSnackbarCounter = AtomicInteger(0)
+
+    // Flag per prevenire doppio tap su checkout
+    private var _isCheckingOut = false
 
     init {
         loadTaxonomy()
@@ -146,11 +150,64 @@ class ActiveListViewModel(
             }
         }
 
+        // Deriva checkedItems dal flusso items (sempre aggiornato)
+        val checkedItems = items.filter { it.isChecked }
+        val activeGroups = buildGroupsFromItems(items.filter { !it.isChecked }, taxonomy)
+
         return ActiveListUiState(
-            activeGroups = groups,
-            checkedItems = _uiState.value.checkedItems,
+            activeGroups = activeGroups,
+            checkedItems = checkedItems,
             error = null
         )
+    }
+
+    private fun buildGroupsFromItems(
+        items: List<ShoppingItem>,
+        taxonomy: TaxonomyCache
+    ): List<CategoryGroup> {
+        val (l1List, l2List, l3List) = taxonomy
+
+        val productToL3 = mutableMapOf<Long, TaxonomyLevel.Level3>()
+        val l3ToL2 = mutableMapOf<Long, TaxonomyLevel.Level2>()
+        val l2ToL1 = mutableMapOf<Long, TaxonomyLevel.Level1>()
+
+        for (l3 in taxonomy.l3List) {
+            productToL3[l3.id] = l3
+            l3ToL2[l3.id] = taxonomy.l2List.find { it.id == l3.level2Id } ?: continue
+            l2ToL1[l2.id] = taxonomy.l1List.find { it.id == l2.level1Id } ?: continue
+        }
+
+        val itemsByL3 = mutableMapOf<Long, MutableList<ShoppingItem>>()
+        for (item in items) {
+            val l3 = productToL3[item.productId] ?: continue
+            itemsByL3.getOrPut(l3.id) { mutableListOf() }.add(item)
+        }
+
+        itemsByL3.values.forEach { it.sortBy { it.name } }
+
+        val groups = mutableListOf<CategoryGroup>()
+        for (l1 in taxonomy.l1List) {
+            val l2s = taxonomy.l2List.filter { it.level1Id == l1.id }
+            val l2Groups = mutableListOf<Level2Group>()
+            for (l2 in l2s) {
+                val l3s = taxonomy.l3List.filter { it.level2Id == l2.id }
+                val l3Groups = mutableListOf<Level3Group>()
+                for (l3 in l3s) {
+                    val l3Items = itemsByL3.getOrDefault(l3.id, emptyList())
+                    if (l3Items.isNotEmpty()) {
+                        l3Groups.add(Level3Group(l3, l3Items))
+                    }
+                }
+                if (l3Groups.isNotEmpty()) {
+                    l2Groups.add(Level2Group(l2, l3Groups))
+                }
+            }
+            if (l2Groups.isNotEmpty()) {
+                groups.add(CategoryGroup(l1, l2Groups))
+            }
+        }
+
+        return groups
     }
 
     /** Handle UI events */
@@ -165,6 +222,7 @@ class ActiveListViewModel(
             is UiEvent.Checkout -> handleCheckout()
             is UiEvent.AddItemManual -> { /* Handled by screen opening bottom sheet */ }
             is UiEvent.UndoDelete -> handleUndoDelete()
+            is UiEvent.UndoCheckout -> handleUndoCheckout()
         }
     }
 
@@ -298,7 +356,7 @@ class ActiveListViewModel(
         _snackbarMessage.value = null
     }
 
-    /** Mostra snackbar con auto-dismiss 5s */
+    /** Mostra snackbar con auto-dismiss 5s per undo delete */
     private fun showUndoSnackbar(message: String) {
         val currentCount = _snackbarCounter.incrementAndGet()
         _snackbarMessage.value = message
@@ -311,18 +369,118 @@ class ActiveListViewModel(
         }
     }
 
+    /** Mostra snackbar checkout con auto-dismiss 5s */
+    private fun showCheckoutSnackbar(message: String) {
+        val currentCount = _checkoutSnackbarCounter.incrementAndGet()
+        _uiState.update { it.copy(checkoutSnackbarMessage = message) }
+        viewModelScope.launch {
+            kotlinx.coroutines.delay(5000)
+            // Controlla che nessun altro snackbar abbia sovrascritto questo
+            if (_checkoutSnackbarCounter.get() == currentCount && _uiState.value.checkoutSnackbarMessage != null) {
+                _uiState.update { it.copy(checkoutSnackbarMessage = null) }
+            }
+        }
+    }
+
     private fun handleCheckout() {
+        // Prevenzione doppio tap
+        if (_isCheckingOut) return
+        _isCheckingOut = true
+
         viewModelScope.launch {
             // Usa lo stato UI già osservato per evitare cold flow hang
             val checkedIds = _uiState.value.checkedItems.map { it.id }
             if (checkedIds.isNotEmpty()) {
+                // Salva gli item per possibile undo PRIMA del checkout
+                val itemsForUndo = _uiState.value.checkedItems
+                _uiState.update { it.copy(checkedItemsForUndo = itemsForUndo) }
+
                 try {
                     withContext(Dispatchers.IO) {
                         shoppingRepository.checkout(checkedIds)
                     }
+                    // Snackbar DOPO checkout riuscito
+                    showCheckoutSnackbar("Spesa conclusa")
+                    // Pulisci undo items DOPO successo
+                    _uiState.update { it.copy(checkedItemsForUndo = emptyList()) }
                 } catch (e: Exception) {
-                    _uiState.update { it.copy(error = "Checkout fallito: ${e.message}") }
+                    _uiState.update { it.copy(error = "Checkout fallito: ${e.message}", checkedItemsForUndo = emptyList()) }
+                } finally {
+                    _isCheckingOut = false
                 }
+            }
+        }
+    }
+
+    private fun handleUndoCheckout() {
+        _uiState.value.checkedItemsForUndo?.let { items ->
+            val restoreTime = System.currentTimeMillis()
+            viewModelScope.launch {
+                withContext(Dispatchers.IO) {
+                    items.forEach { item ->
+                        val restored = item.copyWith(isChecked = false, updatedAt = System.currentTimeMillis())
+                        shoppingRepository.update(restored)
+                    }
+                }
+            }
+            _uiState.update { it.copy(checkedItemsForUndo = emptyList(), checkoutSnackbarMessage = null) }
+        }
+    }
+
+    /** Mostra snackbar con auto-dismiss 5s per undo delete */
+    private fun showUndoSnackbar(message: String) {
+        val currentCount = _snackbarCounter.incrementAndGet()
+        _snackbarMessage.value = message
+        viewModelScope.launch {
+            kotlinx.coroutines.delay(5000)
+            // Controlla che nessun altro snackbar abbia sovrascritto questo
+            if (_snackbarCounter.get() == currentCount && _snackbarMessage.value != null) {
+                _snackbarMessage.value = null
+            }
+        }
+    }
+
+    /** Mostra snackbar checkout con auto-dismiss 5s */
+    private fun showCheckoutSnackbar(message: String) {
+        val currentCount = _checkoutSnackbarCounter.incrementAndGet()
+        _uiState.update { it.copy(checkoutSnackbarMessage = message) }
+        viewModelScope.launch {
+            kotlinx.coroutines.delay(5000)
+            // Controlla che nessun altro snackbar abbia sovrascritto questo
+            if (_checkoutSnackbarCounter.get() == currentCount && _uiState.value.checkoutSnackbarMessage != null) {
+                _uiState.update { it.copy(checkoutSnackbarMessage = null) }
+            }
+        }
+    }
+
+    private fun handleCheckout() {
+        // Prevenzione doppio tap
+        if (_isCheckingOut) return
+        _isCheckingOut = true
+
+        viewModelScope.launch {
+            // Usa lo stato UI già osservato per evitare cold flow hang
+            val checkedIds = _uiState.value.checkedItems.map { it.id }
+            if (checkedIds.isNotEmpty()) {
+                // Salva gli item per possibile undo PRIMA del checkout
+                val itemsForUndo = _uiState.value.checkedItems
+                _uiState.update { it.copy(checkedItemsForUndo = itemsForUndo) }
+
+                try {
+                    withContext(Dispatchers.IO) {
+                        shoppingRepository.checkout(checkedIds)
+                    }
+                    // Snackbar DOPO checkout riuscito
+                    showCheckoutSnackbar("Spesa conclusa")
+                    // Pulisci undo items DOPO successo
+                    _uiState.update { it.copy(checkedItemsForUndo = emptyList()) }
+                } catch (e: Exception) {
+                    _uiState.update { it.copy(error = "Checkout fallito: ${e.message}", checkedItemsForUndo = emptyList()) }
+                } finally {
+                    _isCheckingOut = false
+                }
+            } else {
+                _isCheckingOut = false
             }
         }
     }
