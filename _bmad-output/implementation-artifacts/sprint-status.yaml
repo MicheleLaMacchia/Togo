@@ -54,7 +54,7 @@ development_status:
   epic-3: in-progress
   3-1-ricerca-full-text-nel-catalogo: done
   3-2-normalizzazione-quantità-e-conversioni-autorizzate: done
-  3-3-risoluzione-sinonimi-verso-prodotto-canonico: backlog
+  3-3-risoluzione-sinonimi-verso-prodotto-canonico: done
   3-4-attributi-prodotto-contestuali-marca-variante-conservazione: backlog
   3-5-rilevamento-duplicati-e-dialog-risoluzione: backlog
   3-6-assegnazione-categoria-canonica-e-correzione-con-regole-appr: backlog
