@@ -2,6 +2,7 @@ package it.togo.app.di
 
 import it.togo.app.MainViewModel
 import it.togo.app.presentation.activelist.ActiveListViewModel
+import it.togo.app.presentation.search.SearchViewModel
 import it.togo.app.domain.repository.ShoppingListRepository
 import it.togo.app.domain.repository.CatalogRepository
 import org.koin.core.module.Module
@@ -14,6 +15,11 @@ val presentationModule: Module = module {
     // Epic 2 - Lista Attiva
     viewModel { ActiveListViewModel(
         shoppingRepository = get<ShoppingListRepository>(),
+        catalogRepository = get<CatalogRepository>(),
+    ) }
+    
+    // Epic 3 - Ricerca
+    viewModel { SearchViewModel(
         catalogRepository = get<CatalogRepository>(),
     ) }
     
