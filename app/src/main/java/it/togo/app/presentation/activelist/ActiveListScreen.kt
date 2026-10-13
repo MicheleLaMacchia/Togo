@@ -31,6 +31,8 @@ import androidx.compose.ui.unit.sp
 import it.togo.app.presentation.additem.AddItemBottomSheet
 import it.togo.app.presentation.additem.AddItemConfirmed
 import it.togo.app.presentation.additem.AddItemViewModel
+import it.togo.app.presentation.voice.VoiceBottomSheet
+import it.togo.app.presentation.voice.VoiceBottomSheetViewModel
 import it.togo.app.ui.theme.TogoTheme
 import it.togo.app.ui.theme.componentTokens
 import it.togo.app.ui.theme.togoColors
@@ -47,7 +49,7 @@ import androidx.compose.material3.SnackbarHostState
  * Struttura:
  * - Scaffold con AppBar custom (titolo + azioni Storico/Condividi)
  * - LazyColumn: EmptyState OPPURE gruppi categoria + sezione Presi
- * - FAB microfono per cattura vocale
+ * - FAB microfono per cattura vocale (con VoiceBottomSheet)
  * - FAB "+" per inserimento manuale
  * - Singolo ModalBottomSheetLayout per AddItemBottomSheet (insert + edit)
  * - SnackbarHost per undo delete
@@ -57,6 +59,10 @@ fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
     val viewModel = androidx.lifecycle.viewmodel.compose.viewModel<ActiveListViewModel>()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarMessage by viewModel.snackbarMessage.collectAsStateWithLifecycle()
+
+    // Voice bottom sheet ViewModel
+    val voiceViewModel = androidx.lifecycle.viewmodel.compose.viewModel<VoiceBottomSheetViewModel>()
+    val voiceUiState by voiceViewModel.uiState.collectAsStateWithLifecycle()
 
     val colors = togoColors()
     val typography = togoTypography()
@@ -69,6 +75,21 @@ fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
 
     // State for which item is being edited
     var editingItem by remember { mutableStateOf<ShoppingItem?>(null) }
+
+    // Voice bottom sheet callback: passa testo al parser (Story 4.3)
+    voiceViewModel.onTextConfirmed = { text ->
+        onEvent(UiEvent.VoiceCommand(text))
+    }
+
+    // Voice bottom sheet
+    VoiceBottomSheet(
+        uiState = voiceUiState,
+        onEdit = { newText -> voiceViewModel.editText(newText) },
+        onConfirm = { voiceViewModel.confirm() },
+        onRetry = { voiceViewModel.retry() },
+        onCancel = { voiceViewModel.cancel() },
+        onDismiss = { voiceViewModel.cancel() },
+    )
 
     ModalBottomSheetLayout(
         sheetState = remember { ModalBottomSheetState(ModalBottomSheetValue.Hidden) },
@@ -123,7 +144,16 @@ fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
                             horizontalAlignment = Alignment.End,
                         ) {
                             // Voice FAB
-                            VoiceFab(onClick = { onEvent(UiEvent.NavigateToVoice) })
+                            VoiceFab(
+                                state = when {
+                                    voiceUiState is it.togo.app.presentation.voice.VoiceBottomSheetUiState.Listening -> it.togo.app.domain.voice.VoiceRecognitionState.Listening
+                                    voiceUiState is it.togo.app.presentation.voice.VoiceBottomSheetUiState.Processing -> it.togo.app.domain.voice.VoiceRecognitionState.Processing
+                                    voiceUiState is it.togo.app.presentation.voice.VoiceBottomSheetUiState.Ready -> it.togo.app.domain.voice.VoiceRecognitionState.Result("")
+                                    voiceUiState is it.togo.app.presentation.voice.VoiceBottomSheetUiState.Error -> it.togo.app.domain.voice.VoiceRecognitionState.Error(it.togo.app.domain.voice.ErrorCode.UNKNOWN, "")
+                                    else -> it.togo.app.domain.voice.VoiceRecognitionState.Idle
+                                },
+                                onClick = { voiceViewModel.startListening() }
+                            )
                             
                             // Add Item FAB
                             androidx.compose.material3.FloatingActionButton(

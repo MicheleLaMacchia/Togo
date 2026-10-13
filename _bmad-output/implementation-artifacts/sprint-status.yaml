@@ -63,7 +63,7 @@ development_status:
 
   epic-4: backlog
   4-1-voicerecognitiongateway-e-recognizerintent-it-it: done
-  4-2-voicefab-e-voicebottomsheet-ui: backlog
+  4-2-voicefab-e-voicebottomsheet-ui: done
   4-3-parsing-comando-vocale-e-scomposizione-strutturata: backlog
   4-4-conferma-annullamento-e-chiarimento-ambiguità-vocale: backlog
   4-5-fallback-e-resilienza-vocale: backlog
