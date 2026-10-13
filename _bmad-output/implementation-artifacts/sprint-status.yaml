@@ -65,7 +65,7 @@ development_status:
   4-1-voicerecognitiongateway-e-recognizerintent-it-it: done
   4-2-voicefab-e-voicebottomsheet-ui: done
   4-3-parsing-comando-vocale-e-scomposizione-strutturata: done
-  4-4-conferma-annullamento-e-chiarimento-ambiguità-vocale: backlog
+  4-4-conferma-annullamento-e-chiarimento-ambiguità-vocale: done
   4-5-fallback-e-resilienza-vocale: backlog
   epic-4-retrospective: optional
 
