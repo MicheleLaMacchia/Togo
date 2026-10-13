@@ -4,9 +4,14 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 
 val domainModule: Module = module {
-    // Domain UseCases will be added here in future stories (Epic 2, 3, 4, 5)
-    // Example:
-    // single { ProcessItemInputUseCase(get()) }
+    // Domain UseCases - Epic 3 (Catalogo & Risoluzione)
+    single { CategoryAssigner(get(), get()) }
+    single { CategoryCorrector(get()) }
+    single { AssignCanonicalCategoryUseCase(get()) }
+    single { CorrectCategoryUseCase(get(), get()) }
+    single { LearnedRuleManager(get()) }
+
+    // Domain UseCases - Epic 2 (Lista Attiva) - placeholder
     // factory { AddShoppingItemUseCase(get()) }
     // factory { CheckOffItemUseCase(get()) }
     // factory { CheckoutShoppingListUseCase(get()) }

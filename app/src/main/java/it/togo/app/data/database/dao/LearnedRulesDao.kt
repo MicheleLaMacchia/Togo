@@ -21,6 +21,9 @@ interface LearnedRulesDao {
     @Query("SELECT * FROM LEARNED_RULE WHERE id = :id LIMIT 1")
     suspend fun getById(id: String): LearnedRuleEntity?
 
+    @Query("SELECT * FROM LEARNED_RULE WHERE userExpression = :expression AND productId = :productId LIMIT 1")
+    suspend fun getByExpressionAndProductId(expression: String, productId: Long): LearnedRuleEntity?
+
     @Query("SELECT * FROM LEARNED_RULE WHERE productId = :productId AND isActive = 1 LIMIT 1")
     suspend fun getActiveByProductId(productId: Long): LearnedRuleEntity?
 

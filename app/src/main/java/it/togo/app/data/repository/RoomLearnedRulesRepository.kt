@@ -40,4 +40,28 @@ class RoomLearnedRulesRepository(
         withContext(Dispatchers.IO) {
             learnedRulesDao.getByExpression(expression)?.toDomain()
         }
+
+    override suspend fun getById(ruleId: String): LearnedRule? =
+        withContext(Dispatchers.IO) {
+            learnedRulesDao.getById(ruleId)?.toDomain()
+        }
+
+    override suspend fun getByExpressionAndProductId(expression: String, productId: Long): LearnedRule? =
+        withContext(Dispatchers.IO) {
+            learnedRulesDao.getByExpressionAndProductId(expression, productId)?.toDomain()
+        }
+
+    override suspend fun upsertAtomic(rule: LearnedRule): LearnedRule =
+        withContext(Dispatchers.IO) {
+            val entity = rule.toEntity()
+            val existing = learnedRulesDao.getByExpressionAndProductId(entity.userExpression, entity.productId)
+            if (existing != null) {
+                val updated = entity.copy(id = existing.id)
+                learnedRulesDao.update(updated)
+                updated.toDomain()
+            } else {
+                learnedRulesDao.insert(entity)
+                rule
+            }
+        }
 }
