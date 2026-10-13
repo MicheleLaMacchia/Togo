@@ -724,3 +724,103 @@ Vantaggi:
 - ambiente coerente per BMAD/Codex;
 - test sul telefono reale;
 - possibilità di automatizzare build, test, lint e installazione.
+
+---
+
+## 22.5 Risoluzione problemi comuni
+
+### Build gradlew non eseguibile
+
+Se ricevi `Permission denied` per `gradlew` dentro il container:
+
+```powershell
+git update-index --chmod=+x gradlew
+```
+
+Oppure dentro il Dockerfile o nello script di build:
+
+```bash
+chmod +x ./gradlew
+```
+
+### SDK mancante
+
+Errore simile a:
+
+```text
+Failed to find target with hash string 'android-XX'
+```
+
+Aggiungi al Dockerfile:
+
+```text
+platforms;android-XX
+```
+
+e ricostruisci l'immagine.
+
+### Build Tools mancanti
+
+Aggiungi la versione necessaria:
+
+```text
+build-tools;XX.X.X
+```
+
+### ADB non vede il telefono
+
+Controlla:
+
+- Debug USB;
+- autorizzazione RSA sul telefono;
+- cavo USB dati, non soltanto ricarica;
+- eventuali driver USB del produttore;
+- modalità USB del telefono.
+
+Poi prova:
+
+```powershell
+adb kill-server
+adb start-server
+adb devices
+```
+
+### `INSTALL_FAILED_UPDATE_INCOMPATIBLE`
+
+Può accadere quando la versione installata è firmata con una chiave diversa.
+
+Per una build di sviluppo puoi disinstallare quella precedente:
+
+```powershell
+adb uninstall nome.del.package
+```
+
+e reinstallare l'APK.
+
+Attenzione: la disinstallazione elimina normalmente i dati locali dell'app.
+
+### Dipendenze Compose/AGP incompatibili
+
+Se la build fallisce per errori sulle dipendenze AndroidX (es. `requires libraries and applications that depend on it to compile against version 37 or later`), il progetto potrebbe utilizzare versioni di Compose BOM troppo nuove per la versione di Android Gradle Plugin installata.
+
+Soluzioni:
+
+1. Aggiorna `compileSdk` a 36 o 37 in `app/build.gradle.kts`
+2. Aggiorna `composeBom` in `gradle/libs.versions.toml` a una versione compatibile (es. `2024.08.00` per AGP 8.12.3 + compileSdk 36)
+3. Aggiorna `android.useAndroidX=true` in `gradle.properties`
+4. Aggiorna il Dockerfile per includere la piattaforma `android-36` o `android-37`
+
+### Room database non trovato
+
+Se KSP segnala tipi missing per le entity Room:
+
+- Assicurati che tutte le entity siano definite in file `.kt` separati o verificare che KSP le possa vedere
+- Pulire la cache: `./gradlew clean kspDebugKotlin --no-daemon`
+- Verificare le importazioni nei file `TogoDatabase.kt`
+
+### Risorse mipmap mancanti
+
+Se l'APK non si installa per errori `resource mipmap/ic_launcher not found`:
+
+- Creare le cartelle `mipmap-hdpi`, `mipmap-mdpi`, `mipmap-xhdpi`, `mipmap-xxhdpi`, `mipmap-xxxhdpi`
+- Aggiungere file XML vettoriali o PNG per `ic_launcher` e `ic_launcher_round`
