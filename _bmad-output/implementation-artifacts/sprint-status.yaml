@@ -58,7 +58,7 @@ development_status:
   3-4-attributi-prodotto-contestuali-marca-variante-conservazione: done
   3-5-rilevamento-duplicati-e-dialog-risoluzione: done
   3-6-assegnazione-categoria-canonica-e-correzione-con-regole-appr: done
-  3-7-wizard-categorizzazione-prodotto-sconosciuto: backlog
+  3-7-wizard-categorizzazione-prodotto-sconosciuto: done
   epic-3-retrospective: optional
 
   epic-4: backlog
