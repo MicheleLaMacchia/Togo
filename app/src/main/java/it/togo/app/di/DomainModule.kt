@@ -1,11 +1,13 @@
 package it.togo.app.di
 
+import it.togo.app.data.voice.AndroidVoiceRecognitionGateway
 import it.togo.app.domain.category.CategoryAssigner
 import it.togo.app.domain.category.CategoryCorrector
 import it.togo.app.domain.usecase.AssignCanonicalCategoryUseCase
 import it.togo.app.domain.usecase.CorrectCategoryUseCase
 import it.togo.app.domain.usecase.CreateCanonicalProductUseCase
 import it.togo.app.domain.usecase.LearnedRuleManager
+import it.togo.app.domain.voice.VoiceRecognitionGateway
 import it.togo.app.domain.wizard.CategorySelectionWizard
 import org.koin.core.module.Module
 import org.koin.dsl.module
@@ -21,6 +23,9 @@ val domainModule: Module = module {
     // Domain Wizard (Story 3.7) - Categorizzazione prodotto sconosciuto
     single { CategorySelectionWizard(get()) }
     single { CreateCanonicalProductUseCase(get()) }
+
+    // Voice Recognition (Story 4.1) - Gateway disaccoppiato da Activity
+    single<VoiceRecognitionGateway> { AndroidVoiceRecognitionGateway() }
 
     // Domain UseCases - Epic 2 (Lista Attiva) - placeholder
     // factory { AddShoppingItemUseCase(get()) }
