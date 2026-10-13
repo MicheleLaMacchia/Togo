@@ -6,6 +6,7 @@ import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.usecase.ParseVoiceCommandUseCase
 import it.togo.app.domain.voice.VoiceRecognitionGateway
 import it.togo.app.presentation.activelist.ActiveListViewModel
+import it.togo.app.presentation.history.HistoryViewModel
 import it.togo.app.presentation.search.SearchViewModel
 import it.togo.app.presentation.voice.VoiceBottomSheetViewModel
 import it.togo.app.presentation.voice.VoiceConfirmationViewModel
@@ -42,6 +43,13 @@ val presentationModule: Module = module {
     // Epic 4 - Voice Resilience (Story 4.5)
     viewModel { VoiceResilienceViewModel(
         gateway = get<VoiceRecognitionGateway>(),
+    ) }
+
+    // Epic 5 - History (Story 5.1)
+    viewModel { HistoryViewModel(
+        historyRepository = get<it.togo.app.domain.repository.HistoryRepository>(),
+        catalogRepository = get<CatalogRepository>(),
+        shoppingListRepository = get<ShoppingListRepository>(),
     ) }
 
     // Future ViewModels will be added here (Epic 4, 5):
