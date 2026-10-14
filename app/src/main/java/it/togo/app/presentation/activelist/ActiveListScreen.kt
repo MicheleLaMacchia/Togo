@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import it.togo.app.domain.usecase.ShareListUseCase
 import it.togo.app.presentation.additem.AddItemBottomSheet
 import it.togo.app.presentation.additem.AddItemConfirmed
 import it.togo.app.presentation.additem.AddItemViewModel
@@ -42,6 +43,14 @@ import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarAction
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.History
+import androidx.compose.ui.platform.LocalContext
+import android.content.Intent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 /**
  * Schermata principale Lista Attiva (Spesa).
@@ -63,6 +72,10 @@ fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
     // Voice bottom sheet ViewModel
     val voiceViewModel = androidx.lifecycle.viewmodel.compose.viewModel<VoiceBottomSheetViewModel>()
     val voiceUiState by voiceViewModel.uiState.collectAsStateWithLifecycle()
+
+    // Share list use case
+    val shareUseCase = androidx.lifecycle.viewmodel.compose.viewModel<ShareListUseCase>()
+    val scope = rememberCoroutineScope()
 
     val colors = togoColors()
     val typography = togoTypography()
@@ -129,7 +142,20 @@ fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
             Scaffold(
                 topBar = { ActiveListAppBar(
                     onHistoryClick = { onEvent(UiEvent.NavigateToHistory) },
-                    onShareClick = { onEvent(UiEvent.ShareList) },
+                    onShareClick = {
+                        scope.launch {
+                            val context = LocalContext.current
+                            val intent = shareUseCase()
+                            if (intent != null) {
+                                (context as? android.app.Activity)?.startActivity(
+                                    Intent.createChooser(intent, "Condividi lista spesa")
+                                )
+                            } else {
+                                // Lista vuota o solo voci spuntate - gestito da ShareListUseCase
+                                // Potremmo mostrare un toast qui se necessario
+                            }
+                        }
+                    },
                     activeCount = uiState.activeCount,
                 ) },
                 floatingActionButton = {
@@ -251,4 +277,51 @@ fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
             }
         }
     }
+}
+
+}
+}
+
+// ActiveListAppBar - Custom TopAppBar con azioni Storico e Condividi
+@Composable
+fun ActiveListAppBar(
+    onHistoryClick: () -> Unit,
+    onShareClick: () -> Unit,
+    activeCount: Int,
+) {
+    val colors = togoColors()
+    val typography = togoTypography()
+
+    androidx.compose.material3.TopAppBar(
+        title = {
+            Text(
+                text = "Spesa ($activeCount)",
+                style = typography.sectionHeader,
+                color = colors.inkPrimary,
+            )
+        },
+        navigationIcon = {
+            IconButton(onClick = onHistoryClick) {
+                Icon(
+                    imageVector = Icons.Filled.History,
+                    contentDescription = "Storico",
+                    tint = colors.inkPrimary,
+                )
+            }
+        },
+        actions = {
+            IconButton(onClick = onShareClick) {
+                Icon(
+                    imageVector = Icons.Filled.Share,
+                    contentDescription = "Condividi lista",
+                    tint = colors.inkPrimary,
+                )
+            }
+        },
+        colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(
+            containerColor = colors.surface,
+            titleContentColor = colors.inkPrimary,
+        )
+    )
+}
 }
