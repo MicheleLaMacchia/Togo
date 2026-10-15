@@ -9,6 +9,7 @@ import it.togo.app.presentation.activelist.ActiveListScreen
 import it.togo.app.presentation.activelist.ActiveListViewModel
 import it.togo.app.presentation.activelist.UiEvent
 import it.togo.app.ui.theme.TogoTheme
+import it.togo.app.ui.theme.isSystemDarkTheme
 
 class MainActivity : ComponentActivity() {
 
@@ -17,7 +18,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            TogoTheme {
+            TogoTheme(darkTheme = isSystemDarkTheme()) {
                 ActiveListScreen(onEvent = viewModel::onEvent)
             }
         }

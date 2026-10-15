@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocal
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.CornerBasedShape
+import androidx.compose.ui.graphics.RoundedCornerShape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -28,7 +28,7 @@ data class ItemRowTokens(
     val background: Color,
     val paddingHorizontal: Dp = 16.dp,
     val paddingVertical: Dp = 12.dp,
-    val radius: CornerBasedShape,
+    val radius: RoundedCornerShape,
     val swipeDeleteBackground: Color,
     val swipeDeleteIconColor: Color,
 )
@@ -37,7 +37,7 @@ data class CheckboxUtilityTokens(
     val size: Dp = 48.dp,
     val borderWidth: Dp = 2.dp,
     val borderColor: Color,
-    val radius: CornerBasedShape,
+    val radius: RoundedCornerShape,
     val checkColor: Color,
     val checkedBackground: Color,
 )
@@ -54,7 +54,7 @@ data class QuantityBadgeTokens(
     val background: Color,
     val textColor: Color,
     val borderColor: Color,
-    val radius: CornerBasedShape,
+    val radius: RoundedCornerShape,
     val paddingHorizontal: Dp = 8.dp,
     val paddingVertical: Dp = 4.dp,
 )
@@ -65,14 +65,14 @@ data class VoiceFabTokens(
     val textColor: Color,
     val borderWidth: Dp = 2.dp,
     val borderColor: Color,
-    val radius: CornerBasedShape,
+    val radius: RoundedCornerShape,
 )
 
 data class BottomSheetTokens(
     val background: Color,
     val borderTopWidth: Dp = 2.dp,
     val borderTopColor: Color,
-    val radiusTop: CornerBasedShape,
+    val radiusTop: RoundedCornerShape,
     val checkoutButtonBackground: Color = Color.Unspecified,
     val checkoutButtonContent: Color = Color.Unspecified,
 )
@@ -81,7 +81,7 @@ data class DuplicateDialogTokens(
     val background: Color,
     val borderWidth: Dp = 2.dp,
     val borderColor: Color,
-    val radius: CornerBasedShape,
+    val radius: RoundedCornerShape,
 )
 
 /** Container di tutti i token component-level. */

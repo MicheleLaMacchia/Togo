@@ -24,21 +24,21 @@ class CategoryAssigner(
         resolvedProduct: CanonicalProduct,
         userExpression: String? = null
     ): CategoryAssignment = withContext(Dispatchers.IO) {
-        val taxonomy = catalogRepository.getTaxonomy().firstOrNull().orEmpty()
+        val taxonomy = catalogRepository.getTaxonomy().first()
         val normalizedExpression = userExpression?.trim()?.lowercase()
 
         // 1. Regola appresa attiva per (espressione, prodotto)
         if (normalizedExpression != null && normalizedExpression.isNotEmpty()) {
             val rule = learnedRulesRepository.getByExpression(normalizedExpression)
             if (rule != null && rule.isActive && rule.productId == resolvedProduct.id) {
-                val ruleLevel3 = taxonomy.findLevel3(rule.level3Id)
+                val ruleLevel3 = findLevel3(taxonomy, rule.level3Id)
                 if (ruleLevel3 != null && !ruleLevel3.isUserDefined) {
                     return@withContext CategoryAssignment(
                         suggestedLevel3Id = rule.level3Id,
                         confidence = 0.9,
                         source = AssignmentSource.LEARNED,
                         product = resolvedProduct,
-                        alternatives = taxonomy.findLevel3(resolvedProduct.level3Id)
+                        alternatives = findLevel3(taxonomy, resolvedProduct.level3Id)
                             ?.let { if (it.id != rule.level3Id) listOf(it) else emptyList() }
                             .orEmpty(),
                         userExpression = normalizedExpression
@@ -48,7 +48,7 @@ class CategoryAssigner(
         }
 
         // 2. Default del prodotto
-        val productLevel3 = taxonomy.findLevel3(resolvedProduct.level3Id)
+        val productLevel3 = findLevel3(taxonomy, resolvedProduct.level3Id)
         if (productLevel3 != null && !productLevel3.isUserDefined) {
             return@withContext CategoryAssignment(
                 suggestedLevel3Id = resolvedProduct.level3Id,
@@ -73,5 +73,5 @@ class CategoryAssigner(
     }
 }
 
-private fun List<TaxonomyLevel>.findLevel3(id: Long): TaxonomyLevel.Level3? =
-    firstOrNull { it is TaxonomyLevel.Level3 && it.id == id } as? TaxonomyLevel.Level3
+private fun findLevel3(taxonomy: List<TaxonomyLevel>, id: Long): TaxonomyLevel.Level3? =
+    taxonomy.firstOrNull { it is TaxonomyLevel.Level3 && it.id == id } as? TaxonomyLevel.Level3

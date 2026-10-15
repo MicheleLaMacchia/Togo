@@ -13,13 +13,12 @@ class ShareListUseCase(
 ) {
 
     suspend operator fun invoke(): android.content.Intent? = withContext(Dispatchers.IO) {
-        val activeItems = shoppingListRepository.getActiveItems().firstOrNull()
-            .orEmpty()
+        val activeItems = shoppingListRepository.getActiveItems().first()
             .filter { !it.isChecked }
 
         if (activeItems.isEmpty()) return@withContext null
 
-        val taxonomy = catalogRepository.getTaxonomy().firstOrNull().orEmpty()
+        val taxonomy = catalogRepository.getTaxonomy().first()
         val level1Map = taxonomy.filterIsInstance<TaxonomyLevel.Level1>().associateBy { it.id }
         val level2Map = taxonomy.filterIsInstance<TaxonomyLevel.Level2>().associateBy { it.id }
         val level3Map = taxonomy.filterIsInstance<TaxonomyLevel.Level3>().associateBy { it.id }

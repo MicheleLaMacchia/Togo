@@ -11,7 +11,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
@@ -28,10 +27,9 @@ class ActiveListViewModel(
 
     private val _uiState = MutableStateFlow(ActiveListUiState())
     val uiState = _uiState
-        .distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), ActiveListUiState())
 
-    private val taxonomyCache = MutableStateFlow(TaxonomyCache(emptyList(), emptyList(), emptyList()))
+    private val taxonomyCache = MutableStateFlow<TaxonomyCache?>(null)
 
     private val _snackbarCounter = AtomicInteger(0)
     private val _checkoutSnackbarCounter = AtomicInteger(0)
@@ -67,12 +65,7 @@ class ActiveListViewModel(
                 buildUiState(items, taxonomy)
             }
                 .onEach { newState ->
-                    _uiState.update { it ->
-                        it.copy(
-                            activeGroups = newState.activeGroups,
-                            error = newState.error
-                        )
-                    }
+                    _uiState.value = newState
                 }
                 .launchIn(viewModelScope)
         }
@@ -154,24 +147,23 @@ class ActiveListViewModel(
         }
     }
 
-    private fun handleCheckOff(itemId: String, isChecked: Boolean) {
-        val item = _uiState.value.activeGroups
-            .flatMap { group ->
-                group.level2Groups.flatMap { l2 ->
-                    l2.level3Groups.flatMap { l3 -> l3.items }
-                }
-            }
+    private fun findItem(itemId: String): ShoppingItem? {
+        return _uiState.value.activeGroups
+            .flatMap { group -> group.level2Groups.flatMap { l2 -> l2.level3Groups.flatMap { l3 -> l3.items } } }
             .find { it.id == itemId }
             ?: _uiState.value.checkedItems.find { it.id == itemId }
-            ?: return
+    }
+
+    private fun handleCheckOff(itemId: String, isChecked: Boolean) {
+        val item = findItem(itemId) ?: return
 
         if (isChecked) {
-            _uiState.update { it.copy(pendingCheckOffItemId = itemId) }
+            _uiState.value = _uiState.value.copy(pendingCheckOffItemId = itemId)
 
             viewModelScope.launch {
                 delay(300)
-                _uiState.update { state ->
-                    val newGroups = state.activeGroups.map { group ->
+                _uiState.value = _uiState.value.copy(
+                    activeGroups = _uiState.value.activeGroups.map { group ->
                         group.copy(
                             level2Groups = group.level2Groups.map { l2 ->
                                 l2.copy(
@@ -183,24 +175,21 @@ class ActiveListViewModel(
                                 )
                             }.filter { it.level3Groups.isNotEmpty() }
                         )
-                    }
-                    state.copy(
-                        activeGroups = newGroups,
-                        pendingCheckOffItemId = null,
-                        checkingOffItemId = itemId
-                    )
-                }
+                    },
+                    pendingCheckOffItemId = null,
+                    checkingOffItemId = itemId
+                )
 
                 withContext(Dispatchers.IO) {
                     shoppingRepository.update(item.copyWith(isChecked = true))
                 }
                 delay(300)
-                _uiState.update { it.copy(checkingOffItemId = null) }
+                _uiState.value = _uiState.value.copy(checkingOffItemId = null)
             }
         } else {
-            _uiState.update { state ->
-                val updated = item.copyWith(isChecked = false)
-                val newGroups = state.activeGroups.map { group ->
+            val updated = item.copyWith(isChecked = false)
+            _uiState.value = _uiState.value.copy(
+                activeGroups = _uiState.value.activeGroups.map { group ->
                     group.copy(
                         level2Groups = group.level2Groups.map { l2 ->
                             l2.copy(
@@ -214,12 +203,9 @@ class ActiveListViewModel(
                             )
                         }.filter { it.level3Groups.isNotEmpty() }
                     )
-                }
-                state.copy(
-                    checkedItems = state.checkedItems.filter { it.id != itemId },
-                    activeGroups = newGroups
-                )
-            }
+                },
+                checkedItems = _uiState.value.checkedItems.filter { it.id != itemId }
+            )
 
             viewModelScope.launch {
                 withContext(Dispatchers.IO) {
@@ -234,15 +220,7 @@ class ActiveListViewModel(
     }
 
     private fun handleDeleteItem(itemId: String) {
-        val item = _uiState.value.activeGroups
-            .flatMap { group ->
-                group.level2Groups.flatMap { l2 ->
-                    l2.level3Groups.flatMap { l3 -> l3.items }
-                }
-            }
-            .find { it.id == itemId }
-            ?: _uiState.value.checkedItems.find { it.id == itemId }
-            ?: return
+        val item = findItem(itemId) ?: return
 
         _deletedItemForUndo.value = item
 
@@ -253,7 +231,7 @@ class ActiveListViewModel(
                 }
                 showUndoSnackbar("Voce eliminata")
             } catch (e: Exception) {
-                _uiState.update { it.copy(error = "Eliminazione fallita: ${e.message}") }
+                _uiState.value = _uiState.value.copy(error = "Eliminazione fallita: ${e.message}")
             }
         }
     }
@@ -284,11 +262,11 @@ class ActiveListViewModel(
 
     private fun showCheckoutSnackbar(message: String) {
         val currentCount = _checkoutSnackbarCounter.incrementAndGet()
-        _uiState.update { it.copy(checkoutSnackbarMessage = message) }
+        _uiState.value = _uiState.value.copy(checkoutSnackbarMessage = message)
         viewModelScope.launch {
             delay(5000)
             if (_checkoutSnackbarCounter.get() == currentCount && _uiState.value.checkoutSnackbarMessage != null) {
-                _uiState.update { it.copy(checkoutSnackbarMessage = null) }
+                _uiState.value = _uiState.value.copy(checkoutSnackbarMessage = null)
             }
         }
     }
@@ -297,49 +275,54 @@ class ActiveListViewModel(
         if (_isCheckingOut) return
         _isCheckingOut = true
 
-        viewModelScope.launch {
-            val checkedIds = _uiState.value.checkedItems.map { it.id }
-            if (checkedIds.isNotEmpty()) {
-                val itemsForUndo = _uiState.value.checkedItems
-                _uiState.update { it.copy(checkedItemsForUndo = itemsForUndo) }
+        val items = _uiState.value.activeGroups
+            .flatMap { it.level2Groups.flatMap { it.level3Groups.flatMap { it.items } } }
+            .filter { !it.isChecked }
 
-                try {
-                    withContext(Dispatchers.IO) {
-                        shoppingRepository.checkout(checkedIds)
+        if (items.isEmpty()) {
+            _isCheckingOut = false
+            return
+        }
+
+        _uiState.value = _uiState.value.copy(
+            checkedItemsForUndo = items
+        )
+
+        viewModelScope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    items.forEach { item ->
+                        shoppingRepository.update(item.copyWith(isChecked = true))
                     }
-                    showCheckoutSnackbar("Spesa conclusa")
-                    _uiState.update { it.copy(checkedItemsForUndo = emptyList()) }
-                } catch (e: Exception) {
-                    _uiState.update {
-                        it.copy(
-                            error = "Checkout fallito: ${e.message}",
-                            checkedItemsForUndo = emptyList()
-                        )
-                    }
-                } finally {
-                    _isCheckingOut = false
                 }
+                showCheckoutSnackbar("Spesa conclusa (${items.size} voci)")
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = "Checkout fallito: ${e.message}")
+            } finally {
+                _isCheckingOut = false
             }
         }
     }
 
     private fun handleUndoCheckout() {
-        _uiState.value.checkedItemsForUndo?.let { items ->
+        _uiState.value.checkedItemsForUndo.forEach { item ->
+            val unchecked = item.copyWith(isChecked = false)
             viewModelScope.launch {
                 withContext(Dispatchers.IO) {
-                    items.forEach { item ->
-                        val restored = item.copyWith(isChecked = false)
-                        shoppingRepository.update(restored)
-                    }
+                    shoppingRepository.update(unchecked)
                 }
             }
-            _uiState.update { it.copy(checkedItemsForUndo = emptyList(), checkoutSnackbarMessage = null) }
         }
+        _uiState.value = _uiState.value.copy(checkedItemsForUndo = emptyList())
     }
 
     private data class TaxonomyCache(
-        val l1List: List<TaxonomyLevel.Level1>,
-        val l2List: List<TaxonomyLevel.Level2>,
-        val l3List: List<TaxonomyLevel.Level3>
-    )
+        val l1: List<TaxonomyLevel.Level1>,
+        val l2: List<TaxonomyLevel.Level2>,
+        val l3: List<TaxonomyLevel.Level3>,
+    ) {
+        fun component1() = l1
+        fun component2() = l2
+        fun component3() = l3
+    }
 }

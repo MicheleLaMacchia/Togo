@@ -2,7 +2,7 @@ package it.togo.app.domain.category
 
 import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.repository.CatalogRepository
-import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.first
 
 /**
  * Servizio per la correzione esplicita della categoria canonica da parte dell'utente.
@@ -53,7 +53,7 @@ class CategoryCorrector(
     }
 
     private suspend fun getTaxonomySnapshot(): List<TaxonomyLevel> =
-        catalogRepository.getTaxonomy().firstOrNull() ?: emptyList()
+        catalogRepository.getTaxonomy().first()
 
     private fun validateLevel3(taxonomy: List<TaxonomyLevel>, level3Id: Long): TaxonomyLevel.Level3 {
         val level3 = findLevel3InTaxonomy(taxonomy, level3Id)
