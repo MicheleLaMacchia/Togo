@@ -1,80 +1,62 @@
 package it.togo.app.presentation.activelist
 
-import android.app.Activity
-import android.content.Intent
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.runtime.Composable
-import it.togo.app.domain.usecase.ShareListUseCase
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
+import it.togo.app.domain.model.ShoppingItem
+import it.togo.app.domain.model.TaxonomyLevel
+import it.togo.app.domain.repository.CatalogRepository
 
-/**
- * Helper Compose per la condivisione della lista attiva tramite ShareSheet.
- *
- * Usage:
- * ```kotlin
- * val shareLauncher = rememberShareLauncher(shareUseCase)
- * // ...
- * IconButton(onClick = { shareLauncher.launch(Unit) }) { ... }
- * ```
- */
-@Composable
-fun rememberShareLauncher(
-    shareUseCase: ShareListUseCase
-): androidx.activity.result.ActivityResultLauncher<Unit> {
-    return rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()) {
-        // Risultato condivisone (opzionale)
+suspend fun buildSharedListText(
+    activeItems: List<ShoppingItem>,
+    catalogRepository: CatalogRepository
+): String {
+    val taxonomy = catalogRepository.getTaxonomy().let { flow ->
+        flow.firstOrNull() ?: emptyList()
     }
-}
+    val level1Map = taxonomy.filterIsInstance<TaxonomyLevel.Level1>().associateBy { it.id }
+    val level2Map = taxonomy.filterIsInstance<TaxonomyLevel.Level2>().associateBy { it.id }
+    val level3Map = taxonomy.filterIsInstance<TaxonomyLevel.Level3>().associateBy { it.id }
 
-/**
- * Lancia la condivisione della lista attiva.
- *
- * Deve essere chiamato all'interno di una CoroutineScope (es. `rememberCoroutineScope().launch`).
- */
-suspend fun CoroutineScope.shareActiveList(
-    activity: Activity,
-    shareUseCase: ShareListUseCase
-) {
-    val intent = shareUseCase()
-    if (intent != null) {
-        activity.startActivity(Intent.createChooser(intent, "Condividi lista spesa"))
+    val sb = StringBuilder()
+
+    val itemsByL1 = activeItems.groupBy { item ->
+        val product = catalogRepository.getById(item.productId)
+        val l3 = product?.level3Id?.let { level3Map[it] }
+        val l2 = l3?.let { level2Map[it.level2Id] }
+        l2?.let { level1Map[it.level1Id] }
     }
-}
 
-/**
- * Versione non-suspend per uso diretto in callback (usa launch interno).
- */
-@Composable
-fun ShareListButton(
-    shareUseCase: ShareListUseCase,
-    onEmpty: () -> Unit = {},
-    onNothingToShare: () -> Unit = {}
-) {
-    val scope = rememberCoroutineScope()
-    val shareLauncher = rememberShareLauncher(shareUseCase)
+    level1Map.values.sortedBy { it.sortOrder }.forEach l1@{ l1 ->
+        val l1Items = itemsByL1[l1] ?: return@l1
+        sb.appendLine("=== ${l1.name} ===")
 
-    androidx.compose.material3.IconButton(
-        onClick = {
-            scope.launch {
-                val intent = shareUseCase()
-                if (intent != null) {
-                    val activity = (androidx.compose.ui.platform.LocalContext.current as? android.app.Activity)
-                    activity?.let {
-                        it.startActivity(Intent.createChooser(it, "Condividi lista spesa"))
-                    }
-                } else {
-                    // Gestione casi vuoti
-                    when {
-                        // Qui dovremmo distinguere tra lista vuota e solo voci spuntate
-                        // Per semplicità chiamiamo il callback generico
-                        true -> onEmpty()
-                    }
+        val itemsByL2 = l1Items.groupBy { item ->
+            val product = catalogRepository.getById(item.productId)
+            val l3 = product?.level3Id?.let { level3Map[it] }
+            l3?.let { level2Map[it.level2Id] }
+        }
+
+        level2Map.values.filter { it.level1Id == l1.id }.sortedBy { it.sortOrder }.forEach l2@{ l2 ->
+            val l2Items = itemsByL2[l2] ?: return@l2
+            sb.appendLine("--- ${l2.name} ---")
+
+            val itemsByL3 = l2Items.groupBy { item ->
+                val product = catalogRepository.getById(item.productId)
+                product?.level3Id?.let { level3Map[it] }
+            }
+
+            level3Map.values.filter { it.level2Id == l2.id }.sortedBy { it.sortOrder }.forEach l3@{ l3 ->
+                val l3Items = itemsByL3[l3] ?: return@l3
+                sb.appendLine("${l3.name}:")
+                l3Items.forEach { item ->
+                    sb.appendLine("  - ${formatItem(item)}")
                 }
             }
         }
-    ) {
-        androidx.compose.material.icons.Icons.Default.Share
+        sb.appendLine()
     }
+
+    return sb.toString().trim()
+}
+
+private fun formatItem(item: ShoppingItem): String {
+    return "${item.quantity} ${item.unit.displayName}"
 }

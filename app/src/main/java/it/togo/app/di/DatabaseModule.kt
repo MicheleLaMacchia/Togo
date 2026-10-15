@@ -12,8 +12,7 @@ import it.togo.app.data.database.dao.ShoppingItemDao
 
 val databaseModule: Module = module {
     // Room Database - single instance
-    single<Context> { androidContext() }
-    single { TogoDatabase.build(it) }
+    single { TogoDatabase.build(androidContext()) }
 
     // DAOs - factory (new instance per use)
     factory { get<TogoDatabase>().shoppingItemDao() }

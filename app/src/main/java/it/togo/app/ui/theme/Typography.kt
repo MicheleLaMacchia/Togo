@@ -1,100 +1,72 @@
 package it.togo.app.ui.theme
 
-import androidx.compose.material3.TextStyle
 import androidx.compose.material3.Typography
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocal
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.sp
 
 /**
- * Tipografia TOGO — 5 ruoli (da DESIGN.md §3).
+ * Data class contenente i token tipografici TOGO.
  *
- * Basata su Roboto / Google Sans (font di sistema Android Material3).
- * Nessun peso Light/Thin sui testi primari.
- * Scala lineare con Dynamic Type (fontScale di sistema).
+ * Definisce 5 ruoli di testo ottimizzati per la lista della spesa:
+ * - titleScreen: titoli principali
+ * - sectionHeader: intestazioni di sezione/categoria
+ * - itemName: nomi dei prodotti
+ * - itemMeta: quantità e unità di misura
+ * - caption: note e testi secondari
  */
-data class TogoTypography(
-    /** Titolo schermata — 24sp SemiBold — Headline Medium equivalente. */
+data class TogoTypographyTokens(
     val titleScreen: TextStyle = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.SemiBold,
         fontSize = 24.sp,
-        lineHeight = androidx.compose.ui.unit.sp(32),
-        letterSpacing = 0.sp,
-        textAlign = TextAlign.Start,
-        textDecoration = TextDecoration.None,
+        lineHeight = 32.sp
     ),
-
-    /** Intestazione categoria — 16sp Bold, uppercase tracking — Title Medium equivalente. */
     val sectionHeader: TextStyle = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Bold,
         fontSize = 16.sp,
-        lineHeight = androidx.compose.ui.unit.sp(24),
-        letterSpacing = 0.15.sp,
-        textAlign = TextAlign.Start,
-        textDecoration = TextDecoration.None,
+        lineHeight = 24.sp
     ),
-
-    /** Nome prodotto — 16sp Medium — Body Large equivalente. */
     val itemName: TextStyle = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Medium,
         fontSize = 16.sp,
-        lineHeight = androidx.compose.ui.unit.sp(24),
-        letterSpacing = 0.sp,
-        textAlign = TextAlign.Start,
-        textDecoration = TextDecoration.None,
+        lineHeight = 24.sp
     ),
-
-    /** Quantità / Badge — 14sp SemiBold — Label Large equivalente (min 14sp). */
     val itemMeta: TextStyle = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.SemiBold,
         fontSize = 14.sp,
-        lineHeight = androidx.compose.ui.unit.sp(20),
-        letterSpacing = 0.sp,
-        textAlign = TextAlign.End,
-        textDecoration = TextDecoration.None,
+        lineHeight = 20.sp
     ),
-
-    /** Microcopy / Note — 12sp Regular — Body Small equivalente. */
     val caption: TextStyle = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Normal,
         fontSize = 12.sp,
-        lineHeight = androidx.compose.ui.unit.sp(16),
-        letterSpacing = 0.sp,
-        textAlign = TextAlign.Start,
-        textDecoration = TextDecoration.None,
+        lineHeight = 16.sp
     ),
 )
 
 /** Istanza singleton dei token tipografici TOGO. */
-val TogoTypography = TogoTypography()
+val TogoTypography = TogoTypographyTokens()
 
-/** CompositionLocal per la tipografia TOGO. */
-internal val LocalTogoTypography: CompositionLocal<TogoTypography> =
+/**
+ * CompositionLocal per distribuire i token tipografici attraverso l'albero dei composable.
+ * Usato da [TogoTheme] per fornire i tipi di testo predefiniti.
+ */
+internal val LocalTogoTypography: CompositionLocal<TogoTypographyTokens> =
     staticCompositionLocalOf {
         error("TogoTypography non disponibile. Avvolgere il contenuto in TogoTheme { ... }")
     }
 
-/** Estensione per accedere a TogoTypography da qualsiasi composable dentro TogoTheme. */
-val androidx.compose.ui.platform.CompositionLocalProvider.typography: TogoTypography
-    get() = LocalTogoTypography.current
-
-/** Estensioni su [Typography] Material3 per accesso rapido ai ruoli TOGO. */
-val Typography.titleScreen: TextStyle
-    get() = TogoTypography.titleScreen
-val Typography.sectionHeader: TextStyle
-    get() = TogoTypography.sectionHeader
-val Typography.itemName: TextStyle
-    get() = TogoTypography.itemName
-val Typography.itemMeta: TextStyle
-    get() = TogoTypography.itemMeta
-val Typography.caption: TextStyle
-    get() = TogoTypography.caption
+/**
+ * Funzione composable per accedere ai token tipografici TOGO.
+ * Uso: val tokens = togoTypographyTokens()
+ */
+@Composable
+fun togoTypographyTokens(): TogoTypographyTokens = LocalTogoTypography.current

@@ -1,5 +1,6 @@
 package it.togo.app.ui.theme
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocal
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.dp
@@ -10,7 +11,7 @@ import androidx.compose.ui.unit.dp
  * Griglia modulare 4px/8px per coerenza layout.
  * Target touch minimo 48x48dp per ogni controllo interattivo.
  */
-data class TogoSpacing(
+data class TogoSpacingTokens(
     /** 4dp — unità base. */
     val space1: androidx.compose.ui.unit.Dp = 4.dp,
     /** 8dp — distanza tra card, padding interno standard. */
@@ -39,14 +40,14 @@ data class TogoSpacing(
 }
 
 /** Istanza singleton dello spacing TOGO. */
-val TogoSpacing = TogoSpacing()
+val TogoSpacing = TogoSpacingTokens()
 
 /** CompositionLocal per lo spacing TOGO. */
-internal val LocalTogoSpacing: CompositionLocal<TogoSpacing> =
+internal val LocalTogoSpacing: CompositionLocal<TogoSpacingTokens> =
     staticCompositionLocalOf {
         error("TogoSpacing non disponibile. Avvolgere il contenuto in TogoTheme { ... }")
     }
 
-/** Estensione per accedere a TogoSpacing da qualsiasi composable dentro TogoTheme. */
-val androidx.compose.ui.platform.CompositionLocalProvider.spacing: TogoSpacing
-    get() = LocalTogoSpacing.current
+/** Funzione composable per accedere allo spacing TOGO. */
+@Composable
+fun togoSpacing(): TogoSpacingTokens = LocalTogoSpacing.current

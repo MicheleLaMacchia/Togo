@@ -85,7 +85,7 @@ class LearnedRuleManager(
     /** Elimina definitivamente una regola */
     suspend fun delete(ruleId: String): Boolean = withContext(Dispatchers.IO) {
         val existing = learnedRulesRepository.getById(ruleId)
-        if (existing == null) return false
+        if (existing == null) return@withContext false
         learnedRulesRepository.delete(ruleId)
         true
     }

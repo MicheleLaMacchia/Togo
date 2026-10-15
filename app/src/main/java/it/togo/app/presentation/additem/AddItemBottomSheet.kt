@@ -216,11 +216,11 @@ fun AddItemBottomSheet(
                             onVariantChange = { viewModel.onEvent(AddItemUiEvent.VariantChanged(it)) },
                             condition = uiState.condition,
                             onConditionChange = { viewModel.onEvent(AddItemUiEvent.ConditionChanged(it)) },
-                            showBrand = uiState.selectedProduct?.showBrand ?? true,
-                            showVariant = uiState.selectedProduct?.showVariant ?? true,
-                            showCondition = uiState.selectedProduct?.showCondition ?? true,
-                            commonBrands = uiState.selectedProduct?.commonBrands ?? emptyList(),
-                            commonConditions = uiState.selectedProduct?.commonConditions ?? emptyList(),
+                            showBrand = uiState.selectedProduct?.showBrand ?: true,
+                            showVariant = uiState.selectedProduct?.showVariant ?: true,
+                            showCondition = uiState.selectedProduct?.showCondition ?: true,
+                            commonBrands = uiState.selectedProduct?.commonBrands ?: emptyList(),
+                            commonConditions = uiState.selectedProduct?.commonConditions ?: emptyList(),
                         )
                         4 -> {
                             val product = uiState.selectedProduct ?: return@Column

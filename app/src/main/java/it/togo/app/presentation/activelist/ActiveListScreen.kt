@@ -1,80 +1,58 @@
 package it.togo.app.presentation.activelist
 
+import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.ModalBottomSheetLayout
-import androidx.compose.material3.ModalBottomSheetState
-import androidx.compose.material3.ModalBottomSheetValue
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsStateWithLifecycle
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import it.togo.app.domain.usecase.ShareListUseCase
-import it.togo.app.presentation.additem.AddItemBottomSheet
-import it.togo.app.presentation.additem.AddItemConfirmed
-import it.togo.app.presentation.additem.AddItemViewModel
-import it.togo.app.presentation.voice.VoiceBottomSheet
-import it.togo.app.presentation.voice.VoiceBottomSheetViewModel
-import it.togo.app.ui.theme.TogoTheme
-import it.togo.app.ui.theme.componentTokens
-import it.togo.app.ui.theme.togoColors
-import it.togo.app.ui.theme.togoSpacing
-import it.togo.app.ui.theme.togoTypography
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarAction
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.IconButton
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.History
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.ModalBottomSheetLayout
+import androidx.compose.material3.ModalBottomSheetState
+import androidx.compose.material3.ModalBottomSheetValue
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import android.content.Intent
-import kotlinx.coroutines.CoroutineScope
+import androidx.compose.ui.unit.dp
+import it.togo.app.domain.model.ShoppingItem
+import it.togo.app.domain.usecase.ShareListUseCase
+import it.togo.app.presentation.additem.AddItemBottomSheet
+import it.togo.app.presentation.voice.VoiceBottomSheet
+import it.togo.app.presentation.voice.VoiceBottomSheetViewModel
+import it.togo.app.ui.theme.componentTokens
+import it.togo.app.ui.theme.togoColors
+import it.togo.app.ui.theme.togoSpacing
+import it.togo.app.ui.theme.togoTypography
 import kotlinx.coroutines.launch
 
-/**
- * Schermata principale Lista Attiva (Spesa).
- *
- * Struttura:
- * - Scaffold con AppBar custom (titolo + azioni Storico/Condividi)
- * - LazyColumn: EmptyState OPPURE gruppi categoria + sezione Presi
- * - FAB microfono per cattura vocale (con VoiceBottomSheet)
- * - FAB "+" per inserimento manuale
- * - Singolo ModalBottomSheetLayout per AddItemBottomSheet (insert + edit)
- * - SnackbarHost per undo delete
- */
 @Composable
 fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
     val viewModel = androidx.lifecycle.viewmodel.compose.viewModel<ActiveListViewModel>()
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val snackbarMessage by viewModel.snackbarMessage.collectAsStateWithLifecycle()
-
-    // Voice bottom sheet ViewModel
-    val voiceViewModel = androidx.lifecycle.viewmodel.compose.viewModel<VoiceBottomSheetViewModel>()
-    val voiceUiState by voiceViewModel.uiState.collectAsStateWithLifecycle()
-
-    // Share list use case
-    val shareUseCase = androidx.lifecycle.viewmodel.compose.viewModel<ShareListUseCase>()
+    val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
     val colors = togoColors()
@@ -82,19 +60,20 @@ fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
     val spacing = togoSpacing()
     val tokens = componentTokens()
 
-    // Bottom sheet state for AddItem (insert + edit)
-    val sheetState = remember { ModalBottomSheetState(ModalBottomSheetValue.Hidden) }
-    val scope = rememberCoroutineScope()
-
-    // State for which item is being edited
     var editingItem by remember { mutableStateOf<ShoppingItem?>(null) }
 
-    // Voice bottom sheet callback: passa testo al parser (Story 4.3)
+    val voiceViewModel = androidx.lifecycle.viewmodel.compose.viewModel<VoiceBottomSheetViewModel>()
+    val voiceUiState by voiceViewModel.uiState.collectAsState()
+
+    val shareUseCase = ShareListUseCase(
+        shoppingListRepository = TODO(),
+        catalogRepository = TODO()
+    )
+
     voiceViewModel.onTextConfirmed = { text ->
         onEvent(UiEvent.VoiceCommand(text))
     }
 
-    // Voice bottom sheet
     VoiceBottomSheet(
         uiState = voiceUiState,
         onEdit = { newText -> voiceViewModel.editText(newText) },
@@ -107,131 +86,128 @@ fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
     ModalBottomSheetLayout(
         sheetState = remember { ModalBottomSheetState(ModalBottomSheetValue.Hidden) },
         sheetContent = {
-            editingItem?.let { item ->
-                AddItemBottomSheet(
-                    sheetState = remember { ModalBottomSheetState(ModalBottomSheetValue.Hidden) },
-                    onConfirm = { confirmed ->
-                        viewModel.onAddItemConfirmed(confirmed)
-                    },
-                    onDismiss = { },
-                    isEditMode = true,
-                )
-            }
+            AddItemBottomSheet(
+                sheetState = remember { ModalBottomSheetState(ModalBottomSheetValue.Hidden) },
+                onConfirm = { confirmed ->
+                    viewModel.onAddItemConfirmed(confirmed)
+                },
+                onDismiss = { },
+                isEditMode = editingItem != null,
+            )
         },
         sheetBackgroundColor = colors.surfaceBase,
         sheetShape = androidx.compose.foundation.shape.RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
         sheetPeekHeight = 0.dp,
         confirmStateChange = { it == ModalBottomSheetValue.Expanded },
     ) {
-        ModalBottomSheetLayout(
-            sheetState = remember { ModalBottomSheetState(ModalBottomSheetValue.Hidden) },
-            sheetContent = {
-                AddItemBottomSheet(
-                    sheetState = remember { ModalBottomSheetState(ModalBottomSheetValue.Hidden) },
-                    onConfirm = { confirmed ->
-                        viewModel.onAddItemConfirmed(confirmed)
-                    },
-                    onDismiss = { }
-                )
-            },
-            sheetBackgroundColor = colors.surfaceBase,
-            sheetShape = androidx.compose.foundation.shape.RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-            sheetPeekHeight = 0.dp,
-            confirmStateChange = { it == ModalBottomSheetValue.Expanded },
-        ) {
-            Scaffold(
-                topBar = { ActiveListAppBar(
-                    onHistoryClick = { onEvent(UiEvent.NavigateToHistory) },
-                    onShareClick = {
-                        scope.launch {
-                            val context = LocalContext.current
-                            val intent = shareUseCase()
-                            if (intent != null) {
-                                (context as? android.app.Activity)?.startActivity(
-                                    Intent.createChooser(intent, "Condividi lista spesa")
-                                )
-                            } else {
-                                // Lista vuota o solo voci spuntate - gestito da ShareListUseCase
-                                // Potremmo mostrare un toast qui se necessario
-                            }
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Spesa (${uiState.activeCount})", style = typography.sectionHeader) },
+                    navigationIcon = {
+                        IconButton(onClick = { onEvent(UiEvent.NavigateToHistory) }) {
+                            Icon(Icons.Filled.History, contentDescription = "Storico")
                         }
                     },
-                    activeCount = uiState.activeCount,
-                ) },
-                floatingActionButton = {
-                    // Dual FAB: Voice + Add Item
-                    androidx.compose.foundation.layout.Box(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .align(androidx.compose.ui.Alignment.BottomEnd),
-                    ) {
-                        androidx.compose.foundation.layout.Column(
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                            horizontalAlignment = Alignment.End,
-                        ) {
-                            // Voice FAB
-                            VoiceFab(
-                                state = when {
-                                    voiceUiState is it.togo.app.presentation.voice.VoiceBottomSheetUiState.Listening -> it.togo.app.domain.voice.VoiceRecognitionState.Listening
-                                    voiceUiState is it.togo.app.presentation.voice.VoiceBottomSheetUiState.Processing -> it.togo.app.domain.voice.VoiceRecognitionState.Processing
-                                    voiceUiState is it.togo.app.presentation.voice.VoiceBottomSheetUiState.Ready -> it.togo.app.domain.voice.VoiceRecognitionState.Result("")
-                                    voiceUiState is it.togo.app.presentation.voice.VoiceBottomSheetUiState.Error -> it.togo.app.domain.voice.VoiceRecognitionState.Error(it.togo.app.domain.voice.ErrorCode.UNKNOWN, "")
-                                    else -> it.togo.app.domain.voice.VoiceRecognitionState.Idle
-                                },
-                                onClick = { voiceViewModel.startListening() }
-                            )
-                            
-                            // Add Item FAB
-                            androidx.compose.material3.FloatingActionButton(
-                                onClick = { 
-                                    val scope = rememberCoroutineScope()
-                                    scope.launch { 
-                                        val sheetState = remember { androidx.compose.material3.ModalBottomSheetState(androidx.compose.material3.ModalBottomSheetValue.Hidden) }
-                                        sheetState.show() 
-                                    }
-                                },
-                                containerColor = colors.accentAction,
-                                contentColor = colors.inkInverse,
-                                shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
-                            ) {
-                                Icon(
-                                    imageVector = androidx.compose.material.icons.Icons.Filled.Add,
-                                    contentDescription = "Aggiungi voce",
-                                    tint = colors.inkInverse,
-                                )
+                    actions = {
+                        IconButton(onClick = {
+                            scope.launch {
+                                val context = LocalContext.current
+                                val intent = shareUseCase()
+                                if (intent != null) {
+                                    (context as? android.app.Activity)?.startActivity(
+                                        Intent.createChooser(intent, "Condividi lista spesa")
+                                    )
+                                }
                             }
+                        }) {
+                            Icon(Icons.Filled.Share, contentDescription = "Condividi lista")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = colors.surface,
+                        titleContentColor = colors.inkPrimary,
+                    )
+                )
+            },
+            floatingActionButton = {
+                Box(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .align(Alignment.BottomEnd),
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalAlignment = Alignment.End,
+                    ) {
+                        VoiceFab(
+                            state = when {
+                                voiceUiState is it.togo.app.presentation.voice.VoiceBottomSheetUiState.Listening -> it.togo.app.domain.voice.VoiceRecognitionState.Listening
+                                voiceUiState is it.togo.app.presentation.voice.VoiceBottomSheetUiState.Processing -> it.togo.app.domain.voice.VoiceRecognitionState.Processing
+                                voiceUiState is it.togo.app.presentation.voice.VoiceBottomSheetUiState.Ready -> it.togo.app.domain.voice.VoiceRecognitionState.Result("")
+                                voiceUiState is it.togo.app.presentation.voice.VoiceBottomSheetUiState.Error -> it.togo.app.domain.voice.VoiceRecognitionState.Error(it.togo.app.domain.voice.ErrorCode.UNKNOWN, "")
+                                else -> it.togo.app.domain.voice.VoiceRecognitionState.Idle
+                            },
+                            onClick = { voiceViewModel.startListening() }
+                        )
+
+                        FloatingActionButton(
+                            onClick = {
+                                scope.launch {
+                                    // TODO: show AddItemBottomSheet
+                                }
+                            },
+                            containerColor = colors.accentAction,
+                            contentColor = colors.inkInverse,
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Add,
+                                contentDescription = "Aggiungi voce",
+                                tint = colors.inkInverse,
+                            )
                         }
                     }
                 }
             },
             floatingActionButtonPosition = androidx.compose.material3.FabPosition.End,
-            snackbarHost = { SnackbarHost(remember { SnackbarHostState() }) },
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             content = { innerPadding ->
-                val checkoutSnackbarMessage by viewModel.uiState.collectAsStateWithLifecycle { it.checkoutSnackbarMessage }
+                val checkoutSnackbarMessage by viewModel.uiState.collectAsState { it.checkoutSnackbarMessage }
                 Column(
-                    modifier = androidx.compose.foundation.layout.padding(innerPadding).fillMaxSize(),
+                    modifier = Modifier
+                        .padding(innerPadding)
+                        .fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(spacing.space2)
                 ) {
                     if (checkoutSnackbarMessage != null) {
                         Snackbar(
                             modifier = Modifier.fillMaxWidth(),
-                            action = { SnackbarAction(
-                                label = "Annulla",
-                                onClick = { onEvent(UiEvent.UndoCheckout) },
-                                contentColor = colors.accentHighlight,
-                            ) },
+                            action = {
+                                SnackbarAction(
+                                    label = "Annulla",
+                                    onClick = { onEvent(UiEvent.UndoCheckout) },
+                                    contentColor = colors.accentHighlight,
+                                )
+                            },
                         ) {
                             Text(checkoutSnackbarMessage, style = typography.itemMeta, color = colors.inkInverse)
                         }
                     }
 
                     if (uiState.error != null) {
-                        ErrorPlaceholder(uiState.error!!, colors, typography, spacing)
+                        Text(
+                            text = uiState.error,
+                            style = typography.itemMeta,
+                            color = colors.error,
+                            modifier = Modifier.padding(spacing.space4)
+                        )
                     } else if (uiState.activeGroups.isEmpty()) {
                         EmptyState(
-                            onAddManual = { 
-                                val sheetState = remember { androidx.compose.material3.ModalBottomSheetState(androidx.compose.material3.ModalBottomSheetValue.Hidden) }
-                                androidx.compose.runtime.rememberCoroutineScope().launch { sheetState.show() } 
+                            onAddManual = {
+                                scope.launch {
+                                    // TODO: show AddItemBottomSheet
+                                }
                             },
                             onVoice = { onEvent(UiEvent.NavigateToVoice) },
                             colors = colors,
@@ -244,7 +220,6 @@ fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
                             contentPadding = innerPadding,
                             verticalArrangement = Arrangement.spacedBy(spacing.space2)
                         ) {
-                            // Gruppi categoria
                             items(uiState.activeGroups, key = { group -> group.level1.id.toString() }) { group ->
                                 CategorySection(
                                     group = group,
@@ -259,7 +234,6 @@ fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
                                 androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(spacing.space3))
                             }
 
-                            // Sezione "Presi (N)" collassabile
                             if (uiState.hasCheckedItems) {
                                 PresiSection(
                                     items = uiState.checkedItems,
@@ -275,53 +249,6 @@ fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
                     }
                 }
             }
-        }
-    }
-}
-
-}
-}
-
-// ActiveListAppBar - Custom TopAppBar con azioni Storico e Condividi
-@Composable
-fun ActiveListAppBar(
-    onHistoryClick: () -> Unit,
-    onShareClick: () -> Unit,
-    activeCount: Int,
-) {
-    val colors = togoColors()
-    val typography = togoTypography()
-
-    androidx.compose.material3.TopAppBar(
-        title = {
-            Text(
-                text = "Spesa ($activeCount)",
-                style = typography.sectionHeader,
-                color = colors.inkPrimary,
-            )
-        },
-        navigationIcon = {
-            IconButton(onClick = onHistoryClick) {
-                Icon(
-                    imageVector = Icons.Filled.History,
-                    contentDescription = "Storico",
-                    tint = colors.inkPrimary,
-                )
-            }
-        },
-        actions = {
-            IconButton(onClick = onShareClick) {
-                Icon(
-                    imageVector = Icons.Filled.Share,
-                    contentDescription = "Condividi lista",
-                    tint = colors.inkPrimary,
-                )
-            }
-        },
-        colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(
-            containerColor = colors.surface,
-            titleContentColor = colors.inkPrimary,
         )
-    )
-}
+    }
 }

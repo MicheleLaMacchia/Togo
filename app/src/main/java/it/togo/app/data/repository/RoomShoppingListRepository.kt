@@ -101,6 +101,6 @@ class RoomShoppingListRepository(
             throw IllegalStateException("Expected to delete ${checkedItemIds.size} items but deleted $deletedCount")
         }
 
-        true
+        return true
     }
 }

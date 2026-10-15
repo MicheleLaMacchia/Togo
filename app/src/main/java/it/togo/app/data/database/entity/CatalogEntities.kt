@@ -97,17 +97,3 @@ data class CanonicalProductEntity(
     )
 }
 
-@Entity(
-    tableName = "SYNONYM",
-    indices = [
-        Index(value = ["product_id"], name = "idx_synonym_product_id"),
-        Index(value = ["term"], name = "idx_synonym_term")
-    ]
-)
-data class SynonymEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long,
-    @ColumnInfo(name = "product_id")
-    val productId: Long,
-    val term: String
-)

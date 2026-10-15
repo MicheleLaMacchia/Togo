@@ -3,6 +3,7 @@ package it.togo.app.ui.theme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocal
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
@@ -183,9 +184,9 @@ internal val LocalTogoColorScheme: CompositionLocal<TogoColorScheme> =
         error("TogoColorScheme non disponibile. Avvolgere il contenuto in TogoTheme { ... }")
     }
 
-/** Estensione per accedere ai token TOGO da qualsiasi composable dentro TogoTheme. */
-val androidx.compose.ui.platform.CompositionLocalProvider.colors: TogoColorScheme
-    get() = LocalTogoColorScheme.current
+/** Funzione composable per accedere ai colori TOGO. */
+@Composable
+fun togoColors(): TogoColorScheme = LocalTogoColorScheme.current
 
 /** Factory per creare lo [TogoColorScheme] appropriato dal tema corrente. */
 fun togoColorSchemeFrom(darkTheme: Boolean): TogoColorScheme =

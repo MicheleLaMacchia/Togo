@@ -1,30 +1,26 @@
 package it.togo.app.ui.theme
 
+import android.content.res.Configuration
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MaterialThemeDefaults
+import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RoundedCornerSize
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.provides
+import androidx.compose.ui.platform.LocalConfiguration
 
 /**
  * Tema TOGO — Entry point del Design System "High-Contrast Utility".
  *
  * Avvolge [MaterialTheme] fornendo:
  * - [TogoColorScheme] custom (Light/Dark) via [CompositionLocal]
- * - [TogoTypography] 5 ruoli via [CompositionLocal]
- * - [TogoSpacing] scala 4px/8px + touch target via [CompositionLocal]
- * - [TogoShapes] raggi angolo via [CompositionLocal]
+ * - [TogoTypographyTokens] 5 ruoli via [CompositionLocal]
+ * - [TogoSpacingTokens] scala 4px/8px + touch target via [CompositionLocal]
+ * - [TogoShapesTokens] raggi angolo via [CompositionLocal]
  * - [TogoComponentTokens] 8 componenti via [CompositionLocal]
  *
  * Uso:
  * ```kotlin
- * TogoTheme {
+ * TogoTheme(darkTheme = isSystemDarkTheme()) {
  *     Surface { Text("Hello", style = typography.itemName, color = colors.inkPrimary) }
  * }
  * ```
@@ -33,39 +29,26 @@ import androidx.compose.ui.unit.sp
  */
 @Composable
 fun TogoTheme(
-    darkTheme: Boolean = androidx.compose.material3.isSystemInDarkTheme(),
-    contentAlignment: Alignment = Alignment.TopStart,
+    // darkTheme senza default: il caller decide (evita dipendenza da isSystemInDarkTheme)
+    darkTheme: Boolean,
     content: @Composable () -> Unit,
 ) {
-    val context = LocalContext.current
     val materialColorScheme = if (darkTheme) Material3DarkColorScheme else Material3LightColorScheme
-    val togoColorScheme = togoColorSchemeFrom(darkTheme)
-    val togoTypography = TogoTypography
-    val togoSpacing = TogoSpacing
-    val togoShapes = TogoShapes
+    val togoColorScheme: TogoColorScheme = togoColorSchemeFrom(darkTheme)
+    val togoTypography: TogoTypographyTokens = TogoTypography
+    val togoSpacing: TogoSpacingTokens = TogoSpacing
+    val togoShapes: TogoShapesTokens = TogoShapes
     val togoComponentTokens = remember {
-        TogoComponentTokens.from(togoColorScheme, togoShapes)
+        togoComponentTokensFrom(togoColorScheme, togoShapes)
     }
 
-    // Typography Material3 derivata dai token TOGO (per componenti Material3 che la usano internamente)
+    // Typography Material3 derivata dai token TOGO
     val materialTypography = Typography(
         headlineMedium = togoTypography.titleScreen,
         titleMedium = togoTypography.sectionHeader,
         bodyLarge = togoTypography.itemName,
         labelLarge = togoTypography.itemMeta,
         bodySmall = togoTypography.caption,
-        // Ruoli Material3 non usati da TOGO: fallback a default
-        displayLarge = MaterialThemeDefaults.typography.displayLarge,
-        displayMedium = MaterialThemeDefaults.typography.displayMedium,
-        displaySmall = MaterialThemeDefaults.typography.displaySmall,
-        headlineLarge = MaterialThemeDefaults.typography.headlineLarge,
-        headlineSmall = MaterialThemeDefaults.typography.headlineSmall,
-        titleLarge = MaterialThemeDefaults.typography.titleLarge,
-        titleSmall = MaterialThemeDefaults.typography.titleSmall,
-        bodyMedium = MaterialThemeDefaults.typography.bodyMedium,
-        bodySmall = MaterialThemeDefaults.typography.bodySmall,
-        labelMedium = MaterialThemeDefaults.typography.labelMedium,
-        labelSmall = MaterialThemeDefaults.typography.labelSmall,
     )
 
     // Shapes Material3 derivati dai token TOGO
@@ -74,9 +57,10 @@ fun TogoTheme(
         small = togoShapes.sm,
         medium = togoShapes.md,
         large = togoShapes.lg,
-        extraLarge = togoShapes.lg, // Chip/altri usano lg (12dp), non full (cerchio)
+        extraLarge = togoShapes.lg,
     )
 
+    // CompositionLocalProvider usando infix 'provides' (API pubblica standard)
     CompositionLocalProvider(
         LocalTogoColorScheme provides togoColorScheme,
         LocalTogoTypography provides togoTypography,
@@ -88,39 +72,18 @@ fun TogoTheme(
             colorScheme = materialColorScheme,
             typography = materialTypography,
             shapes = materialShapes,
-            contentAlignment = contentAlignment,
             content = content,
         )
     }
 }
 
 /**
- * Accesso rapido ai colori TOGO dal contesto composable.
- * Equivalente a `MaterialTheme.colorScheme` ma per token TOGO.
+ * Helper per calcolare darkTheme da configurazione di sistema.
+ * Sostituisce [isSystemInDarkTheme] per compatibilità versioni Compose.
+ * Usa in: `TogoTheme(darkTheme = isSystemDarkTheme())`
  */
 @Composable
-fun togoColors(): TogoColorScheme = LocalTogoColorScheme.current
-
-/**
- * Accesso rapido alla tipografia TOGO.
- */
-@Composable
-fun togoTypography(): TogoTypography = LocalTogoTypography.current
-
-/**
- * Accesso rapido allo spacing TOGO.
- */
-@Composable
-fun togoSpacing(): TogoSpacing = LocalTogoSpacing.current
-
-/**
- * Accesso rapido alle shape TOGO.
- */
-@Composable
-fun togoShapes(): TogoShapes = LocalTogoShapes.current
-
-/**
- * Accesso rapido ai token component TOGO.
- */
-@Composable
-fun togoComponentTokens(): TogoComponentTokens = LocalTogoComponentTokens.current
+fun isSystemDarkTheme(): Boolean {
+    val config = LocalConfiguration.current
+    return (config.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+}

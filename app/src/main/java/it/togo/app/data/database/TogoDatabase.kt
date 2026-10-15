@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.room.TypeConverters
 import it.togo.app.data.database.dao.CatalogDao
 import it.togo.app.data.database.dao.HistoryDao
 import it.togo.app.data.database.dao.LearnedRulesDao
@@ -16,7 +15,6 @@ import it.togo.app.data.database.entity.ShoppingItemEntity
 import it.togo.app.data.database.entity.TaxonomyLevel1Entity
 import it.togo.app.data.database.entity.TaxonomyLevel2Entity
 import it.togo.app.data.database.entity.TaxonomyLevel3Entity
-import it.togo.app.data.database.entity.TypeConverters
 
 @Database(
     entities = [
@@ -32,7 +30,6 @@ import it.togo.app.data.database.entity.TypeConverters
     version = 1,
     exportSchema = false
 )
-@TypeConverters(TypeConverters::class)
 abstract class TogoDatabase : RoomDatabase() {
 
     abstract fun shoppingItemDao(): ShoppingItemDao

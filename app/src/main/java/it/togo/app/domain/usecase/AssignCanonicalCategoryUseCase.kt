@@ -23,7 +23,7 @@ class AssignCanonicalCategoryUseCase(
      * @param userExpression Espressione utente originale (per lookup regole apprese)
      * @return CategoryAssignment con categoria suggerita, confidence, origine
      */
-    operator fun invoke(
+    suspend operator fun invoke(
         resolvedProduct: CanonicalProduct,
         userExpression: String? = null
     ): CategoryAssignment = withContext(Dispatchers.IO) {

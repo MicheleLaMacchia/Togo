@@ -59,9 +59,15 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.koin.android)
     implementation(libs.koin.compose)
-    implementation(libs.room.runtime)
-    implementation(libs.room.ktx)
-    ksp(libs.room.compiler)
+    implementation(libs.room.runtime) {
+        exclude(group = "com.intellij", module = "annotations")
+    }
+    implementation(libs.room.ktx) {
+        exclude(group = "com.intellij", module = "annotations")
+    }
+    ksp(libs.room.compiler) {
+        exclude(group = "com.intellij", module = "annotations")
+    }
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     testImplementation(libs.junit)
     testImplementation(libs.sqlite.jdbc)

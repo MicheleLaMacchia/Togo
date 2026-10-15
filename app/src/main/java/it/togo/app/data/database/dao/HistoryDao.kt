@@ -29,14 +29,6 @@ interface HistoryDao {
     @Update
     suspend fun update(item: HistoricalItemEntity): Int
 
-    @Query("""
-        INSERT INTO HISTORICAL_ITEM (id, productId, lastQuantity, lastUnit, purchasedAt, purchaseCount)
-        VALUES (:id, :productId, :lastQuantity, :lastUnit, :purchasedAt, :purchaseCount)
-        ON CONFLICT(id) DO UPDATE SET
-            lastQuantity = excluded.lastQuantity,
-            lastUnit = excluded.lastUnit,
-            purchasedAt = excluded.purchasedAt,
-            purchaseCount = purchaseCount + 1
-    """)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertHistorical(item: HistoricalItemEntity): Long
 }

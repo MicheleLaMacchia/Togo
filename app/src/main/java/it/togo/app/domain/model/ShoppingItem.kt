@@ -24,9 +24,9 @@ data class ShoppingItem(
     ): ShoppingItem = copy(
         quantity = quantity ?: this.quantity,
         unit = unit ?: this.unit,
-        brand = brand ?? this.brand,
-        variant = variant ?? this.variant,
-        condition = condition ?? this.condition,
+        brand = brand ?: this.brand,
+        variant = variant ?: this.variant,
+        condition = condition ?: this.condition,
         isChecked = isChecked ?: this.isChecked,
         updatedAt = System.currentTimeMillis()
     )

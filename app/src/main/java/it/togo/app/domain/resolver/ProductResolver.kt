@@ -65,7 +65,8 @@ class ProductResolver(
 
         // Cerca prodotti corrispondenti (max 50 dal DB)
         val candidates = catalogRepository.search(normalized)
-            .let { flow -> flow.first() }
+            .firstOrNull()
+            .orEmpty()
             .mapNotNull { product ->
                 val score = calculateConfidence(normalized, product)
                 if (score >= MIN_CONFIDENCE) {
