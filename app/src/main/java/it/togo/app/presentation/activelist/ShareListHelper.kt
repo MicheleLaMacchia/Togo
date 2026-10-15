@@ -3,22 +3,26 @@ package it.togo.app.presentation.activelist
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.repository.CatalogRepository
+import kotlinx.coroutines.flow.first
 
 suspend fun buildSharedListText(
     activeItems: List<ShoppingItem>,
     catalogRepository: CatalogRepository
 ): String {
-    val taxonomy = catalogRepository.getTaxonomy().let { flow ->
-        flow.firstOrNull() ?: emptyList()
-    }
+    val taxonomy = catalogRepository.getTaxonomy().first()
     val level1Map = taxonomy.filterIsInstance<TaxonomyLevel.Level1>().associateBy { it.id }
     val level2Map = taxonomy.filterIsInstance<TaxonomyLevel.Level2>().associateBy { it.id }
     val level3Map = taxonomy.filterIsInstance<TaxonomyLevel.Level3>().associateBy { it.id }
+    val productsById = mutableMapOf<String, it.togo.app.domain.model.CanonicalProduct>()
+    for (item in activeItems) {
+        val product = catalogRepository.getById(item.productId) ?: continue
+        productsById[item.id] = product
+    }
 
     val sb = StringBuilder()
 
     val itemsByL1 = activeItems.groupBy { item ->
-        val product = catalogRepository.getById(item.productId)
+        val product = productsById[item.id]
         val l3 = product?.level3Id?.let { level3Map[it] }
         val l2 = l3?.let { level2Map[it.level2Id] }
         l2?.let { level1Map[it.level1Id] }
@@ -29,7 +33,7 @@ suspend fun buildSharedListText(
         sb.appendLine("=== ${l1.name} ===")
 
         val itemsByL2 = l1Items.groupBy { item ->
-            val product = catalogRepository.getById(item.productId)
+            val product = productsById[item.id]
             val l3 = product?.level3Id?.let { level3Map[it] }
             l3?.let { level2Map[it.level2Id] }
         }
@@ -39,7 +43,7 @@ suspend fun buildSharedListText(
             sb.appendLine("--- ${l2.name} ---")
 
             val itemsByL3 = l2Items.groupBy { item ->
-                val product = catalogRepository.getById(item.productId)
+                val product = productsById[item.id]
                 product?.level3Id?.let { level3Map[it] }
             }
 

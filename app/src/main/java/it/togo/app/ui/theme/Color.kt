@@ -4,7 +4,7 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocal
+import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
@@ -132,7 +132,20 @@ sealed interface TogoColorScheme {
     val accentWarning: Color
     val badgeBg: Color
     val badgeInk: Color
+
+    // Alias legacy mantenuti per i consumer UI già esistenti.
+    val surface: Color get() = surfaceCard
+    val surfaceVariant: Color get() = surfaceSubtle
+    val inkTertiary: Color get() = inkMuted
+    val accent: Color get() = accentHighlight
+    val accentSoft: Color get() = surfaceSubtle
+    val success: Color get() = accentSuccess
+    val warning: Color get() = accentWarning
+    val error: Color get() = accentWarning
+    val scrim: Color get() = surfaceInverse
 }
+
+typealias TogoColors = TogoColorScheme
 
 /** Implementazione Light. */
 data class LightTogoColorSchemeImpl(
@@ -175,7 +188,7 @@ data class DarkTogoColorSchemeImpl(
 ) : TogoColorScheme
 
 /** CompositionLocal per il ColorScheme TOGO corrente (Light/Dark). */
-internal val LocalTogoColorScheme: CompositionLocal<TogoColorScheme> =
+internal val LocalTogoColorScheme: ProvidableCompositionLocal<TogoColorScheme> =
     staticCompositionLocalOf {
         error("TogoColorScheme non disponibile. Avvolgere il contenuto in TogoTheme { ... }")
     }

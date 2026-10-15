@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 
@@ -37,25 +36,34 @@ class LearnedRulesViewModel(
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
-            combine(
+            val rulesAndSearch = combine(
                 learnedRulesRepository.getAll(),
                 _searchQuery,
                 _snackbarMessage,
+            ) { rules, query, snackbar -> Triple(rules, query, snackbar) }
+
+            val dialogState = combine(
                 _isDeleteDialogOpen,
                 _ruleToDelete,
-                _editingRule
-            ) { rules, query, snackbar, dialogOpen, deleteRule, editingRule ->
+                _editingRule,
+            ) { dialogOpen, deleteRule, editingRule -> Triple(dialogOpen, deleteRule, editingRule) }
+
+            combine(rulesAndSearch, dialogState) { (rules, query, snackbar), (dialogOpen, deleteRule, editingRule) ->
                 // Filtra regole orfane (prodotto non più nel catalogo)
-                val validRules = rules.filter { rule ->
-                    catalogRepository.getById(rule.productId) != null
+                val productNames = mutableMapOf<Long, String>()
+                for (rule in rules) {
+                    catalogRepository.getById(rule.productId)?.let { product ->
+                        productNames[rule.productId] = product.name
+                    }
                 }
+                val validRules = rules.filter { it.productId in productNames }
                 // Ricerca combinata: espressione OR nome prodotto
                 val filtered = if (query.isBlank()) {
                     validRules
                 } else {
                     validRules.filter { rule ->
                         rule.userExpression.contains(query, ignoreCase = true) ||
-                            (catalogRepository.getById(rule.productId)?.name?.contains(query, ignoreCase = true) == true)
+                            (productNames[rule.productId]?.contains(query, ignoreCase = true) == true)
                     }
                 }
                 LearnedRulesUiState(

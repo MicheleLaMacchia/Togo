@@ -6,6 +6,8 @@ import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.ShoppingListRepository
+import it.togo.app.domain.usecase.ShareListUseCase
+import it.togo.app.presentation.additem.AddItemConfirmed
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +26,8 @@ class ActiveListViewModel(
     private val shoppingRepository: ShoppingListRepository,
     private val catalogRepository: CatalogRepository
 ) : ViewModel() {
+
+    private val shareListUseCase = ShareListUseCase(shoppingRepository, catalogRepository)
 
     private val _uiState = MutableStateFlow(ActiveListUiState())
     val uiState = _uiState
@@ -71,24 +75,21 @@ class ActiveListViewModel(
         }
     }
 
-    private fun buildUiState(
+    private suspend fun buildUiState(
         items: List<ShoppingItem>,
         taxonomy: TaxonomyCache
     ): ActiveListUiState {
         val (l1List, l2List, l3List) = taxonomy
 
-        val l3ToL2 = mutableMapOf<Long, Long>()
-        val l2ToL1 = mutableMapOf<Long, Long>()
-
-        for (l3 in l3List) {
-            l3ToL2[l3.id] = l3.level2Id
-            l2ToL1[l3.level2Id] = l2List.find { it.id == l3.level2Id }?.level1Id ?: continue
-        }
-
         val itemsByL3 = mutableMapOf<Long, MutableList<ShoppingItem>>()
+        val productNames = mutableMapOf<Long, String>()
         for (item in items) {
-            val l3Id = l3List.find { it.id == item.productId }?.id ?: continue
-            itemsByL3.getOrPut(l3Id) { mutableListOf() }.add(item)
+            val product = catalogRepository.getById(item.productId) ?: continue
+            productNames[item.productId] = product.name
+            val l3Id = product.level3Id
+            if (l3List.any { it.id == l3Id }) {
+                itemsByL3.getOrPut(l3Id) { mutableListOf() }.add(item)
+            }
         }
 
         itemsByL3.values.forEach { list -> list.sortBy { item -> item.productId } }
@@ -101,7 +102,7 @@ class ActiveListViewModel(
                 val l3s = l3List.filter { it.level2Id == l2.id }
                 val l3Groups = mutableListOf<Level3Group>()
                 for (l3 in l3s) {
-                    val l3Items = itemsByL3.getOrDefault(l3.id, emptyList())
+                    val l3Items = itemsByL3[l3.id].orEmpty()
                     if (l3Items.isNotEmpty()) {
                         l3Groups.add(Level3Group(l3, l3Items))
                     }
@@ -120,6 +121,7 @@ class ActiveListViewModel(
         return ActiveListUiState(
             activeGroups = groups,
             checkedItems = checkedItems,
+            productNames = productNames,
             error = null
         )
     }
@@ -128,6 +130,7 @@ class ActiveListViewModel(
         when (event) {
             is UiEvent.CheckOff -> handleCheckOff(event.itemId, event.isChecked)
             is UiEvent.EditItem -> handleEditItem(event.item)
+            is UiEvent.VoiceCommand -> { }
             is UiEvent.DeleteItem -> handleDeleteItem(event.itemId)
             is UiEvent.NavigateToVoice -> { }
             is UiEvent.NavigateToHistory -> { }
@@ -146,6 +149,8 @@ class ActiveListViewModel(
             }
         }
     }
+
+    suspend fun shareListIntent(): android.content.Intent? = shareListUseCase()
 
     private fun findItem(itemId: String): ShoppingItem? {
         return _uiState.value.activeGroups
@@ -238,7 +243,7 @@ class ActiveListViewModel(
 
     private fun handleUndoDelete() {
         _deletedItemForUndo.value?.let { item ->
-            val restored = item.copyWith(updatedAt = System.currentTimeMillis())
+            val restored = item.copyWith()
             viewModelScope.launch {
                 withContext(Dispatchers.IO) {
                     shoppingRepository.insert(restored)
@@ -320,9 +325,5 @@ class ActiveListViewModel(
         val l1: List<TaxonomyLevel.Level1>,
         val l2: List<TaxonomyLevel.Level2>,
         val l3: List<TaxonomyLevel.Level3>,
-    ) {
-        fun component1() = l1
-        fun component2() = l2
-        fun component3() = l3
-    }
+    )
 }

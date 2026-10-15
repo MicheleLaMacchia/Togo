@@ -2,11 +2,14 @@ package it.togo.app.presentation.additem
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,8 +21,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
@@ -39,6 +45,7 @@ import java.util.Locale
  * - LazyColumn suggerimenti sotto (max 8)
  * - Tap su risultato → ProductSelected
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ProductSearchField(
     query: String,
@@ -51,8 +58,9 @@ fun ProductSearchField(
     val typography = togoTypography()
     val spacing = togoSpacing()
     val tokens = componentTokens()
+    var isFocused by remember { mutableStateOf(false) }
 
-    val textFieldFocusManager = androidx.compose.ui.focus.FocusManager_androidKt.LocalFocusManager.current
+    val textFieldFocusManager = androidx.compose.ui.platform.LocalFocusManager.current
     val textFieldFocusRequester = remember { androidx.compose.ui.focus.FocusRequester() }
 
     Column(
@@ -66,14 +74,12 @@ fun ProductSearchField(
                 .padding(horizontal = spacing.space2)
                 .background(
                     color = colors.surfaceCard,
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(tokens.itemRow.radius),
+                    shape = tokens.itemRow.radius,
                 )
                 .border(
                     width = 1.dp,
-                    color = if (textFieldFocusManager.hasFocus(textFieldFocusRequester))
-                        colors.accentHighlight
-                        else colors.borderHairline,
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(tokens.itemRow.radius),
+                    color = if (isFocused) colors.accentHighlight else colors.borderHairline,
+                    shape = tokens.itemRow.radius,
                 ),
             contentAlignment = Alignment.CenterStart,
         ) {
@@ -94,7 +100,9 @@ fun ProductSearchField(
                     .padding(
                         horizontal = spacing.space3,
                         vertical = spacing.space2,
-                    ),
+                    )
+                    .focusRequester(textFieldFocusRequester)
+                    .onFocusChanged { isFocused = it.isFocused },
                 placeholder = {
                     Text(
                         "Cerca prodotto...",
@@ -104,13 +112,16 @@ fun ProductSearchField(
                 },
                 singleLine = true,
                 textStyle = typography.itemName,
-                colors = androidx.compose.material3.TextFieldDefaults.textFieldColors(
-                    textColor = colors.inkPrimary,
+                colors = androidx.compose.material3.TextFieldDefaults.colors(
+                    focusedTextColor = colors.inkPrimary,
+                    unfocusedTextColor = colors.inkPrimary,
                     cursorColor = colors.accentHighlight,
-                    backgroundColor = Color.Transparent,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
                     disabledIndicatorColor = Color.Transparent,
+                    errorContainerColor = Color.Transparent,
                 ),
                 keyboardOptions = androidx.compose.ui.text.input.KeyboardOptions(
                     keyboardType = androidx.compose.ui.text.input.KeyboardType.Text,
@@ -157,6 +168,7 @@ fun ProductSearchField(
 }
 
 /** Singolo elemento suggerimento */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ProductSuggestionItem(
     product: CanonicalProduct,
@@ -174,8 +186,8 @@ private fun ProductSuggestionItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = spacing.space2, vertical = spacing.space2)
-            .background(colors.surfaceCard, androidx.compose.foundation.shape.RoundedCornerShape(tokens.itemRow.radius))
-            .border(1.dp, colors.borderHairline, androidx.compose.foundation.shape.RoundedCornerShape(tokens.itemRow.radius))
+            .background(colors.surfaceCard, tokens.itemRow.radius)
+            .border(1.dp, colors.borderHairline, tokens.itemRow.radius)
             .combinedClickable(onClick = onClick)
             .padding(horizontal = spacing.space3, vertical = spacing.space3),
     ) {

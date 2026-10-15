@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.Flow
 data class ActiveListUiState(
     val activeGroups: List<CategoryGroup> = emptyList(),
     val checkedItems: List<ShoppingItem> = emptyList(),
+    val productNames: Map<Long, String> = emptyMap(),
     val error: String? = null,
     val checkingOffItemId: String? = null,      // Item in corso di animazione check-off
     val pendingCheckOffItemId: String? = null,  // Item in attesa di check-off (300ms delay)
@@ -69,6 +70,9 @@ sealed interface UiEvent {
 
     /** Modifica voce (tap su riga) */
     data class EditItem(val item: ShoppingItem) : UiEvent
+
+    /** Testo confermato dalla cattura vocale. */
+    data class VoiceCommand(val text: String) : UiEvent
 
     /** Elimina voce (swipe) */
     data class DeleteItem(val itemId: String) : UiEvent

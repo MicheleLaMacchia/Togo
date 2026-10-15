@@ -11,8 +11,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.UUID
@@ -55,13 +62,20 @@ class AddItemViewModel(
                     .map { results -> results }
                     .onStart { _uiState.update { it.copy(isLoading = true) } }
                     .onCompletion { _uiState.update { it.copy(isLoading = false) } }
+                    .catch { error ->
+                        _uiState.update { it.copy(isLoading = false, errors = it.errors + ("search" to (error.message ?: "Errore ricerca"))) }
+                        emit(emptyList())
+                    }
+                    .onEach { results -> _uiState.update { it.copy(searchResults = results) } }
             } else {
-                kotlinx.coroutines.flow.flowOf(emptyList())
+                kotlinx.coroutines.flow.flowOf(emptyList<CanonicalProduct>())
+                    .onEach { _uiState.update { it.copy(searchResults = emptyList(), isLoading = false) } }
             }
         }
         .stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(), emptyList())
 
     init {
+        searchResults.launchIn(viewModelScope)
         _searchQuery.value = ""
         if (isEditMode) {
             initializeEditMode()
@@ -80,10 +94,8 @@ class AddItemViewModel(
                         ?: throw IllegalStateException("Prodotto non più disponibile nel catalogo")
                     
                     val compatible = product.compatibleUnits
-                        .ifEmpty { product.defaultUnit?.let { listOf(it) } ?: listOf(StandardUnit.PIECE) }
+                        .ifEmpty { listOf(StandardUnit.PIECE) }
                     
-                    val defaultUnit = product.defaultUnit ?: compatible.firstOrNull { it == StandardUnit.PIECE } ?: compatible.first()
-
                     _uiState.update {
                         it.copy(
                             selectedProduct = product,
@@ -100,7 +112,7 @@ class AddItemViewModel(
                         )
                     }
                 } catch (e: Exception) {
-                    _uiState.update { it.copy(error = "Errore caricamento prodotto: ${e.message}") }
+                    _uiState.update { it.copy(errors = it.errors + ("product" to "Errore caricamento prodotto: ${e.message}")) }
                 }
             }
         }
@@ -132,9 +144,9 @@ class AddItemViewModel(
     private fun handleProductSelected(product: CanonicalProduct) {
         // Determina unità compatibili per il prodotto
         val compatible = product.compatibleUnits
-            .ifEmpty { product.defaultUnit?.let { listOf(it) } ?: listOf(StandardUnit.PIECE) }
+            .ifEmpty { listOf(StandardUnit.PIECE) }
 
-        val defaultUnit = product.defaultUnit ?: compatible.firstOrNull { it == StandardUnit.PIECE } ?: compatible.first()
+        val defaultUnit = compatible.firstOrNull { it == StandardUnit.PIECE } ?: compatible.first()
 
         _uiState.update {
             it.copy(
@@ -213,7 +225,7 @@ class AddItemViewModel(
 
         val item = if (isEditMode) {
             // Modalità EDIT: aggiorna item esistente mantenendo ID e timestamp creato
-            editItem!!.copyWith(
+            editItem!!.copy(
                 productId = state.selectedProduct!!.id,
                 quantity = state.quantity,
                 unit = unit,
@@ -221,7 +233,8 @@ class AddItemViewModel(
                 variant = state.variant.ifBlank { null },
                 condition = state.condition.ifBlank { null },
                 isChecked = editItem!!.isChecked, // mantiene stato check
-            ).copyWith(updatedAt = System.currentTimeMillis()) // Aggiorna timestamp
+                updatedAt = System.currentTimeMillis(),
+            )
         } else {
             // Modalità INSERT: nuova voce
             ShoppingItem(

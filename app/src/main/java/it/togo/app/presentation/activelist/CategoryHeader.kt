@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,10 +24,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import it.togo.app.domain.model.TaxonomyLevel
+import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.ui.theme.componentTokens
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
+import java.util.Locale
 
 /**
  * Header categoria (Level1 + Level2).
@@ -50,7 +53,7 @@ fun CategoryHeader(
             .padding(horizontal = spacing.space2)
         ,
         color = tokens.categoryHeader.background,
-        shape = RoundedCornerShape(0.dp),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(0.dp),
     ) {
         Row(
             modifier = Modifier
@@ -99,6 +102,7 @@ fun CategoryHeader(
 @Composable
 fun CategorySection(
     group: CategoryGroup,
+    productNames: Map<Long, String> = emptyMap(),
     onCheckOff: (String, Boolean) -> Unit,
     onEdit: (ShoppingItem) -> Unit,
     onDelete: (String) -> Unit,
@@ -154,6 +158,7 @@ fun CategorySection(
                         l3Group.items.forEach { item ->
                             ItemRow(
                                 item = item,
+                                productName = productNames[item.productId] ?: "Prodotto #${item.productId}",
                                 onCheckChange = { checked -> onCheckOff(item.id, checked) },
                                 onClick = { onEdit(item) },
                                 onDelete = { onDelete(item.id) },

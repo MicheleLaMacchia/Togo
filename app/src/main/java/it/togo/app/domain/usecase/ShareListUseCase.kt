@@ -5,6 +5,7 @@ import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.ShoppingListRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
 class ShareListUseCase(
@@ -22,8 +23,13 @@ class ShareListUseCase(
         val level1Map = taxonomy.filterIsInstance<TaxonomyLevel.Level1>().associateBy { it.id }
         val level2Map = taxonomy.filterIsInstance<TaxonomyLevel.Level2>().associateBy { it.id }
         val level3Map = taxonomy.filterIsInstance<TaxonomyLevel.Level3>().associateBy { it.id }
+        val productsById = mutableMapOf<String, it.togo.app.domain.model.CanonicalProduct>()
+        for (item in activeItems) {
+            val product = catalogRepository.getById(item.productId) ?: continue
+            productsById[item.id] = product
+        }
 
-        val text = buildSharedText(activeItems, level1Map, level2Map, level3Map)
+        val text = buildSharedText(activeItems, productsById, level1Map, level2Map, level3Map)
 
         android.content.Intent(android.content.Intent.ACTION_SEND)
             .setType("text/plain")
@@ -31,8 +37,9 @@ class ShareListUseCase(
             .putExtra(android.content.Intent.EXTRA_SUBJECT, "Lista spesa TOGO")
     }
 
-    private suspend fun buildSharedText(
+    private fun buildSharedText(
         items: List<ShoppingItem>,
+        productsById: Map<String, it.togo.app.domain.model.CanonicalProduct>,
         level1Map: Map<Long, TaxonomyLevel.Level1>,
         level2Map: Map<Long, TaxonomyLevel.Level2>,
         level3Map: Map<Long, TaxonomyLevel.Level3>
@@ -40,7 +47,7 @@ class ShareListUseCase(
         val sb = StringBuilder()
 
         val itemsByL1 = items.groupBy { item ->
-            val product = getProduct(item)
+            val product = productsById[item.id]
             val l3 = product?.level3Id?.let { level3Map[it] }
             val l2 = l3?.let { level2Map[it.level2Id] }
             l2?.let { level1Map[it.level1Id] }
@@ -51,7 +58,7 @@ class ShareListUseCase(
             sb.appendLine("=== ${l1.name} ===")
 
             val itemsByL2 = l1Items.groupBy { item ->
-                val product = getProduct(item)
+                val product = productsById[item.id]
                 val l3 = product?.level3Id?.let { level3Map[it] }
                 l3?.let { level2Map[it.level2Id] }
             }
@@ -61,7 +68,7 @@ class ShareListUseCase(
                 sb.appendLine("--- ${l2.name} ---")
 
                 val itemsByL3 = l2Items.groupBy { item ->
-                    val product = getProduct(item)
+                    val product = productsById[item.id]
                     product?.level3Id?.let { level3Map[it] }
                 }
 
@@ -77,10 +84,6 @@ class ShareListUseCase(
         }
 
         return sb.toString().trim()
-    }
-
-    private suspend fun getProduct(item: ShoppingItem): it.togo.app.domain.model.CanonicalProduct? {
-        return catalogRepository.getById(item.productId)
     }
 
     private fun formatItem(item: ShoppingItem): String {

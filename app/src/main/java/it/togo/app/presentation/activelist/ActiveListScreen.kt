@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,31 +15,28 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarAction
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.ModalBottomSheetLayout
-import androidx.compose.material3.ModalBottomSheetState
-import androidx.compose.material3.ModalBottomSheetValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import it.togo.app.domain.model.ShoppingItem
-import it.togo.app.domain.usecase.ShareListUseCase
 import it.togo.app.presentation.additem.AddItemBottomSheet
 import it.togo.app.presentation.voice.VoiceBottomSheet
 import it.togo.app.presentation.voice.VoiceBottomSheetViewModel
@@ -48,6 +46,7 @@ import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
     val viewModel = androidx.lifecycle.viewmodel.compose.viewModel<ActiveListViewModel>()
@@ -60,15 +59,18 @@ fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
     val spacing = togoSpacing()
     val tokens = componentTokens()
 
-    var editingItem by remember { mutableStateOf<ShoppingItem?>(null) }
-
     val voiceViewModel = androidx.lifecycle.viewmodel.compose.viewModel<VoiceBottomSheetViewModel>()
     val voiceUiState by voiceViewModel.uiState.collectAsState()
 
-    val shareUseCase = ShareListUseCase(
-        shoppingListRepository = TODO(),
-        catalogRepository = TODO()
-    )
+    val context = LocalContext.current
+    var showAddItemSheet by remember { mutableStateOf(false) }
+
+    if (showAddItemSheet) {
+        AddItemBottomSheet(
+            onConfirm = viewModel::onAddItemConfirmed,
+            onDismiss = { showAddItemSheet = false },
+        )
+    }
 
     voiceViewModel.onTextConfirmed = { text ->
         onEvent(UiEvent.VoiceCommand(text))
@@ -83,24 +85,7 @@ fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
         onDismiss = { voiceViewModel.cancel() },
     )
 
-    ModalBottomSheetLayout(
-        sheetState = remember { ModalBottomSheetState(ModalBottomSheetValue.Hidden) },
-        sheetContent = {
-            AddItemBottomSheet(
-                sheetState = remember { ModalBottomSheetState(ModalBottomSheetValue.Hidden) },
-                onConfirm = { confirmed ->
-                    viewModel.onAddItemConfirmed(confirmed)
-                },
-                onDismiss = { },
-                isEditMode = editingItem != null,
-            )
-        },
-        sheetBackgroundColor = colors.surfaceBase,
-        sheetShape = androidx.compose.foundation.shape.RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-        sheetPeekHeight = 0.dp,
-        confirmStateChange = { it == ModalBottomSheetValue.Expanded },
-    ) {
-        Scaffold(
+    Scaffold(
             topBar = {
                 TopAppBar(
                     title = { Text("Spesa (${uiState.activeCount})", style = typography.sectionHeader) },
@@ -112,8 +97,7 @@ fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
                     actions = {
                         IconButton(onClick = {
                             scope.launch {
-                                val context = LocalContext.current
-                                val intent = shareUseCase()
+                                val intent = viewModel.shareListIntent()
                                 if (intent != null) {
                                     (context as? android.app.Activity)?.startActivity(
                                         Intent.createChooser(intent, "Condividi lista spesa")
@@ -133,8 +117,7 @@ fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
             floatingActionButton = {
                 Box(
                     modifier = Modifier
-                        .padding(16.dp)
-                        .align(Alignment.BottomEnd),
+                        .padding(16.dp),
                 ) {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -152,11 +135,7 @@ fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
                         )
 
                         FloatingActionButton(
-                            onClick = {
-                                scope.launch {
-                                    // TODO: show AddItemBottomSheet
-                                }
-                            },
+                            onClick = { showAddItemSheet = true },
                             containerColor = colors.accentAction,
                             contentColor = colors.inkInverse,
                             shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
@@ -173,22 +152,19 @@ fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
             floatingActionButtonPosition = androidx.compose.material3.FabPosition.End,
             snackbarHost = { SnackbarHost(snackbarHostState) },
             content = { innerPadding ->
-                val checkoutSnackbarMessage by viewModel.uiState.collectAsState { it.checkoutSnackbarMessage }
                 Column(
                     modifier = Modifier
                         .padding(innerPadding)
                         .fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(spacing.space2)
                 ) {
-                    if (checkoutSnackbarMessage != null) {
+                    uiState.checkoutSnackbarMessage?.let { checkoutSnackbarMessage ->
                         Snackbar(
                             modifier = Modifier.fillMaxWidth(),
                             action = {
-                                SnackbarAction(
-                                    label = "Annulla",
-                                    onClick = { onEvent(UiEvent.UndoCheckout) },
-                                    contentColor = colors.accentHighlight,
-                                )
+                                TextButton(onClick = { onEvent(UiEvent.UndoCheckout) }) {
+                                    Text("Annulla", color = colors.accentHighlight)
+                                }
                             },
                         ) {
                             Text(checkoutSnackbarMessage, style = typography.itemMeta, color = colors.inkInverse)
@@ -197,7 +173,7 @@ fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
 
                     if (uiState.error != null) {
                         Text(
-                            text = uiState.error,
+                                text = uiState.error.orEmpty(),
                             style = typography.itemMeta,
                             color = colors.error,
                             modifier = Modifier.padding(spacing.space4)
@@ -205,9 +181,7 @@ fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
                     } else if (uiState.activeGroups.isEmpty()) {
                         EmptyState(
                             onAddManual = {
-                                scope.launch {
-                                    // TODO: show AddItemBottomSheet
-                                }
+                                showAddItemSheet = true
                             },
                             onVoice = { onEvent(UiEvent.NavigateToVoice) },
                             colors = colors,
@@ -217,12 +191,12 @@ fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
                     } else {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = innerPadding,
                             verticalArrangement = Arrangement.spacedBy(spacing.space2)
                         ) {
                             items(uiState.activeGroups, key = { group -> group.level1.id.toString() }) { group ->
                                 CategorySection(
                                     group = group,
+                                    productNames = uiState.productNames,
                                     onCheckOff = { itemId, checked -> onEvent(UiEvent.CheckOff(itemId, checked)) },
                                     onEdit = { item -> onEvent(UiEvent.EditItem(item)) },
                                     onDelete = { itemId -> onEvent(UiEvent.DeleteItem(itemId)) },
@@ -237,6 +211,7 @@ fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
                             if (uiState.hasCheckedItems) {
                                 PresiSection(
                                     items = uiState.checkedItems,
+                                    productNames = uiState.productNames,
                                     onUncheck = { itemId -> onEvent(UiEvent.CheckOff(itemId, false)) },
                                     onCheckout = { onEvent(UiEvent.Checkout) },
                                     colors = colors,
@@ -250,5 +225,4 @@ fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
                 }
             }
         )
-    }
 }

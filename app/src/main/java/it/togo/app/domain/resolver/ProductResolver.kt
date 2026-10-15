@@ -5,6 +5,7 @@ import it.togo.app.domain.model.ResolutionResult
 import it.togo.app.domain.model.ResolvedProduct
 import it.togo.app.domain.repository.CatalogRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
 /**

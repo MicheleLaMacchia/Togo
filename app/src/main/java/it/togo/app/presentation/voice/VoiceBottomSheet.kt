@@ -51,6 +51,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import it.togo.app.ui.theme.togoColors
+import it.togo.app.ui.theme.TogoColorScheme
+import it.togo.app.ui.theme.TogoSpacingTokens
+import it.togo.app.ui.theme.TogoTypographyTokens
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypographyTokens
 

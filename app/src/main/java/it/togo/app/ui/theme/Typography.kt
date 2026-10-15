@@ -2,7 +2,7 @@ package it.togo.app.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocal
+import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -50,16 +50,20 @@ data class TogoTypographyTokens(
         fontSize = 12.sp,
         lineHeight = 16.sp
     ),
-)
+) {
+    val itemTitle: TextStyle get() = itemName
+}
+
+typealias TogoTypography = TogoTypographyTokens
 
 /** Istanza singleton dei token tipografici TOGO. */
-val TogoTypography = TogoTypographyTokens()
+val DefaultTogoTypography = TogoTypographyTokens()
 
 /**
  * CompositionLocal per distribuire i token tipografici attraverso l'albero dei composable.
  * Usato da [TogoTheme] per fornire i tipi di testo predefiniti.
  */
-internal val LocalTogoTypography: CompositionLocal<TogoTypographyTokens> =
+internal val LocalTogoTypography: ProvidableCompositionLocal<TogoTypographyTokens> =
     staticCompositionLocalOf {
         error("TogoTypography non disponibile. Avvolgere il contenuto in TogoTheme { ... }")
     }
@@ -70,3 +74,7 @@ internal val LocalTogoTypography: CompositionLocal<TogoTypographyTokens> =
  */
 @Composable
 fun togoTypographyTokens(): TogoTypographyTokens = LocalTogoTypography.current
+
+/** Accessor storico mantenuto per i consumer UI. */
+@Composable
+fun togoTypography(): TogoTypographyTokens = togoTypographyTokens()

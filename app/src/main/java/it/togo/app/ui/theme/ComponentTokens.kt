@@ -1,10 +1,10 @@
 package it.togo.app.ui.theme
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocal
+import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RoundedCornerShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -149,7 +149,7 @@ fun togoComponentTokensFrom(
 )
 
 /** CompositionLocal per i token component TOGO. */
-internal val LocalTogoComponentTokens: CompositionLocal<TogoComponentTokens> =
+internal val LocalTogoComponentTokens: ProvidableCompositionLocal<TogoComponentTokens> =
     staticCompositionLocalOf {
         error("TogoComponentTokens non disponibile. Avvolgere il contenuto in TogoTheme { ... }")
     }
@@ -157,3 +157,7 @@ internal val LocalTogoComponentTokens: CompositionLocal<TogoComponentTokens> =
 /** Funzione composable per accedere ai token component TOGO. */
 @Composable
 fun togoComponentTokens(): TogoComponentTokens = LocalTogoComponentTokens.current
+
+/** Accessor storico usato dai consumer del design system. */
+@Composable
+fun componentTokens(): TogoComponentTokens = togoComponentTokens()

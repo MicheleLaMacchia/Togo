@@ -4,7 +4,6 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +11,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -19,9 +21,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
@@ -32,9 +37,6 @@ import it.togo.app.ui.theme.componentTokens
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
-import android.os.Vibrator
-import android.content.Context
-import android.os.VibrationEffect
 
 /**
  * Sezione collassabile "Presi (N)" in fondo alla lista.
@@ -44,9 +46,11 @@ import android.os.VibrationEffect
  * - Pulsante "Concludi spesa" in fondo
  * - Voci checkate con checkbox spuntata → tap per uncheck
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PresiSection(
     items: List<ShoppingItem>,
+    productNames: Map<Long, String> = emptyMap(),
     onUncheck: (String) -> Unit,
     onCheckout: () -> Unit,
     colors: it.togo.app.ui.theme.TogoColorScheme,
@@ -55,6 +59,7 @@ fun PresiSection(
     tokens: it.togo.app.ui.theme.TogoComponentTokens,
 ) {
     var expanded by rememberSaveable { mutableStateOf(true) }
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -71,9 +76,18 @@ fun PresiSection(
                 .fillMaxWidth()
                 .padding(horizontal = spacing.space2, vertical = spacing.space2)
                 .background(colors.surfaceSubtle)
-                .border(bottom = androidx.compose.ui.graphics.BorderStroke(1.dp, colors.borderHairline))
+                .drawBehind {
+                    val strokeWidth = 1.dp.toPx()
+                    val y = size.height - strokeWidth / 2
+                    drawLine(
+                        color = colors.borderHairline,
+                        start = androidx.compose.ui.geometry.Offset(0f, y),
+                        end = androidx.compose.ui.geometry.Offset(size.width, y),
+                        strokeWidth = strokeWidth,
+                    )
+                }
                 .heightIn(min = 48.dp) // Touch target minimo 48dp
-            ,
+                .combinedClickable(onClick = { expanded = !expanded }),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -90,15 +104,9 @@ fun PresiSection(
                 contentDescription = if (expanded) "Collassa" else "Espandi",
                 tint = colors.inkSecondary,
                 modifier = Modifier
-                    .size(24.dp)
-                    .fillMaxWidth()
-                    .wrapContentSize(Alignment.CenterEnd),
+                    .size(24.dp),
             )
         }
-            .fillMaxWidth()
-            .background(colors.surfaceSubtle)
-            .border(bottom = androidx.compose.ui.graphics.BorderStroke(1.dp, colors.borderHairline))
-            .combinedClickable(onClick = { expanded = !expanded })
 
         // Contenuto animato
         androidx.compose.animation.AnimatedVisibility(
@@ -111,12 +119,16 @@ fun PresiSection(
             ),
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = spacing.space2)
+                    .padding(bottom = spacing.space3),
                 verticalArrangement = Arrangement.spacedBy(spacing.space1),
             ) {
                 items.forEach { item ->
                     ItemRow(
                         item = item, // Usa lo stato reale dell'item
+                        productName = productNames[item.productId] ?: "Prodotto #${item.productId}",
                         onCheckChange = { checked ->
                             if (!checked) onUncheck(item.id) // Uncheck = move back to active
                         },
@@ -125,34 +137,27 @@ fun PresiSection(
                     )
                 }
             }
-            .padding(horizontal = spacing.space2)
-            .padding(bottom = spacing.space3)
 
             // Pulsante "Concludi spesa" - nascosto se items vuoto
             if (items.isNotEmpty()) {
                 Button(
                     onClick = {
                         // Haptic feedback 15ms
-                        val context = androidx.compose.ui.platform.LocalContext.current
-                        val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
-                        if (vibrator != null && vibrator.hasVibrator()) {
-                            vibrator.vibrate(VibrationEffect.createOneShot(15, VibrationEffect.DEFAULT_AMPLITUDE))
-                        }
+                        performShortHapticFeedback(context)
                         onCheckout()
                     },
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.space2),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.space2).padding(bottom = spacing.space2),
                     colors = androidx.compose.material3.ButtonDefaults.buttonColors(
                         containerColor = tokens.bottomSheet.checkoutButtonBackground,
                         contentColor = tokens.bottomSheet.checkoutButtonContent,
                     ),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(tokens.bottomSheet.radiusTop),
+                    shape = tokens.bottomSheet.radiusTop,
                 ) {
                     Text(
                         text = "Concludi spesa",
                         style = typography.sectionHeader.copy(color = tokens.bottomSheet.checkoutButtonContent),
                     )
                 }
-                    .padding(bottom = spacing.space2)
             }
         }
     }

@@ -17,6 +17,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenu
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -51,6 +52,7 @@ import it.togo.app.ui.theme.togoTypography
  *
  * Design System: 100% token TogoTheme.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductCategorizationWizard(
     draft: NewProductDraft,

@@ -4,7 +4,6 @@ import android.content.res.Configuration
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocal
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalConfiguration
@@ -36,10 +35,10 @@ fun TogoTheme(
 ) {
     val materialColorScheme = if (darkTheme) Material3DarkColorScheme else Material3LightColorScheme
     val togoColorScheme: TogoColorScheme = togoColorSchemeFrom(darkTheme)
-    val togoTypography: TogoTypographyTokens = TogoTypography
-    val togoSpacing: TogoSpacingTokens = TogoSpacing
+    val togoTypography: TogoTypographyTokens = DefaultTogoTypography
+    val togoSpacing: TogoSpacingTokens = DefaultTogoSpacing
     val togoShapes: TogoShapesTokens = TogoShapes
-    val togoComponentTokens = remember {
+    val togoComponentTokens = remember(togoColorScheme, togoShapes) {
         togoComponentTokensFrom(togoColorScheme, togoShapes)
     }
 

@@ -2,6 +2,9 @@ package it.togo.app.presentation.search
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,7 +12,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingBasket
 import androidx.compose.material3.Icon
@@ -18,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -34,6 +37,7 @@ import it.togo.app.ui.theme.togoTypographyTokens
  * Mostra nome prodotto con termini evidenziati (background accentHighlight, bold)
  * e attributi opzionali (marca, variante, conservazione) sotto il nome.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SearchResultItem(
     product: CanonicalProduct,
@@ -46,18 +50,14 @@ fun SearchResultItem(
     val tokens = togoComponentTokens()
 
     val highlightedName = buildAnnotatedStringHighlight(product.name, query)
-    val metaParts = buildList<String> {
-        if (product.name.isNotBlank()) add(product.name)
-    }
-
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = spacing[2], vertical = spacing[1])
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(tokens.itemRow.radius)),
-        shape = RoundedCornerShape(tokens.itemRow.radius),
-        border = androidx.compose.ui.graphics.BorderStroke(tokens.itemRow.borderWidth, colors.borderCrisp),
+            .combinedClickable(onClick = onClick)
+            .clip(tokens.itemRow.radius),
+        shape = tokens.itemRow.radius,
+        border = BorderStroke(tokens.itemRow.borderWidth, colors.borderCrisp),
         color = tokens.itemRow.background,
     ) {
         Row(
@@ -76,14 +76,14 @@ fun SearchResultItem(
                     .size(tokens.checkboxUtility.size)
                     .background(
                         color = colors.surfaceSubtle,
-                        shape = RoundedCornerShape(tokens.checkboxUtility.radius),
+                        shape = tokens.checkboxUtility.radius,
                     )
                     .border(
                         tokens.checkboxUtility.borderWidth,
                         colors.borderHairline,
-                        RoundedCornerShape(tokens.checkboxUtility.radius),
+                        tokens.checkboxUtility.radius,
                     )
-                    .clip(RoundedCornerShape(tokens.checkboxUtility.radius)),
+                    .clip(tokens.checkboxUtility.radius),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -109,16 +109,6 @@ fun SearchResultItem(
                     overflow = TextOverflow.Ellipsis,
                 )
 
-                // Meta opzionale: solo nome per ora
-                if (metaParts.isNotEmpty()) {
-                    Text(
-                        text = metaParts.joinToString(" · "),
-                        style = typography.caption,
-                        color = colors.inkSecondary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
             }
         }
     }

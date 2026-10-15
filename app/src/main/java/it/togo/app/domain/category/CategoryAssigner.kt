@@ -5,6 +5,7 @@ import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.LearnedRulesRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
 /**
@@ -61,7 +62,9 @@ class CategoryAssigner(
         }
 
         // 3. Fallback primo L3 valido
-        val fallbackLevel3 = taxonomy.firstOrNull { it is TaxonomyLevel.Level3 && !it.isUserDefined } as? TaxonomyLevel.Level3
+        val fallbackLevel3 = taxonomy
+            .filterIsInstance<TaxonomyLevel.Level3>()
+            .firstOrNull { !it.isUserDefined }
         CategoryAssignment(
             suggestedLevel3Id = fallbackLevel3?.id ?: resolvedProduct.level3Id,
             confidence = 0.5,

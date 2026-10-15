@@ -33,6 +33,7 @@ data class AddItemUiState(
 
     // Validazione
     val errors: Map<String, String> = emptyMap(),
+    val isEditMode: Boolean = false,
 
     // Stato UI
     val isLoading: Boolean = false,

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,12 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.BorderStroke
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import it.togo.app.domain.model.CanonicalProduct
@@ -47,7 +43,6 @@ import it.togo.app.ui.theme.togoComponentTokens
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypographyTokens
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
 
 /**
  * Schermata di ricerca nel catalogo con evidenziazione dei termini trovati.
@@ -87,12 +82,12 @@ fun SearchScreen(onEvent: (SearchUiEvent) -> Unit) {
                 .padding(horizontal = spacing[4])
                 .background(
                     color = colors.surfaceCard,
-                    shape = RoundedCornerShape(tokens.itemRow.radius),
+                    shape = tokens.itemRow.radius,
                 )
                 .border(
                     width = 1.dp,
                     color = colors.borderHairline,
-                    shape = RoundedCornerShape(tokens.itemRow.radius),
+                    shape = tokens.itemRow.radius,
                 ),
             contentAlignment = Alignment.CenterStart,
         ) {
@@ -124,12 +119,15 @@ fun SearchScreen(onEvent: (SearchUiEvent) -> Unit) {
                 },
                 singleLine = true,
                 textStyle = typography.itemName,
-                colors = androidx.compose.material3.TextFieldDefaults.textFieldColors(
-                    textColor = colors.inkPrimary,
+                 colors = androidx.compose.material3.TextFieldDefaults.colors(
+                    focusedTextColor = colors.inkPrimary,
+                    unfocusedTextColor = colors.inkPrimary,
                     cursorColor = colors.accentHighlight,
-                    backgroundColor = Color.Transparent,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
+                    errorContainerColor = Color.Transparent,
                     errorIndicatorColor = Color.Transparent,
                 ),
             )
@@ -151,123 +149,4 @@ fun SearchScreen(onEvent: (SearchUiEvent) -> Unit) {
             }
         }
     }
-}
-
-/** Item risultato ricerca con highlighting termini */
-@Composable
-fun SearchResultItem(
-    product: CanonicalProduct,
-    query: String,
-    onClick: () -> Unit,
-) {
-    val colors = togoColors()
-    val typography = togoTypographyTokens()
-    val spacing = togoSpacing()
-    val tokens = togoComponentTokens()
-
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = spacing[2], vertical = spacing[1])
-            .combinedClickable(onClick = onClick)
-            .clip(RoundedCornerShape(tokens.itemRow.radius)),
-        shape = RoundedCornerShape(tokens.itemRow.radius),
-        border = BorderStroke(tokens.itemRow.borderWidth, colors.borderCrisp),
-        color = tokens.itemRow.background,
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    horizontal = tokens.itemRow.paddingHorizontal,
-                    vertical = tokens.itemRow.paddingVertical,
-                ),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(spacing[3]),
-        ) {
-            // 1. Icona prodotto
-            Box(
-                modifier = Modifier
-                    .size(tokens.checkboxUtility.size)
-                    .background(
-                        color = colors.surfaceSubtle,
-                        shape = RoundedCornerShape(tokens.checkboxUtility.radius),
-                    )
-                    .border(
-                        tokens.checkboxUtility.borderWidth,
-                        colors.borderHairline,
-                        RoundedCornerShape(tokens.checkboxUtility.radius),
-                    )
-                    .clip(RoundedCornerShape(tokens.checkboxUtility.radius)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.ShoppingBasket,
-                    contentDescription = "Prodotto",
-                    tint = colors.inkMuted,
-                    modifier = Modifier.size(tokens.checkboxUtility.size * 0.55f),
-                )
-            }
-
-            // 2. Centro: nome + meta
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
-                Text(
-                    text = buildAnnotatedStringHighlight(product.name, query),
-                    style = typography.itemName,
-                    color = colors.inkPrimary,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-
-                // Meta opzionale: solo nome per ora
-                if (product.name.isNotBlank()) {
-                    Text(
-                        text = product.name,
-                        style = typography.caption,
-                        color = colors.inkSecondary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-        }
-    }
-}
-
-/**
- * Costruisce AnnotatedString con highlighting dei termini della query.
- * Ogni occurrenza di query (case-insensitive) nel testo viene evidenziata
- * con background accentHighlight e grassetto.
- */
-fun buildAnnotatedStringHighlight(text: String, searchQuery: String): AnnotatedString {
-    if (text.isBlank() || searchQuery.isBlank()) {
-        return AnnotatedString(text)
-    }
-
-    val normalizedSearch = searchQuery.lowercase()
-    val lowerText = text.lowercase()
-    val builder = AnnotatedString.Builder(text)
-
-    var index = 0
-    while (true) {
-        index = lowerText.indexOf(normalizedSearch, index)
-        if (index == -1) break
-
-        builder.addStyle(
-            SpanStyle(
-                backgroundColor = Color(0xFF2563EB), // accentHighlight
-                fontWeight = FontWeight.Bold,
-            ),
-            index,
-            index + searchQuery.length,
-        )
-        index += searchQuery.length
-    }
-
-    return builder.toAnnotatedString()
 }

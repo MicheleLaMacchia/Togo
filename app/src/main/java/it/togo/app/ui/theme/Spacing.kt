@@ -1,7 +1,7 @@
 package it.togo.app.ui.theme
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocal
+import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.dp
 
@@ -37,13 +37,16 @@ data class TogoSpacingTokens(
         6 -> space6
         else -> throw IllegalArgumentException("Indice spacing valido: 1..6, ricevuto $index")
     }
+
 }
 
+typealias TogoSpacing = TogoSpacingTokens
+
 /** Istanza singleton dello spacing TOGO. */
-val TogoSpacing = TogoSpacingTokens()
+val DefaultTogoSpacing = TogoSpacingTokens()
 
 /** CompositionLocal per lo spacing TOGO. */
-internal val LocalTogoSpacing: CompositionLocal<TogoSpacingTokens> =
+internal val LocalTogoSpacing: ProvidableCompositionLocal<TogoSpacingTokens> =
     staticCompositionLocalOf {
         error("TogoSpacing non disponibile. Avvolgere il contenuto in TogoTheme { ... }")
     }

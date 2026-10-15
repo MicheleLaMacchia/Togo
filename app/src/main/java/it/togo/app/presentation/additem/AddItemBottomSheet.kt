@@ -8,9 +8,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -18,22 +20,25 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import it.togo.app.domain.model.CanonicalProduct
+import it.togo.app.domain.model.StandardUnit
 import it.togo.app.ui.theme.componentTokens
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
-import androidx.compose.material3.ModalBottomSheetLayout
-import androidx.compose.material3.ModalBottomSheetState
-import androidx.compose.material3.ModalBottomSheetValue
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.derivedStateOf
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.TextField
@@ -46,6 +51,7 @@ import androidx.compose.ui.platform.LocalContext
 import android.os.Vibrator
 import android.content.Context
 import android.os.VibrationEffect
+import kotlinx.coroutines.launch
 
 /**
  * Bottom Sheet "Aggiungi/Modifica Voce Manuale" - flusso multi-step.
@@ -60,9 +66,9 @@ import android.os.VibrationEffect
  * - INSERT: nuova voce (parte da step 1)
  * - EDIT: modifica voce esistente (parte da step 2, pre-popolato)
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddItemBottomSheet(
-    sheetState: ModalBottomSheetState,
     onConfirm: (it.togo.app.presentation.additem.AddItemConfirmed) -> Unit,
     onDismiss: () -> Unit,
     isEditMode: Boolean = false,
@@ -77,10 +83,17 @@ fun AddItemBottomSheet(
 
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    ModalBottomSheetLayout(
+    ModalBottomSheet(
+        onDismissRequest = {
+            viewModel.onEvent(AddItemUiEvent.Reset)
+            onDismiss()
+        },
         sheetState = sheetState,
-        sheetContent = {
+        containerColor = colors.surfaceBase,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+    ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -209,19 +222,17 @@ fun AddItemBottomSheet(
                             errorQuantity = uiState.errors["quantity"],
                             errorUnit = uiState.errors["unit"],
                         )
-                        3 -> AttributeStep(
-                            brand = uiState.brand,
-                            onBrandChange = { viewModel.onEvent(AddItemUiEvent.BrandChanged(it)) },
-                            variant = uiState.variant,
-                            onVariantChange = { viewModel.onEvent(AddItemUiEvent.VariantChanged(it)) },
-                            condition = uiState.condition,
-                            onConditionChange = { viewModel.onEvent(AddItemUiEvent.ConditionChanged(it)) },
-                            showBrand = uiState.selectedProduct?.showBrand ?: true,
-                            showVariant = uiState.selectedProduct?.showVariant ?: true,
-                            showCondition = uiState.selectedProduct?.showCondition ?: true,
-                            commonBrands = uiState.selectedProduct?.commonBrands ?: emptyList(),
-                            commonConditions = uiState.selectedProduct?.commonConditions ?: emptyList(),
-                        )
+                        3 -> uiState.selectedProduct?.let { product ->
+                            AttributeStep(
+                                product = product,
+                                brand = uiState.brand,
+                                onBrandChange = { viewModel.onEvent(AddItemUiEvent.BrandChanged(it)) },
+                                variant = uiState.variant,
+                                onVariantChange = { viewModel.onEvent(AddItemUiEvent.VariantChanged(it)) },
+                                condition = uiState.condition,
+                                onConditionChange = { viewModel.onEvent(AddItemUiEvent.ConditionChanged(it)) },
+                            )
+                        }
                         4 -> {
                             val product = uiState.selectedProduct ?: return@Column
                             val unit = uiState.selectedUnit ?: return@Column
@@ -310,12 +321,7 @@ fun AddItemBottomSheet(
 
                 androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(bottom = spacing.space4))
             }
-        },
-        sheetBackgroundColor = colors.surfaceBase,
-        sheetShape = androidx.compose.foundation.shape.RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-        sheetPeekHeight = 0.dp,
-        confirmStateChange = { it == ModalBottomSheetValue.Expanded },
-    )
+    }
 }
 
 /** Step 1: Ricerca prodotto */
@@ -361,30 +367,22 @@ fun QuantityUnitStep(
 /** Step 3: Attributi */
 @Composable
 fun AttributeStep(
+    product: CanonicalProduct,
     brand: String,
     onBrandChange: (String) -> Unit,
     variant: String,
     onVariantChange: (String) -> Unit,
     condition: String,
     onConditionChange: (String) -> Unit,
-    showBrand: Boolean,
-    showVariant: Boolean,
-    showCondition: Boolean,
-    commonBrands: List<String>,
-    commonConditions: List<String>,
 ) {
     AttributeSection(
+        product = product,
         brand = brand,
         onBrandChange = onBrandChange,
         variant = variant,
         onVariantChange = onVariantChange,
         condition = condition,
         onConditionChange = onConditionChange,
-        showBrand = showBrand,
-        showVariant = showVariant,
-        showCondition = showCondition,
-        commonBrands = commonBrands,
-        commonConditions = commonConditions,
     )
 }
 

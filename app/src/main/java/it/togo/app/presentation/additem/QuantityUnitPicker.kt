@@ -2,6 +2,8 @@ package it.togo.app.presentation.additem
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +37,7 @@ import it.togo.app.ui.theme.togoTypography
  * - Stepper quantità: - / valore / + (step 0.1 per unità continue, 1 per discrete)
  * - Dropdown unità: solo unità compatibili con il prodotto
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun QuantityUnitPicker(
     quantity: Double,
@@ -104,14 +107,17 @@ fun QuantityUnitPicker(
                             .padding(horizontal = 16.dp, vertical = 12.dp),
                         singleLine = true,
                         textStyle = togoTypography().itemName,
-                        colors = androidx.compose.material3.TextFieldDefaults.textFieldColors(
-                            textColor = togoColors().inkPrimary,
+                        colors = androidx.compose.material3.TextFieldDefaults.colors(
+                            focusedTextColor = togoColors().inkPrimary,
+                            unfocusedTextColor = togoColors().inkPrimary,
                             cursorColor = togoColors().accentHighlight,
-                            backgroundColor = Color.Transparent,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent,
                             disabledIndicatorColor = Color.Transparent,
                             errorIndicatorColor = togoColors().accentWarning,
+                            errorContainerColor = Color.Transparent,
                         ),
                         keyboardOptions = androidx.compose.ui.text.input.KeyboardOptions(
                             keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
@@ -195,6 +201,7 @@ fun QuantityUnitPicker(
 }
 
 /** Chip per selezione unità */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun UnitChip(
     unit: StandardUnit,

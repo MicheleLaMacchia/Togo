@@ -11,8 +11,12 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -39,11 +43,11 @@ class SearchViewModel(
         .flatMapLatest { query: String ->
             if (query.isNotBlank()) {
                 catalogRepository.search(query)
-                    .onStart { _uiState.update { it.copy(isLoading = true) } }
+                    .onStart { _uiState.update { it.copy(query = query, isLoading = true, error = null) } }
                     .onCompletion { _uiState.update { it.copy(isLoading = false) } }
                     .catch { e: Throwable ->
                         _uiState.update { it.copy(error = e.message ?: "Errore ricerca", isLoading = false) }
-                        kotlinx.coroutines.flow.flowOf(emptyList<CanonicalProduct>())
+                        emit(emptyList())
                     }
             } else {
                 kotlinx.coroutines.flow.flowOf(emptyList<CanonicalProduct>())
@@ -51,10 +55,12 @@ class SearchViewModel(
                     .onCompletion { _uiState.update { it.copy(isLoading = false) } }
             }
         }
+        .onEach { results -> _uiState.update { it.copy(results = results, isLoading = false) } }
         .stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(), emptyList())
 
     init {
         _searchQuery.value = ""
+        searchResults.launchIn(viewModelScope)
     }
 
     /** Handle UI events */
@@ -68,10 +74,12 @@ class SearchViewModel(
 
     private fun handleQueryChanged(query: String) {
         _searchQuery.value = query
+        _uiState.update { it.copy(query = query, error = null) }
     }
 
     private fun handleClear() {
         _searchQuery.value = ""
+        _uiState.update { it.copy(query = "", results = emptyList(), error = null, isLoading = false) }
     }
 
     private fun handleItemSelected(product: CanonicalProduct) {
