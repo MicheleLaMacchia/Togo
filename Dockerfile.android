@@ -1,23 +1,31 @@
+# syntax=docker/dockerfile:1
+# Dockerfile per build Android APK del progetto TOGO
+# Basato su: guida_android_docker_windows.md
+
 FROM eclipse-temurin:17-jdk
 
 ENV ANDROID_HOME=/opt/android-sdk
 ENV ANDROID_SDK_ROOT=/opt/android-sdk
 ENV PATH="${PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools"
 
+# Dipendenze di base
 RUN apt-get update \
     && apt-get install -y --no-install-recommends wget unzip ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
+# Android SDK command-line tools
 RUN mkdir -p ${ANDROID_HOME}/cmdline-tools \
-    && (wget -q --tries=3 --timeout=30 https://dl.google.com/android/repository/commandlinetools-linux-latest.zip -O /tmp/cmdline-tools.zip \
-        || wget -q --tries=3 --timeout=30 https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O /tmp/cmdline-tools.zip) \
+    && wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O /tmp/cmdline-tools.zip \
     && unzip -q /tmp/cmdline-tools.zip -d /tmp/android-tools \
     && mkdir -p ${ANDROID_HOME}/cmdline-tools/latest \
     && mv /tmp/android-tools/cmdline-tools/* ${ANDROID_HOME}/cmdline-tools/latest/ \
     && rm -rf /tmp/cmdline-tools.zip /tmp/android-tools
 
+# Accetta licenze Android SDK
 RUN yes | sdkmanager --licenses >/dev/null || true
 
+# Installa piattaforme e build-tools
+# NOTA: adatta le versioni in base a compileSdk/targetSdk del progetto
 RUN sdkmanager \
     "platform-tools" \
     "platforms;android-35" \
