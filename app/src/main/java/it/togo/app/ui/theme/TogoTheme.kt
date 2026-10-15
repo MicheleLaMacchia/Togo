@@ -4,8 +4,10 @@ import android.content.res.Configuration
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocal
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.provides
+import androidx.compose.runtime.ProvidedValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalConfiguration
 
 /**
@@ -60,14 +62,21 @@ fun TogoTheme(
         extraLarge = togoShapes.lg,
     )
 
-    // CompositionLocalProvider usando infix 'provides' (API pubblica standard)
-    CompositionLocalProvider(
-        LocalTogoColorScheme provides togoColorScheme,
-        LocalTogoTypography provides togoTypography,
-        LocalTogoSpacing provides togoSpacing,
-        LocalTogoShapes provides togoShapes,
-        LocalTogoComponentTokens provides togoComponentTokens,
-    ) {
+    // CompositionLocalProvider: creiamo ProvidedValue[] usando helper locale
+    // (evita dipendenza da extension 'provides' non risolta in alcune versioni Compose)
+    @Composable
+    fun <T> provided(local: CompositionLocal<T>, value: T): ProvidedValue<T> =
+        local.provides(value)
+
+    val providedValues = arrayOf(
+        provided(LocalTogoColorScheme, togoColorScheme),
+        provided(LocalTogoTypography, togoTypography),
+        provided(LocalTogoSpacing, togoSpacing),
+        provided(LocalTogoShapes, togoShapes),
+        provided(LocalTogoComponentTokens, togoComponentTokens),
+    )
+
+    CompositionLocalProvider(*providedValues) {
         MaterialTheme(
             colorScheme = materialColorScheme,
             typography = materialTypography,

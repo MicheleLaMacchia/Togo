@@ -8,9 +8,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -29,25 +30,23 @@ class SearchViewModel(
     // ---- State ----
     private val _uiState = MutableStateFlow(SearchUiState())
     val uiState = _uiState
-        .distinctUntilChanged()
         .stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(), SearchUiState())
 
     // ---- Input query con debounce 300ms ----
     private val _searchQuery = kotlinx.coroutines.flow.MutableStateFlow("")
     val searchResults: Flow<List<CanonicalProduct>> = _searchQuery
         .debounce(300) // debounce 300ms
-        .distinctUntilChanged()
-        .flatMapLatest { query ->
+        .flatMapLatest { query: String ->
             if (query.isNotBlank()) {
                 catalogRepository.search(query)
                     .onStart { _uiState.update { it.copy(isLoading = true) } }
                     .onCompletion { _uiState.update { it.copy(isLoading = false) } }
-                    .catch { e ->
+                    .catch { e: Throwable ->
                         _uiState.update { it.copy(error = e.message ?: "Errore ricerca", isLoading = false) }
-                        kotlinx.coroutines.flow.flowOf(emptyList())
+                        kotlinx.coroutines.flow.flowOf(emptyList<CanonicalProduct>())
                     }
             } else {
-                kotlinx.coroutines.flow.flowOf(emptyList())
+                kotlinx.coroutines.flow.flowOf(emptyList<CanonicalProduct>())
                     .onStart { _uiState.update { it.copy(isLoading = true) } }
                     .onCompletion { _uiState.update { it.copy(isLoading = false) } }
             }
@@ -77,7 +76,5 @@ class SearchViewModel(
 
     private fun handleItemSelected(product: CanonicalProduct) {
         // TODO: navigazione a dettaglio prodotto / aggiunta alla lista
-        // Per ora emettiamo un evento che la Activity/Composable padre può gestire
-        // In futuro: navigazione a dettaglio prodotto o aggiunta alla lista
     }
 }

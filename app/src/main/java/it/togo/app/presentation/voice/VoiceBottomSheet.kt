@@ -52,7 +52,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
-import it.togo.app.ui.theme.togoTypography
+import it.togo.app.ui.theme.togoTypographyTokens
 
 /**
  * Bottom sheet per il riconoscimento vocale.
@@ -76,7 +76,7 @@ fun VoiceBottomSheet(
     onDismiss: () -> Unit,
 ) {
     val colors = togoColors()
-    val typography = togoTypography()
+    val typography = togoTypographyTokens()
     val spacing = togoSpacing()
 
     // ModalBottomSheet gestisce nativamente animazione e scrim
@@ -85,15 +85,15 @@ fun VoiceBottomSheet(
         ModalBottomSheet(
             onDismissRequest = onDismiss,
             sheetState = sheetState,
-            containerColor = colors.surface,
+            containerColor = colors.surfaceBase,
             shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(spacing.space4),
+                    .padding(spacing[4]),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(spacing.space4),
+                verticalArrangement = Arrangement.spacedBy(spacing[4]),
             ) {
                 // Handle bar
                 Surface(
@@ -101,7 +101,7 @@ fun VoiceBottomSheet(
                         .width(40.dp)
                         .height(4.dp),
                     shape = RoundedCornerShape(2.dp),
-                    color = colors.outline,
+                    color = colors.borderCrisp,
                 ) {}
 
                 when (uiState) {
@@ -140,7 +140,7 @@ fun VoiceBottomSheet(
                     is VoiceBottomSheetUiState.Hidden -> { /* non visibile */ }
                 }
 
-                Spacer(modifier = Modifier.height(spacing.space2))
+                Spacer(modifier = Modifier.height(spacing[2]))
             }
         }
     }
@@ -148,9 +148,9 @@ fun VoiceBottomSheet(
 
 @Composable
 private fun ListeningContent(
-    colors: it.togo.app.ui.theme.TogoColors,
-    typography: it.togo.app.ui.theme.TogoTypography,
-    spacing: it.togo.app.ui.theme.TogoSpacing,
+    colors: TogoColorScheme,
+    typography: TogoTypographyTokens,
+    spacing: TogoSpacingTokens,
     onCancel: () -> Unit,
 ) {
     // Indicatore pulse
@@ -167,22 +167,22 @@ private fun ListeningContent(
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(spacing.space4),
-        modifier = Modifier.padding(spacing.space4),
+        verticalArrangement = Arrangement.spacedBy(spacing[4]),
+        modifier = Modifier.padding(spacing[4]),
     ) {
         Surface(
             modifier = Modifier
                 .size(72.dp)
                 .scale(scale),
             shape = CircleShape,
-            color = colors.error.copy(alpha = 0.15f),
+            color = colors.accentWarning.copy(alpha = 0.15f),
         ) {
             Icon(
                 imageVector = Icons.Filled.Mic,
                 contentDescription = null,
-                tint = colors.error,
+                tint = colors.accentWarning,
                 modifier = Modifier
-                    .padding(spacing.space4)
+                    .padding(spacing[4])
                     .size(32.dp),
             )
         }
@@ -208,18 +208,18 @@ private fun ListeningContent(
 
 @Composable
 private fun ProcessingContent(
-    colors: it.togo.app.ui.theme.TogoColors,
-    typography: it.togo.app.ui.theme.TogoTypography,
-    spacing: it.togo.app.ui.theme.TogoSpacing,
+    colors: TogoColorScheme,
+    typography: TogoTypographyTokens,
+    spacing: TogoSpacingTokens,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(spacing.space4),
-        modifier = Modifier.padding(spacing.space4),
+        verticalArrangement = Arrangement.spacedBy(spacing[4]),
+        modifier = Modifier.padding(spacing[4]),
     ) {
         CircularProgressIndicator(
             modifier = Modifier.size(48.dp),
-            color = colors.accent,
+            color = colors.accentHighlight,
         )
 
         Text(
@@ -233,17 +233,17 @@ private fun ProcessingContent(
 @Composable
 private fun ReadyContent(
     uiState: VoiceBottomSheetUiState.Ready,
-    colors: it.togo.app.ui.theme.TogoColors,
-    typography: it.togo.app.ui.theme.TogoTypography,
-    spacing: it.togo.app.ui.theme.TogoSpacing,
+    colors: TogoColorScheme,
+    typography: TogoTypographyTokens,
+    spacing: TogoSpacingTokens,
     onEdit: (String) -> Unit,
     onConfirm: () -> Unit,
     onRetry: () -> Unit,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(spacing.space3),
-        modifier = Modifier.padding(horizontal = spacing.space4),
+        verticalArrangement = Arrangement.spacedBy(spacing[3]),
+        modifier = Modifier.padding(horizontal = spacing[4]),
     ) {
         Text(
             text = "Prodotto riconosciuto",
@@ -263,14 +263,14 @@ private fun ReadyContent(
         } else {
             Surface(
                 shape = RoundedCornerShape(8.dp),
-                color = colors.surfaceVariant,
+                color = colors.surfaceSubtle,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(
                     text = uiState.editedText,
-                    style = typography.itemTitle,
+                    style = typography.itemName,
                     color = colors.inkPrimary,
-                    modifier = Modifier.padding(spacing.space3),
+                    modifier = Modifier.padding(spacing[3]),
                 )
             }
         }
@@ -278,7 +278,7 @@ private fun ReadyContent(
         // Azioni: toggle Modifica/Annulla modifica in base a isEditing
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(spacing.space2),
+            horizontalArrangement = Arrangement.spacedBy(spacing[2]),
         ) {
             if (uiState.isEditing) {
                 OutlinedButton(
@@ -290,7 +290,7 @@ private fun ReadyContent(
                         contentDescription = null,
                         modifier = Modifier.size(18.dp),
                     )
-                    Spacer(modifier = Modifier.width(spacing.space1))
+                    Spacer(modifier = Modifier.width(spacing[1]))
                     Text("Annulla modifica")
                 }
             } else {
@@ -303,7 +303,7 @@ private fun ReadyContent(
                         contentDescription = null,
                         modifier = Modifier.size(18.dp),
                     )
-                    Spacer(modifier = Modifier.width(spacing.space1))
+                    Spacer(modifier = Modifier.width(spacing[1]))
                     Text("Modifica")
                 }
             }
@@ -317,7 +317,7 @@ private fun ReadyContent(
                     contentDescription = null,
                     modifier = Modifier.size(18.dp),
                 )
-                Spacer(modifier = Modifier.width(spacing.space1))
+                Spacer(modifier = Modifier.width(spacing[1]))
                 Text("Riprova")
             }
         }
@@ -335,21 +335,21 @@ private fun ReadyContent(
 @Composable
 private fun ErrorContent(
     uiState: VoiceBottomSheetUiState.Error,
-    colors: it.togo.app.ui.theme.TogoColors,
-    typography: it.togo.app.ui.theme.TogoTypography,
-    spacing: it.togo.app.ui.theme.TogoSpacing,
+    colors: TogoColorScheme,
+    typography: TogoTypographyTokens,
+    spacing: TogoSpacingTokens,
     onRetry: () -> Unit,
     onCancel: () -> Unit,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(spacing.space3),
-        modifier = Modifier.padding(horizontal = spacing.space4),
+        verticalArrangement = Arrangement.spacedBy(spacing[3]),
+        modifier = Modifier.padding(horizontal = spacing[4]),
     ) {
         Icon(
             imageVector = Icons.Filled.Close,
             contentDescription = null,
-            tint = colors.error,
+            tint = colors.accentWarning,
             modifier = Modifier.size(48.dp),
         )
 
@@ -368,7 +368,7 @@ private fun ErrorContent(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(spacing.space3),
+            horizontalArrangement = Arrangement.spacedBy(spacing[3]),
         ) {
             OutlinedButton(
                 onClick = onCancel,

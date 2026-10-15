@@ -37,7 +37,7 @@ import androidx.compose.ui.unit.dp
 import it.togo.app.domain.parser.ParsedCommand
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
-import it.togo.app.ui.theme.togoTypography
+import it.togo.app.ui.theme.togoTypographyTokens
 
 /**
  * Bottom sheet di conferma per comandi vocali.
@@ -60,7 +60,7 @@ fun VoiceConfirmationSheet(
     onDismiss: () -> Unit,
 ) {
     val colors = togoColors()
-    val typography = togoTypography()
+    val typography = togoTypographyTokens()
     val spacing = togoSpacing()
 
     if (uiState.isVisible) {
@@ -69,7 +69,7 @@ fun VoiceConfirmationSheet(
         ModalBottomSheet(
             onDismissRequest = onDismiss,
             sheetState = sheetState,
-            containerColor = colors.surface,
+            containerColor = colors.surfaceBase,
             shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
         ) {
             when (val state = uiState) {
@@ -86,7 +86,7 @@ fun VoiceConfirmationSheet(
                 else -> { /* Hidden: non visibile */ }
             }
 
-            Spacer(modifier = Modifier.height(spacing.space2))
+            Spacer(modifier = Modifier.height(spacing[2]))
         }
     }
 }
@@ -94,9 +94,9 @@ fun VoiceConfirmationSheet(
 @Composable
 private fun ReadyContent(
     state: VoiceConfirmationUiState.Ready,
-    colors: it.togo.app.ui.theme.TogoColors,
-    typography: it.togo.app.ui.theme.TogoTypography,
-    spacing: it.togo.app.ui.theme.TogoSpacing,
+    colors: TogoColorScheme,
+    typography: TogoTypographyTokens,
+    spacing: TogoSpacingTokens,
     onConfirm: () -> Unit,
     onEdit: (String) -> Unit,
     onCancel: () -> Unit,
@@ -108,9 +108,9 @@ private fun ReadyContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(spacing.space4),
+            .padding(spacing[4]),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(spacing.space3),
+        verticalArrangement = Arrangement.spacedBy(spacing[3]),
     ) {
         // Handle bar
         Surface(
@@ -118,7 +118,7 @@ private fun ReadyContent(
                 .width(40.dp)
                 .height(4.dp),
             shape = RoundedCornerShape(2.dp),
-            color = colors.outline,
+            color = colors.borderCrisp,
         ) {}
 
         Text(
@@ -131,18 +131,18 @@ private fun ReadyContent(
         if (state.parsedCommand.needsClarification) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(spacing.space2),
+                horizontalArrangement = Arrangement.spacedBy(spacing[2]),
             ) {
                 Icon(
                     imageVector = Icons.Filled.Warning,
                     contentDescription = null,
-                    tint = colors.warning,
+                    tint = colors.accentWarning,
                     modifier = Modifier.size(20.dp),
                 )
                 Text(
                     text = "Manca l'unità di misura, specifica",
                     style = typography.itemMeta,
-                    color = colors.warning,
+                    color = colors.accentWarning,
                 )
             }
         }
@@ -179,7 +179,7 @@ private fun ReadyContent(
         // Azioni
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(spacing.space2),
+            horizontalArrangement = Arrangement.spacedBy(spacing[2]),
         ) {
             if (!isEditing) {
                 OutlinedButton(
@@ -191,7 +191,7 @@ private fun ReadyContent(
                         contentDescription = null,
                         modifier = Modifier.size(18.dp),
                     )
-                    Spacer(modifier = Modifier.width(spacing.space1))
+                    Spacer(modifier = Modifier.width(spacing[1]))
                     Text("Modifica")
                 }
             }
@@ -205,7 +205,7 @@ private fun ReadyContent(
                     contentDescription = null,
                     modifier = Modifier.size(18.dp),
                 )
-                Spacer(modifier = Modifier.width(spacing.space1))
+                Spacer(modifier = Modifier.width(spacing[1]))
                 Text("Annulla")
             }
         }
@@ -221,7 +221,7 @@ private fun ReadyContent(
                     contentDescription = null,
                     modifier = Modifier.size(18.dp),
                 )
-                Spacer(modifier = Modifier.width(spacing.space1))
+                Spacer(modifier = Modifier.width(spacing[1]))
                 Text("Conferma")
             }
         }
@@ -231,22 +231,22 @@ private fun ReadyContent(
 @Composable
 private fun CommandDisplay(
     command: ParsedCommand,
-    colors: it.togo.app.ui.theme.TogoColors,
-    typography: it.togo.app.ui.theme.TogoTypography,
-    spacing: it.togo.app.ui.theme.TogoSpacing,
+    colors: TogoColorScheme,
+    typography: TogoTypographyTokens,
+    spacing: TogoSpacingTokens,
 ) {
     Surface(
         shape = RoundedCornerShape(8.dp),
-        color = colors.surfaceVariant,
+        color = colors.surfaceSubtle,
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(
-            modifier = Modifier.padding(spacing.space3),
-            verticalArrangement = Arrangement.spacedBy(spacing.space1),
+            modifier = Modifier.padding(spacing[3]),
+            verticalArrangement = Arrangement.spacedBy(spacing[1]),
         ) {
             Text(
                 text = command.productName,
-                style = typography.itemTitle,
+                style = typography.itemName,
                 color = colors.inkPrimary,
             )
 
@@ -270,7 +270,7 @@ private fun CommandDisplay(
                 Text(
                     text = "Confidenza: ${(command.confidence * 100).toInt()}%",
                     style = typography.caption,
-                    color = colors.inkTertiary,
+                    color = colors.inkMuted,
                 )
             }
         }

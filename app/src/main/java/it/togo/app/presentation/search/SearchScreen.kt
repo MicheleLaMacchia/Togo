@@ -17,8 +17,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ShoppingBasket
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -31,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.BorderStroke
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -39,10 +42,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import it.togo.app.domain.model.CanonicalProduct
-import it.togo.app.ui.theme.componentTokens
 import it.togo.app.ui.theme.togoColors
+import it.togo.app.ui.theme.togoComponentTokens
 import it.togo.app.ui.theme.togoSpacing
-import it.togo.app.ui.theme.togoTypography
+import it.togo.app.ui.theme.togoTypographyTokens
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 
@@ -58,12 +61,12 @@ import kotlinx.coroutines.flow.Flow
 @Composable
 fun SearchScreen(onEvent: (SearchUiEvent) -> Unit) {
     val viewModel = androidx.lifecycle.viewmodel.compose.viewModel<SearchViewModel>()
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsState()
 
     val colors = togoColors()
-    val typography = togoTypography()
+    val typography = togoTypographyTokens()
     val spacing = togoSpacing()
-    val tokens = componentTokens()
+    val tokens = togoComponentTokens()
 
     val textFieldFocusRequester = remember { FocusRequester() }
 
@@ -75,13 +78,13 @@ fun SearchScreen(onEvent: (SearchUiEvent) -> Unit) {
 
     Column(
         modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(spacing.space2),
+        verticalArrangement = Arrangement.spacedBy(spacing[2]),
     ) {
         // Campo ricerca
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = spacing.space4)
+                .padding(horizontal = spacing[4])
                 .background(
                     color = colors.surfaceCard,
                     shape = RoundedCornerShape(tokens.itemRow.radius),
@@ -94,12 +97,12 @@ fun SearchScreen(onEvent: (SearchUiEvent) -> Unit) {
             contentAlignment = Alignment.CenterStart,
         ) {
             Icon(
-                imageVector = androidx.compose.material.icons.Icons.Filled.Search,
+                imageVector = Icons.Filled.Search,
                 contentDescription = "Cerca",
                 tint = colors.inkMuted,
                 modifier = Modifier
                     .size(24.dp)
-                    .padding(start = spacing.space3),
+                    .padding(start = spacing[3]),
             )
 
             TextField(
@@ -108,8 +111,8 @@ fun SearchScreen(onEvent: (SearchUiEvent) -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
-                        horizontal = spacing.space3,
-                        vertical = spacing.space2,
+                        horizontal = spacing[3],
+                        vertical = spacing[2],
                     )
                     .focusRequester(textFieldFocusRequester),
                 placeholder = {
@@ -136,14 +139,14 @@ fun SearchScreen(onEvent: (SearchUiEvent) -> Unit) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(spacing.space4),
-            verticalArrangement = Arrangement.spacedBy(spacing.space2),
+                .padding(spacing[4]),
+            verticalArrangement = Arrangement.spacedBy(spacing[2]),
         ) {
             items(uiState.results, key = { it.id }) { product ->
                 SearchResultItem(
                     product = product,
                     query = uiState.query,
-                    onClick = { onEvent(SearchUiEvent.ItemSelected(it)) },
+                    onClick = { onEvent(SearchUiEvent.ItemSelected(product)) },
                 )
             }
         }
@@ -158,20 +161,19 @@ fun SearchResultItem(
     onClick: () -> Unit,
 ) {
     val colors = togoColors()
-    val typography = togoTypography()
+    val typography = togoTypographyTokens()
     val spacing = togoSpacing()
-    val tokens = componentTokens()
+    val tokens = togoComponentTokens()
 
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = spacing.space2, vertical = spacing.space1)
+            .padding(horizontal = spacing[2], vertical = spacing[1])
             .combinedClickable(onClick = onClick)
             .clip(RoundedCornerShape(tokens.itemRow.radius)),
         shape = RoundedCornerShape(tokens.itemRow.radius),
         border = BorderStroke(tokens.itemRow.borderWidth, colors.borderCrisp),
         color = tokens.itemRow.background,
-        elevation = 0.dp,
     ) {
         Row(
             modifier = Modifier
@@ -181,7 +183,7 @@ fun SearchResultItem(
                     vertical = tokens.itemRow.paddingVertical,
                 ),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(spacing.space3),
+            horizontalArrangement = Arrangement.spacedBy(spacing[3]),
         ) {
             // 1. Icona prodotto
             Box(
@@ -200,7 +202,7 @@ fun SearchResultItem(
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    imageVector = androidx.compose.material.icons.Icons.Filled.ShoppingBasket,
+                    imageVector = Icons.Filled.ShoppingBasket,
                     contentDescription = "Prodotto",
                     tint = colors.inkMuted,
                     modifier = Modifier.size(tokens.checkboxUtility.size * 0.55f),
@@ -220,18 +222,12 @@ fun SearchResultItem(
                     color = colors.inkPrimary,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    textDecoration = TextDecoration.None,
                 )
 
-                // Meta opzionale: brand + variante + condition
-                val metaParts = buildList<String> {
-                    if (product.brand?.isNotBlank() == true) add(product.brand)
-                    if (product.variant?.isNotBlank() == true) add(product.variant)
-                    if (product.condition?.isNotBlank() == true) add(product.condition)
-                }
-                if (metaParts.isNotEmpty()) {
+                // Meta opzionale: solo nome per ora
+                if (product.name.isNotBlank()) {
                     Text(
-                        text = metaParts.joinToString(" · "),
+                        text = product.name,
                         style = typography.caption,
                         color = colors.inkSecondary,
                         maxLines = 1,

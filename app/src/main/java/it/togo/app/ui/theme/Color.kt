@@ -78,10 +78,8 @@ private val LightTogoColorScheme: ColorScheme = lightColorScheme(
     onSurfaceVariant = TogoColorTokens.LightInkSecondary,
     outline = TogoColorTokens.LightBorderCrisp,
     outlineVariant = TogoColorTokens.LightBorderHairline,
-    shadow = TogoColorTokens.LightInkPrimary,
     scrim = TogoColorTokens.LightInkPrimary,
     inverseSurface = TogoColorTokens.LightSurfaceInverse,
-    onInverseSurface = TogoColorTokens.LightInkInverse,
     inversePrimary = TogoColorTokens.LightInkInverse,
 )
 
@@ -111,10 +109,8 @@ private val DarkTogoColorScheme: ColorScheme = darkColorScheme(
     onSurfaceVariant = TogoColorTokens.DarkInkSecondary,
     outline = TogoColorTokens.DarkBorderCrisp,
     outlineVariant = TogoColorTokens.DarkBorderCrisp,
-    shadow = TogoColorTokens.DarkInkPrimary,
     scrim = TogoColorTokens.DarkInkPrimary,
     inverseSurface = TogoColorTokens.LightSurfaceBase,
-    onInverseSurface = TogoColorTokens.LightInkPrimary,
     inversePrimary = TogoColorTokens.LightInkPrimary,
 )
 
