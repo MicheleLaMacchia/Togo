@@ -48,7 +48,6 @@ class AddItemViewModel(
     // ---- State ----
     private val _uiState = MutableStateFlow(AddItemUiState(isEditMode = editItem != null))
     val uiState = _uiState
-        .distinctUntilChanged()
         .stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(), AddItemUiState(isEditMode = editItem != null))
 
     // ---- Ricerca prodotti con debounce 300ms ----

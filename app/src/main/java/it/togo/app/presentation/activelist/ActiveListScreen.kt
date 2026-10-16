@@ -48,8 +48,11 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
-    val viewModel = androidx.lifecycle.viewmodel.compose.viewModel<ActiveListViewModel>()
+fun ActiveListScreen(
+    viewModel: ActiveListViewModel,
+    voiceViewModel: VoiceBottomSheetViewModel,
+    onEvent: (UiEvent) -> Unit,
+) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -59,7 +62,6 @@ fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
     val spacing = togoSpacing()
     val tokens = componentTokens()
 
-    val voiceViewModel = androidx.lifecycle.viewmodel.compose.viewModel<VoiceBottomSheetViewModel>()
     val voiceUiState by voiceViewModel.uiState.collectAsState()
 
     val context = LocalContext.current
@@ -209,16 +211,18 @@ fun ActiveListScreen(onEvent: (UiEvent) -> Unit) {
                             }
 
                             if (uiState.hasCheckedItems) {
-                                PresiSection(
-                                    items = uiState.checkedItems,
-                                    productNames = uiState.productNames,
-                                    onUncheck = { itemId -> onEvent(UiEvent.CheckOff(itemId, false)) },
-                                    onCheckout = { onEvent(UiEvent.Checkout) },
-                                    colors = colors,
-                                    typography = typography,
-                                    spacing = spacing,
-                                    tokens = tokens,
-                                )
+                                item {
+                                    PresiSection(
+                                        items = uiState.checkedItems,
+                                        productNames = uiState.productNames,
+                                        onUncheck = { itemId -> onEvent(UiEvent.CheckOff(itemId, false)) },
+                                        onCheckout = { onEvent(UiEvent.Checkout) },
+                                        colors = colors,
+                                        typography = typography,
+                                        spacing = spacing,
+                                        tokens = tokens,
+                                    )
+                                }
                             }
                         }
                     }

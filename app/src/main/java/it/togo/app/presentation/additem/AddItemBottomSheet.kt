@@ -16,6 +16,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,10 +44,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.TextField
-import androidx.compose.ui.text.input.KeyboardOptions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardActions
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalContext
 import android.os.Vibrator
@@ -143,7 +145,7 @@ fun AddItemBottomSheet(
                         onDismiss()
                     }) {
                         Icon(
-                            imageVector = androidx.compose.material.icons.Icons.Filled.Close,
+                            imageVector = Icons.Filled.Close,
                             contentDescription = "Chiudi",
                             tint = colors.inkPrimary,
                         )
@@ -154,7 +156,7 @@ fun AddItemBottomSheet(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = spacing.space4, bottom = spacing.space2),
+                        .padding(start = spacing.space4, end = spacing.space4, bottom = spacing.space2),
                     horizontalArrangement = Arrangement.spacedBy(spacing.space2),
                 ) {
                     val totalSteps = if (viewModel.isEditMode) 3 else 4
@@ -259,7 +261,7 @@ fun AddItemBottomSheet(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = spacing.space3, horizontal = spacing.space4),
+                        .padding(start = spacing.space4, top = spacing.space3, end = spacing.space4),
                     horizontalArrangement = Arrangement.spacedBy(spacing.space2),
                 ) {
                     val minStep = if (viewModel.isEditMode) 2 else 1

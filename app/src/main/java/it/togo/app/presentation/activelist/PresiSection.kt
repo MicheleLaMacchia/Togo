@@ -17,6 +17,9 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -98,9 +101,9 @@ fun PresiSection(
             )
             Icon(
                 imageVector = if (expanded)
-                    androidx.compose.material.icons.Icons.Filled.ExpandLess
+                    Icons.Filled.ExpandLess
                 else
-                    androidx.compose.material.icons.Icons.Filled.ExpandMore,
+                    Icons.Filled.ExpandMore,
                 contentDescription = if (expanded) "Collassa" else "Espandi",
                 tint = colors.inkSecondary,
                 modifier = Modifier

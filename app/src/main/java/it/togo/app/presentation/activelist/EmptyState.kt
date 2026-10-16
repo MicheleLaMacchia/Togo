@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -54,7 +57,7 @@ fun EmptyState(
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                imageVector = androidx.compose.material.icons.Icons.Filled.ShoppingCart,
+                imageVector = Icons.Filled.ShoppingCart,
                 contentDescription = "Carrello vuoto",
                 tint = colors.inkMuted,
                 modifier = Modifier.size(48.dp),
@@ -108,7 +111,7 @@ fun EmptyState(
                 ),
             ) {
                 Icon(
-                    imageVector = androidx.compose.material.icons.Icons.Filled.Mic,
+                    imageVector = Icons.Filled.Mic,
                     contentDescription = "Aggiungi a voce",
                     tint = colors.inkPrimary,
                     modifier = Modifier.size(28.dp),

@@ -11,7 +11,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -119,7 +121,7 @@ fun QuantityUnitPicker(
                             errorIndicatorColor = togoColors().accentWarning,
                             errorContainerColor = Color.Transparent,
                         ),
-                        keyboardOptions = androidx.compose.ui.text.input.KeyboardOptions(
+                        keyboardOptions = KeyboardOptions(
                             keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
                             imeAction = androidx.compose.ui.text.input.ImeAction.Next,
                         ),
@@ -182,7 +184,7 @@ fun QuantityUnitPicker(
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    androidx.compose.foundation.lazy.items(compatibleUnits) { unit ->
+                    items(compatibleUnits) { unit ->
                         UnitChip(
                             unit = unit,
                             selected = selectedUnit == unit,

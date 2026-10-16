@@ -11,6 +11,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -226,7 +227,7 @@ private fun CheckboxUtility(
     ) {
         if (checked) {
             Icon(
-                imageVector = androidx.compose.material.icons.Icons.Filled.Check,
+                imageVector = Icons.Filled.Check,
                 contentDescription = "Spuntato",
                 tint = tokens.checkColor,
                 modifier = Modifier.size(size * 0.55f),

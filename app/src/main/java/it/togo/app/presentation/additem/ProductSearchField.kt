@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +19,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -84,7 +88,7 @@ fun ProductSearchField(
             contentAlignment = Alignment.CenterStart,
         ) {
             Icon(
-                imageVector = androidx.compose.material.icons.Icons.Filled.Search,
+                imageVector = Icons.Filled.Search,
                 contentDescription = "Cerca",
                 tint = colors.inkMuted,
                 modifier = Modifier
@@ -123,11 +127,11 @@ fun ProductSearchField(
                     disabledIndicatorColor = Color.Transparent,
                     errorContainerColor = Color.Transparent,
                 ),
-                keyboardOptions = androidx.compose.ui.text.input.KeyboardOptions(
+                keyboardOptions = KeyboardOptions(
                     keyboardType = androidx.compose.ui.text.input.KeyboardType.Text,
                     imeAction = androidx.compose.ui.text.input.ImeAction.Search,
                 ),
-                keyboardActions = androidx.compose.ui.text.input.KeyboardActions(
+                keyboardActions = KeyboardActions(
                     onSearch = { textFieldFocusManager.clearFocus() },
                 ),
             )

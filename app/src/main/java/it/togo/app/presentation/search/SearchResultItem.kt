@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ShoppingBasket
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -87,7 +87,7 @@ fun SearchResultItem(
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    imageVector = Icons.Filled.ShoppingBasket,
+                    imageVector = Icons.Filled.ShoppingCart,
                     contentDescription = "Prodotto",
                     tint = colors.inkMuted,
                     modifier = Modifier.size(tokens.checkboxUtility.size * 0.55f),
