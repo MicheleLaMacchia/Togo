@@ -1,0 +1,526 @@
+package it.togo.app.presentation.activelist
+
+import androidx.compose.ui.test.assertHasClickAction
+import androidx.compose.ui.test.assertHasNoClickAction
+import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import it.togo.app.AppNavigator
+import it.togo.app.domain.model.CanonicalProduct
+import it.togo.app.domain.model.ShoppingItem
+import it.togo.app.domain.model.StandardUnit
+import it.togo.app.domain.model.TaxonomyLevel
+import it.togo.app.domain.repository.CatalogRepository
+import it.togo.app.domain.repository.ShoppingListRepository
+import it.togo.app.domain.voice.ErrorCode
+import it.togo.app.domain.voice.VoiceRecognitionGateway
+import it.togo.app.domain.voice.VoiceRecognitionState
+import it.togo.app.presentation.voice.VoiceBottomSheetViewModel
+import it.togo.app.ui.theme.TogoTheme
+import it.togo.app.ui.theme.componentTokens
+import it.togo.app.ui.theme.togoColors
+import it.togo.app.ui.theme.togoSpacing
+import it.togo.app.ui.theme.togoTypography
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flowOf
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
+import org.robolectric.RobolectricTestRunner
+
+/**
+ * Test JVM (Robolectric) per le semantiche TalkBack della Lista Attiva (Story 6.1).
+ *
+ * Copre righe prodotto, checkbox, sezione "Presi", App Bar/FAB, callback e la
+ * mappatura reale prodotti/tassonomia del ViewModel.
+ */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35])
+class ActiveListAccessibilityTest {
+
+    @get:Rule
+    val composeTestRule = createComposeRule()
+
+    private val uncheckedItem = ShoppingItem(
+        productId = 1L,
+        quantity = 2.0,
+        unit = StandardUnit.PIECE,
+        isChecked = false,
+    )
+
+    private val checkedItem = ShoppingItem(
+        productId = 1L,
+        quantity = 2.0,
+        unit = StandardUnit.PIECE,
+        isChecked = true,
+    )
+
+    @Test
+    fun `active row announces name quantity category and state`() {
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                ItemRow(
+                    item = uncheckedItem,
+                    productName = "Mozzarella",
+                    categoryLabel = "Latticini, Formaggi, Mozzarella",
+                    onCheckChange = {},
+                    onClick = {},
+                    onDelete = {},
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Mozzarella").assertExists()
+        composeTestRule.onNodeWithText("2 pz").assertExists()
+        composeTestRule
+            .onNodeWithContentDescription(
+                "Mozzarella, 2 pezzi, Latticini, Formaggi, Mozzarella, non selezionato. Doppio tocco per modificare."
+            )
+            .assertExists()
+    }
+
+    @Test
+    fun `checked row announces checked state and uncheck action`() {
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                ItemRow(
+                    item = checkedItem,
+                    productName = "Mozzarella",
+                    categoryLabel = "Latticini, Formaggi, Mozzarella",
+                    rowActionDescription = null,
+                    onCheckChange = {},
+                    onClick = {},
+                    onDelete = {},
+                )
+            }
+        }
+
+        composeTestRule
+            .onNodeWithContentDescription(
+                "Mozzarella, 2 pezzi, Latticini, Formaggi, Mozzarella, selezionato."
+            )
+            .assertExists()
+        composeTestRule
+            .onNodeWithContentDescription("Deseleziona Mozzarella.")
+            .assertExists()
+            .assertIsOn()
+            .assertHasClickAction()
+    }
+
+    @Test
+    fun `checkbox is a toggleable control that invokes onCheckedChange only`() {
+        var checked: Boolean? = null
+        var rowClicked = false
+
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                ItemRow(
+                    item = uncheckedItem,
+                    productName = "Mozzarella",
+                    categoryLabel = "Latticini",
+                    onCheckChange = { checked = it },
+                    onClick = { rowClicked = true },
+                    onDelete = {},
+                )
+            }
+        }
+
+        composeTestRule
+            .onNodeWithContentDescription("Spunta Mozzarella.")
+            .assertExists()
+            .assertIsOff()
+            .assertHasClickAction()
+            .performClick()
+
+        assertEquals(true, checked)
+        assertFalse("il tap sulla checkbox non deve aprire la modifica", rowClicked)
+    }
+
+    @Test
+    fun `row tap invokes edit callback only`() {
+        var checked: Boolean? = null
+        var rowClicked = false
+
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                ItemRow(
+                    item = uncheckedItem,
+                    productName = "Mozzarella",
+                    categoryLabel = "Latticini",
+                    onCheckChange = { checked = it },
+                    onClick = { rowClicked = true },
+                    onDelete = {},
+                )
+            }
+        }
+
+        composeTestRule
+            .onNodeWithContentDescription(
+                "Mozzarella, 2 pezzi, Latticini, non selezionato. Doppio tocco per modificare."
+            )
+            .performClick()
+
+        assertTrue("il tap sulla riga deve aprire la modifica", rowClicked)
+        assertEquals(null, checked)
+    }
+
+    @Test
+    fun `checked presi row is not clickable but checkbox still toggles`() {
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                ItemRow(
+                    item = checkedItem,
+                    productName = "Mozzarella",
+                    categoryLabel = "Latticini, Formaggi, Mozzarella",
+                    rowActionDescription = null,
+                    onCheckChange = {},
+                    onClick = {},
+                    onDelete = {},
+                )
+            }
+        }
+
+        composeTestRule
+            .onNodeWithContentDescription(
+                "Mozzarella, 2 pezzi, Latticini, Formaggi, Mozzarella, selezionato."
+            )
+            .assertExists()
+            .assertHasNoClickAction()
+
+        composeTestRule
+            .onNodeWithContentDescription("Deseleziona Mozzarella.")
+            .assertHasClickAction()
+    }
+
+    @Test
+    fun `category fallback is never empty`() {
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                ItemRow(
+                    item = uncheckedItem,
+                    productName = "Mozzarella",
+                    categoryLabel = null,
+                    onCheckChange = {},
+                    onClick = {},
+                    onDelete = {},
+                )
+            }
+        }
+
+        composeTestRule
+            .onNodeWithContentDescription(
+                "Mozzarella, 2 pezzi, Categoria non assegnata, non selezionato. Doppio tocco per modificare."
+            )
+            .assertExists()
+    }
+
+    @Test
+    fun `presi header announces count and expanded state and toggles`() {
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                PresiSection(
+                    items = listOf(checkedItem),
+                    productNames = mapOf(1L to "Mozzarella"),
+                    categoryLabels = mapOf(1L to "Latticini, Formaggi, Mozzarella"),
+                    onUncheck = {},
+                    onCheckout = {},
+                    colors = togoColors(),
+                    typography = togoTypography(),
+                    spacing = togoSpacing(),
+                    tokens = componentTokens(),
+                )
+            }
+        }
+
+        val expandedDescription =
+            "Presi, 1 voce, sezione espansa. Doppio tocco per collassare."
+        composeTestRule
+            .onNodeWithContentDescription(expandedDescription)
+            .assertExists()
+            .assertHasClickAction()
+
+        composeTestRule.onNodeWithText("Presi (1)").assertExists()
+
+        composeTestRule.onNodeWithContentDescription(expandedDescription).performClick()
+
+        composeTestRule
+            .onNodeWithContentDescription(
+                "Presi, 1 voce, sezione collassata. Doppio tocco per espandere."
+            )
+            .assertExists()
+    }
+
+    @Test
+    fun `voice fab exposes labels for every state`() {
+        // Idle
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                VoiceFab(state = VoiceRecognitionState.Idle, onClick = {})
+            }
+        }
+        composeTestRule
+            .onNodeWithContentDescription("Aggiungi prodotto con la voce. Pulsante.")
+            .assertExists()
+
+        // Listening
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                VoiceFab(state = VoiceRecognitionState.Listening, onClick = {})
+            }
+        }
+        composeTestRule.onNodeWithText("Ascolto...").assertExists()
+        composeTestRule
+            .onNodeWithContentDescription("Interrompi ascolto")
+            .assertExists()
+
+        // Processing: etichetta + descrizione e nessuna attivazione
+        var processingInvoked = false
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                VoiceFab(state = VoiceRecognitionState.Processing, onClick = { processingInvoked = true })
+            }
+        }
+        composeTestRule.onNodeWithText("Elaborazione in corso...").assertExists()
+        val processingDescription = "Elaborazione in corso. Attendere."
+        composeTestRule
+            .onNodeWithContentDescription(processingDescription)
+            .assertExists()
+            .assertIsNotEnabled()
+        assertFalse(
+            "durante l'elaborazione il FAB non deve avviare un nuovo ascolto",
+            processingInvoked
+        )
+
+        // Error: comunica l'azione di riprova/nuovo prodotto
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                VoiceFab(
+                    state = VoiceRecognitionState.Error(ErrorCode.UNKNOWN, "boom"),
+                    onClick = {},
+                )
+            }
+        }
+        composeTestRule
+            .onNodeWithContentDescription("Errore di riconoscimento. Tocca per riprovare.")
+            .assertExists()
+
+        // Result: comunica l'azione di conferma/nuovo prodotto
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                VoiceFab(state = VoiceRecognitionState.Result("Pane"), onClick = {})
+            }
+        }
+        composeTestRule
+            .onNodeWithContentDescription("Prodotto riconosciuto. Tocca per aggiungere un altro prodotto.")
+            .assertExists()
+    }
+
+    @Test
+    fun `settings opens learned rules and back returns to active list`() {
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                AppNavigator(
+                    onActiveListEvent = {},
+                    activeListContent = { onEvent ->
+                        androidx.compose.foundation.layout.Column {
+                            Text("Lista attiva")
+                            Button(onClick = { onEvent(UiEvent.NavigateToSettings) }) {
+                                Text("Impostazioni")
+                            }
+                        }
+                    },
+                    learnedRulesContent = { onBack ->
+                        androidx.compose.foundation.layout.Column {
+                            Text("Regole apprese")
+                            Button(onClick = onBack) { Text("Indietro") }
+                        }
+                    },
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Lista attiva").assertExists()
+        composeTestRule.onNodeWithText("Impostazioni").performClick()
+        composeTestRule.onNodeWithText("Regole apprese").assertExists()
+        composeTestRule.onNodeWithText("Indietro").performClick()
+        composeTestRule.onNodeWithText("Lista attiva").assertExists()
+    }
+
+    @Test
+    fun `active list app bar exposes meaningful descriptions`() {
+        val viewModel = ActiveListViewModel(
+            shoppingRepository = FakeShoppingListRepository(),
+            catalogRepository = FakeCatalogRepository(),
+        )
+        val voiceViewModel = VoiceBottomSheetViewModel(FakeVoiceGateway())
+
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                ActiveListScreen(
+                    viewModel = viewModel,
+                    voiceViewModel = voiceViewModel,
+                    onEvent = {},
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithContentDescription("Storico").assertExists()
+        composeTestRule.onNodeWithContentDescription("Condividi lista").assertExists()
+        composeTestRule.onNodeWithContentDescription("Impostazioni").assertExists()
+        composeTestRule.onNodeWithContentDescription("Aggiungi voce").assertExists()
+        composeTestRule
+            .onNodeWithContentDescription("Aggiungi prodotto con la voce. Pulsante.")
+            .assertExists()
+    }
+
+    @Test
+    fun `view model maps checked item to canonical category label`() {
+        val taxonomy = listOf(
+            TaxonomyLevel.Level1(id = 1L, name = "Latticini", sortOrder = 1),
+            TaxonomyLevel.Level2(id = 2L, name = "Formaggi", sortOrder = 1, level1Id = 1L),
+            TaxonomyLevel.Level3(id = 3L, name = "Mozzarella", sortOrder = 1, level2Id = 2L),
+            TaxonomyLevel.Level1(id = 4L, name = "Dispensa", sortOrder = 2),
+            TaxonomyLevel.Level2(id = 5L, name = "Panetteria", sortOrder = 1, level1Id = 4L),
+            TaxonomyLevel.Level3(id = 6L, name = "Pane", sortOrder = 1, level2Id = 5L),
+        )
+        val activeItem = ShoppingItem(productId = 2L, quantity = 1.0, unit = StandardUnit.PIECE)
+        val checked = ShoppingItem(productId = 1L, quantity = 2.0, unit = StandardUnit.PIECE, isChecked = true)
+
+        val viewModel = ActiveListViewModel(
+            shoppingRepository = FakeShoppingListRepository(items = listOf(activeItem, checked)),
+            catalogRepository = FakeCatalogRepository(
+                taxonomy = taxonomy,
+                products = mapOf(
+                    1L to CanonicalProduct(id = 1L, name = "Mozzarella", level3Id = 3L),
+                    2L to CanonicalProduct(id = 2L, name = "Pane", level3Id = 6L),
+                ),
+            ),
+        )
+        val voiceViewModel = VoiceBottomSheetViewModel(FakeVoiceGateway())
+
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                ActiveListScreen(
+                    viewModel = viewModel,
+                    voiceViewModel = voiceViewModel,
+                    onEvent = {},
+                )
+            }
+        }
+
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            composeTestRule
+                .onAllNodesWithContentDescription(
+                    "Mozzarella, 2 pezzi, Latticini, Formaggi, Mozzarella, selezionato."
+                )
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+
+        composeTestRule
+            .onNodeWithContentDescription(
+                "Mozzarella, 2 pezzi, Latticini, Formaggi, Mozzarella, selezionato."
+            )
+            .assertExists()
+    }
+
+    @Test
+    fun `quantityLabel formats large numbers without scientific notation`() {
+        assertEquals("1000000 pezzi", quantityLabel(1000000.0, StandardUnit.PIECE))
+        assertEquals("1000000,5 pezzi", quantityLabel(1000000.5, StandardUnit.PIECE))
+        assertEquals("10000000000 pezzi", quantityLabel(1.0E10, StandardUnit.PIECE))
+        assertEquals("0,125 grammi", quantityLabel(0.125, StandardUnit.GRAM))
+        assertEquals("0 pezzi", quantityLabel(0.0, StandardUnit.PIECE))
+    }
+
+    @Test
+    fun `quantityLabel uses Italian decimals and full unit names`() {
+        assertEquals("2 pezzi", quantityLabel(2.0, StandardUnit.PIECE))
+        assertEquals("1 pezzo", quantityLabel(1.0, StandardUnit.PIECE))
+        assertEquals("1,5 litri", quantityLabel(1.5, StandardUnit.LITER))
+        assertEquals("2,5 bottiglie", quantityLabel(2.5, StandardUnit.BOTTLE))
+        assertEquals("1000 grammi", quantityLabel(1000.0, StandardUnit.GRAM))
+        assertEquals("1 grammo", quantityLabel(1.0, StandardUnit.GRAM))
+        assertEquals("3 lattine", quantityLabel(3.0, StandardUnit.CAN))
+        assertEquals("1 pentola", quantityLabel(1.0, StandardUnit.POT))
+        assertEquals("1 vasetto", quantityLabel(1.0, StandardUnit.JAR))
+    }
+
+    @Test
+    fun `quantity badge and talkback agree for large quantities`() {
+        val item = uncheckedItem.copy(quantity = 1.0E10)
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                ItemRow(
+                    item = item,
+                    productName = "Pezzi",
+                    categoryLabel = "Varie",
+                    onCheckChange = {},
+                    onClick = {},
+                    onDelete = {},
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("10000000000 pz").assertExists()
+        composeTestRule
+            .onNodeWithContentDescription(
+                "Pezzi, 10000000000 pezzi, Varie, non selezionato. Doppio tocco per modificare."
+            )
+            .assertExists()
+    }
+
+    // --- Fakes di dominio per comporre la schermata senza DB ---
+
+    private class FakeShoppingListRepository(
+        private val items: List<ShoppingItem> = emptyList()
+    ) : ShoppingListRepository {
+        override fun getActiveItems(): Flow<List<ShoppingItem>> =
+            flowOf(items.filter { !it.isChecked })
+        override fun getCheckedItems(): Flow<List<ShoppingItem>> =
+            flowOf(items.filter { it.isChecked })
+        override suspend fun insert(item: ShoppingItem) = Unit
+        override suspend fun update(item: ShoppingItem) = Unit
+        override suspend fun delete(itemId: String) = Unit
+        override suspend fun getByProductId(productId: Long): ShoppingItem? =
+            items.firstOrNull { it.productId == productId }
+        override suspend fun checkout(checkedItemIds: List<String>): Boolean = true
+    }
+
+    private class FakeCatalogRepository(
+        private val taxonomy: List<TaxonomyLevel> = emptyList(),
+        private val products: Map<Long, CanonicalProduct> = emptyMap()
+    ) : CatalogRepository {
+        override fun search(query: String): Flow<List<CanonicalProduct>> =
+            flowOf(products.values.filter { it.name.contains(query, ignoreCase = true) })
+        override suspend fun getById(id: Long): CanonicalProduct? = products[id]
+        override fun getTaxonomy(): Flow<List<TaxonomyLevel>> = flowOf(taxonomy)
+    }
+
+    private class FakeVoiceGateway : VoiceRecognitionGateway {
+        private val _state = MutableStateFlow<VoiceRecognitionState>(VoiceRecognitionState.Idle)
+        override val state: StateFlow<VoiceRecognitionState> = _state
+        override suspend fun startListening() {
+            _state.value = VoiceRecognitionState.Listening
+        }
+        override fun stopListening() {
+            _state.value = VoiceRecognitionState.Idle
+        }
+        override fun reset() {
+            _state.value = VoiceRecognitionState.Idle
+        }
+    }
+}

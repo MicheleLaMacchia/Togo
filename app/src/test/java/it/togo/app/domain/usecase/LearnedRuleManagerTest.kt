@@ -41,11 +41,13 @@ class LearnedRuleManagerTest {
         manager = LearnedRuleManager(repository)
 
         `when`(repository.getAll()).thenReturn(flowOf(listOf(rule1, rule2)))
-        `when`(repository.getById("rule-1")).thenReturn(rule1)
-        `when`(repository.getById("rule-2")).thenReturn(rule2)
-        `when`(repository.getById("rule-3")).thenReturn(null)
-        `when`(repository.upsertAtomic(any())).thenAnswer { invocation ->
-            invocation.arguments[0] as LearnedRule
+        runBlocking {
+            `when`(repository.getById("rule-1")).thenReturn(rule1)
+            `when`(repository.getById("rule-2")).thenReturn(rule2)
+            `when`(repository.getById("rule-3")).thenReturn(null)
+            `when`(repository.upsertAtomic(any())).thenAnswer { invocation ->
+                invocation.arguments[0] as LearnedRule
+            }
         }
     }
 

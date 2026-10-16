@@ -49,7 +49,7 @@ class LearnedRulesViewModelTest {
         `when`(rulesRepo.getAll()).thenReturn(flowOf(rules))
 
         products.forEach { (id, product) ->
-            `when`(catalogRepo.getById(id)).thenReturn(product)
+            kotlinx.coroutines.runBlocking { `when`(catalogRepo.getById(id)).thenReturn(product) }
         }
 
         val vm = LearnedRulesViewModel(manager, catalogRepo, rulesRepo)
@@ -66,16 +66,6 @@ class LearnedRulesViewModelTest {
 
     private val product1 = CanonicalProduct(id = 1L, name = "Latte Intero", level3Id = 5L)
     private val product2 = CanonicalProduct(id = 2L, name = "Caffè Macinato", level3Id = 12L)
-
-    @Before
-    fun setup() {
-        Dispatchers.setMain(testDispatcher)
-    }
-
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
-    }
 
     @Test
     fun `stato iniziale vuoto`() = runTest(testDispatcher) {

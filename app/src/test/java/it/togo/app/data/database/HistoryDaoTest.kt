@@ -6,12 +6,18 @@ import androidx.test.core.app.ApplicationProvider
 import it.togo.app.data.database.dao.HistoryDao
 import it.togo.app.data.database.entity.HistoricalItemEntity
 import it.togo.app.domain.model.StandardUnit
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
 class HistoryDaoTest {
 
     @get:Rule

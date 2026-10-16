@@ -91,7 +91,7 @@ class CategoryAssignerTest {
     }
 
     @Test
-    fun `rule per PRODOTTO DIVERSO ignorata -> usa default`() = runBlocking(Dispatchers.IO) {
+    fun `rule per PRODOTTO DIVERSO ignorata usa default`() = runBlocking(Dispatchers.IO) {
         // Rule per productId=2 (Latte di Soia), ma assegniamo per productId=1 (Latte UHT)
         val rule = LearnedRule(
             userExpression = "latte",
@@ -108,7 +108,7 @@ class CategoryAssignerTest {
     }
 
     @Test
-    fun `rule inattiva ignorata -> usa default`() = runBlocking(Dispatchers.IO) {
+    fun `rule inattiva ignorata usa default`() = runBlocking(Dispatchers.IO) {
         val rule = LearnedRule(
             userExpression = "latte",
             productId = 1L,
@@ -124,7 +124,7 @@ class CategoryAssignerTest {
     }
 
     @Test
-    fun `rule per L3 user-defined ignorata -> usa default`() = runBlocking(Dispatchers.IO) {
+    fun `rule per L3 user-defined ignorata usa default`() = runBlocking(Dispatchers.IO) {
         val rule = LearnedRule(
             userExpression = "latte",
             productId = 1L,

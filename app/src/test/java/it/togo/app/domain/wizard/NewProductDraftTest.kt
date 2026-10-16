@@ -84,8 +84,7 @@ class NewProductDraftTest {
             .withLevel3(level3)
             .withProductName("Latte di avena")
             .withUnits(listOf(StandardUnit.LITER))
-            .withBrand("Coop")
-            .withVariant("bio")
+            .withAttributes("Coop", "bio", null)
 
         // Torna indietro e seleziona nuovo L1
         val newLevel1 = TaxonomyLevel.Level1(3, "Non alimentari", 3)
@@ -111,7 +110,7 @@ class NewProductDraftTest {
             .withLevel3(level3)
             .withProductName("Latte di avena")
             .withUnits(listOf(StandardUnit.LITER))
-            .withBrand("Coop")
+            .withAttributes("Coop", null, null)
 
         // Torna indietro e seleziona nuovo L2
         val newLevel2 = TaxonomyLevel.Level2(30, "Detergenti", 1, 1)

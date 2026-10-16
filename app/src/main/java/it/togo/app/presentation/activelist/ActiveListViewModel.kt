@@ -2,6 +2,7 @@ package it.togo.app.presentation.activelist
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.repository.CatalogRepository
@@ -64,9 +65,10 @@ class ActiveListViewModel(
         viewModelScope.launch {
             combine(
                 shoppingRepository.getActiveItems(),
+                shoppingRepository.getCheckedItems(),
                 taxonomyCache.filterNotNull()
-            ) { items, taxonomy ->
-                buildUiState(items, taxonomy)
+            ) { activeItems, checkedItems, taxonomy ->
+                buildUiState(activeItems, checkedItems, taxonomy)
             }
                 .onEach { newState ->
                     _uiState.value = newState
@@ -76,20 +78,36 @@ class ActiveListViewModel(
     }
 
     private suspend fun buildUiState(
-        items: List<ShoppingItem>,
+        activeItems: List<ShoppingItem>,
+        checkedItems: List<ShoppingItem>,
         taxonomy: TaxonomyCache
     ): ActiveListUiState {
         val (l1List, l2List, l3List) = taxonomy
 
+        val l1ById = l1List.associateBy { it.id }
+        val l2ById = l2List.associateBy { it.id }
+        val l3ById = l3List.associateBy { it.id }
+
         val itemsByL3 = mutableMapOf<Long, MutableList<ShoppingItem>>()
         val productNames = mutableMapOf<Long, String>()
-        for (item in items) {
+        val categoryLabels = mutableMapOf<Long, String>()
+        for (item in activeItems) {
             val product = catalogRepository.getById(item.productId) ?: continue
             productNames[item.productId] = product.name
+            categoryLabels[item.productId] = canonicalCategoryLabel(product, l1ById, l2ById, l3ById)
             val l3Id = product.level3Id
             if (l3List.any { it.id == l3Id }) {
                 itemsByL3.getOrPut(l3Id) { mutableListOf() }.add(item)
             }
+        }
+
+        // Le voci spuntate non entrano nei gruppi attivi, ma servono nome e
+        // categoria nella sezione "Presi".
+        for (item in checkedItems) {
+            if (productNames.containsKey(item.productId)) continue
+            val product = catalogRepository.getById(item.productId) ?: continue
+            productNames[item.productId] = product.name
+            categoryLabels[item.productId] = canonicalCategoryLabel(product, l1ById, l2ById, l3ById)
         }
 
         itemsByL3.values.forEach { list -> list.sortBy { item -> item.productId } }
@@ -116,14 +134,36 @@ class ActiveListViewModel(
             }
         }
 
-        val checkedItems = items.filter { it.isChecked }
-
         return ActiveListUiState(
             activeGroups = groups,
             checkedItems = checkedItems,
             productNames = productNames,
+            categoryLabels = categoryLabels,
             error = null
         )
+    }
+
+    /**
+     * Etichetta canonica leggibile della categoria: "L1, L2, L3".
+     *
+     * Riempie sempre una stringa non vuota (fallback localizzato) anche se la
+     * tassonomia non è disponibile o il prodotto non ha un L3 valido.
+     */
+    private fun canonicalCategoryLabel(
+        product: CanonicalProduct,
+        l1ById: Map<Long, TaxonomyLevel.Level1>,
+        l2ById: Map<Long, TaxonomyLevel.Level2>,
+        l3ById: Map<Long, TaxonomyLevel.Level3>
+    ): String {
+        val l3 = l3ById[product.level3Id]
+        val l2 = l3?.let { l2ById[it.level2Id] }
+        val l1 = l2?.let { l1ById[it.level1Id] }
+        return when {
+            l1 != null && l2 != null && l3 != null -> "${l1.name}, ${l2.name}, ${l3.name}"
+            l2 != null && l3 != null -> "${l2.name}, ${l3.name}"
+            l3 != null -> l3.name
+            else -> "Categoria non assegnata"
+        }
     }
 
     fun onEvent(event: UiEvent) {
@@ -134,6 +174,7 @@ class ActiveListViewModel(
             is UiEvent.DeleteItem -> handleDeleteItem(event.itemId)
             is UiEvent.NavigateToVoice -> { }
             is UiEvent.NavigateToHistory -> { }
+            is UiEvent.NavigateToSettings -> { }
             is UiEvent.ShareList -> { }
             is UiEvent.Checkout -> handleCheckout()
             is UiEvent.AddItemManual -> { }

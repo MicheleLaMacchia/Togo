@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -109,6 +110,9 @@ fun ActiveListScreen(
                         }) {
                             Icon(Icons.Filled.Share, contentDescription = "Condividi lista")
                         }
+                        IconButton(onClick = { onEvent(UiEvent.NavigateToSettings) }) {
+                            Icon(Icons.Filled.Settings, contentDescription = "Impostazioni")
+                        }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = colors.surface,
@@ -133,7 +137,13 @@ fun ActiveListScreen(
                                 voiceUiState is it.togo.app.presentation.voice.VoiceBottomSheetUiState.Error -> it.togo.app.domain.voice.VoiceRecognitionState.Error(it.togo.app.domain.voice.ErrorCode.UNKNOWN, "")
                                 else -> it.togo.app.domain.voice.VoiceRecognitionState.Idle
                             },
-                            onClick = { voiceViewModel.startListening() }
+                            onClick = {
+                                if (voiceUiState is it.togo.app.presentation.voice.VoiceBottomSheetUiState.Listening) {
+                                    voiceViewModel.cancel()
+                                } else {
+                                    voiceViewModel.startListening()
+                                }
+                            }
                         )
 
                         FloatingActionButton(
@@ -199,6 +209,7 @@ fun ActiveListScreen(
                                 CategorySection(
                                     group = group,
                                     productNames = uiState.productNames,
+                                    categoryLabels = uiState.categoryLabels,
                                     onCheckOff = { itemId, checked -> onEvent(UiEvent.CheckOff(itemId, checked)) },
                                     onEdit = { item -> onEvent(UiEvent.EditItem(item)) },
                                     onDelete = { itemId -> onEvent(UiEvent.DeleteItem(itemId)) },
@@ -215,6 +226,7 @@ fun ActiveListScreen(
                                     PresiSection(
                                         items = uiState.checkedItems,
                                         productNames = uiState.productNames,
+                                        categoryLabels = uiState.categoryLabels,
                                         onUncheck = { itemId -> onEvent(UiEvent.CheckOff(itemId, false)) },
                                         onCheckout = { onEvent(UiEvent.Checkout) },
                                         colors = colors,

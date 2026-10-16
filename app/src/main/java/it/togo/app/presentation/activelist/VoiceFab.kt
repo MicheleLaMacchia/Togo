@@ -25,6 +25,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import it.togo.app.domain.voice.VoiceRecognitionState
@@ -57,6 +59,7 @@ fun VoiceFab(
     val isListening = state.isListening
     val isError = state.isError
     val isResult = state.isResult
+    val isProcessing = state is VoiceRecognitionState.Processing
 
     // Animazione pulse per Listening
     val pulseScale by animateFloatAsState(
@@ -73,10 +76,31 @@ fun VoiceFab(
 
     val icon = when {
         isListening -> Icons.Filled.Mic
+        isProcessing -> Icons.Filled.Mic
         isError -> Icons.Filled.MicOff
         isResult -> Icons.Filled.Mic
         else -> Icons.Filled.Mic
     }
+
+    // Etichetta di stato: comunica anche l'azione disponibile (riprova / nuovo).
+    val stateLabel = when {
+        isListening -> "Ascolto..."
+        isProcessing -> "Elaborazione in corso..."
+        isError -> "Errore di riconoscimento. Tocca per riprovare."
+        isResult -> "Prodotto riconosciuto. Tocca per aggiungere un altro prodotto."
+        else -> ""
+    }
+
+    val fabContentDescription = when {
+        isListening -> "Interrompi ascolto"
+        isProcessing -> "Elaborazione in corso. Attendere."
+        isError -> stateLabel
+        isResult -> stateLabel
+        else -> "Aggiungi prodotto con la voce. Pulsante."
+    }
+
+    // Durante l'elaborazione il FAB non avvia una nuova ascolto.
+    val enabled = !isProcessing
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -84,7 +108,7 @@ fun VoiceFab(
     ) {
         // Label stato
         AnimatedVisibility(
-            visible = isListening || isError || isResult,
+            visible = isListening || isProcessing || isError || isResult,
             enter = fadeIn(),
             exit = fadeOut(),
         ) {
@@ -94,12 +118,7 @@ fun VoiceFab(
                 shadowElevation = 2.dp,
             ) {
                 Text(
-                    text = when {
-                        isListening -> "Ascolto..."
-                        isError -> "Errore"
-                        isResult -> "Riconosciuto!"
-                        else -> ""
-                    },
+                    text = stateLabel,
                     style = typography.caption,
                     color = colors.inkPrimary,
                     modifier = Modifier.padding(horizontal = spacing.space3, vertical = spacing.space1),
@@ -109,16 +128,17 @@ fun VoiceFab(
 
         // FAB
         FloatingActionButton(
-            onClick = onClick,
-            containerColor = fabColor,
-            contentColor = Color.White,
+            onClick = { if (enabled) onClick() },
+            containerColor = if (enabled) fabColor else colors.surfaceSubtle,
+            contentColor = if (enabled) Color.White else colors.inkMuted,
             modifier = modifier
                 .size(56.dp)
-                .scale(pulseScale),
+                .scale(pulseScale)
+                .semantics { if (isProcessing) disabled() },
         ) {
             Icon(
                 imageVector = icon,
-                contentDescription = if (isListening) "Interrompi ascolto" else "Avvia comando vocale",
+                contentDescription = fabContentDescription,
                 modifier = Modifier.size(24.dp),
             )
         }

@@ -22,16 +22,16 @@ import java.sql.DriverManager
 class CatalogDaoTest {
 
     private fun assetFile(): File {
-        val candidates = listOf(
-            File("src", "main", "assets", "catalog.db"),
-            File("app", "src", "main", "assets", "catalog.db"),
-            File("..", "app", "src", "main", "assets", "catalog.db")
+        val candidates: List<File> = listOf(
+            File("src/main/assets/catalog.db"),
+            File("app/src/main/assets/catalog.db"),
+            File("../app/src/main/assets/catalog.db")
         )
-        return candidates.firstOrNull { it.exists() }
-            ?: error(
-                "catalog.db non trovato (cercato in: " +
-                    candidates.joinToString(", ") { it.absolutePath } + ")"
-            )
+        val found: File? = candidates.firstOrNull { it.exists() }
+        return found ?: error(
+            "catalog.db non trovato (cercato in: " +
+                candidates.joinToString(", ") { f: File -> f.absolutePath } + ")"
+        )
     }
 
     private fun <T> withDb(block: (Connection) -> T): T {
@@ -43,8 +43,7 @@ class CatalogDaoTest {
     }
 
     private fun runSearch(conn: Connection, rawQuery: String): List<String> {
-        import it.togo.app.data.database.CatalogQueries
-        val query = CatalogQueries.escapeLike(CatalogQueries.normalize(rawQuery))
+        val query = it.togo.app.data.database.CatalogQueries.escapeLike(it.togo.app.data.database.CatalogQueries.normalize(rawQuery))
         if (query.isEmpty()) return emptyList()
 
         // La query SEARCH usa binding Room `:query` (3 occorrenze); per JDBC diventano `?`

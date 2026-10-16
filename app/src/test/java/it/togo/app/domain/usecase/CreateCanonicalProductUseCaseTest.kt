@@ -99,7 +99,7 @@ class CreateCanonicalProductUseCaseTest {
         val invalidDraft = validDraft.withProductName("")
 
         val ex = assertThrows(IllegalArgumentException::class.java) {
-            useCase(invalidDraft)
+            runBlocking { useCase(invalidDraft) }
         }
         assertTrue(ex.message?.contains("Nome prodotto") == true)
     }
@@ -109,7 +109,7 @@ class CreateCanonicalProductUseCaseTest {
         val invalidDraft = validDraft.withQuantity(0.0)
 
         val ex = assertThrows(IllegalArgumentException::class.java) {
-            useCase(invalidDraft)
+            runBlocking { useCase(invalidDraft) }
         }
         assertTrue(ex.message?.contains("Quantità") == true)
     }
@@ -119,7 +119,7 @@ class CreateCanonicalProductUseCaseTest {
         val invalidDraft = validDraft.withStep(WizardStep.ENTER_DETAILS)
 
         assertThrows(IllegalArgumentException::class.java) {
-            useCase(invalidDraft)
+            runBlocking { useCase(invalidDraft) }
         }
     }
 
@@ -135,7 +135,7 @@ class CreateCanonicalProductUseCaseTest {
             .withStep(WizardStep.CONFIRM)
 
         assertThrows(IllegalArgumentException::class.java) {
-            useCase(invalidDraft)
+            runBlocking { useCase(invalidDraft) }
         }
     }
 

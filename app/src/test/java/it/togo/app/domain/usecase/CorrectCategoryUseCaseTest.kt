@@ -1,5 +1,6 @@
 package it.togo.app.domain.usecase
 
+import it.togo.app.domain.category.AssignmentSource
 import it.togo.app.domain.category.CategoryAssignment
 import it.togo.app.domain.category.CategoryCorrection
 import it.togo.app.domain.category.CategoryCorrector

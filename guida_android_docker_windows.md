@@ -8,6 +8,8 @@ Questa guida descrive un flusso di sviluppo Android in cui:
 - l'APK viene generato dal container ma salvato nel progetto locale;
 - l'APK può essere installato sul telefono tramite ADB oppure copiato manualmente.
 
+Gli script PowerShell usano l'SDK contenuto nell'immagine e montano nel container un `local.properties` temporaneo con `sdk.dir=/opt/android-sdk`. Il file `local.properties` presente sul PC non viene modificato.
+
 ---
 
 ## 1. Architettura del flusso
@@ -162,23 +164,13 @@ Questa operazione va ripetuta soltanto quando modifichi il Dockerfile o le versi
 
 ## 6. Generare l'APK debug
 
-Sempre dalla root del progetto:
+Dalla root del progetto, avvia lo script:
 
 ```powershell
-docker run --rm `
-  -v "${PWD}:/workspace" `
-  -w /workspace `
-  android-builder `
-  ./gradlew assembleDebug
+.\build-android.ps1
 ```
 
-Il repository viene montato come volume dentro:
-
-```text
-/workspace
-```
-
-Quindi l'APK prodotto dal container viene scritto direttamente sul filesystem Windows.
+Lo script verifica che Docker e l'immagine `android-builder` siano disponibili, poi esegue `sh ./gradlew clean assembleDebug` nel container. Il repository è montato in `/workspace`, quindi l'APK viene scritto sul filesystem Windows. Un `local.properties` temporaneo con `sdk.dir=/opt/android-sdk` è montato al suo posto solo nel container e rimosso al termine, anche se la build fallisce; il file host resta invariato. Se Docker non è avviato, avvia Docker Desktop. Se manca l'immagine, creala come descritto nella sezione 5.
 
 Normalmente il file risultante è:
 
@@ -202,61 +194,13 @@ Get-Item ".\app\build\outputs\apk\debug\app-debug.apk"
 
 ## 7. Cache Gradle consigliata
 
-Senza cache, Docker potrebbe riscaricare dipendenze Gradle a ogni build.
-
-Puoi creare un volume persistente:
-
-```powershell
-docker volume create android-gradle-cache
-```
-
-Poi usare:
-
-```powershell
-docker run --rm `
-  -v "${PWD}:/workspace" `
-  -v "android-gradle-cache:/root/.gradle" `
-  -w /workspace `
-  android-builder `
-  ./gradlew assembleDebug
-```
-
-Questo rende le build successive sensibilmente più rapide.
+Gli script `build-android.ps1`, `build-install-android.ps1` e `test-android.ps1` riutilizzano il volume Docker `android-gradle-cache` montato in `/root/.gradle`. Docker crea il volume al primo utilizzo; le dipendenze scaricate velocizzano le esecuzioni successive.
 
 ---
 
 ## 8. Script PowerShell per automatizzare la build
 
-Crea nella root del progetto:
-
-```text
-build-android.ps1
-```
-
-Contenuto:
-
-```powershell
-$ErrorActionPreference = "Stop"
-
-Write-Host "Build APK Android via Docker..."
-
-docker run --rm `
-  -v "${PWD}:/workspace" `
-  -v "android-gradle-cache:/root/.gradle" `
-  -w /workspace `
-  android-builder `
-  ./gradlew assembleDebug
-
-$apk = ".\app\build\outputs\apk\debug\app-debug.apk"
-
-if (Test-Path $apk) {
-    Write-Host ""
-    Write-Host "BUILD OK"
-    Write-Host "APK: $apk"
-} else {
-    throw "Build terminata ma APK non trovato in $apk"
-}
-```
+Lo script `build-android.ps1` è incluso nella root del repository e gestisce override SDK, cache, controllo dell'esito Docker/Gradle e verifica dell'APK. L'operazione `clean` evita che un APK precedente venga scambiato per il risultato della build corrente. Lancialo dalla root:
 
 Avvio:
 
@@ -390,44 +334,13 @@ A quel punto puoi aprire l'app direttamente dal telefono.
 
 ## 14. Build + installazione in un solo script
 
-Puoi creare:
+Usa lo script incluso nella root:
 
 ```text
 build-install-android.ps1
 ```
 
-Contenuto:
-
-```powershell
-$ErrorActionPreference = "Stop"
-
-$apk = ".\app\build\outputs\apk\debug\app-debug.apk"
-
-Write-Host "1/3 - Build Android via Docker"
-
-docker run --rm `
-  -v "${PWD}:/workspace" `
-  -v "android-gradle-cache:/root/.gradle" `
-  -w /workspace `
-  android-builder `
-  ./gradlew assembleDebug
-
-if (-not (Test-Path $apk)) {
-    throw "APK non trovato: $apk"
-}
-
-Write-Host "2/3 - Verifica dispositivo"
-
-$devices = adb devices
-Write-Host $devices
-
-Write-Host "3/3 - Installazione APK"
-
-adb install -r $apk
-
-Write-Host ""
-Write-Host "Build e installazione completate."
-```
+Lo script `build-install-android.ps1` è incluso nella root. Usa lo stesso override SDK temporaneo e controlla l'esito della build prima di verificare l'APK e avviare ADB. Anche gli errori di `adb devices` e `adb install` vengono restituiti.
 
 Uso:
 
@@ -458,52 +371,22 @@ test sul telefono
 Se vuoi eseguire una compilazione pulita:
 
 ```powershell
-docker run --rm `
-  -v "${PWD}:/workspace" `
-  -v "android-gradle-cache:/root/.gradle" `
-  -w /workspace `
-  android-builder `
-  ./gradlew clean assembleDebug
+.\build-android.ps1
 ```
 
 Non serve farlo a ogni build.
 
 ---
 
-## 16. Eseguire test e lint nel container
+## 16. Eseguire i test JVM nel container
 
-Test unitari:
-
-```powershell
-docker run --rm `
-  -v "${PWD}:/workspace" `
-  -v "android-gradle-cache:/root/.gradle" `
-  -w /workspace `
-  android-builder `
-  ./gradlew test
-```
-
-Lint:
+Test unitari JVM del modulo `app`:
 
 ```powershell
-docker run --rm `
-  -v "${PWD}:/workspace" `
-  -v "android-gradle-cache:/root/.gradle" `
-  -w /workspace `
-  android-builder `
-  ./gradlew lint
+.\test-android.ps1
 ```
 
-Build + test:
-
-```powershell
-docker run --rm `
-  -v "${PWD}:/workspace" `
-  -v "android-gradle-cache:/root/.gradle" `
-  -w /workspace `
-  android-builder `
-  ./gradlew test assembleDebug
-```
+Lo script esegue `sh ./gradlew :app:testDebugUnitTest` nell'immagine `android-builder` con il mount del repository, override temporaneo e cache Gradle; restituisce il codice di uscita Docker/Gradle. Non esegue build APK né lint.
 
 ---
 
@@ -539,10 +422,10 @@ Questo evita che BMAD/Codex debba conoscere dettagli dell'ambiente host.
 
 ## 18. Debug APK vs Release APK
 
-Durante lo sviluppo usa:
+Durante lo sviluppo usa lo script PowerShell, che configura l'SDK containerizzato:
 
-```bash
-./gradlew assembleDebug
+```powershell
+.\build-android.ps1
 ```
 
 Output:
@@ -560,13 +443,13 @@ Per una release reale serviranno invece:
 
 Non mettere mai password del keystore direttamente nel repository.
 
-Per il Play Store generalmente userai:
+Per il Play Store generalmente si usa il task Gradle:
 
 ```bash
 ./gradlew bundleRelease
 ```
 
-che produce un `.aab`.
+che produce un `.aab`. Gli script descritti in questa guida automatizzano solo il flusso debug; per il task release va mantenuto lo stesso override `sdk.dir=/opt/android-sdk` nel container.
 
 ---
 
@@ -574,18 +457,10 @@ che produce un `.aab`.
 
 ### `./gradlew: Permission denied`
 
-Dentro Linux/Docker il wrapper potrebbe non essere eseguibile.
-
-Puoi usare:
+Il wrapper è tracciato senza bit eseguibile; gli script usano `sh ./gradlew` nel container, quindi non è necessario modificarne i permessi. Avvia la build con:
 
 ```powershell
-git update-index --chmod=+x gradlew
-```
-
-oppure nel Dockerfile/script:
-
-```bash
-chmod +x ./gradlew
+.\build-android.ps1
 ```
 
 ### SDK mancante
@@ -683,13 +558,11 @@ adb devices
 ### Quando qualcosa sembra incoerente
 
 ```powershell
-docker run --rm `
-  -v "${PWD}:/workspace" `
-  -v "android-gradle-cache:/root/.gradle" `
-  -w /workspace `
-  android-builder `
-  ./gradlew clean test assembleDebug
+.\test-android.ps1
+.\build-android.ps1
 ```
+
+I due script usano l'SDK del container e conservano separati test JVM e build APK.
 
 ---
 
@@ -723,7 +596,7 @@ Vantaggi:
 - build riproducibili;
 - ambiente coerente per BMAD/Codex;
 - test sul telefono reale;
-- possibilità di automatizzare build, test, lint e installazione.
+- possibilità di automatizzare build, test JVM e installazione.
 
 ---
 
@@ -731,16 +604,10 @@ Vantaggi:
 
 ### Build gradlew non eseguibile
 
-Se ricevi `Permission denied` per `gradlew` dentro il container:
+Se ricevi `Permission denied` per `gradlew` dentro il container, usa gli script inclusi: invocano il wrapper con `sh` e non richiedono modifiche ai permessi.
 
 ```powershell
-git update-index --chmod=+x gradlew
-```
-
-Oppure dentro il Dockerfile o nello script di build:
-
-```bash
-chmod +x ./gradlew
+.\build-android.ps1
 ```
 
 ### SDK mancante
@@ -815,7 +682,8 @@ Soluzioni:
 Se KSP segnala tipi missing per le entity Room:
 
 - Assicurati che tutte le entity siano definite in file `.kt` separati o verificare che KSP le possa vedere
-- Pulire la cache: `./gradlew clean kspDebugKotlin --no-daemon`
+- Per una build pulita: eseguire `.\build-android.ps1` (include `clean` e usa l'SDK nel container).
+- Il task KSP specifico va eseguito nel container usando lo stesso override SDK temporaneo previsto dagli script.
 - Verificare le importazioni nei file `TogoDatabase.kt`
 
 ### Risorse mipmap mancanti

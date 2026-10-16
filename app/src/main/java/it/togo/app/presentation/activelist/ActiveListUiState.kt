@@ -15,6 +15,13 @@ data class ActiveListUiState(
     val activeGroups: List<CategoryGroup> = emptyList(),
     val checkedItems: List<ShoppingItem> = emptyList(),
     val productNames: Map<Long, String> = emptyMap(),
+    /**
+     * Etichetta di categoria canonica (L1, L2, L3) per ogni prodotto.
+     *
+     * Necessaria anche per le voci spuntate in "Presi", dove la riga non passa
+     * per [CategoryGroup] e quindi non conosce la tassonomia.
+     */
+    val categoryLabels: Map<Long, String> = emptyMap(),
     val error: String? = null,
     val checkingOffItemId: String? = null,      // Item in corso di animazione check-off
     val pendingCheckOffItemId: String? = null,  // Item in attesa di check-off (300ms delay)
@@ -82,6 +89,9 @@ sealed interface UiEvent {
 
     /** Naviga a Storico (icona AppBar) */
     object NavigateToHistory : UiEvent
+
+    /** Apri le Regole apprese (pulsante Impostazioni nell'App Bar) */
+    object NavigateToSettings : UiEvent
 
     /** Condividi lista (icona AppBar) */
     object ShareList : UiEvent

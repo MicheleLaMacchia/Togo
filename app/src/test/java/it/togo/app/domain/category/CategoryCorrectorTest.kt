@@ -85,8 +85,11 @@ class CategoryCorrectorTest {
     }
 
     @Test(expected = IllegalArgumentException::class)
-    fun `correzione con assignment.product null lancia eccezione`() = runBlocking(Dispatchers.IO) {
-        val badAssignment = assignment.copy(product = null as CanonicalProduct?)
+    fun `correzione con assignment product null lancia eccezione`() = runBlocking(Dispatchers.IO) {
+        // Forza product a CanonicalProduct dummy con id invalido per testare fallback
+        val badAssignment = assignment.copy(
+            product = CanonicalProduct(id = -1L, name = "Invalid", level3Id = -1L)
+        )
         corrector.correct(badAssignment, 12L)
     }
 

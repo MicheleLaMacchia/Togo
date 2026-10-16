@@ -54,9 +54,11 @@ class CategoryAssignmentIntegrationTest {
         learnedRulesRepository = mock()
 
         `when`(catalogRepository.getTaxonomy()).thenReturn(flowOf(taxonomy))
-        `when`(learnedRulesRepository.getByExpressionAndProductId(any(), any())).thenReturn(null)
-        `when`(learnedRulesRepository.upsertAtomic(any())).thenAnswer { invocation ->
-            invocation.arguments[0] as LearnedRule
+        runBlocking {
+            `when`(learnedRulesRepository.getByExpressionAndProductId(any(), any())).thenReturn(null)
+            `when`(learnedRulesRepository.upsertAtomic(any())).thenAnswer { invocation ->
+                invocation.arguments[0] as LearnedRule
+            }
         }
 
         assigner = CategoryAssigner(catalogRepository, learnedRulesRepository)
@@ -66,7 +68,7 @@ class CategoryAssignmentIntegrationTest {
     }
 
     @Test
-    fun `flusso completo: assign default -> correct -> confirmRemember -> reassign usa learned rule`() = runBlocking(Dispatchers.IO) {
+    fun `flusso completo assign default correct confirmRemember reassign usa learned rule`() = runBlocking(Dispatchers.IO) {
         // 1. Primo assegnamento: default prodotto (Latticini)
         val assignment1 = assignUseCase(productLatte, "latte")
         assertEquals(AssignmentSource.DEFAULT, assignment1.source)
@@ -98,7 +100,7 @@ class CategoryAssignmentIntegrationTest {
     }
 
     @Test
-    fun `flusso con declineRemember: rule NON creata, nuovo assign usa default`() = runBlocking(Dispatchers.IO) {
+    fun `flusso con declineRemember rule NON creata nuovo assign usa default`() = runBlocking(Dispatchers.IO) {
         // 1. Assegnamento default
         val assignment1 = assignUseCase(productLatte, "latte")
         assertEquals(AssignmentSource.DEFAULT, assignment1.source)

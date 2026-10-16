@@ -30,6 +30,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
@@ -54,6 +56,7 @@ import it.togo.app.ui.theme.togoTypography
 fun PresiSection(
     items: List<ShoppingItem>,
     productNames: Map<Long, String> = emptyMap(),
+    categoryLabels: Map<Long, String> = emptyMap(),
     onUncheck: (String) -> Unit,
     onCheckout: () -> Unit,
     colors: it.togo.app.ui.theme.TogoColorScheme,
@@ -63,6 +66,12 @@ fun PresiSection(
 ) {
     var expanded by rememberSaveable { mutableStateOf(true) }
     val context = LocalContext.current
+
+    // Semantica dell'intestazione: nome sezione, conteggio e stato espansa/collassata.
+    val count = items.size
+    val stateText = if (expanded) "espansa" else "collassata"
+    val toggleAction = if (expanded) "collassare" else "espandere"
+    val headerDescription = "Presi, $count ${if (count == 1) "voce" else "voci"}, sezione $stateText. Doppio tocco per $toggleAction."
 
     Column(
         modifier = Modifier
@@ -90,7 +99,8 @@ fun PresiSection(
                     )
                 }
                 .heightIn(min = 48.dp) // Touch target minimo 48dp
-                .combinedClickable(onClick = { expanded = !expanded }),
+                .combinedClickable(onClick = { expanded = !expanded })
+                .semantics { contentDescription = headerDescription },
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -104,7 +114,8 @@ fun PresiSection(
                     Icons.Filled.ExpandLess
                 else
                     Icons.Filled.ExpandMore,
-                contentDescription = if (expanded) "Collassa" else "Espandi",
+                // Decorativa: l'azione è descritta dalla semantica dell'intera intestazione.
+                contentDescription = null,
                 tint = colors.inkSecondary,
                 modifier = Modifier
                     .size(24.dp),
@@ -132,6 +143,10 @@ fun PresiSection(
                     ItemRow(
                         item = item, // Usa lo stato reale dell'item
                         productName = productNames[item.productId] ?: "Prodotto #${item.productId}",
+                        categoryLabel = categoryLabels[item.productId],
+                        // In "Presi" il tap sulla riga non apre la modifica: la riga
+                        // annuncia solo dati e stato, l'azione è sulla checkbox.
+                        rowActionDescription = null,
                         onCheckChange = { checked ->
                             if (!checked) onUncheck(item.id) // Uncheck = move back to active
                         },

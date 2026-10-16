@@ -52,7 +52,7 @@ class HistoryViewModelTest {
 
         // Setup catalog mock per ricerca by name
         products.forEach { (id, product) ->
-            `when`(catalogRepo.getById(id)).thenReturn(product)
+            kotlinx.coroutines.runBlocking { `when`(catalogRepo.getById(id)).thenReturn(product) }
         }
 
         val vm = HistoryViewModel(historyRepo, catalogRepo, shoppingRepo)

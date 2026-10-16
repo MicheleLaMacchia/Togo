@@ -1,118 +1,127 @@
 package it.togo.app.presentation.additem
 
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import it.togo.app.domain.model.ResolutionOption
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
- * Test JVM per DuplicateResolutionDialog (Story 3.5).
+ * Test JVM per DuplicateResolutionDialog (Story 3.5 + Story 6.1).
+ *
+ * Verifica annuncio (titolo, messaggio, opzioni), stati e callback.
  */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35])
 class DuplicateResolutionDialogTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    @Test
-    fun `dialog shows product name and quantities`() {
+    private fun showDialog(
+        canSum: Boolean = true,
+        onSelect: (ResolutionOption) -> Unit = {},
+    ) {
         composeTestRule.setContent {
             DuplicateResolutionDialog(
                 productName = "Latte UHT",
                 currentQuantity = 1.0,
                 newQuantity = 2.0,
-                onSelect = {},
+                canSum = canSum,
+                onSelect = onSelect,
             )
         }
+    }
+
+    @Test
+    fun `dialog shows product name and quantities`() {
+        showDialog()
 
         composeTestRule.onNodeWithText("Prodotto già in lista").assertExists()
         composeTestRule.onNodeWithText("Latte UHT").assertExists()
     }
 
     @Test
-    fun `canSum true shows sum option`() {
-        var selectedOption: ResolutionOption? = null
+    fun `title and message are exposed as content descriptions`() {
+        showDialog()
 
-        composeTestRule.setContent {
-            DuplicateResolutionDialog(
-                productName = "Latte UHT",
-                currentQuantity = 1.0,
-                newQuantity = 2.0,
-                canSum = true,
-                onSelect = { selectedOption = it },
+        composeTestRule
+            .onNodeWithContentDescription("Prodotto già in lista")
+            .assertExists()
+
+        composeTestRule
+            .onNodeWithContentDescription(
+                "\"Latte UHT\" è già presente con 1.0. Nuova quantità: 2.0. Cosa vuoi fare?"
             )
-        }
-
-        composeTestRule.onNodeWithText(org.hamcrest.CoreMatchers.containsString("Somma quantità")).assertExists()
-        composeTestRule.onNodeWithText(org.hamcrest.CoreMatchers.containsString("Somma quantità")).performClick()
-        assertEquals(ResolutionResult.SUM, selectedOption)
+            .assertExists()
     }
 
     @Test
-    fun `canSum false hides sum option`() {
-        composeTestRule.setContent {
-            DuplicateResolutionDialog(
-                productName = "Latte UHT",
-                currentQuantity = 1.0,
-                newQuantity = 2.0,
-                canSum = false,
-                onSelect = {},
-            )
-        }
+    fun `sum option is clickable and invokes onSelect with SUM`() {
+        var selectedOption: ResolutionOption? = null
+        showDialog(canSum = true, onSelect = { selectedOption = it })
 
-        composeTestRule.onNodeWithText(org.hamcrest.CoreMatchers.containsString("Somma quantità")).assertDoesNotExist()
+        composeTestRule
+            .onNodeWithText("Somma quantità (+2.0 → 3.0)")
+            .assertExists()
+            .assertHasClickAction()
+            .performClick()
+
+        assertEquals(ResolutionOption.SUM, selectedOption)
     }
 
     @Test
-    fun `replace option calls onSelect with REPLACE`() {
-        var selectedOption: ResolutionOption? = null
+    fun `canSum false hides the sum option so it is not actionable`() {
+        showDialog(canSum = false)
 
-        composeTestRule.setContent {
-            DuplicateResolutionDialog(
-                productName = "Latte UHT",
-                currentQuantity = 1.0,
-                newQuantity = 2.0,
-                onSelect = { selectedOption = it },
-            )
-        }
-
-        composeTestRule.onNodeWithText(org.hamcrest.CoreMatchers.containsString("Sostituisci quantità")).performClick()
-        assertEquals(ResolutionResult.REPLACE, selectedOption)
+        composeTestRule
+            .onNodeWithText("Somma quantità (+2.0 → 3.0)")
+            .assertDoesNotExist()
     }
 
     @Test
-    fun `separate option calls onSelect with SEPARATE`() {
+    fun `replace option is clickable and invokes onSelect with REPLACE`() {
         var selectedOption: ResolutionOption? = null
+        showDialog(onSelect = { selectedOption = it })
 
-        composeTestRule.setContent {
-            DuplicateResolutionDialog(
-                productName = "Latte UHT",
-                currentQuantity = 1.0,
-                newQuantity = 2.0,
-                onSelect = { selectedOption = it },
-            )
-        }
+        composeTestRule
+            .onNodeWithText("Sostituisci quantità (2.0)")
+            .assertHasClickAction()
+            .performClick()
 
-        composeTestRule.onNodeWithText("Crea voce separata").performClick()
-        assertEquals(ResolutionResult.SEPARATE, selectedOption)
+        assertEquals(ResolutionOption.REPLACE, selectedOption)
     }
 
     @Test
-    fun `cancel option calls onSelect with CANCEL`() {
+    fun `separate option is clickable and invokes onSelect with SEPARATE`() {
         var selectedOption: ResolutionOption? = null
+        showDialog(onSelect = { selectedOption = it })
 
-        composeTestRule.setContent {
-            DuplicateResolutionDialog(
-                productName = "Latte UHT",
-                currentQuantity = 1.0,
-                newQuantity = 2.0,
-                onSelect = { selectedOption = it },
-            )
-        }
+        composeTestRule
+            .onNodeWithText("Crea voce separata")
+            .assertHasClickAction()
+            .performClick()
 
-        composeTestRule.onNodeWithText("Annulla").performClick()
-        assertEquals(ResolutionResult.CANCEL, selectedOption)
+        assertEquals(ResolutionOption.SEPARATE, selectedOption)
+    }
+
+    @Test
+    fun `cancel option is clickable and invokes onSelect with CANCEL`() {
+        var selectedOption: ResolutionOption? = null
+        showDialog(onSelect = { selectedOption = it })
+
+        composeTestRule
+            .onNodeWithText("Annulla")
+            .assertHasClickAction()
+            .performClick()
+
+        assertEquals(ResolutionOption.CANCEL, selectedOption)
     }
 }

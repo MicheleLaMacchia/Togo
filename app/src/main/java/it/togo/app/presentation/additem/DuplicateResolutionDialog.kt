@@ -17,6 +17,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -43,6 +45,11 @@ fun DuplicateResolutionDialog(
     canSum: Boolean = true,
     onSelect: (ResolutionOption) -> Unit,
 ) {
+    // Testi esposti anche come contentDescription per TalkBack/test.
+    val title = "Prodotto già in lista"
+    val message = "\"$productName\" è già presente con $currentQuantity. " +
+        "Nuova quantità: $newQuantity. Cosa vuoi fare?"
+
     Dialog(onDismissRequest = { onSelect(ResolutionOption.CANCEL) }) {
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -60,22 +67,25 @@ fun DuplicateResolutionDialog(
             ) {
                 // Titolo
                 Text(
-                    text = "Prodotto già in lista",
+                    text = title,
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics { contentDescription = title },
                 )
 
                 // Messaggio descrittivo
                 Text(
-                    text = "\"$productName\" è già presente con $currentQuantity. " +
-                        "Nuova quantità: $newQuantity. Cosa vuoi fare?",
+                    text = message,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics { contentDescription = message },
                 )
 
                 // Azioni

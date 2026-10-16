@@ -5,12 +5,18 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import it.togo.app.data.database.dao.LearnedRulesDao
 import it.togo.app.data.database.entity.LearnedRuleEntity
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
 class LearnedRulesDaoTest {
 
     @get:Rule

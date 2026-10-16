@@ -91,7 +91,7 @@ class VoiceRecognitionResultTest {
     }
 
     @Test
-    fun `Error contiene codice e messaggio`() {
+    fun `VoiceRecognitionState Error contiene codice e messaggio`() {
         val state = VoiceRecognitionState.Error(ErrorCode.NOT_AVAILABLE, "Non disponibile")
 
         assertFalse(state.isListening)

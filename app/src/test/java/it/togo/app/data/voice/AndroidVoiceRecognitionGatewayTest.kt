@@ -2,15 +2,18 @@ package it.togo.app.data.voice
 
 import it.togo.app.domain.voice.ErrorCode
 import it.togo.app.domain.voice.VoiceRecognitionState
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
- * Test JVM per AndroidVoiceRecognitionGateway.
- *
- * Nota: questi test verificano la logica del gateway senza Android SDK.
- * Per test completi con Activity/Intent, usare Robolectric o instrumented tests.
+ * Test JVM (Robolectric) per AndroidVoiceRecognitionGateway.
  */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
 class AndroidVoiceRecognitionGatewayTest {
 
     @Test
@@ -22,7 +25,7 @@ class AndroidVoiceRecognitionGatewayTest {
     }
 
     @Test
-    fun `startListening senza launcher ritorna Error NOT_AVAILABLE`() = runBlocking {
+    fun `startListening senza launcher ritorna Error NOT_AVAILABLE`() = runTest {
         val gateway = AndroidVoiceRecognitionGateway()
 
         gateway.startListening()
@@ -108,10 +111,7 @@ class AndroidVoiceRecognitionGatewayTest {
     fun `operazioni gateway completate sotto 100ms`() {
         val gateway = AndroidVoiceRecognitionGateway()
 
-        gateway.startListening()
-        gateway.stopListening()
+        gateway.onActivityResult(android.app.Activity.RESULT_OK, null)
         gateway.reset()
     }
 }
-
-private suspend fun runBlocking(block: suspend () -> Unit) = kotlinx.coroutines.runBlocking { block() }

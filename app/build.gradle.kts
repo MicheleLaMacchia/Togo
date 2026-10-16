@@ -40,6 +40,12 @@ android {
     buildFeatures {
         compose = true
     }
+    testOptions {
+        // Necessario per Compose UI test + Robolectric: risorse e manifest dell'app.
+        unitTests {
+            isIncludeAndroidResources = true
+        }
+    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -72,7 +78,14 @@ dependencies {
     }
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     testImplementation(libs.junit)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.arch.core.testing)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.sqlite.jdbc)
+    testImplementation(libs.androidx.ui.test.junit4)
+    testImplementation(libs.robolectric)
     androidTestImplementation(libs.junit)
     debugImplementation(libs.androidx.ui.tooling)
+    debugImplementation(libs.androidx.ui.test.manifest)
 }

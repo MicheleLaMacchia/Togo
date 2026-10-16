@@ -1,6 +1,7 @@
 package it.togo.app.presentation.additem
 
 import it.togo.app.domain.model.ResolutionOption
+import it.togo.app.domain.model.StandardUnit
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test

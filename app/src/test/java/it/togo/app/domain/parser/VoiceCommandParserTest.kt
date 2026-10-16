@@ -46,7 +46,7 @@ class VoiceCommandParserTest {
         val result = parser.parse("2 latte")
 
         assertEquals("latte", result.productName)
-        assertEquals(2.0, result.quantity, 0.001)
+        assertEquals(2.0, result.quantity!!, 0.001)
         assertNull(result.unit)
         assertTrue(result.needsClarification)
         assertEquals(0.9, result.confidence, 0.001)
@@ -57,7 +57,7 @@ class VoiceCommandParserTest {
         val result = parser.parse("1,5 kg di riso")
 
         assertEquals("riso", result.productName)
-        assertEquals(1.5, result.quantity, 0.001)
+        assertEquals(1.5, result.quantity!!, 0.001)
         assertEquals(StandardUnit.KILOGRAM, result.unit)
     }
 
@@ -66,7 +66,7 @@ class VoiceCommandParserTest {
         val result = parser.parse("1.5 kg di riso")
 
         assertEquals("riso", result.productName)
-        assertEquals(1.5, result.quantity, 0.001)
+        assertEquals(1.5, result.quantity!!, 0.001)
     }
 
     // --- Quantità parole italiane ---
@@ -76,7 +76,7 @@ class VoiceCommandParserTest {
         val result = parser.parse("mezzo chilo di caffè")
 
         assertEquals("caffè", result.productName)
-        assertEquals(0.5, result.quantity, 0.001)
+        assertEquals(0.5, result.quantity!!, 0.001)
         assertEquals(StandardUnit.KILOGRAM, result.unit)
     }
 
@@ -85,7 +85,7 @@ class VoiceCommandParserTest {
         val result = parser.parse("un litro di latte")
 
         assertEquals("latte", result.productName)
-        assertEquals(1.0, result.quantity, 0.001)
+        assertEquals(1.0, result.quantity!!, 0.001)
         assertEquals(StandardUnit.LITER, result.unit)
     }
 
@@ -94,7 +94,7 @@ class VoiceCommandParserTest {
         val result = parser.parse("due mele")
 
         assertEquals("mele", result.productName)
-        assertEquals(2.0, result.quantity, 0.001)
+        assertEquals(2.0, result.quantity!!, 0.001)
     }
 
     @Test
@@ -194,7 +194,7 @@ class VoiceCommandParserTest {
         val result = parser.parse("2 di latte")
 
         assertEquals("latte", result.productName)
-        assertEquals(2.0, result.quantity, 0.001)
+        assertEquals(2.0, result.quantity!!, 0.001)
         assertNull(result.unit)
         assertTrue(result.needsClarification)
     }
@@ -220,7 +220,7 @@ class VoiceCommandParserTest {
         val result = parser.parse("aggiungi 2 litri di latte intero")
 
         assertEquals("latte intero", result.productName)
-        assertEquals(2.0, result.quantity, 0.001)
+        assertEquals(2.0, result.quantity!!, 0.001)
         assertEquals(StandardUnit.LITER, result.unit)
     }
 
@@ -229,7 +229,7 @@ class VoiceCommandParserTest {
         val result = parser.parse("2 litri della latte")
 
         assertEquals("latte", result.productName)
-        assertEquals(2.0, result.quantity, 0.001)
+        assertEquals(2.0, result.quantity!!, 0.001)
     }
 
     @Test

@@ -6,12 +6,18 @@ import androidx.test.core.app.ApplicationProvider
 import it.togo.app.data.database.dao.ShoppingItemDao
 import it.togo.app.data.database.entity.ShoppingItemEntity
 import it.togo.app.domain.model.StandardUnit
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
 class ShoppingItemDaoTest {
 
     @get:Rule
@@ -30,7 +36,7 @@ class ShoppingItemDaoTest {
     }
 
     @Test
-    fun `insert and getActive emits item`() = runBlocking {
+    fun `insert and getAll emits item`() = runBlocking {
         val item = ShoppingItemEntity(
             id = "test-1",
             productId = 1,
@@ -42,11 +48,11 @@ class ShoppingItemDaoTest {
 
         dao.insert(item)
 
-        val activeItems = dao.getActive().first()
-        assertEquals(1, activeItems.size)
-        assertEquals("test-1", activeItems[0].id)
-        assertEquals(1, activeItems[0].productId)
-        assertEquals(StandardUnit.KILOGRAM, activeItems[0].unit)
+        val allItems = dao.getAll().first()
+        assertEquals(1, allItems.size)
+        assertEquals("test-1", allItems[0].id)
+        assertEquals(1, allItems[0].productId)
+        assertEquals(StandardUnit.KILOGRAM, allItems[0].unit)
     }
 
     @Test
@@ -63,14 +69,16 @@ class ShoppingItemDaoTest {
 
         dao.insert(item)
 
-        var activeItems = dao.getActive().first()
+        var allItems = dao.getAll().first()
+        val activeItems = allItems.filter { !it.isChecked }
         assertEquals(1, activeItems.size)
         assertFalse(activeItems[0].isChecked)
 
         dao.markAsChecked("test-2", System.currentTimeMillis())
 
-        activeItems = dao.getActive().first()
-        assertEquals(0, activeItems.size) // Item moved out of active
+        allItems = dao.getAll().first()
+        val remainingActive = allItems.filter { !it.isChecked }
+        assertEquals(0, remainingActive.size) // Item moved out of active
     }
 
     @Test
@@ -106,12 +114,12 @@ class ShoppingItemDaoTest {
         )
 
         dao.insert(item)
-        var activeItems = dao.getActive().first()
-        assertEquals(1, activeItems.size)
+        var allItems = dao.getAll().first()
+        assertEquals(1, allItems.size)
 
         dao.deleteById("test-4")
 
-        activeItems = dao.getActive().first()
-        assertEquals(0, activeItems.size)
+        allItems = dao.getAll().first()
+        assertEquals(0, allItems.size)
     }
 }

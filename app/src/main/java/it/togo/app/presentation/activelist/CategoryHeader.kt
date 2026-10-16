@@ -103,6 +103,7 @@ fun CategoryHeader(
 fun CategorySection(
     group: CategoryGroup,
     productNames: Map<Long, String> = emptyMap(),
+    categoryLabels: Map<Long, String> = emptyMap(),
     onCheckOff: (String, Boolean) -> Unit,
     onEdit: (ShoppingItem) -> Unit,
     onDelete: (String) -> Unit,
@@ -159,6 +160,8 @@ fun CategorySection(
                             ItemRow(
                                 item = item,
                                 productName = productNames[item.productId] ?: "Prodotto #${item.productId}",
+                                categoryLabel = categoryLabels[item.productId],
+                                rowActionDescription = "Doppio tocco per modificare.",
                                 onCheckChange = { checked -> onCheckOff(item.id, checked) },
                                 onClick = { onEdit(item) },
                                 onDelete = { onDelete(item.id) },

@@ -3,18 +3,58 @@
 
 $ErrorActionPreference = "Stop"
 
+$repoRoot = $PSScriptRoot
+$apk = Join-Path $repoRoot "app\build\outputs\apk\debug\app-debug.apk"
+
+if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
+    throw "Docker non è disponibile. Avvia Docker Desktop e riprova."
+}
+
+& docker image inspect android-builder *> $null
+if ($LASTEXITCODE -ne 0) {
+    throw "Immagine Docker 'android-builder' non disponibile. Avvia Docker Desktop e, se l'immagine manca, esegui: docker build -f Dockerfile.android -t android-builder ."
+}
+
+$localPropertiesTemp = Join-Path ([System.IO.Path]::GetTempPath()) ("togo-local.properties-" + [guid]::NewGuid().ToString("N") + ".tmp")
+$dockerExitCode = 0
+
 Write-Host "Build APK Android via Docker..."
 
-docker run --rm `
-  -v "${PWD}:/workspace" `
-  -v "android-gradle-cache:/root/.gradle" `
-  -w /workspace `
-  android-builder `
-  ./gradlew clean assembleDebug
+try {
+    [System.IO.File]::WriteAllText($localPropertiesTemp, "sdk.dir=/opt/android-sdk" + [Environment]::NewLine, [System.Text.Encoding]::ASCII)
+    $localPropertiesDockerPath = $localPropertiesTemp.Replace('\', '/')
 
-$apk = ".\app\build\outputs\apk\debug\app-debug.apk"
+    # In Windows PowerShell, stderr from native programs can become a terminating
+    # error under ErrorActionPreference=Stop. Preserve the native exit code instead.
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    & docker run --rm `
+      -v "${repoRoot}:/workspace" `
+      -v "${localPropertiesDockerPath}:/workspace/local.properties:ro" `
+      -v "android-gradle-cache:/root/.gradle" `
+      -w /workspace `
+      android-builder `
+      sh ./gradlew clean assembleDebug
 
-if (Test-Path $apk) {
+    $dockerExitCode = $LASTEXITCODE
+    $ErrorActionPreference = $previousErrorActionPreference
+    if ($dockerExitCode -ne 0) {
+        Write-Error "Build Docker/Gradle fallita (codice $dockerExitCode)." -ErrorAction Continue
+    }
+} finally {
+    if ($null -ne $previousErrorActionPreference) {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
+    if (Test-Path -LiteralPath $localPropertiesTemp) {
+        Remove-Item -LiteralPath $localPropertiesTemp -Force
+    }
+}
+
+if ($dockerExitCode -ne 0) {
+    exit $dockerExitCode
+}
+
+if (Test-Path -LiteralPath $apk) {
     Write-Host ""
     Write-Host "BUILD OK"
     Write-Host "APK: $apk"
