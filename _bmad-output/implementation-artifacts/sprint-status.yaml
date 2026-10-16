@@ -61,7 +61,7 @@ development_status:
   3-7-wizard-categorizzazione-prodotto-sconosciuto: done
   epic-3-retrospective: done
 
-  epic-4: backlog
+  epic-4: done
   4-1-voicerecognitiongateway-e-recognizerintent-it-it: done
   4-2-voicefab-e-voicebottomsheet-ui: done
   4-3-parsing-comando-vocale-e-scomposizione-strutturata: done
@@ -69,7 +69,7 @@ development_status:
   4-5-fallback-e-resilienza-vocale: done
   epic-4-retrospective: optional
 
-  epic-5: backlog
+  epic-5: done
   5-1-schermata-storico-con-ricerca-e-riaggiunta: done
   5-2-gestione-regole-apprese: done
   5-3-condivisione-lista-attiva-via-sharesheet: done
