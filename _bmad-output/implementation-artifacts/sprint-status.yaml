@@ -51,7 +51,7 @@ development_status:
   2-5-conclusione-spesa-checkout-atomico-verso-storico: done
   epic-2-retrospective: optional
 
-  epic-3: in-progress
+  epic-3: done
   3-1-ricerca-full-text-nel-catalogo: done
   3-2-normalizzazione-quantità-e-conversioni-autorizzate: done
   3-3-risoluzione-sinonimi-verso-prodotto-canonico: done
@@ -59,7 +59,7 @@ development_status:
   3-5-rilevamento-duplicati-e-dialog-risoluzione: done
   3-6-assegnazione-categoria-canonica-e-correzione-con-regole-appr: done
   3-7-wizard-categorizzazione-prodotto-sconosciuto: done
-  epic-3-retrospective: optional
+  epic-3-retrospective: done
 
   epic-4: backlog
   4-1-voicerecognitiongateway-e-recognizerintent-it-it: done
@@ -86,3 +86,4 @@ development_status:
   7-1-aggiunta-nuovo-prodotto-canonico-su-categoria-esistente: backlog
   7-2-proposta-nuovo-livello-3-sotto-un-livello-2-esistente: backlog
   epic-7-retrospective: optional
+last_updated: 10-16-2026 12:00
