@@ -1,11 +1,10 @@
 package it.togo.app.presentation.activelist
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -19,6 +18,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -62,11 +63,14 @@ fun CategoryHeader(
                     horizontal = tokens.categoryHeader.paddingHorizontal,
                     vertical = tokens.categoryHeader.paddingVertical,
                 )
-                .border(
-                    width = tokens.categoryHeader.borderLeftWidth,
-                    color = tokens.categoryHeader.borderLeftColor,
-                    shape = RoundedCornerShape(0.dp),
-                ),
+                .drawBehind {
+                    drawLine(
+                        color = tokens.categoryHeader.borderLeftColor,
+                        start = Offset(0f, 0f),
+                        end = Offset(0f, size.height),
+                        strokeWidth = tokens.categoryHeader.borderLeftWidth.toPx(),
+                    )
+                },
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(spacing.space2),
         ) {

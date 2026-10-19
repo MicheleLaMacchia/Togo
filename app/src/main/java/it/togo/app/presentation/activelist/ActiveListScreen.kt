@@ -38,6 +38,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 import it.togo.app.presentation.additem.AddItemBottomSheet
 import it.togo.app.presentation.voice.VoiceBottomSheet
 import it.togo.app.presentation.voice.VoiceBottomSheetViewModel
@@ -67,6 +72,33 @@ fun ActiveListScreen(
 
     val context = LocalContext.current
     var showAddItemSheet by remember { mutableStateOf(false) }
+
+    // Richiesta runtime permesso RECORD_AUDIO per il riconoscimento vocale
+    val audioPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) voiceViewModel.startListening()
+    }
+
+    // Launcher per il risultato del riconoscimento vocale del sistema
+    val voiceGateway = org.koin.compose.koinInject<it.togo.app.data.voice.AndroidVoiceRecognitionGateway>()
+    val speechLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        voiceGateway.onActivityResult(result.resultCode, result.data)
+    }
+    androidx.compose.runtime.LaunchedEffect(voiceGateway) {
+        voiceGateway.registerLauncher(speechLauncher)
+    }
+
+    // Lambda condivisa: avvia ascolto con controllo permesso
+    val startVoiceWithPermission: () -> Unit = {
+        val granted = ContextCompat.checkSelfPermission(
+            context, Manifest.permission.RECORD_AUDIO
+        ) == PackageManager.PERMISSION_GRANTED
+        if (granted) voiceViewModel.startListening()
+        else audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+    }
 
     if (showAddItemSheet) {
         AddItemBottomSheet(
@@ -141,7 +173,7 @@ fun ActiveListScreen(
                                 if (voiceUiState is it.togo.app.presentation.voice.VoiceBottomSheetUiState.Listening) {
                                     voiceViewModel.cancel()
                                 } else {
-                                    voiceViewModel.startListening()
+                                    startVoiceWithPermission()
                                 }
                             }
                         )
@@ -195,7 +227,7 @@ fun ActiveListScreen(
                             onAddManual = {
                                 showAddItemSheet = true
                             },
-                            onVoice = { onEvent(UiEvent.NavigateToVoice) },
+                            onVoice = startVoiceWithPermission,
                             colors = colors,
                             typography = typography,
                             spacing = spacing,

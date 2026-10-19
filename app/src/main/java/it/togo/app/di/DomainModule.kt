@@ -12,6 +12,7 @@ import it.togo.app.domain.usecase.ParseVoiceCommandUseCase
 import it.togo.app.domain.voice.VoiceRecognitionGateway
 import it.togo.app.domain.wizard.CategorySelectionWizard
 import org.koin.core.module.Module
+import org.koin.dsl.bind
 import org.koin.dsl.module
 
 val domainModule: Module = module {
@@ -27,7 +28,7 @@ val domainModule: Module = module {
     single { CreateCanonicalProductUseCase(get()) }
 
     // Voice Recognition (Story 4.1) - Gateway disaccoppiato da Activity
-    single<VoiceRecognitionGateway> { AndroidVoiceRecognitionGateway() }
+    single { AndroidVoiceRecognitionGateway() } bind VoiceRecognitionGateway::class
 
     // Voice Parsing (Story 4.3) - Parser comandi vocali
     single { VoiceCommandParser() }

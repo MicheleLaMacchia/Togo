@@ -154,27 +154,27 @@ fun PresiSection(
                         onDelete = { /* no-op in presa - could enable delete later */ },
                     )
                 }
-            }
 
-            // Pulsante "Concludi spesa" - nascosto se items vuoto
-            if (items.isNotEmpty()) {
-                Button(
-                    onClick = {
-                        // Haptic feedback 15ms
-                        performShortHapticFeedback(context)
-                        onCheckout()
-                    },
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.space2).padding(bottom = spacing.space2),
-                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                        containerColor = tokens.bottomSheet.checkoutButtonBackground,
-                        contentColor = tokens.bottomSheet.checkoutButtonContent,
-                    ),
-                    shape = tokens.bottomSheet.radiusTop,
-                ) {
-                    Text(
-                        text = "Concludi spesa",
-                        style = typography.sectionHeader.copy(color = tokens.bottomSheet.checkoutButtonContent),
-                    )
+                // Pulsante "Concludi spesa" - nascosto se items vuoto
+                if (items.isNotEmpty()) {
+                    Button(
+                        onClick = {
+                            // Haptic feedback 15ms
+                            performShortHapticFeedback(context)
+                            onCheckout()
+                        },
+                        modifier = Modifier.fillMaxWidth().padding(bottom = spacing.space2),
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                            containerColor = tokens.bottomSheet.checkoutButtonBackground,
+                            contentColor = tokens.bottomSheet.checkoutButtonContent,
+                        ),
+                        shape = tokens.bottomSheet.radiusTop,
+                    ) {
+                        Text(
+                            text = "Concludi spesa",
+                            style = typography.sectionHeader.copy(color = tokens.bottomSheet.checkoutButtonContent),
+                        )
+                    }
                 }
             }
         }

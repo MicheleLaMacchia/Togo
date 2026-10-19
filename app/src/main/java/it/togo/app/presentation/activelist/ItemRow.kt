@@ -62,7 +62,7 @@ import it.togo.app.ui.theme.togoTypography
  *
  * Stati:
  * - Attivo: bordo crisp, testo inkPrimary, badge scuro
- * - Checked: testo barrato, opacità 45%, inkMuted, checkbox riempita verde/nero
+ * - Checked: testo barrato inkMuted, bordo/checkbox verde
  *
  * Accessibilità:
  * - Attivo: la riga è cliccabile → modifica; la checkbox → spunta.
@@ -88,7 +88,6 @@ fun ItemRow(
     val swipeThresholdPx = with(LocalDensity.current) { 80.dp.toPx() }
 
     val isChecked = item.isChecked
-    val alpha = if (isChecked) 0.45f else 1f
     val textColor = if (isChecked) colors.inkMuted else colors.inkPrimary
     val borderColor = if (isChecked) colors.accentSuccess else colors.borderCrisp
     val checkboxBorderColor = if (isChecked) colors.accentSuccess else colors.borderCrisp
@@ -167,7 +166,7 @@ fun ItemRow(
             },
             shape = tokens.itemRow.radius,
             border = BorderStroke(tokens.itemRow.borderWidth, borderColor),
-            color = tokens.itemRow.background.copy(alpha = alpha),
+            color = tokens.itemRow.background,
             shadowElevation = 0.dp,
         ) {
             Row(
@@ -203,7 +202,7 @@ fun ItemRow(
                     Text(
                         text = productName,
                         style = typography.itemName,
-                        color = textColor.copy(alpha = alpha),
+                        color = textColor,
                         maxLines = 2,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                         textDecoration = if (isChecked) TextDecoration.LineThrough else TextDecoration.None,
@@ -219,7 +218,7 @@ fun ItemRow(
                         Text(
                             text = metaParts.joinToString(" · "),
                             style = typography.caption,
-                            color = colors.inkSecondary.copy(alpha = alpha),
+                            color = colors.inkSecondary,
                             maxLines = 1,
                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                         )
@@ -232,7 +231,7 @@ fun ItemRow(
                     unit = item.unit.displayName,
                     tokens = tokens.quantityBadge,
                     typography = typography,
-                    textColor = if (isChecked) colors.inkMuted else tokens.quantityBadge.textColor,
+                    textColor = tokens.quantityBadge.textColor,
                     backgroundColor = if (isChecked) colors.surfaceSubtle else tokens.quantityBadge.background,
                 )
             }
