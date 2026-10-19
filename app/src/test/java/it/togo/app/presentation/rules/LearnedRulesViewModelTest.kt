@@ -39,8 +39,8 @@ class LearnedRulesViewModelTest {
 
         every { rulesRepo.getAll() } returns flowOf(rules)
         coEvery { catalogRepo.getById(any()) } returns null
-        coEvery { manager.deactivate(any()) } just Runs
-        coEvery { manager.reactivate(any()) } just Runs
+        coEvery { manager.deactivate(any()) } returns sampleRule()
+        coEvery { manager.reactivate(any()) } returns sampleRule()
         coEvery { manager.delete(any()) } returns true
         coEvery { manager.update(any(), any(), any()) } returns sampleRule()
         products.forEach { (id, product) ->

@@ -41,10 +41,10 @@ class HistoryViewModelTest {
 
         every { historyRepo.getAll() } returns flowOf(items)
         every { shoppingRepo.getActiveItems() } returns flowOf(emptyList())
-        every { shoppingRepo.getByProductId(any()) } returns null
-        coEvery { shoppingRepo.insert(any()) } just Runs
-        coEvery { shoppingRepo.update(any()) } just Runs
-        coEvery { shoppingRepo.delete(any()) } just Runs
+        coEvery { shoppingRepo.getByProductId(any()) } returns null
+        coEvery { shoppingRepo.insert(any()) } returns Unit
+        coEvery { shoppingRepo.update(any()) } returns Unit
+        coEvery { shoppingRepo.delete(any()) } returns Unit
         coEvery { catalogRepo.getById(any()) } returns null
         products.forEach { (id, product) ->
             coEvery { catalogRepo.getById(id) } returns product
@@ -140,8 +140,8 @@ class HistoryViewModelTest {
 
         every { historyRepo.getAll() } returns flowOf(items)
         every { shoppingRepo.getActiveItems() } returns flowOf(activeItems)
-        every { shoppingRepo.getByProductId(any()) } returns activeItems.firstOrNull()
-        coEvery { shoppingRepo.insert(any()) } just Runs
+        coEvery { shoppingRepo.getByProductId(any()) } returns activeItems.firstOrNull()
+        coEvery { shoppingRepo.insert(any()) } returns Unit
         coEvery { catalogRepo.getById(any()) } returns null
 
         val vm = HistoryViewModel(historyRepo, catalogRepo, shoppingRepo)
