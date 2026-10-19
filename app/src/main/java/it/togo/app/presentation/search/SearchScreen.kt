@@ -54,7 +54,7 @@ import kotlinx.coroutines.delay
  */
 @Composable
 fun SearchScreen(onEvent: (SearchUiEvent) -> Unit) {
-    val viewModel = androidx.lifecycle.viewmodel.compose.viewModel<SearchViewModel>()
+    val viewModel = org.koin.androidx.compose.koinViewModel<SearchViewModel>()
     val uiState by viewModel.uiState.collectAsState()
 
     val colors = togoColors()

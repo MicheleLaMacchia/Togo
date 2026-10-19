@@ -75,7 +75,7 @@ fun AddItemBottomSheet(
     onDismiss: () -> Unit,
     isEditMode: Boolean = false,
 ) {
-    val viewModel = androidx.lifecycle.viewmodel.compose.viewModel<AddItemViewModel>()
+    val viewModel = org.koin.androidx.compose.koinViewModel<AddItemViewModel>()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val colors = togoColors()

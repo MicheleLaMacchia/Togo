@@ -6,6 +6,7 @@ import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.usecase.ParseVoiceCommandUseCase
 import it.togo.app.domain.voice.VoiceRecognitionGateway
 import it.togo.app.presentation.activelist.ActiveListViewModel
+import it.togo.app.presentation.additem.AddItemViewModel
 import it.togo.app.presentation.history.HistoryViewModel
 import it.togo.app.presentation.rules.LearnedRulesViewModel
 import it.togo.app.presentation.search.SearchViewModel
@@ -58,6 +59,12 @@ val presentationModule: Module = module {
         learnedRuleManager = get<it.togo.app.domain.usecase.LearnedRuleManager>(),
         catalogRepository = get<CatalogRepository>(),
         learnedRulesRepository = get<it.togo.app.domain.repository.LearnedRulesRepository>(),
+    ) }
+
+    // Add Item (FAB "+")
+    viewModel { AddItemViewModel(
+        catalogRepository = get<CatalogRepository>(),
+        shoppingRepository = get<ShoppingListRepository>(),
     ) }
 
     // Future ViewModels will be added here (Epic 4, 5):
