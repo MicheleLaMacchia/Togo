@@ -1,5 +1,6 @@
 package it.togo.app.domain.category
 
+import io.mockk.*
 import it.togo.app.data.database.CatalogQueries
 import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.LearnedRule
@@ -13,7 +14,6 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mockito.*
 
 /**
  * Test JVM per CategoryAssigner.
@@ -53,16 +53,16 @@ class CategoryAssignerTest {
 
     @Before
     fun setup() {
-        catalogRepository = mock()
-        learnedRulesRepository = mock()
+        catalogRepository = mockk<CatalogRepository>()
+        learnedRulesRepository = mockk<LearnedRulesRepository>()
         assigner = CategoryAssigner(catalogRepository, learnedRulesRepository)
 
-        `when`(catalogRepository.getTaxonomy()).thenReturn(flowOf(taxonomy))
+        every { catalogRepository.getTaxonomy() } returns flowOf(taxonomy)
     }
 
     @Test
-    fun `assegnazione default prodotto quando nessuna rule`() = runBlocking(Dispatchers.IO) {
-        `when`(learnedRulesRepository.getByExpressionAndProductId(any(), any())).thenReturn(null)
+    fun `assegnazione default prodotto quando nessuna rule`(): Unit = runBlocking(Dispatchers.IO) {
+        coEvery { learnedRulesRepository.getByExpressionAndProductId(any(), any()) } returns null
 
         val assignment = assigner.assign(productLatte, "latte")
 
@@ -73,14 +73,14 @@ class CategoryAssignerTest {
     }
 
     @Test
-    fun `assegnazione da rule appresa per STESSO prodotto prevale su default`() = runBlocking(Dispatchers.IO) {
+    fun `assegnazione da rule appresa per STESSO prodotto prevale su default`(): Unit = runBlocking(Dispatchers.IO) {
         val rule = LearnedRule(
             userExpression = "latte",
             productId = 1L, // STESSO productId
             level3Id = 12L, // Bevande (diverso da default 5)
             isActive = true
         )
-        `when`(learnedRulesRepository.getByExpressionAndProductId("latte", 1L)).thenReturn(rule)
+        coEvery { learnedRulesRepository.getByExpressionAndProductId("latte", 1L) } returns rule
 
         val assignment = assigner.assign(productLatte, "latte")
 
@@ -91,15 +91,9 @@ class CategoryAssignerTest {
     }
 
     @Test
-    fun `rule per PRODOTTO DIVERSO ignorata usa default`() = runBlocking(Dispatchers.IO) {
+    fun `rule per PRODOTTO DIVERSO ignorata usa default`(): Unit = runBlocking(Dispatchers.IO) {
         // Rule per productId=2 (Latte di Soia), ma assegniamo per productId=1 (Latte UHT)
-        val rule = LearnedRule(
-            userExpression = "latte",
-            productId = 2L,
-            level3Id = 12L,
-            isActive = true
-        )
-        `when`(learnedRulesRepository.getByExpressionAndProductId("latte", 1L)).thenReturn(null)
+        coEvery { learnedRulesRepository.getByExpressionAndProductId("latte", 1L) } returns null
 
         val assignment = assigner.assign(productLatte, "latte")
 
@@ -108,14 +102,14 @@ class CategoryAssignerTest {
     }
 
     @Test
-    fun `rule inattiva ignorata usa default`() = runBlocking(Dispatchers.IO) {
+    fun `rule inattiva ignorata usa default`(): Unit = runBlocking(Dispatchers.IO) {
         val rule = LearnedRule(
             userExpression = "latte",
             productId = 1L,
             level3Id = 12L,
             isActive = false
         )
-        `when`(learnedRulesRepository.getByExpressionAndProductId("latte", 1L)).thenReturn(rule)
+        coEvery { learnedRulesRepository.getByExpressionAndProductId("latte", 1L) } returns rule
 
         val assignment = assigner.assign(productLatte, "latte")
 
@@ -124,14 +118,14 @@ class CategoryAssignerTest {
     }
 
     @Test
-    fun `rule per L3 user-defined ignorata usa default`() = runBlocking(Dispatchers.IO) {
+    fun `rule per L3 user-defined ignorata usa default`(): Unit = runBlocking(Dispatchers.IO) {
         val rule = LearnedRule(
             userExpression = "latte",
             productId = 1L,
             level3Id = 99L, // User-defined
             isActive = true
         )
-        `when`(learnedRulesRepository.getByExpressionAndProductId("latte", 1L)).thenReturn(rule)
+        coEvery { learnedRulesRepository.getByExpressionAndProductId("latte", 1L) } returns rule
 
         val assignment = assigner.assign(productLatte, "latte")
 
@@ -140,7 +134,7 @@ class CategoryAssignerTest {
     }
 
     @Test
-    fun `espressione vuota o null salta lookup rule`() = runBlocking(Dispatchers.IO) {
+    fun `espressione vuota o null salta lookup rule`(): Unit = runBlocking(Dispatchers.IO) {
         val assignment1 = assigner.assign(productLatte, null)
         val assignment2 = assigner.assign(productLatte, "")
         val assignment3 = assigner.assign(productLatte, "   ")
@@ -148,34 +142,34 @@ class CategoryAssignerTest {
         assertEquals(AssignmentSource.DEFAULT, assignment1.source)
         assertEquals(AssignmentSource.DEFAULT, assignment2.source)
         assertEquals(AssignmentSource.DEFAULT, assignment3.source)
-        verify(learnedRulesRepository, never()).getByExpressionAndProductId(any(), any())
+        coVerify(exactly = 0) { learnedRulesRepository.getByExpressionAndProductId(any(), any()) }
     }
 
     @Test
-    fun `normalizzazione accent-fold su espressione`() = runBlocking(Dispatchers.IO) {
+    fun `normalizzazione accent-fold su espressione`(): Unit = runBlocking(Dispatchers.IO) {
         val rule = LearnedRule(
             userExpression = CatalogQueries.normalize("caffè"), // "caffe"
             productId = 2L,
             level3Id = 12L,
             isActive = true
         )
-        `when`(learnedRulesRepository.getByExpressionAndProductId("caffe", 2L)).thenReturn(rule)
+        coEvery { learnedRulesRepository.getByExpressionAndProductId("caffe", 2L) } returns rule
 
         val assignment = assigner.assign(productLatteSoia, "caffè")
 
         assertEquals(AssignmentSource.LEARNED, assignment.source)
-        verify(learnedRulesRepository).getByExpressionAndProductId("caffe", 2L)
+        coVerify { learnedRulesRepository.getByExpressionAndProductId("caffe", 2L) }
     }
 
     @Test
-    fun `alternative includono default + rule + sibling L3s`() = runBlocking(Dispatchers.IO) {
+    fun `alternative includono default + rule + sibling L3s`(): Unit = runBlocking(Dispatchers.IO) {
         val rule = LearnedRule(
             userExpression = "latte",
             productId = 1L,
             level3Id = 12L, // Bevande
             isActive = true
         )
-        `when`(learnedRulesRepository.getByExpressionAndProductId("latte", 1L)).thenReturn(rule)
+        coEvery { learnedRulesRepository.getByExpressionAndProductId("latte", 1L) } returns rule
 
         val assignment = assigner.assign(productLatte, "latte")
 
@@ -187,9 +181,9 @@ class CategoryAssignerTest {
     }
 
     @Test
-    fun `fallback primo L3 valido quando default invalido`() = runBlocking(Dispatchers.IO) {
+    fun `fallback primo L3 valido quando default invalido`(): Unit = runBlocking(Dispatchers.IO) {
         val productSenzaL3 = productLatte.copy(level3Id = 999L)
-        `when`(learnedRulesRepository.getByExpressionAndProductId(any(), any())).thenReturn(null)
+        coEvery { learnedRulesRepository.getByExpressionAndProductId(any(), any()) } returns null
 
         val assignment = assigner.assign(productSenzaL3, "test")
 
@@ -202,9 +196,9 @@ class CategoryAssignerTest {
     }
 
     @Test
-    fun `fallback alternatives includono sibling L3s`() = runBlocking(Dispatchers.IO) {
+    fun `fallback alternatives includono sibling L3s`(): Unit = runBlocking(Dispatchers.IO) {
         val productSenzaL3 = productLatte.copy(level3Id = 999L)
-        `when`(learnedRulesRepository.getByExpressionAndProductId(any(), any())).thenReturn(null)
+        coEvery { learnedRulesRepository.getByExpressionAndProductId(any(), any()) } returns null
 
         val assignment = assigner.assign(productSenzaL3, "test")
 
@@ -214,8 +208,8 @@ class CategoryAssignerTest {
     }
 
     @Test(timeout = 100)
-    fun `assegnazione completata sotto 100ms`() = runBlocking(Dispatchers.IO) {
-        `when`(learnedRulesRepository.getByExpressionAndProductId(any(), any())).thenReturn(null)
+    fun `assegnazione completata sotto 100ms`(): Unit = runBlocking(Dispatchers.IO) {
+        coEvery { learnedRulesRepository.getByExpressionAndProductId(any(), any()) } returns null
         assigner.assign(productLatte, "latte")
     }
 }

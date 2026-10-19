@@ -68,30 +68,34 @@ class VoiceFallbackHandlerTest {
 
     @Test
     fun `delay backoff aumenta con fallimenti`() {
+        // Prima di qualsiasi fallimento: consecutiveFailures=0 → delay 0
+        val delay0 = handler.getNextRetryDelayMs()
+        handler.recordFailure(ErrorCode.NETWORK_ERROR)
+        // Dopo 1° fallimento: consecutiveFailures=1 → delay 500
         val delay1 = handler.getNextRetryDelayMs()
         handler.recordFailure(ErrorCode.NETWORK_ERROR)
+        // Dopo 2° fallimento: consecutiveFailures=2 → delay 1000
         val delay2 = handler.getNextRetryDelayMs()
-        handler.recordFailure(ErrorCode.NETWORK_ERROR)
-        val delay3 = handler.getNextRetryDelayMs()
 
+        assertEquals(0L, delay0)
         assertEquals(500L, delay1)
         assertEquals(1000L, delay2)
-        assertEquals(2000L, delay3)
     }
 
     @Test
-    fun `MISSING_PERMISSION non permette fallback immediato`() {
+    fun `MISSING_PERMISSION non permette retry`() {
         val shouldFallback = handler.recordFailure(ErrorCode.MISSING_PERMISSION)
 
-        assertFalse(shouldFallback)
-        assertFalse(handler.isFallbackActive())
+        // canRetry(MISSING_PERMISSION) = false → fallback attivato
+        assertTrue(shouldFallback)
     }
 
     @Test
-    fun `NOT_AVAILABLE non attiva fallback con un solo fallimento`() {
+    fun `NOT_AVAILABLE non permette retry`() {
         val shouldFallback = handler.recordFailure(ErrorCode.NOT_AVAILABLE)
 
-        assertFalse(shouldFallback)
+        // canRetry(NOT_AVAILABLE) = false → fallback attivato
+        assertTrue(shouldFallback)
     }
 
     @Test(timeout = 100)

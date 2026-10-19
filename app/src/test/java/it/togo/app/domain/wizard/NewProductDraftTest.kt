@@ -35,7 +35,8 @@ class NewProductDraftTest {
         assertEquals(level1, draft.selectedLevel1)
         assertNull(draft.selectedLevel2)
         assertNull(draft.selectedLevel3)
-        assertTrue(draft.canProceed)
+        // SELECT_L2 richiede selectedLevel2 != null → non ancora selezionato
+        assertFalse(draft.canProceed)
     }
 
     @Test
@@ -47,7 +48,8 @@ class NewProductDraftTest {
         assertEquals(WizardStep.SELECT_L3, draft.currentStep)
         assertEquals(level2, draft.selectedLevel2)
         assertNull(draft.selectedLevel3)
-        assertTrue(draft.canProceed)
+        // SELECT_L3 richiede selectedLevel3 != null → non ancora selezionato
+        assertFalse(draft.canProceed)
     }
 
     @Test
@@ -179,8 +181,9 @@ class NewProductDraftTest {
             .withLevel2(level2)
             .withLevel3(level3)
 
+        // After withLevel3, step is ENTER_DETAILS
         assertEquals(WizardStep.SELECT_L3, draft.previousStep)
-        assertEquals(WizardStep.ENTER_DETAILS, draft.nextStep)
+        assertEquals(WizardStep.CONFIRM, draft.nextStep)
 
         val back = draft.withStep(draft.previousStep!!)
         assertEquals(WizardStep.SELECT_L3, back.currentStep)

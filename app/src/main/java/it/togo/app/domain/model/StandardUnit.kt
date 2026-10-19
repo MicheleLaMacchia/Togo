@@ -81,36 +81,33 @@ enum class StandardUnit(val code: String, val displayName: String) {
         return when (this) {
             GRAM -> {
                 if (quantity >= 1000) {
-                    val kg = roundToDecimals(quantity / 1000.0, 2)
-                    "$kg kg"
+                    "${fmtTrim(roundToDecimals(quantity / 1000.0, 2))} kg"
                 } else {
-                    val g = roundToDecimals(quantity, 2)
-                    "$g g"
+                    "${fmtTrim(roundToDecimals(quantity, 2))} g"
                 }
             }
             KILOGRAM -> {
-                val kg = roundToDecimals(quantity, 2)
-                "$kg kg"
+                "${fmtTrim(roundToDecimals(quantity, 2))} kg"
             }
             MILLILITER -> {
                 if (quantity >= 1000) {
-                    val l = roundToDecimals(quantity / 1000.0, 2)
-                    "$l L"
+                    "${fmtTrim(roundToDecimals(quantity / 1000.0, 2))} L"
                 } else {
-                    val ml = roundToDecimals(quantity, 2)
-                    "$ml ml"
+                    "${fmtTrim(roundToDecimals(quantity, 2))} ml"
                 }
             }
             LITER -> {
-                val l = roundToDecimals(quantity, 2)
-                "$l L"
+                "${fmtTrim(roundToDecimals(quantity, 2))} L"
             }
             else -> {
-                val v = roundToDecimals(quantity, 2)
-                "$v ${this.displayName}"
+                "${fmtTrim(roundToDecimals(quantity, 2))} ${this.displayName}"
             }
         }
     }
+
+    /** Formatta un Double rimuovendo zeri decimali inutili (500.0 → "500", 1.5 → "1.5") */
+    private fun fmtTrim(value: Double): String =
+        if (value == value.toLong().toDouble()) value.toLong().toString() else value.toString()
 
     /** Verifica se una quantità è valida (> 0, finita, non NaN) */
     fun isValidQuantity(quantity: Double): Boolean {

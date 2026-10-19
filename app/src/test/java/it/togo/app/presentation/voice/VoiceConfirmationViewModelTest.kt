@@ -53,7 +53,7 @@ class VoiceConfirmationViewModelTest {
         val vm = createViewModel()
 
         vm.showForRecognition("2 litri di latte")
-        testDispatcher.scheduler.advanceUntilIdle()
+        Thread.sleep(200)
 
         val state = vm.uiState.value
         assertTrue(state is VoiceConfirmationUiState.Ready)
@@ -69,7 +69,7 @@ class VoiceConfirmationViewModelTest {
         vm.onCommandConfirmed = { confirmed = it }
 
         vm.showForRecognition("latte")
-        testDispatcher.scheduler.advanceUntilIdle()
+        Thread.sleep(200)
         vm.confirm()
 
         assertNotNull(confirmed)
@@ -82,7 +82,7 @@ class VoiceConfirmationViewModelTest {
         val vm = createViewModel()
 
         vm.showForRecognition("latte")
-        testDispatcher.scheduler.advanceUntilIdle()
+        Thread.sleep(200)
         vm.cancel()
 
         assertEquals(VoiceConfirmationUiState.Hidden, vm.uiState.value)
@@ -93,9 +93,9 @@ class VoiceConfirmationViewModelTest {
         val vm = createViewModel()
 
         vm.showForRecognition("latte")
-        testDispatcher.scheduler.advanceUntilIdle()
+        Thread.sleep(200)
         vm.editText("2 litri di latte intero")
-        testDispatcher.scheduler.advanceUntilIdle()
+        Thread.sleep(200)
 
         val state = vm.uiState.value
         assertTrue(state is VoiceConfirmationUiState.Ready)
@@ -110,7 +110,7 @@ class VoiceConfirmationViewModelTest {
         val vm = createViewModel()
 
         vm.showForRecognition("2 latte")
-        testDispatcher.scheduler.advanceUntilIdle()
+        Thread.sleep(200)
 
         val state = vm.uiState.value
         assertTrue(state is VoiceConfirmationUiState.Ready)
@@ -122,7 +122,7 @@ class VoiceConfirmationViewModelTest {
         val vm = createViewModel()
 
         vm.showForRecognition("")
-        testDispatcher.scheduler.advanceUntilIdle()
+        Thread.sleep(200)
 
         val state = vm.uiState.value
         if (state is VoiceConfirmationUiState.Ready) {
@@ -135,10 +135,10 @@ class VoiceConfirmationViewModelTest {
         val vm = createViewModel()
 
         vm.showForRecognition("latte")
-        testDispatcher.scheduler.advanceUntilIdle()
+        Thread.sleep(200)
 
         vm.toggleEdit()
-        testDispatcher.scheduler.advanceUntilIdle()
+        Thread.sleep(200)
 
         val state = vm.uiState.value
         assertTrue(state is VoiceConfirmationUiState.Ready)
@@ -150,7 +150,7 @@ class VoiceConfirmationViewModelTest {
         val vm = createViewModel()
 
         vm.showForRecognition("latte")
-        testDispatcher.scheduler.advanceUntilIdle()
+        Thread.sleep(200)
         vm.reset()
 
         assertEquals(VoiceConfirmationUiState.Hidden, vm.uiState.value)
@@ -161,7 +161,7 @@ class VoiceConfirmationViewModelTest {
         val vm = createViewModel()
 
         vm.showForRecognition("2 litri di latte")
-        testDispatcher.scheduler.advanceUntilIdle()
+        Thread.sleep(200)
         vm.confirm()
     }
 }

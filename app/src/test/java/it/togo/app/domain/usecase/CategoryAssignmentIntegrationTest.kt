@@ -1,9 +1,8 @@
 package it.togo.app.domain.usecase
 
+import io.mockk.*
 import it.togo.app.domain.category.AssignmentSource
-import it.togo.app.domain.category.CategoryAssignment
 import it.togo.app.domain.category.CategoryAssigner
-import it.togo.app.domain.category.CategoryCorrection
 import it.togo.app.domain.category.CategoryCorrector
 import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.LearnedRule
@@ -17,12 +16,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mockito.*
 
-/**
- * Integration test JVM per il flusso completo:
- * assign → correct → confirmRemember → reassign with same expression
- */
 class CategoryAssignmentIntegrationTest {
 
     private lateinit var catalogRepository: CatalogRepository
@@ -33,9 +27,7 @@ class CategoryAssignmentIntegrationTest {
     private lateinit var correctUseCase: CorrectCategoryUseCase
 
     private val productLatte = CanonicalProduct(
-        id = 1L,
-        name = "Latte UHT",
-        level3Id = 5L, // Latticini (default)
+        id = 1L, name = "Latte UHT", level3Id = 5L,
         compatibleUnits = listOf(StandardUnit.LITER, StandardUnit.MILLILITER)
     )
 
@@ -50,16 +42,12 @@ class CategoryAssignmentIntegrationTest {
 
     @Before
     fun setup() {
-        catalogRepository = mock()
-        learnedRulesRepository = mock()
+        catalogRepository = mockk<CatalogRepository>()
+        learnedRulesRepository = mockk<LearnedRulesRepository>()
 
-        `when`(catalogRepository.getTaxonomy()).thenReturn(flowOf(taxonomy))
-        runBlocking {
-            `when`(learnedRulesRepository.getByExpressionAndProductId(any(), any())).thenReturn(null)
-            `when`(learnedRulesRepository.upsertAtomic(any())).thenAnswer { invocation ->
-                invocation.arguments[0] as LearnedRule
-            }
-        }
+        every { catalogRepository.getTaxonomy() } returns flowOf(taxonomy)
+        coEvery { learnedRulesRepository.getByExpressionAndProductId(any(), any()) } returns null
+        coEvery { learnedRulesRepository.upsertAtomic(any()) } answers { firstArg<LearnedRule>() }
 
         assigner = CategoryAssigner(catalogRepository, learnedRulesRepository)
         corrector = CategoryCorrector(catalogRepository)
@@ -68,81 +56,65 @@ class CategoryAssignmentIntegrationTest {
     }
 
     @Test
-    fun `flusso completo assign default correct confirmRemember reassign usa learned rule`() = runBlocking(Dispatchers.IO) {
-        // 1. Primo assegnamento: default prodotto (Latticini)
+    fun `flusso completo assign default correct confirmRemember reassign usa learned rule`(): Unit = runBlocking(Dispatchers.IO) {
         val assignment1 = assignUseCase(productLatte, "latte")
         assertEquals(AssignmentSource.DEFAULT, assignment1.source)
         assertEquals(5L, assignment1.suggestedLevel3Id)
         assertEquals("latte", assignment1.userExpression)
 
-        // 2. Utente corregge: Latticini -> Bevande
         val correction = correctUseCase(assignment1, 12L)
         assertTrue(correction.isEffective)
         assertEquals(5L, correction.originalLevel3Id)
         assertEquals(12L, correction.correctedLevel3Id)
 
-        // 3. Utente conferma "Ricorda questa scelta"
         val learnedRule = correctUseCase.confirmRemember(assignment1, correction)
         assertEquals("latte", learnedRule.userExpression)
         assertEquals(1L, learnedRule.productId)
         assertEquals(12L, learnedRule.level3Id)
         assertTrue(learnedRule.isActive)
 
-        // 4. Mock repository per restituire la rule appena creata
-        `when`(learnedRulesRepository.getByExpressionAndProductId("latte", 1L)).thenReturn(learnedRule)
+        coEvery { learnedRulesRepository.getByExpressionAndProductId("latte", 1L) } returns learnedRule
 
-        // 5. Nuovo assegnamento con stessa espressione: deve usare LEARNED rule
         val assignment2 = assignUseCase(productLatte, "latte")
         assertEquals(AssignmentSource.LEARNED, assignment2.source)
-        assertEquals(12L, assignment2.suggestedLevel3Id) // Bevande, non Latticini
+        assertEquals(12L, assignment2.suggestedLevel3Id)
         assertEquals(0.9, assignment2.confidence, 0.001)
-        assertTrue(assignment2.requiresConfirmation) // 0.9 <= 0.9
+        assertTrue(assignment2.requiresConfirmation)
     }
 
     @Test
-    fun `flusso con declineRemember rule NON creata nuovo assign usa default`() = runBlocking(Dispatchers.IO) {
-        // 1. Assegnamento default
+    fun `flusso con declineRemember rule NON creata nuovo assign usa default`(): Unit = runBlocking(Dispatchers.IO) {
         val assignment1 = assignUseCase(productLatte, "latte")
         assertEquals(AssignmentSource.DEFAULT, assignment1.source)
 
-        // 2. Correzione
         val correction = correctUseCase(assignment1, 12L)
         assertTrue(correction.isEffective)
 
-        // 3. Utente RIFIUTA "Ricorda"
         val declined = correctUseCase.declineRemember()
         assertTrue(declined)
 
-        // 4. Repository non chiamato per upsert
-        verify(learnedRulesRepository, never()).upsertAtomic(any())
+        coVerify(exactly = 0) { learnedRulesRepository.upsertAtomic(any()) }
 
-        // 5. Nuovo assegnamento: ancora default (nessuna rule creata)
         val assignment2 = assignUseCase(productLatte, "latte")
         assertEquals(AssignmentSource.DEFAULT, assignment2.source)
         assertEquals(5L, assignment2.suggestedLevel3Id)
     }
 
     @Test
-    fun `rule per prodotto A non influenza prodotto B`() = runBlocking(Dispatchers.IO) {
+    fun `rule per prodotto A non influenza prodotto B`(): Unit = runBlocking(Dispatchers.IO) {
         val productLatteSoia = CanonicalProduct(
-            id = 2L,
-            name = "Latte di Soia",
-            level3Id = 12L, // Bevande (default)
+            id = 2L, name = "Latte di Soia", level3Id = 12L,
             compatibleUnits = listOf(StandardUnit.LITER, StandardUnit.MILLILITER)
         )
 
-        // 1. Crea rule per Latte UHT (productId=1): "latte" -> Bevande
         val assignment1 = assignUseCase(productLatte, "latte")
         val correction = correctUseCase(assignment1, 12L)
         val learnedRule = correctUseCase.confirmRemember(assignment1, correction)
-        `when`(learnedRulesRepository.getByExpressionAndProductId("latte", 1L)).thenReturn(learnedRule)
-
-        // 2. Assegna per Latte di Soia (productId=2) con stessa espressione
-        `when`(learnedRulesRepository.getByExpressionAndProductId("latte", 2L)).thenReturn(null)
+        coEvery { learnedRulesRepository.getByExpressionAndProductId("latte", 1L) } returns learnedRule
+        coEvery { learnedRulesRepository.getByExpressionAndProductId("latte", 2L) } returns null
 
         val assignment2 = assignUseCase(productLatteSoia, "latte")
 
-        // Deve usare DEFAULT di Latte di Soia (Bevande), non la rule di Latte UHT
         assertEquals(AssignmentSource.DEFAULT, assignment2.source)
         assertEquals(12L, assignment2.suggestedLevel3Id)
     }

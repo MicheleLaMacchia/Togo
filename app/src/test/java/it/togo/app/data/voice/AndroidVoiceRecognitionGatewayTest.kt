@@ -4,8 +4,10 @@ import it.togo.app.domain.voice.ErrorCode
 import it.togo.app.domain.voice.VoiceRecognitionState
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.koin.core.context.stopKoin
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
@@ -15,6 +17,9 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
 class AndroidVoiceRecognitionGatewayTest {
+
+    @Before
+    fun setup() { stopKoin() }
 
     @Test
     fun `stato iniziale e Idle`() {

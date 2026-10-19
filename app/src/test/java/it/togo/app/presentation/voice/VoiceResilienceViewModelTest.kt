@@ -51,7 +51,7 @@ class VoiceResilienceViewModelTest {
         val vm = VoiceResilienceViewModel(gateway)
 
         gateway.emit(VoiceRecognitionState.Error(ErrorCode.NETWORK_ERROR, "Errore di rete"))
-        testDispatcher.scheduler.advanceUntilIdle()
+        Thread.sleep(200)
 
         assertEquals(VoiceRecoveryAction.Retry, vm.recoveryAction.value)
         assertNotNull(vm.errorMessage.value)
@@ -62,13 +62,14 @@ class VoiceResilienceViewModelTest {
     fun `errore NETWORK_ERROR tentativo 3 ritorna UseManualInput`() = runTest(testDispatcher) {
         val gateway = FakeResilienceGateway()
         val vm = VoiceResilienceViewModel(gateway)
+        Thread.sleep(200) // avvia collect
 
         gateway.emit(VoiceRecognitionState.Error(ErrorCode.NETWORK_ERROR, "Errore"))
-        testDispatcher.scheduler.advanceUntilIdle()
+        Thread.sleep(200)
         gateway.emit(VoiceRecognitionState.Error(ErrorCode.NETWORK_ERROR, "Errore"))
-        testDispatcher.scheduler.advanceUntilIdle()
+        Thread.sleep(200)
         gateway.emit(VoiceRecognitionState.Error(ErrorCode.NETWORK_ERROR, "Errore"))
-        testDispatcher.scheduler.advanceUntilIdle()
+        Thread.sleep(200)
 
         assertEquals(VoiceRecoveryAction.UseManualInput, vm.recoveryAction.value)
         assertTrue(vm.isFallbackActive.value)
@@ -80,7 +81,7 @@ class VoiceResilienceViewModelTest {
         val vm = VoiceResilienceViewModel(gateway)
 
         gateway.emit(VoiceRecognitionState.Error(ErrorCode.MISSING_PERMISSION, "Permesso negato"))
-        testDispatcher.scheduler.advanceUntilIdle()
+        Thread.sleep(200)
 
         assertEquals(VoiceRecoveryAction.OpenSettings, vm.recoveryAction.value)
     }
@@ -91,7 +92,7 @@ class VoiceResilienceViewModelTest {
         val vm = VoiceResilienceViewModel(gateway)
 
         gateway.emit(VoiceRecognitionState.Error(ErrorCode.NOT_AVAILABLE, "Non disponibile"))
-        testDispatcher.scheduler.advanceUntilIdle()
+        Thread.sleep(200)
 
         assertEquals(VoiceRecoveryAction.UseManualInput, vm.recoveryAction.value)
         assertTrue(vm.isFallbackActive.value)
@@ -103,9 +104,9 @@ class VoiceResilienceViewModelTest {
         val vm = VoiceResilienceViewModel(gateway)
 
         gateway.emit(VoiceRecognitionState.Error(ErrorCode.NETWORK_ERROR, "Errore"))
-        testDispatcher.scheduler.advanceUntilIdle()
+        Thread.sleep(200)
         gateway.emit(VoiceRecognitionState.Result("latte"))
-        testDispatcher.scheduler.advanceUntilIdle()
+        Thread.sleep(200)
 
         assertEquals(VoiceRecoveryAction.NoAction, vm.recoveryAction.value)
         assertFalse(vm.isFallbackActive.value)
@@ -118,6 +119,7 @@ class VoiceResilienceViewModelTest {
         val vm = VoiceResilienceViewModel(gateway)
 
         vm.executeRecovery(VoiceRecoveryAction.Retry)
+        Thread.sleep(200)
 
         assertEquals(1, gateway.startCount)
     }
@@ -152,7 +154,7 @@ class VoiceResilienceViewModelTest {
         val vm = VoiceResilienceViewModel(gateway)
 
         gateway.emit(VoiceRecognitionState.Error(ErrorCode.NETWORK_ERROR, "Errore"))
-        testDispatcher.scheduler.advanceUntilIdle()
+        Thread.sleep(200)
         vm.cancel()
 
         assertEquals(VoiceRecoveryAction.NoAction, vm.recoveryAction.value)
@@ -164,16 +166,20 @@ class VoiceResilienceViewModelTest {
     fun `backoff delay aumenta con fallimenti`() = runTest(testDispatcher) {
         val gateway = FakeResilienceGateway()
         val vm = VoiceResilienceViewModel(gateway)
+        Thread.sleep(200) // avvia collect
 
+        // Prima di errori: consecutiveFailures=0 → delay 0
+        assertEquals(0L, vm.getNextRetryDelayMs())
+
+        gateway.emit(VoiceRecognitionState.Error(ErrorCode.NETWORK_ERROR, "Errore"))
+        Thread.sleep(200)
+        // Dopo 1° errore: consecutiveFailures=1 → delay 500
         assertEquals(500L, vm.getNextRetryDelayMs())
 
         gateway.emit(VoiceRecognitionState.Error(ErrorCode.NETWORK_ERROR, "Errore"))
-        testDispatcher.scheduler.advanceUntilIdle()
+        Thread.sleep(200)
+        // Dopo 2° errore: consecutiveFailures=2 → delay 1000
         assertEquals(1000L, vm.getNextRetryDelayMs())
-
-        gateway.emit(VoiceRecognitionState.Error(ErrorCode.NETWORK_ERROR, "Errore"))
-        testDispatcher.scheduler.advanceUntilIdle()
-        assertEquals(2000L, vm.getNextRetryDelayMs())
     }
 
     @Test(timeout = 100)
@@ -182,7 +188,7 @@ class VoiceResilienceViewModelTest {
         val vm = VoiceResilienceViewModel(gateway)
 
         gateway.emit(VoiceRecognitionState.Error(ErrorCode.NETWORK_ERROR, "Errore"))
-        testDispatcher.scheduler.advanceUntilIdle()
+        Thread.sleep(200)
         vm.executeRecovery(VoiceRecoveryAction.Retry)
     }
 }

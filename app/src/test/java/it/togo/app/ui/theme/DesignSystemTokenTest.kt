@@ -3,8 +3,10 @@ package it.togo.app.ui.theme
 import androidx.compose.ui.graphics.toArgb
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.koin.core.context.stopKoin
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
@@ -15,8 +17,11 @@ import org.robolectric.annotation.Config
  * i requisiti di contrasto siano soddisfatti.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35])
+@Config(sdk = [34])
 class DesignSystemTokenTest {
+
+    @Before
+    fun setup() { stopKoin() }
 
     @Test
     fun `light color tokens match DESIGN_MD`() {

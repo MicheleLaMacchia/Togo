@@ -9,9 +9,11 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import it.togo.app.presentation.activelist.UiEvent
 import it.togo.app.ui.theme.TogoTheme
+import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.koin.core.context.stopKoin
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
@@ -27,6 +29,9 @@ class AppNavigatorTest {
 
     @get:Rule
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
+
+    @After
+    fun tearDown() { stopKoin() }
 
     private fun setNavigatorContent() {
         composeTestRule.setContent {

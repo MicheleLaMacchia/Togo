@@ -35,9 +35,11 @@ import kotlinx.coroutines.flow.flowOf
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.koin.core.context.stopKoin
 import org.robolectric.annotation.Config
 import org.robolectric.RobolectricTestRunner
 
@@ -48,11 +50,14 @@ import org.robolectric.RobolectricTestRunner
  * mappatura reale prodotti/tassonomia del ViewModel.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35])
+@Config(sdk = [34])
 class ActiveListAccessibilityTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
+
+    @Before
+    fun setup() { stopKoin() }
 
     private val uncheckedItem = ShoppingItem(
         productId = 1L,

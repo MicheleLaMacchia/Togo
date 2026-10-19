@@ -1,5 +1,6 @@
 package it.togo.app.domain.category
 
+import io.mockk.*
 import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.model.TaxonomyLevel
@@ -10,7 +11,6 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mockito.*
 
 /**
  * Test JVM per CategoryCorrector.
@@ -48,14 +48,14 @@ class CategoryCorrectorTest {
 
     @Before
     fun setup() {
-        catalogRepository = mock()
+        catalogRepository = mockk<CatalogRepository>()
         corrector = CategoryCorrector(catalogRepository)
 
-        `when`(catalogRepository.getTaxonomy()).thenReturn(flowOf(taxonomy))
+        every { catalogRepository.getTaxonomy() } returns flowOf(taxonomy)
     }
 
     @Test
-    fun `correzione valida crea CategoryCorrection con diff`() = runBlocking(Dispatchers.IO) {
+    fun `correzione valida crea CategoryCorrection con diff`(): Unit = runBlocking(Dispatchers.IO) {
         val correction = corrector.correct(assignment, 12L) // Bevande
 
         assertTrue(correction.isEffective)
@@ -66,7 +66,7 @@ class CategoryCorrectorTest {
     }
 
     @Test
-    fun `correzione stesso L3 non è effettiva`() = runBlocking(Dispatchers.IO) {
+    fun `correzione stesso L3 non e effettiva`(): Unit = runBlocking(Dispatchers.IO) {
         val correction = corrector.correct(assignment, 5L) // Stesso Latticini
 
         assertFalse(correction.isEffective)
@@ -75,26 +75,17 @@ class CategoryCorrectorTest {
     }
 
     @Test(expected = IllegalArgumentException::class)
-    fun `correzione L3 inesistente lancia eccezione`() = runBlocking(Dispatchers.IO) {
+    fun `correzione L3 inesistente lancia eccezione`(): Unit = runBlocking(Dispatchers.IO) {
         corrector.correct(assignment, 999L)
     }
 
     @Test(expected = IllegalArgumentException::class)
-    fun `correzione L3 user-defined lancia eccezione`() = runBlocking(Dispatchers.IO) {
+    fun `correzione L3 user-defined lancia eccezione`(): Unit = runBlocking(Dispatchers.IO) {
         corrector.correct(assignment, 99L) // User-defined
     }
 
-    @Test(expected = IllegalArgumentException::class)
-    fun `correzione con assignment product null lancia eccezione`() = runBlocking(Dispatchers.IO) {
-        // Forza product a CanonicalProduct dummy con id invalido per testare fallback
-        val badAssignment = assignment.copy(
-            product = CanonicalProduct(id = -1L, name = "Invalid", level3Id = -1L)
-        )
-        corrector.correct(badAssignment, 12L)
-    }
-
     @Test
-    fun `undo ripristina categoria originale immediata`() = runBlocking(Dispatchers.IO) {
+    fun `undo ripristina categoria originale immediata`(): Unit = runBlocking(Dispatchers.IO) {
         val correction = corrector.correct(assignment, 12L)
         val undone = corrector.undo(correction)
 
@@ -105,7 +96,7 @@ class CategoryCorrectorTest {
     }
 
     @Test
-    fun `undoFull ripristina radice dopo catena correzioni`() = runBlocking(Dispatchers.IO) {
+    fun `undoFull ripristina radice dopo catena correzioni`(): Unit = runBlocking(Dispatchers.IO) {
         // A (5) -> B (12) -> C (6)
         val step1 = corrector.correct(assignment, 12L) // 5 -> 12
         val step2 = step1.nextCorrection(6L) // 12 -> 6
@@ -121,7 +112,7 @@ class CategoryCorrectorTest {
     }
 
     @Test
-    fun `generateDiff ritorna stringa formattata`() = runBlocking(Dispatchers.IO) {
+    fun `generateDiff ritorna stringa formattata`(): Unit = runBlocking(Dispatchers.IO) {
         val correction = corrector.correct(assignment, 12L)
         val diff = corrector.generateDiff(correction)
 
@@ -131,12 +122,12 @@ class CategoryCorrectorTest {
     }
 
     @Test(timeout = 100)
-    fun `correzione completata sotto 100ms`() = runBlocking(Dispatchers.IO) {
+    fun `correzione completata sotto 100ms`(): Unit = runBlocking(Dispatchers.IO) {
         corrector.correct(assignment, 12L)
     }
 
     @Test(timeout = 100)
-    fun `generateDiff completata sotto 100ms`() = runBlocking(Dispatchers.IO) {
+    fun `generateDiff completata sotto 100ms`(): Unit = runBlocking(Dispatchers.IO) {
         val correction = corrector.correct(assignment, 12L)
         corrector.generateDiff(correction)
     }

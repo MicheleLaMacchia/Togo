@@ -40,7 +40,7 @@ data class NewProductDraft(
         get() = when (currentStep) {
             WizardStep.SELECT_L1 -> selectedLevel1 != null
             WizardStep.SELECT_L2 -> selectedLevel2 != null
-            WizardStep.SELECT_L3 -> selectedLevel3 != null && (isNewLevel3.not() || newLevel3Name.isNotBlank())
+            WizardStep.SELECT_L3 -> selectedLevel3 != null || (isNewLevel3 && newLevel3Name.isNotBlank())
             WizardStep.ENTER_DETAILS -> productName.isNotBlank() && selectedUnit != null && quantity > 0
             WizardStep.CONFIRM -> true
         }

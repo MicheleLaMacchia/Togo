@@ -78,7 +78,7 @@ dependencies {
     }
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     testImplementation(libs.junit)
-    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockk)
     testImplementation(libs.arch.core.testing)
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.kotlinx.coroutines.test)

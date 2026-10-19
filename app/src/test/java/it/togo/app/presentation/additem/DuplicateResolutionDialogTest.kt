@@ -7,9 +7,11 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import it.togo.app.domain.model.ResolutionOption
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.koin.core.context.stopKoin
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
@@ -19,11 +21,14 @@ import org.robolectric.annotation.Config
  * Verifica annuncio (titolo, messaggio, opzioni), stati e callback.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35])
+@Config(sdk = [34])
 class DuplicateResolutionDialogTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
+
+    @Before
+    fun setup() { stopKoin() }
 
     private fun showDialog(
         canSum: Boolean = true,

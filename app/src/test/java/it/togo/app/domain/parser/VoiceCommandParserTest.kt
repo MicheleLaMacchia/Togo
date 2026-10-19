@@ -67,6 +67,7 @@ class VoiceCommandParserTest {
 
         assertEquals("riso", result.productName)
         assertEquals(1.5, result.quantity!!, 0.001)
+        assertEquals(StandardUnit.KILOGRAM, result.unit)
     }
 
     // --- Quantità parole italiane ---
