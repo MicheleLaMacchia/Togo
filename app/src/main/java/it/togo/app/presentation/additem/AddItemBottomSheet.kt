@@ -163,23 +163,10 @@ fun AddItemBottomSheet(
                     val startStep = if (viewModel.isEditMode) 2 else 1
                     
                     (startStep..4).forEach { step ->
-                        val isActive = uiState.currentStep >= step
-                        val isCurrent = uiState.currentStep == step
-                        val effectiveIndex = step - startStep
-                        
                         Row(
                             modifier = Modifier.weight(1f),
                             horizontalArrangement = Arrangement.spacedBy(spacing.space1),
                         ) {
-                            // Linea progress
-                            if (step < 4) {
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(2.dp)
-                                        .background(if (uiState.currentStep >= step) colors.accentHighlight else colors.borderHairline),
-                                )
-                            }
                             // Circle step
                             Box(
                                 modifier = Modifier
@@ -193,6 +180,15 @@ fun AddItemBottomSheet(
                                 Text(
                                     text = (step - startStep + 1).toString(),
                                     style = typography.caption.copy(color = if (uiState.currentStep >= step) colors.inkInverse else colors.inkMuted),
+                                )
+                            }
+                            // Linea progress (dopo il cerchio, tranne l'ultimo step)
+                            if (step < 4) {
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(2.dp)
+                                        .background(if (uiState.currentStep > step) colors.accentHighlight else colors.borderHairline),
                                 )
                             }
                         }

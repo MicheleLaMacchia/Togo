@@ -6,7 +6,9 @@ status: 'ready'
 route: 'dispatch'
 baseline_commit: '483ee59c5122ba9e24acc9c551f7769462f4051b'
 review_loop_iteration: 0
-context: []
+context:
+  - 'Bug re-confermato dall''utente il 2026-10-19: il blocco indicatore (righe 155-200) è risultato INVARIATO rispetto al baseline — la fix non è mai stata applicata.'
+  - 'PREREQUISITO AVVIO: se l''app è ancora in crash-loop al boot (vedi spec-riparazione-koin-bind-gateway.md, bind Koin gateway vocale), la verifica visiva V5 è impossibile finché quell''altra fix non è buildata. La correzione del presente script può comunque essere applicata in anticipo.'
 ---
 
 <frozen-after-approval reason="human-owned intent — do not modify unless human renegotiates">
@@ -32,6 +34,8 @@ Screenshot utente 2026-10-19 ore 11:57, bottom sheet "Cerca prodotto" (step 1):
 - Complessivamente: spazi tra cerchi disuguali (lunghi1→2 e2→3, minimo3→4).
 
 Riproducibile in qualsiasi momento aprendo il FAB "+".
+
+**Re-verifica sorgente 2026-10-19 (prima di questa esecuzione):** `grep`/lettura del blocco righe 155-200 di `AddItemBottomSheet.kt` → struttura **identica** a quella descritta in Root cause (linea prima del cerchio, `if (step < 4)`, colore `>= step`); il file non ha modifiche non committate (`git status` pulito per quel path, ultimo commit `483ee59`).
 
 ## Root cause (da verificare prima di correggere — `AddItemBottomSheet.kt`)
 
@@ -73,6 +77,7 @@ Riproducibile in qualsiasi momento aprendo il FAB "+".
   - [ ] Comunicare all'utente: *"Fix applicata al solo AddItemBottomSheet.kt. Esegui tu la build e l'installazione con: `powershell -ExecutionPolicy Bypass -File .\build-install-android.ps1`"*
   - [ ] **Attendere** la conferma dell'utente. Non procedere in autonomia.
 - [ ] **V5 — Verifica visiva post-build (SOLO dopo la conferma dell'utente):**
+  - [ ] **Guardia**: se l'app non si avvia (crash-loop noto da `NoBeanDefFoundException` Koin, vedi `spec-riparazione-koin-bind-gateway.md`), la fix del presente script è comunque applicata correttamente: segnalare all'utente che la verifica visiva è bloccata dall'altra issue e che va risolta/prima buildata quella.
   - [ ] Aprire il FAB "+" → indicatore deve mostrare `1 ——— 2 ——— 3 ——— 4`: **nessun tratteggio prima del "1"**, connettore presente tra **ogni** coppia, spazi uniformi.
   - [ ] Allo step 1: connettori tutti grigli (`borderHairline`).
   - [ ] Selezionare un prodotto → allo step 2: connettore 1→2 blu (`accentHighlight`), 2→3 e 3→4 grigli.
