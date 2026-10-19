@@ -42,7 +42,7 @@ object TogoColorTokens {
     val DarkSurfaceCard = Color(0xFF131B2E)        // #131B2E
     val DarkInkPrimary = Color(0xFFF8FAFC)         // #F8FAFC
     val DarkInkSecondary = Color(0xFF94A3B8)       // #94A3B8
-    val DarkBorderCrisp = Color(0xFF475569)        // #475569
+    val DarkBorderCrisp = Color(0xFF64748B)        // #64748B (WCAG >=3:1 su surfaceBase dark)
     val DarkAccentHighlight = Color(0xFF60A5FA)    // #60A5FA
 
     // Token condivisi (identici in entrambi i temi)

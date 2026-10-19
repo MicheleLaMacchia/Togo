@@ -25,7 +25,7 @@ Make TOGO usable and legible across accessibility needs and lighting conditions 
 ## Technical Decisions
 
 - Keep presentation in Jetpack Compose with ViewModels and immutable UI state, following the existing Clean Architecture/UDF boundary; accessibility semantics belong on the rendered controls and sections.
-- Use the dedicated dark design tokens consistently: `surface-base-dark #0B0F17`, `surface-card-dark #131B2E`, `ink-primary-dark #F8FAFC`, `ink-secondary-dark #94A3B8`, `border-crisp-dark #475569`, and `accent-highlight-dark #60A5FA`. Do not substitute light tokens in dark mode.
+- Use the dedicated dark design tokens consistently: `surface-base-dark #0B0F17`, `surface-card-dark #131B2E`, `ink-primary-dark #F8FAFC`, `ink-secondary-dark #94A3B8`, `border-crisp-dark #64748B`, and `accent-highlight-dark #60A5FA`. Do not substitute light tokens in dark mode.
 - Dark appearance follows Android system mode and must remain consistent when the app enters background/foreground or switches between light and dark, without crashes or stale UI state.
 - Voice recognition uses the OS recognition service; TOGO must not retain its audio or recognized text beyond current processing. Keep the manual/local app usable independently of voice availability.
 

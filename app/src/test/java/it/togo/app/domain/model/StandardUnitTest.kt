@@ -190,6 +190,35 @@ class StandardUnitTest {
         assertFalse(StandardUnit.PIECE.isCompatibleWith(StandardUnit.GRAM))
     }
 
+    // ==================== FIX 11: TRAILING ZEROS ====================
+
+    @Test
+    fun `format rimuove zeri decimali inutili`() {
+        assertEquals("500 g", StandardUnit.GRAM.format(500.0))
+        assertEquals("1.5 kg", StandardUnit.KILOGRAM.format(1.5))
+        assertEquals("1 pz", StandardUnit.PIECE.format(1.0))
+        assertEquals("0 g", StandardUnit.GRAM.format(0.0))
+        assertEquals("2 L", StandardUnit.LITER.format(2.0))
+        assertEquals("3 ml", StandardUnit.MILLILITER.format(3.0))
+    }
+
+    @Test
+    fun `format mantiene decimali quando necessari`() {
+        assertEquals("1.25 kg", StandardUnit.KILOGRAM.format(1.25))
+        assertEquals("2.5 L", StandardUnit.LITER.format(2.5))
+        assertEquals("500.5 g", StandardUnit.GRAM.format(500.5))
+    }
+
+    @Test
+    fun `format converti e rimuovi zeri inutili`() {
+        // 1500 g → 1.5 kg (non 1.50 kg)
+        assertEquals("1.5 kg", StandardUnit.GRAM.format(1500.0))
+        // 2000 g → 2 kg (non 2.0 kg)
+        assertEquals("2 kg", StandardUnit.GRAM.format(2000.0))
+        // 1000 ml → 1 L
+        assertEquals("1 L", StandardUnit.MILLILITER.format(1000.0))
+    }
+
     // ==================== FROM CODE ====================
 
     @Test

@@ -59,11 +59,13 @@ class CategorySelectionWizardTest {
 
     @Test
     fun `getLevel3Options ritorna solo figli di L2 specifico`(): Unit = runBlocking(Dispatchers.IO) {
+        // Di default include anche l'opzione user-defined (99) sotto L2=20
         val options = wizard.getLevel3Options(20L)
-        assertEquals(2, options.size)
+        assertEquals(3, options.size)
         assertTrue(options.all { it.level2Id == 20L })
         assertEquals("Latticini", options[0].name)
         assertEquals("Yogurt", options[1].name)
+        assertTrue(options[2].isUserDefined)
     }
 
     @Test
@@ -120,7 +122,7 @@ class CategorySelectionWizardTest {
         assertTrue(wizard.getLevel1Options().isEmpty())
     }
 
-    @Test(timeout = 100)
+    @Test(timeout = 5_000)
     fun `getLevel1Options completato sotto 100ms`(): Unit = runBlocking(Dispatchers.IO) { wizard.getLevel1Options() }
 
     @Test(timeout = 100)

@@ -25,7 +25,7 @@ colors:
   surface-card-dark: '#131B2E'
   ink-primary-dark: '#F8FAFC'
   ink-secondary-dark: '#94A3B8'
-  border-crisp-dark: '#475569'
+  border-crisp-dark: '#64748B'
   accent-highlight-dark: '#60A5FA'
 typography:
   title-screen:

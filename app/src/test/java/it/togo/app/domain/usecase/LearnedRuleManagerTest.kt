@@ -27,6 +27,7 @@ class LearnedRuleManagerTest {
         coEvery { repository.getById("rule-1") } returns rule1
         coEvery { repository.getById("rule-2") } returns rule2
         coEvery { repository.getById("rule-3") } returns null
+        coEvery { repository.getById("rule-999") } returns null
         coEvery { repository.upsertAtomic(any()) } answers { firstArg<LearnedRule>() }
     }
 
@@ -116,7 +117,6 @@ class LearnedRuleManagerTest {
 
     @Test
     fun `delete ritorna false se rule non esisteva`(): Unit = runBlocking(Dispatchers.IO) {
-        coEvery { repository.delete("rule-999") } throws IllegalArgumentException("not found")
         assertFalse(manager.delete("rule-999"))
     }
 

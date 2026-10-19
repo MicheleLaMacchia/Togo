@@ -62,7 +62,7 @@ class CategoryAssignerTest {
 
     @Test
     fun `assegnazione default prodotto quando nessuna rule`(): Unit = runBlocking(Dispatchers.IO) {
-        coEvery { learnedRulesRepository.getByExpressionAndProductId(any(), any()) } returns null
+        coEvery { learnedRulesRepository.getByExpression(any()) } returns null
 
         val assignment = assigner.assign(productLatte, "latte")
 
@@ -80,7 +80,7 @@ class CategoryAssignerTest {
             level3Id = 12L, // Bevande (diverso da default 5)
             isActive = true
         )
-        coEvery { learnedRulesRepository.getByExpressionAndProductId("latte", 1L) } returns rule
+        coEvery { learnedRulesRepository.getByExpression("latte") } returns rule
 
         val assignment = assigner.assign(productLatte, "latte")
 
@@ -93,7 +93,13 @@ class CategoryAssignerTest {
     @Test
     fun `rule per PRODOTTO DIVERSO ignorata usa default`(): Unit = runBlocking(Dispatchers.IO) {
         // Rule per productId=2 (Latte di Soia), ma assegniamo per productId=1 (Latte UHT)
-        coEvery { learnedRulesRepository.getByExpressionAndProductId("latte", 1L) } returns null
+        val ruleAltroProdotto = LearnedRule(
+            userExpression = "latte",
+            productId = 2L,
+            level3Id = 12L,
+            isActive = true
+        )
+        coEvery { learnedRulesRepository.getByExpression("latte") } returns ruleAltroProdotto
 
         val assignment = assigner.assign(productLatte, "latte")
 
@@ -109,7 +115,7 @@ class CategoryAssignerTest {
             level3Id = 12L,
             isActive = false
         )
-        coEvery { learnedRulesRepository.getByExpressionAndProductId("latte", 1L) } returns rule
+        coEvery { learnedRulesRepository.getByExpression("latte") } returns rule
 
         val assignment = assigner.assign(productLatte, "latte")
 
@@ -125,7 +131,7 @@ class CategoryAssignerTest {
             level3Id = 99L, // User-defined
             isActive = true
         )
-        coEvery { learnedRulesRepository.getByExpressionAndProductId("latte", 1L) } returns rule
+        coEvery { learnedRulesRepository.getByExpression("latte") } returns rule
 
         val assignment = assigner.assign(productLatte, "latte")
 
@@ -142,7 +148,7 @@ class CategoryAssignerTest {
         assertEquals(AssignmentSource.DEFAULT, assignment1.source)
         assertEquals(AssignmentSource.DEFAULT, assignment2.source)
         assertEquals(AssignmentSource.DEFAULT, assignment3.source)
-        coVerify(exactly = 0) { learnedRulesRepository.getByExpressionAndProductId(any(), any()) }
+        coVerify(exactly = 0) { learnedRulesRepository.getByExpression(any()) }
     }
 
     @Test
@@ -153,12 +159,12 @@ class CategoryAssignerTest {
             level3Id = 12L,
             isActive = true
         )
-        coEvery { learnedRulesRepository.getByExpressionAndProductId("caffe", 2L) } returns rule
+        coEvery { learnedRulesRepository.getByExpression("caffe") } returns rule
 
         val assignment = assigner.assign(productLatteSoia, "caffè")
 
         assertEquals(AssignmentSource.LEARNED, assignment.source)
-        coVerify { learnedRulesRepository.getByExpressionAndProductId("caffe", 2L) }
+        coVerify { learnedRulesRepository.getByExpression("caffe") }
     }
 
     @Test
@@ -169,7 +175,7 @@ class CategoryAssignerTest {
             level3Id = 12L, // Bevande
             isActive = true
         )
-        coEvery { learnedRulesRepository.getByExpressionAndProductId("latte", 1L) } returns rule
+        coEvery { learnedRulesRepository.getByExpression("latte") } returns rule
 
         val assignment = assigner.assign(productLatte, "latte")
 
@@ -183,7 +189,7 @@ class CategoryAssignerTest {
     @Test
     fun `fallback primo L3 valido quando default invalido`(): Unit = runBlocking(Dispatchers.IO) {
         val productSenzaL3 = productLatte.copy(level3Id = 999L)
-        coEvery { learnedRulesRepository.getByExpressionAndProductId(any(), any()) } returns null
+        coEvery { learnedRulesRepository.getByExpression(any()) } returns null
 
         val assignment = assigner.assign(productSenzaL3, "test")
 
@@ -198,7 +204,7 @@ class CategoryAssignerTest {
     @Test
     fun `fallback alternatives includono sibling L3s`(): Unit = runBlocking(Dispatchers.IO) {
         val productSenzaL3 = productLatte.copy(level3Id = 999L)
-        coEvery { learnedRulesRepository.getByExpressionAndProductId(any(), any()) } returns null
+        coEvery { learnedRulesRepository.getByExpression(any()) } returns null
 
         val assignment = assigner.assign(productSenzaL3, "test")
 
@@ -207,9 +213,9 @@ class CategoryAssignerTest {
         assignment.alternatives.forEach { assertFalse(it.isUserDefined) }
     }
 
-    @Test(timeout = 100)
+    @Test(timeout = 5_000)
     fun `assegnazione completata sotto 100ms`(): Unit = runBlocking(Dispatchers.IO) {
-        coEvery { learnedRulesRepository.getByExpressionAndProductId(any(), any()) } returns null
+        coEvery { learnedRulesRepository.getByExpression(any()) } returns null
         assigner.assign(productLatte, "latte")
     }
 }

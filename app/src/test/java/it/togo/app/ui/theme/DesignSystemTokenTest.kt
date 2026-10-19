@@ -25,32 +25,32 @@ class DesignSystemTokenTest {
 
     @Test
     fun `light color tokens match DESIGN_MD`() {
-        assertEquals(0xFFFFFFFF, TogoColorTokens.LightSurfaceBase.toArgb())
-        assertEquals(0xFFF8FAFC, TogoColorTokens.LightSurfaceSubtle.toArgb())
-        assertEquals(0xFFFFFFFF, TogoColorTokens.LightSurfaceCard.toArgb())
-        assertEquals(0xFF0F172A, TogoColorTokens.LightSurfaceInverse.toArgb())
-        assertEquals(0xFF0F172A, TogoColorTokens.LightInkPrimary.toArgb())
-        assertEquals(0xFF475569, TogoColorTokens.LightInkSecondary.toArgb())
-        assertEquals(0xFF94A3B8, TogoColorTokens.LightInkMuted.toArgb())
-        assertEquals(0xFFFFFFFF, TogoColorTokens.LightInkInverse.toArgb())
-        assertEquals(0xFF0F172A, TogoColorTokens.LightBorderCrisp.toArgb())
-        assertEquals(0xFFCBD5E1, TogoColorTokens.LightBorderHairline.toArgb())
-        assertEquals(0xFF0F172A, TogoColorTokens.LightAccentAction.toArgb())
-        assertEquals(0xFF15803D, TogoColorTokens.LightAccentSuccess.toArgb())
-        assertEquals(0xFF2563EB, TogoColorTokens.LightAccentHighlight.toArgb())
-        assertEquals(0xFFB45309, TogoColorTokens.LightAccentWarning.toArgb())
-        assertEquals(0xFF0F172A, TogoColorTokens.LightBadgeBg.toArgb())
-        assertEquals(0xFFFFFFFF, TogoColorTokens.LightBadgeInk.toArgb())
+        assertEquals(0xFFFFFFFF.toInt(), TogoColorTokens.LightSurfaceBase.toArgb())
+        assertEquals(0xFFF8FAFC.toInt(), TogoColorTokens.LightSurfaceSubtle.toArgb())
+        assertEquals(0xFFFFFFFF.toInt(), TogoColorTokens.LightSurfaceCard.toArgb())
+        assertEquals(0xFF0F172A.toInt(), TogoColorTokens.LightSurfaceInverse.toArgb())
+        assertEquals(0xFF0F172A.toInt(), TogoColorTokens.LightInkPrimary.toArgb())
+        assertEquals(0xFF475569.toInt(), TogoColorTokens.LightInkSecondary.toArgb())
+        assertEquals(0xFF94A3B8.toInt(), TogoColorTokens.LightInkMuted.toArgb())
+        assertEquals(0xFFFFFFFF.toInt(), TogoColorTokens.LightInkInverse.toArgb())
+        assertEquals(0xFF0F172A.toInt(), TogoColorTokens.LightBorderCrisp.toArgb())
+        assertEquals(0xFFCBD5E1.toInt(), TogoColorTokens.LightBorderHairline.toArgb())
+        assertEquals(0xFF0F172A.toInt(), TogoColorTokens.LightAccentAction.toArgb())
+        assertEquals(0xFF15803D.toInt(), TogoColorTokens.LightAccentSuccess.toArgb())
+        assertEquals(0xFF2563EB.toInt(), TogoColorTokens.LightAccentHighlight.toArgb())
+        assertEquals(0xFFB45309.toInt(), TogoColorTokens.LightAccentWarning.toArgb())
+        assertEquals(0xFF0F172A.toInt(), TogoColorTokens.LightBadgeBg.toArgb())
+        assertEquals(0xFFFFFFFF.toInt(), TogoColorTokens.LightBadgeInk.toArgb())
     }
 
     @Test
     fun `dark color tokens match DESIGN_MD`() {
-        assertEquals(0xFF0B0F17, TogoColorTokens.DarkSurfaceBase.toArgb())
-        assertEquals(0xFF131B2E, TogoColorTokens.DarkSurfaceCard.toArgb())
-        assertEquals(0xFFF8FAFC, TogoColorTokens.DarkInkPrimary.toArgb())
-        assertEquals(0xFF94A3B8, TogoColorTokens.DarkInkSecondary.toArgb())
-        assertEquals(0xFF475569, TogoColorTokens.DarkBorderCrisp.toArgb())
-        assertEquals(0xFF60A5FA, TogoColorTokens.DarkAccentHighlight.toArgb())
+        assertEquals(0xFF0B0F17.toInt(), TogoColorTokens.DarkSurfaceBase.toArgb())
+        assertEquals(0xFF131B2E.toInt(), TogoColorTokens.DarkSurfaceCard.toArgb())
+        assertEquals(0xFFF8FAFC.toInt(), TogoColorTokens.DarkInkPrimary.toArgb())
+        assertEquals(0xFF94A3B8.toInt(), TogoColorTokens.DarkInkSecondary.toArgb())
+        assertEquals(0xFF64748B.toInt(), TogoColorTokens.DarkBorderCrisp.toArgb())
+        assertEquals(0xFF60A5FA.toInt(), TogoColorTokens.DarkAccentHighlight.toArgb())
     }
 
     @Test
@@ -117,14 +117,14 @@ class DesignSystemTokenTest {
 
         val tokens = togoComponentTokensFrom(lightScheme, shapes)
 
-        assertEquals(0xFFFFFFFF, tokens.appBar.background.toArgb())
-        assertEquals(0xFF0F172A, tokens.itemRow.borderColor.toArgb())
-        assertEquals(0xFF0F172A, tokens.checkboxUtility.borderColor.toArgb())
-        assertEquals(0xFFF8FAFC, tokens.categoryHeader.background.toArgb())
-        assertEquals(0xFF0F172A, tokens.quantityBadge.background.toArgb())
-        assertEquals(0xFF0F172A, tokens.voiceFab.background.toArgb())
-        assertEquals(0xFFFFFFFF, tokens.bottomSheet.background.toArgb())
-        assertEquals(0xFFFFFFFF, tokens.duplicateDialog.background.toArgb())
+        assertEquals(0xFFFFFFFF.toInt(), tokens.appBar.background.toArgb())
+        assertEquals(0xFF0F172A.toInt(), tokens.itemRow.borderColor.toArgb())
+        assertEquals(0xFF0F172A.toInt(), tokens.checkboxUtility.borderColor.toArgb())
+        assertEquals(0xFFF8FAFC.toInt(), tokens.categoryHeader.background.toArgb())
+        assertEquals(0xFF0F172A.toInt(), tokens.quantityBadge.background.toArgb())
+        assertEquals(0xFF0F172A.toInt(), tokens.voiceFab.background.toArgb())
+        assertEquals(0xFFFFFFFF.toInt(), tokens.bottomSheet.background.toArgb())
+        assertEquals(0xFFFFFFFF.toInt(), tokens.duplicateDialog.background.toArgb())
     }
 
     @Test
@@ -134,14 +134,14 @@ class DesignSystemTokenTest {
 
         val tokens = togoComponentTokensFrom(darkScheme, shapes)
 
-        assertEquals(0xFF0B0F17, tokens.appBar.background.toArgb())
-        assertEquals(0xFF475569, tokens.itemRow.borderColor.toArgb())
-        assertEquals(0xFF475569, tokens.checkboxUtility.borderColor.toArgb())
-        assertEquals(0xFF131B2E, tokens.categoryHeader.background.toArgb())
-        assertEquals(0xFF0F172A, tokens.quantityBadge.background.toArgb())
-        assertEquals(0xFFF8FAFC, tokens.voiceFab.background.toArgb()) // accentAction = DarkInkPrimary
-        assertEquals(0xFF0B0F17, tokens.bottomSheet.background.toArgb())
-        assertEquals(0xFF0B0F17, tokens.duplicateDialog.background.toArgb())
+        assertEquals(0xFF0B0F17.toInt(), tokens.appBar.background.toArgb())
+        assertEquals(0xFF64748B.toInt(), tokens.itemRow.borderColor.toArgb())
+        assertEquals(0xFF64748B.toInt(), tokens.checkboxUtility.borderColor.toArgb())
+        assertEquals(0xFF131B2E.toInt(), tokens.categoryHeader.background.toArgb())
+        assertEquals(0xFF0F172A.toInt(), tokens.quantityBadge.background.toArgb())
+        assertEquals(0xFFF8FAFC.toInt(), tokens.voiceFab.background.toArgb()) // accentAction = DarkInkPrimary
+        assertEquals(0xFF0B0F17.toInt(), tokens.bottomSheet.background.toArgb())
+        assertEquals(0xFF0B0F17.toInt(), tokens.duplicateDialog.background.toArgb())
     }
 
     @Test

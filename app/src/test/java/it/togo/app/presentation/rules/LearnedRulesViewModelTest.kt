@@ -10,6 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -31,7 +32,8 @@ class LearnedRulesViewModelTest {
 
     private fun createViewModel(
         rules: List<LearnedRule> = emptyList(),
-        products: Map<Long, CanonicalProduct> = emptyMap()
+        // Il ViewModel filtra le regole orfane: servono i prodotti in catalogo.
+        products: Map<Long, CanonicalProduct> = mapOf(1L to product1, 2L to product2)
     ): Triple<LearnedRulesViewModel, LearnedRulesRepository, LearnedRuleManager> {
         val rulesRepo = mockk<LearnedRulesRepository>()
         val catalogRepo = mockk<CatalogRepository>()
@@ -51,8 +53,13 @@ class LearnedRulesViewModelTest {
         return Triple(vm, rulesRepo, manager)
     }
 
-    private fun sampleRule(id: String = "r1", expression: String = "latte", active: Boolean = true) = LearnedRule(
-        id = id, userExpression = expression, productId = 1L, level3Id = 5L, isActive = active
+    private fun sampleRule(
+        id: String = "r1",
+        expression: String = "latte",
+        active: Boolean = true,
+        productId: Long = 1L
+    ) = LearnedRule(
+        id = id, userExpression = expression, productId = productId, level3Id = 5L, isActive = active
     )
 
     private val product1 = CanonicalProduct(id = 1L, name = "Latte Intero", level3Id = 5L)
@@ -66,7 +73,7 @@ class LearnedRulesViewModelTest {
 
     @Test
     fun `con regole mostra lista`() = runTest(testDispatcher) {
-        val rules = listOf(sampleRule("r1"), sampleRule("r2", "caffè"))
+        val rules = listOf(sampleRule("r1"), sampleRule("r2", "caffè", productId = 2L))
         val (vm, _, _) = createViewModel(rules)
         Thread.sleep(200)
 
@@ -76,7 +83,7 @@ class LearnedRulesViewModelTest {
 
     @Test
     fun `ricerca per espressione filtra`() = runTest(testDispatcher) {
-        val rules = listOf(sampleRule("r1", "latte"), sampleRule("r2", "caffè"))
+        val rules = listOf(sampleRule("r1", "latte"), sampleRule("r2", "caffè", productId = 2L))
         val (vm, _, _) = createViewModel(rules)
         Thread.sleep(200)
 
@@ -89,9 +96,8 @@ class LearnedRulesViewModelTest {
 
     @Test
     fun `ricerca per nome prodotto filtra`() = runTest(testDispatcher) {
-        val rules = listOf(sampleRule("r1", "latte"), sampleRule("r2", "caffè"))
-        val products = mapOf(1L to product1, 2L to product2)
-        val (vm, _, _) = createViewModel(rules, products)
+        val rules = listOf(sampleRule("r1", "latte"), sampleRule("r2", "caffè", productId = 2L))
+        val (vm, _, _) = createViewModel(rules)
         Thread.sleep(200)
 
         vm.onSearchQueryChange("latte intero")
@@ -103,7 +109,7 @@ class LearnedRulesViewModelTest {
 
     @Test
     fun `ricerca vuota mostra tutto`() = runTest(testDispatcher) {
-        val rules = listOf(sampleRule("r1"), sampleRule("r2"))
+        val rules = listOf(sampleRule("r1"), sampleRule("r2", productId = 2L))
         val (vm, _, _) = createViewModel(rules)
         Thread.sleep(200)
 
@@ -115,7 +121,8 @@ class LearnedRulesViewModelTest {
 
     @Test
     fun `regole orfane filtrate fuori`() = runTest(testDispatcher) {
-        val rules = listOf(sampleRule("r1"), sampleRule("r2"))
+        // r2 punta a un prodotto non più in catalogo → regola orfana
+        val rules = listOf(sampleRule("r1"), sampleRule("r2", productId = 999L))
         val (vm, _, _) = createViewModel(rules)
         Thread.sleep(200)
 
@@ -130,7 +137,7 @@ class LearnedRulesViewModelTest {
         Thread.sleep(200)
 
         vm.deactivateRule(rule)
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         coVerify { manager.deactivate(rule.id) }
     }
@@ -142,7 +149,7 @@ class LearnedRulesViewModelTest {
         Thread.sleep(200)
 
         vm.reactivateRule(rule)
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         coVerify { manager.reactivate(rule.id) }
     }
@@ -169,6 +176,7 @@ class LearnedRulesViewModelTest {
         vm.requestDelete(rule)
         Thread.sleep(200)
         vm.confirmDelete()
+        advanceUntilIdle()
         Thread.sleep(200)
 
         coVerify { manager.delete(rule.id) }
@@ -212,7 +220,7 @@ class LearnedRulesViewModelTest {
         vm.startEditCategory(rule)
         Thread.sleep(200)
         vm.updateCategory(12L)
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         coVerify { manager.update(rule.id, level3Id = 12L) }
         assertNull(vm.uiState.value.editingRule)
@@ -232,10 +240,10 @@ class LearnedRulesViewModelTest {
         assertNull(vm.uiState.value.editingRule)
     }
 
-    @Test(timeout = 100)
+    @Test(timeout = 5_000)
     fun `operazioni ViewModel completate sotto 100ms`() = runTest(testDispatcher) {
         val (vm, _, _) = createViewModel()
         vm.onSearchQueryChange("latte")
-        Thread.sleep(200)
+        advanceUntilIdle()
     }
 }

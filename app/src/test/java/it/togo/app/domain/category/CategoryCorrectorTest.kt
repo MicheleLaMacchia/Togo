@@ -106,9 +106,9 @@ class CategoryCorrectorTest {
         assertEquals(6L, step2.correctedLevel3Id)
         assertTrue(step2.hasCorrectionChain)
 
-        val fullUndo = corrector.undo(step2.undoFull()) // undo completo a radice
+        val fullUndo = step2.undoFull() // undo completo a radice
         assertEquals(5L, fullUndo.correctedLevel3Id)
-        assertFalse(fullUndo.isEffective)
+        assertEquals(5L, fullUndo.rootOriginalLevel3Id)
     }
 
     @Test

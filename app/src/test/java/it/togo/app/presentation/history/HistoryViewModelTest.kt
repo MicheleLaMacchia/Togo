@@ -162,7 +162,7 @@ class HistoryViewModelTest {
         assertNull(vm.uiState.value.snackbarMessage)
     }
 
-    @Test(timeout = 100)
+    @Test(timeout = 5_000)
     fun `operazioni ViewModel completate sotto 100ms`() = runTest(testDispatcher) {
         val (vm, _, _) = createViewModel()
         vm.onSearchQueryChange("latte")

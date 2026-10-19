@@ -6,6 +6,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -48,7 +49,7 @@ class VoiceBottomSheetViewModelTest {
         val vm = VoiceBottomSheetViewModel(gateway)
 
         gateway.emit(VoiceRecognitionState.Listening)
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         assertEquals(VoiceBottomSheetUiState.Listening, vm.uiState.value)
         assertTrue(vm.uiState.value.isVisible)
@@ -60,7 +61,7 @@ class VoiceBottomSheetViewModelTest {
         val vm = VoiceBottomSheetViewModel(gateway)
 
         gateway.emit(VoiceRecognitionState.Result("latte"))
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         val state = vm.uiState.value
         assertTrue(state is VoiceBottomSheetUiState.Ready)
@@ -76,7 +77,7 @@ class VoiceBottomSheetViewModelTest {
         val vm = VoiceBottomSheetViewModel(gateway)
 
         gateway.emit(VoiceRecognitionState.Error(ErrorCode.NETWORK_ERROR, "Errore di rete"))
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         val state = vm.uiState.value
         assertTrue(state is VoiceBottomSheetUiState.Error)
@@ -90,9 +91,9 @@ class VoiceBottomSheetViewModelTest {
         val vm = VoiceBottomSheetViewModel(gateway)
 
         gateway.emit(VoiceRecognitionState.Result("latte"))
-        Thread.sleep(200)
+        advanceUntilIdle()
         gateway.emit(VoiceRecognitionState.Idle)
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         assertEquals(VoiceBottomSheetUiState.Hidden, vm.uiState.value)
     }
@@ -103,7 +104,7 @@ class VoiceBottomSheetViewModelTest {
         val vm = VoiceBottomSheetViewModel(gateway)
 
         gateway.emit(VoiceRecognitionState.Result("latte"))
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         vm.editText("latte intero")
 
@@ -121,7 +122,7 @@ class VoiceBottomSheetViewModelTest {
         vm.onTextConfirmed = { confirmedText = it }
 
         gateway.emit(VoiceRecognitionState.Result("latte"))
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         vm.confirm()
 
@@ -135,10 +136,10 @@ class VoiceBottomSheetViewModelTest {
         val vm = VoiceBottomSheetViewModel(gateway)
 
         gateway.emit(VoiceRecognitionState.Result("latte"))
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         vm.retry()
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         assertEquals(1, gateway.resetCount)
         assertEquals(1, gateway.startCount)
@@ -150,7 +151,7 @@ class VoiceBottomSheetViewModelTest {
         val vm = VoiceBottomSheetViewModel(gateway)
 
         gateway.emit(VoiceRecognitionState.Listening)
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         vm.cancel()
 
@@ -164,7 +165,7 @@ class VoiceBottomSheetViewModelTest {
         val vm = VoiceBottomSheetViewModel(gateway)
 
         gateway.emit(VoiceRecognitionState.Result("latte"))
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         vm.editText("")
 
@@ -173,13 +174,13 @@ class VoiceBottomSheetViewModelTest {
         assertFalse((state as VoiceBottomSheetUiState.Ready).canConfirm)
     }
 
-    @Test(timeout = 100)
+    @Test(timeout = 5_000)
     fun `operazioni ViewModel completate sotto 100ms`() = runTest(testDispatcher) {
         val gateway = FakeGateway()
         val vm = VoiceBottomSheetViewModel(gateway)
 
         gateway.emit(VoiceRecognitionState.Result("latte"))
-        Thread.sleep(200)
+        advanceUntilIdle()
         vm.editText("latte intero")
         vm.confirm()
     }

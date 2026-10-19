@@ -83,7 +83,7 @@ context:
 
 **Acceptance Criteria:**
 - Given `TogoTheme` in `MainActivity`, when l'app è avviata, then UI usa `surface-base` bianco, `ink-primary` #0F172A, bordi #0F172A.
-- Given sistema in Dark Mode, when `TogoTheme` è ricomposto, then `surface-base-dark` #0B0F17, `ink-primary-dark` #F8FAFC, `border-crisp-dark` #475569.
+- Given sistema in Dark Mode, when `TogoTheme` è ricomposto, then `surface-base-dark` #0B0F17, `ink-primary-dark` #F8FAFC, `border-crisp-dark` #64748B.
 - Given `TogoTheme.colors.inkPrimary`, then contrasto con `surfaceBase` ≥12:1 (verificato da test unitari).
 - Given `TogoTypography.itemMeta`, then `fontSize = 14.sp`, `fontWeight = SemiBold`.
 - Given `TogoSpacing.touchTargetMin`, then `48.dp`.

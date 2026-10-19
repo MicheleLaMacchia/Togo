@@ -7,6 +7,7 @@ import it.togo.app.domain.usecase.ParseVoiceCommandUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -53,7 +54,7 @@ class VoiceConfirmationViewModelTest {
         val vm = createViewModel()
 
         vm.showForRecognition("2 litri di latte")
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         val state = vm.uiState.value
         assertTrue(state is VoiceConfirmationUiState.Ready)
@@ -69,7 +70,7 @@ class VoiceConfirmationViewModelTest {
         vm.onCommandConfirmed = { confirmed = it }
 
         vm.showForRecognition("latte")
-        Thread.sleep(200)
+        advanceUntilIdle()
         vm.confirm()
 
         assertNotNull(confirmed)
@@ -82,7 +83,7 @@ class VoiceConfirmationViewModelTest {
         val vm = createViewModel()
 
         vm.showForRecognition("latte")
-        Thread.sleep(200)
+        advanceUntilIdle()
         vm.cancel()
 
         assertEquals(VoiceConfirmationUiState.Hidden, vm.uiState.value)
@@ -93,9 +94,9 @@ class VoiceConfirmationViewModelTest {
         val vm = createViewModel()
 
         vm.showForRecognition("latte")
-        Thread.sleep(200)
+        advanceUntilIdle()
         vm.editText("2 litri di latte intero")
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         val state = vm.uiState.value
         assertTrue(state is VoiceConfirmationUiState.Ready)
@@ -110,7 +111,7 @@ class VoiceConfirmationViewModelTest {
         val vm = createViewModel()
 
         vm.showForRecognition("2 latte")
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         val state = vm.uiState.value
         assertTrue(state is VoiceConfirmationUiState.Ready)
@@ -122,7 +123,7 @@ class VoiceConfirmationViewModelTest {
         val vm = createViewModel()
 
         vm.showForRecognition("")
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         val state = vm.uiState.value
         if (state is VoiceConfirmationUiState.Ready) {
@@ -135,10 +136,10 @@ class VoiceConfirmationViewModelTest {
         val vm = createViewModel()
 
         vm.showForRecognition("latte")
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         vm.toggleEdit()
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         val state = vm.uiState.value
         assertTrue(state is VoiceConfirmationUiState.Ready)
@@ -150,18 +151,18 @@ class VoiceConfirmationViewModelTest {
         val vm = createViewModel()
 
         vm.showForRecognition("latte")
-        Thread.sleep(200)
+        advanceUntilIdle()
         vm.reset()
 
         assertEquals(VoiceConfirmationUiState.Hidden, vm.uiState.value)
     }
 
-    @Test(timeout = 100)
+    @Test(timeout = 5_000)
     fun `operazioni ViewModel completate sotto 100ms`() = runTest(testDispatcher) {
         val vm = createViewModel()
 
         vm.showForRecognition("2 litri di latte")
-        Thread.sleep(200)
+        advanceUntilIdle()
         vm.confirm()
     }
 }

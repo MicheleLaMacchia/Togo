@@ -50,7 +50,8 @@ class DuplicateResolutionDialogTest {
         showDialog()
 
         composeTestRule.onNodeWithText("Prodotto già in lista").assertExists()
-        composeTestRule.onNodeWithText("Latte UHT").assertExists()
+        // Il nome è dentro il messaggio: "\"Latte UHT\" è già presente con ..."
+        composeTestRule.onNodeWithText("Latte UHT", substring = true).assertExists()
     }
 
     @Test

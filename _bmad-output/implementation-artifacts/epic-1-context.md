@@ -50,7 +50,7 @@ Fornire l'architettura applicativa, la persistenza locale e il Design System pro
   - Nessuna ombreggiatura sfumata o gradiente decorativo ("Flat + Crisp Strokes"): separazione visiva ottenuta tramite bordi solidi (1.5px e 2px) e contrasti netti.
 - **Token Colore e Tema Material 3:**
   - **Light Mode:** `surface-base` (`#FFFFFF`), `surface-subtle` (`#F8FAFC`), `surface-card` (`#FFFFFF`), `ink-primary` (`#0F172A`), `ink-secondary` (`#475569`), `ink-muted` (`#94A3B8`), `border-crisp` (`#0F172A`), `badge-bg` (`#0F172A`), `badge-ink` (`#FFFFFF`), `accent-action` (`#0F172A`), `accent-success` (`#15803D`), `accent-highlight` (`#2563EB`).
-  - **Dark Mode:** `surface-base-dark` (`#0B0F17`), `surface-card-dark` (`#131B2E`), `ink-primary-dark` (`#F8FAFC`), `ink-secondary-dark` (`#94A3B8`), `border-crisp-dark` (`#475569`), `accent-highlight-dark` (`#60A5FA`).
+  - **Dark Mode:** `surface-base-dark` (`#0B0F17`), `surface-card-dark` (`#131B2E`), `ink-primary-dark` (`#F8FAFC`), `ink-secondary-dark` (`#94A3B8`), `border-crisp-dark` (`#64748B`), `accent-highlight-dark` (`#60A5FA`).
 - **Sistema Tipografico (Roboto / Google Sans):**
   - Scala gerarchica a 5 ruoli: `title-screen` (24sp SemiBold), `section-header` (16sp Bold), `item-name` (16sp Medium), `item-meta` (14sp SemiBold), `caption` (12sp Regular).
   - Supporto al ridimensionamento dei caratteri di sistema (Dynamic Type) senza troncature o overflow.

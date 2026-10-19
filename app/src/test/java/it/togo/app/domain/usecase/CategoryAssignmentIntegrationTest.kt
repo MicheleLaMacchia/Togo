@@ -46,7 +46,7 @@ class CategoryAssignmentIntegrationTest {
         learnedRulesRepository = mockk<LearnedRulesRepository>()
 
         every { catalogRepository.getTaxonomy() } returns flowOf(taxonomy)
-        coEvery { learnedRulesRepository.getByExpressionAndProductId(any(), any()) } returns null
+        coEvery { learnedRulesRepository.getByExpression(any()) } returns null
         coEvery { learnedRulesRepository.upsertAtomic(any()) } answers { firstArg<LearnedRule>() }
 
         assigner = CategoryAssigner(catalogRepository, learnedRulesRepository)
@@ -73,7 +73,7 @@ class CategoryAssignmentIntegrationTest {
         assertEquals(12L, learnedRule.level3Id)
         assertTrue(learnedRule.isActive)
 
-        coEvery { learnedRulesRepository.getByExpressionAndProductId("latte", 1L) } returns learnedRule
+        coEvery { learnedRulesRepository.getByExpression("latte") } returns learnedRule
 
         val assignment2 = assignUseCase(productLatte, "latte")
         assertEquals(AssignmentSource.LEARNED, assignment2.source)
@@ -110,8 +110,8 @@ class CategoryAssignmentIntegrationTest {
         val assignment1 = assignUseCase(productLatte, "latte")
         val correction = correctUseCase(assignment1, 12L)
         val learnedRule = correctUseCase.confirmRemember(assignment1, correction)
-        coEvery { learnedRulesRepository.getByExpressionAndProductId("latte", 1L) } returns learnedRule
-        coEvery { learnedRulesRepository.getByExpressionAndProductId("latte", 2L) } returns null
+        coEvery { learnedRulesRepository.getByExpression("latte") } returns learnedRule
+        // La rule ha productId=1: per il prodotto 2 (id diverso) viene ignorata
 
         val assignment2 = assignUseCase(productLatteSoia, "latte")
 

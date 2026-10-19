@@ -161,16 +161,19 @@ class VoiceCommandParser {
             remaining = ITALIAN_NUMBER_WORDS_REGEX.replace(remaining, "")
         }
 
-        // Rimuovi hint categoria
-        if (categoryHint != null) {
-            remaining = remaining.replace(categoryHint, "", ignoreCase = true)
-        }
-
         // Rimuovi preposizioni articolate (con word boundary completo)
         remaining = PREPOSITIONS_REGEX.replace(remaining, " ")
 
         // Rimuovi verbi d'azione
         remaining = ACTION_VERBS_REGEX.replace(remaining, " ")
+
+        // Rimuovi hint categoria solo se resta un nome prodotto.
+        // Es. "1,5 kg di riso": "riso" è anche categoria, ma è l'unico testo
+        // rimasto → va mantenuto come nome prodotto.
+        if (categoryHint != null) {
+            val withoutHint = remaining.replace(categoryHint, "", ignoreCase = true)
+            if (withoutHint.isNotBlank()) remaining = withoutHint
+        }
 
         // Normalizza spazi
         remaining = remaining.replace(Regex("\\s+"), " ").trim()

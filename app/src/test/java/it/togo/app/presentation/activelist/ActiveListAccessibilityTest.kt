@@ -12,7 +12,11 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import it.togo.app.AppNavigator
+import it.togo.app.data.voice.AndroidVoiceRecognitionGateway
 import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.StandardUnit
@@ -35,11 +39,9 @@ import kotlinx.coroutines.flow.flowOf
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.koin.core.context.stopKoin
 import org.robolectric.annotation.Config
 import org.robolectric.RobolectricTestRunner
 
@@ -55,9 +57,6 @@ class ActiveListAccessibilityTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
-
-    @Before
-    fun setup() { stopKoin() }
 
     private val uncheckedItem = ShoppingItem(
         productId = 1L,
@@ -270,34 +269,32 @@ class ActiveListAccessibilityTest {
 
     @Test
     fun `voice fab exposes labels for every state`() {
-        // Idle
+        // Un solo setContent: lo stato viene aggiornato tra le asserzioni.
+        var state by mutableStateOf<VoiceRecognitionState>(VoiceRecognitionState.Idle)
+        var processingInvoked = false
+
         composeTestRule.setContent {
             TogoTheme(darkTheme = false) {
-                VoiceFab(state = VoiceRecognitionState.Idle, onClick = {})
+                VoiceFab(state = state, onClick = { processingInvoked = true })
             }
         }
+
+        // Idle
         composeTestRule
             .onNodeWithContentDescription("Aggiungi prodotto con la voce. Pulsante.")
             .assertExists()
 
         // Listening
-        composeTestRule.setContent {
-            TogoTheme(darkTheme = false) {
-                VoiceFab(state = VoiceRecognitionState.Listening, onClick = {})
-            }
-        }
+        composeTestRule.runOnIdle { state = VoiceRecognitionState.Listening }
+        composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Ascolto...").assertExists()
         composeTestRule
             .onNodeWithContentDescription("Interrompi ascolto")
             .assertExists()
 
         // Processing: etichetta + descrizione e nessuna attivazione
-        var processingInvoked = false
-        composeTestRule.setContent {
-            TogoTheme(darkTheme = false) {
-                VoiceFab(state = VoiceRecognitionState.Processing, onClick = { processingInvoked = true })
-            }
-        }
+        composeTestRule.runOnIdle { state = VoiceRecognitionState.Processing }
+        composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Elaborazione in corso...").assertExists()
         val processingDescription = "Elaborazione in corso. Attendere."
         composeTestRule
@@ -310,24 +307,17 @@ class ActiveListAccessibilityTest {
         )
 
         // Error: comunica l'azione di riprova/nuovo prodotto
-        composeTestRule.setContent {
-            TogoTheme(darkTheme = false) {
-                VoiceFab(
-                    state = VoiceRecognitionState.Error(ErrorCode.UNKNOWN, "boom"),
-                    onClick = {},
-                )
-            }
+        composeTestRule.runOnIdle {
+            state = VoiceRecognitionState.Error(ErrorCode.UNKNOWN, "boom")
         }
+        composeTestRule.waitForIdle()
         composeTestRule
             .onNodeWithContentDescription("Errore di riconoscimento. Tocca per riprovare.")
             .assertExists()
 
         // Result: comunica l'azione di conferma/nuovo prodotto
-        composeTestRule.setContent {
-            TogoTheme(darkTheme = false) {
-                VoiceFab(state = VoiceRecognitionState.Result("Pane"), onClick = {})
-            }
-        }
+        composeTestRule.runOnIdle { state = VoiceRecognitionState.Result("Pane") }
+        composeTestRule.waitForIdle()
         composeTestRule
             .onNodeWithContentDescription("Prodotto riconosciuto. Tocca per aggiungere un altro prodotto.")
             .assertExists()
@@ -377,6 +367,7 @@ class ActiveListAccessibilityTest {
                 ActiveListScreen(
                     viewModel = viewModel,
                     voiceViewModel = voiceViewModel,
+                    voiceGateway = AndroidVoiceRecognitionGateway(),
                     onEvent = {},
                 )
             }
@@ -421,6 +412,7 @@ class ActiveListAccessibilityTest {
                 ActiveListScreen(
                     viewModel = viewModel,
                     voiceViewModel = voiceViewModel,
+                    voiceGateway = AndroidVoiceRecognitionGateway(),
                     onEvent = {},
                 )
             }

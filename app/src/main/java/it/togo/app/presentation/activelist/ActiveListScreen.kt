@@ -58,6 +58,9 @@ fun ActiveListScreen(
     viewModel: ActiveListViewModel,
     voiceViewModel: VoiceBottomSheetViewModel,
     onEvent: (UiEvent) -> Unit,
+    // Iniettabile nei test; in produzione risolto da Koin.
+    voiceGateway: it.togo.app.data.voice.AndroidVoiceRecognitionGateway =
+        org.koin.compose.koinInject(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -81,7 +84,6 @@ fun ActiveListScreen(
     }
 
     // Launcher per il risultato del riconoscimento vocale del sistema
-    val voiceGateway = org.koin.compose.koinInject<it.togo.app.data.voice.AndroidVoiceRecognitionGateway>()
     val speechLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->

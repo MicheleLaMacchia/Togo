@@ -711,7 +711,7 @@ così che l'app non abbagli e rispetti la batteria del dispositivo OLED.
 
 **Given** la modalità Dark attiva nelle impostazioni di sistema Android
 **When** l'app viene aperta o passa in background e torna in foreground
-**Then** il tema Dark viene applicato automaticamente: `surface-base-dark #0B0F17`, `surface-card-dark #131B2E`, `ink-primary-dark #F8FAFC`, `ink-secondary-dark #94A3B8`, `border-crisp-dark #475569`, `accent-highlight-dark #60A5FA`
+**Then** il tema Dark viene applicato automaticamente: `surface-base-dark #0B0F17`, `surface-card-dark #131B2E`, `ink-primary-dark #F8FAFC`, `ink-secondary-dark #94A3B8`, `border-crisp-dark #64748B`, `accent-highlight-dark #60A5FA`
 **And** il rapporto di contrasto testo/sfondo per `ink-primary-dark` su `surface-base-dark` è ≥7:1
 **And** tutti i componenti (ItemRow, CategoryHeader, VoiceBottomSheet, DuplicateResolutionDialog, FAB) mostrano i token dark corretti
 **And** passando dalla modalità Light a Dark e viceversa non si verificano crash o stati inconsistenti della UI
