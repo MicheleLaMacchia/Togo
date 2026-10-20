@@ -54,6 +54,18 @@ class AndroidVoiceRecognitionGateway : VoiceRecognitionGateway {
     }
 
     /**
+     * Rilascia il launcher quando la schermata che lo ha registrato esce dalla
+     * composizione, evitando che il singleton trattenga un launcher obsoleto.
+     */
+    fun unregisterLauncher() {
+        launcher = null
+    }
+
+    /** Visibile ai test per verificare il ciclo di registrazione del launcher. */
+    internal val isLauncherRegistered: Boolean
+        get() = launcher != null
+
+    /**
      * Avvia il riconoscimento vocale one-shot.
      *
      * Se già in ascolto, ignora la chiamata.
@@ -61,7 +73,7 @@ class AndroidVoiceRecognitionGateway : VoiceRecognitionGateway {
      * Se il launcher non è registrato, stato → Error(NOT_AVAILABLE).
      */
     override suspend fun startListening() {
-        if (_state.value.isListening) return
+        if (_state.value.isListening || _state.value is VoiceRecognitionState.Processing) return
 
         // Nota: il controllo permesso è fatto dal presentation layer (che ha il Context)
         // tramite [hasRecordAudioPermission]. Qui gestiamo solo l'assenza del launcher.

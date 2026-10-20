@@ -28,10 +28,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
@@ -71,11 +74,12 @@ fun PresiSection(
     val count = items.size
     val stateText = if (expanded) "espansa" else "collassata"
     val toggleAction = if (expanded) "collassare" else "espandere"
-    val headerDescription = "Presi, $count ${if (count == 1) "voce" else "voci"}, sezione $stateText. Doppio tocco per $toggleAction."
+    val headerDescription = "Presi, $count ${if (count == 1) "voce" else "voci"}. Doppio tocco per $toggleAction."
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .testTag("presi_section")
             .animateContentSize(
                 animationSpec = spring(dampingRatio = 0.9f, stiffness = 200.0f)
             )
@@ -99,8 +103,14 @@ fun PresiSection(
                     )
                 }
                 .heightIn(min = 48.dp) // Touch target minimo 48dp
-                .combinedClickable(onClick = { expanded = !expanded })
-                .semantics { contentDescription = headerDescription },
+                .combinedClickable(
+                    onClick = { expanded = !expanded },
+                    role = Role.Button,
+                )
+                .semantics {
+                    contentDescription = headerDescription
+                    stateDescription = stateText
+                },
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {

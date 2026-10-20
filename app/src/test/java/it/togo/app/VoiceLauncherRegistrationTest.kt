@@ -1,55 +1,51 @@
 package it.togo.app
 
-import java.io.File
+import android.content.Intent
+import androidx.activity.result.ActivityResultLauncher
+import io.mockk.mockk
+import it.togo.app.data.voice.AndroidVoiceRecognitionGateway
+import it.togo.app.domain.voice.ErrorCode
+import it.togo.app.domain.voice.VoiceRecognitionState
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
- * Test di analisi statica: verifica che ActiveListScreen.kt registri il launcher vocale.
- *
- * Fix 4: Launcher vocale registrato sul gateway con StartActivityForResult + registerLauncher via LaunchedEffect
+ * Verifica il lifecycle del launcher vocale sul gateway reale.
+ * La registrazione dalla schermata è coperta dal test di composizione.
  */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
 class VoiceLauncherRegistrationTest {
 
-    private val sourceFile: File
-        get() = File("app/src/main/java/it/togo/app/presentation/activelist/ActiveListScreen.kt").let {
-            if (it.exists()) it
-            else File("src/main/java/it/togo/app/presentation/activelist/ActiveListScreen.kt")
-        }
-
     @Test
-    fun `ActiveListScreen registra launcher vocale sul gateway`() {
-        val source = sourceFile.readText()
+    fun `gateway registers and unregisters launcher`() {
+        val gateway = AndroidVoiceRecognitionGateway()
+        val launcher = mockk<ActivityResultLauncher<Intent>>(relaxed = true)
 
-        assertTrue(
-            "ActiveListScreen deve usare registerLauncher",
-            source.contains("registerLauncher")
-        )
-        assertTrue(
-            "ActiveListScreen deve usare StartActivityForResult",
-            source.contains("StartActivityForResult")
-        )
-        assertTrue(
-            "ActiveListScreen deve gestire onActivityResult",
-            source.contains("onActivityResult")
-        )
+        assertFalse("il gateway parte senza launcher", gateway.isLauncherRegistered)
+
+        gateway.registerLauncher(launcher)
+        assertTrue("il launcher deve essere registrato", gateway.isLauncherRegistered)
+
+        gateway.unregisterLauncher()
+        assertFalse("il launcher deve essere rilasciato", gateway.isLauncherRegistered)
     }
 
     @Test
-    fun `ActiveListScreen usa koinInject per gateway vocale`() {
-        val source = sourceFile.readText()
-        assertTrue(
-            "ActiveListScreen deve iniettare AndroidVoiceRecognitionGateway via Koin",
-            source.contains("koinInject") || source.contains("AndroidVoiceRecognitionGateway")
-        )
-    }
+    fun `startListening without launcher reports not available`() = runTest {
+        val gateway = AndroidVoiceRecognitionGateway()
 
-    @Test
-    fun `ActiveListScreen controlla permesso RECORD_AUDIO a runtime`() {
-        val source = sourceFile.readText()
+        gateway.startListening()
+
+        val state = gateway.state.value
         assertTrue(
-            "Deve usare ContextCompat.checkSelfPermission per RECORD_AUDIO",
-            source.contains("RECORD_AUDIO") && source.contains("checkSelfPermission")
+            "senza launcher lo stato deve essere Error(NOT_AVAILABLE)",
+            state is VoiceRecognitionState.Error && state.code == ErrorCode.NOT_AVAILABLE,
         )
     }
 }

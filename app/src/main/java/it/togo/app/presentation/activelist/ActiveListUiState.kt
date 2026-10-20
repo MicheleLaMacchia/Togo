@@ -75,9 +75,6 @@ sealed interface UiEvent {
     /** Spunta/ripristina una voce */
     data class CheckOff(val itemId: String, val isChecked: Boolean) : UiEvent
 
-    /** Modifica voce (tap su riga) */
-    data class EditItem(val item: ShoppingItem) : UiEvent
-
     /** Testo confermato dalla cattura vocale. */
     data class VoiceCommand(val text: String) : UiEvent
 

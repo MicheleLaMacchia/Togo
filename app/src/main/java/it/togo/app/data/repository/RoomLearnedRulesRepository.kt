@@ -4,6 +4,7 @@ import it.togo.app.data.database.dao.LearnedRulesDao
 import it.togo.app.data.database.entity.LearnedRuleEntity
 import it.togo.app.domain.model.LearnedRule
 import it.togo.app.domain.repository.LearnedRulesRepository
+import it.togo.app.domain.text.normalizeExpression
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -20,13 +21,13 @@ class RoomLearnedRulesRepository(
 
     override suspend fun insert(rule: LearnedRule) {
         withContext(Dispatchers.IO) {
-            learnedRulesDao.insert(rule.toEntity())
+            learnedRulesDao.insert(rule.normalized().toEntity())
         }
     }
 
     override suspend fun update(rule: LearnedRule) {
         withContext(Dispatchers.IO) {
-            learnedRulesDao.update(rule.toEntity())
+            learnedRulesDao.update(rule.normalized().toEntity())
         }
     }
 
@@ -38,7 +39,7 @@ class RoomLearnedRulesRepository(
 
     override suspend fun getByExpression(expression: String): LearnedRule? =
         withContext(Dispatchers.IO) {
-            learnedRulesDao.getByExpression(expression)?.toDomain()
+            learnedRulesDao.getByExpression(normalizeExpression(expression))?.toDomain()
         }
 
     override suspend fun getById(ruleId: String): LearnedRule? =
@@ -48,12 +49,16 @@ class RoomLearnedRulesRepository(
 
     override suspend fun getByExpressionAndProductId(expression: String, productId: Long): LearnedRule? =
         withContext(Dispatchers.IO) {
-            learnedRulesDao.getByExpressionAndProductId(expression, productId)?.toDomain()
+            learnedRulesDao.getByExpressionAndProductId(
+                normalizeExpression(expression),
+                productId,
+            )?.toDomain()
         }
 
     override suspend fun upsertAtomic(rule: LearnedRule): LearnedRule =
         withContext(Dispatchers.IO) {
-            val entity = rule.toEntity()
+            val normalizedRule = rule.normalized()
+            val entity = normalizedRule.toEntity()
             val existing = learnedRulesDao.getByExpressionAndProductId(entity.userExpression, entity.productId)
             if (existing != null) {
                 val updated = entity.copy(id = existing.id)
@@ -61,7 +66,16 @@ class RoomLearnedRulesRepository(
                 updated.toDomain()
             } else {
                 learnedRulesDao.insert(entity)
-                rule
+                normalizedRule
             }
         }
+}
+
+private fun LearnedRule.normalized(): LearnedRule {
+    val normalizedExpression = normalizeExpression(userExpression)
+    return if (normalizedExpression == userExpression) {
+        this
+    } else {
+        copy(userExpression = normalizedExpression)
+    }
 }

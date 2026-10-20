@@ -4,6 +4,8 @@ import it.togo.app.domain.model.ShoppingItem
 import kotlinx.coroutines.flow.Flow
 
 interface ShoppingListRepository {
+    /** Tutte le voci in un'unica emissione, per evitare stati transitori tra query. */
+    fun getAllItems(): Flow<List<ShoppingItem>>
     fun getActiveItems(): Flow<List<ShoppingItem>>
     fun getCheckedItems(): Flow<List<ShoppingItem>>
     suspend fun insert(item: ShoppingItem)

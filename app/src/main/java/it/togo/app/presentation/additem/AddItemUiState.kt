@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
  * 1. Ricerca prodotto (query → risultati)
  * 2. Selezione prodotto → quantità + unità
  * 3. Attributi opzionali (marca, variante, conservazione)
- * 4. Conferma → emette AddItemConfirmed
+ * 4. Conferma → insert/update diretto e chiusura della sheet
  */
 data class AddItemUiState(
     // Step 1: Ricerca

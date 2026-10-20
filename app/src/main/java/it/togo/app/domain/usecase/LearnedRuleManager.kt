@@ -2,6 +2,7 @@ package it.togo.app.domain.usecase
 
 import it.togo.app.domain.model.LearnedRule
 import it.togo.app.domain.repository.LearnedRulesRepository
+import it.togo.app.domain.text.normalizeExpression
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.firstOrNull
@@ -40,7 +41,7 @@ class LearnedRuleManager(
         productId: Long,
         level3Id: Long
     ): LearnedRule = withContext(Dispatchers.IO) {
-        val normalized = userExpression.trim().lowercase()
+        val normalized = normalizeExpression(userExpression)
         require(normalized.isNotEmpty()) { "Espressione utente non può essere vuota" }
 
         // Nota: validazione user-defined va fatta dal chiamante (UI) che ha accesso alla tassonomia

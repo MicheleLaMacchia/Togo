@@ -94,8 +94,10 @@ fun VoiceFab(
     val fabContentDescription = when {
         isListening -> "Interrompi ascolto"
         isProcessing -> "Elaborazione in corso. Attendere."
-        isError -> stateLabel
-        isResult -> stateLabel
+        // La label visibile contiene già il messaggio completo: qui esponiamo
+        // solo l'azione per evitare che TalkBack ripeta la stessa frase.
+        isError -> "Riprova"
+        isResult -> "Aggiungi un altro prodotto"
         else -> "Aggiungi prodotto con la voce. Pulsante."
     }
 

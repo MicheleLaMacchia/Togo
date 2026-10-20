@@ -8,7 +8,6 @@ import it.togo.app.domain.repository.ShoppingListRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.withContext
 import androidx.room.Transaction
 
@@ -17,19 +16,16 @@ class RoomShoppingListRepository(
     private val historyDao: HistoryDao
 ) : ShoppingListRepository {
 
+    override fun getAllItems(): Flow<List<ShoppingItem>> =
+        shoppingItemDao.getAll().map { entities ->
+            entities.map { it.toDomain() }
+        }
+
     override fun getActiveItems(): Flow<List<ShoppingItem>> =
-        shoppingItemDao.getAll()
-            .map { entities ->
-                entities.map { it.toDomain() }
-            }
-            .map { items -> items.filter { !it.isChecked } }
+        getAllItems().map { items -> items.filter { !it.isChecked } }
 
     override fun getCheckedItems(): Flow<List<ShoppingItem>> =
-        shoppingItemDao.getAll()
-            .map { entities ->
-                entities.map { it.toDomain() }
-            }
-            .map { items -> items.filter { it.isChecked } }
+        getAllItems().map { items -> items.filter { it.isChecked } }
 
     override suspend fun insert(item: ShoppingItem) {
         withContext(Dispatchers.IO) {

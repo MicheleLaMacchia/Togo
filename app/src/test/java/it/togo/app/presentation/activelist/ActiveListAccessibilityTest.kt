@@ -1,12 +1,22 @@
 package it.togo.app.presentation.activelist
 
+import android.Manifest
+import android.provider.Settings
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.hasAnyDescendant
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -42,6 +52,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.RobolectricTestRunner
 
@@ -249,22 +261,31 @@ class ActiveListAccessibilityTest {
             }
         }
 
-        val expandedDescription =
-            "Presi, 1 voce, sezione espansa. Doppio tocco per collassare."
+        val expandedDescription = "Presi, 1 voce. Doppio tocco per collassare."
         composeTestRule
             .onNodeWithContentDescription(expandedDescription)
             .assertExists()
             .assertHasClickAction()
+            .assert(
+                SemanticsMatcher.expectValue(
+                    SemanticsProperties.StateDescription,
+                    "espansa",
+                )
+            )
 
         composeTestRule.onNodeWithText("Presi (1)").assertExists()
 
         composeTestRule.onNodeWithContentDescription(expandedDescription).performClick()
 
         composeTestRule
-            .onNodeWithContentDescription(
-                "Presi, 1 voce, sezione collassata. Doppio tocco per espandere."
-            )
+            .onNodeWithContentDescription("Presi, 1 voce. Doppio tocco per espandere.")
             .assertExists()
+            .assert(
+                SemanticsMatcher.expectValue(
+                    SemanticsProperties.StateDescription,
+                    "collassata",
+                )
+            )
     }
 
     @Test
@@ -301,6 +322,7 @@ class ActiveListAccessibilityTest {
             .onNodeWithContentDescription(processingDescription)
             .assertExists()
             .assertIsNotEnabled()
+            .performClick()
         assertFalse(
             "durante l'elaborazione il FAB non deve avviare un nuovo ascolto",
             processingInvoked
@@ -312,15 +334,95 @@ class ActiveListAccessibilityTest {
         }
         composeTestRule.waitForIdle()
         composeTestRule
-            .onNodeWithContentDescription("Errore di riconoscimento. Tocca per riprovare.")
+            .onNodeWithText("Errore di riconoscimento. Tocca per riprovare.")
             .assertExists()
+        composeTestRule.onNodeWithContentDescription("Riprova").assertExists()
 
-        // Result: comunica l'azione di conferma/nuovo prodotto
+        // Result: label visibile completa, descrizione FAB limitata all'azione
         composeTestRule.runOnIdle { state = VoiceRecognitionState.Result("Pane") }
         composeTestRule.waitForIdle()
         composeTestRule
-            .onNodeWithContentDescription("Prodotto riconosciuto. Tocca per aggiungere un altro prodotto.")
+            .onNodeWithText("Prodotto riconosciuto. Tocca per aggiungere un altro prodotto.")
             .assertExists()
+        composeTestRule
+            .onNodeWithContentDescription("Aggiungi un altro prodotto")
+            .assertExists()
+    }
+
+    @Test
+    fun `app settings intent points to package details`() {
+        val intent = appSettingsIntent("it.togo.app")
+
+        assertEquals(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, intent.action)
+        assertEquals("package:it.togo.app", intent.data.toString())
+    }
+
+    @Test
+    fun `voice fab starts and cancels listening with granted permission`() {
+        val gateway = FakeVoiceGateway()
+        val voiceViewModel = VoiceBottomSheetViewModel(gateway)
+        val viewModel = ActiveListViewModel(
+            shoppingRepository = FakeShoppingListRepository(),
+            catalogRepository = FakeCatalogRepository(),
+        )
+        shadowOf(RuntimeEnvironment.getApplication())
+            .grantPermissions(Manifest.permission.RECORD_AUDIO)
+
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                ActiveListScreen(
+                    viewModel = viewModel,
+                    voiceViewModel = voiceViewModel,
+                    voiceGateway = AndroidVoiceRecognitionGateway(),
+                    onEvent = {},
+                )
+            }
+        }
+
+        composeTestRule
+            .onNodeWithContentDescription("Aggiungi prodotto con la voce. Pulsante.")
+            .performClick()
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            gateway.state.value is VoiceRecognitionState.Listening
+        }
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithContentDescription("Interrompi ascolto").performClick()
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            gateway.state.value is VoiceRecognitionState.Idle
+        }
+    }
+
+    @Test
+    fun `voice fab does not start listening when permission is denied`() {
+        val gateway = FakeVoiceGateway()
+        val voiceViewModel = VoiceBottomSheetViewModel(gateway)
+        val viewModel = ActiveListViewModel(
+            shoppingRepository = FakeShoppingListRepository(),
+            catalogRepository = FakeCatalogRepository(),
+        )
+        shadowOf(RuntimeEnvironment.getApplication())
+            .denyPermissions(Manifest.permission.RECORD_AUDIO)
+
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                ActiveListScreen(
+                    viewModel = viewModel,
+                    voiceViewModel = voiceViewModel,
+                    voiceGateway = AndroidVoiceRecognitionGateway(),
+                    onEvent = {},
+                )
+            }
+        }
+
+        composeTestRule
+            .onNodeWithContentDescription("Aggiungi prodotto con la voce. Pulsante.")
+            .performClick()
+        composeTestRule.waitForIdle()
+
+        assertTrue(
+            "senza permesso il gateway non deve iniziare l'ascolto",
+            gateway.state.value is VoiceRecognitionState.Idle,
+        )
     }
 
     @Test
@@ -352,6 +454,174 @@ class ActiveListAccessibilityTest {
         composeTestRule.onNodeWithText("Regole apprese").assertExists()
         composeTestRule.onNodeWithText("Indietro").performClick()
         composeTestRule.onNodeWithText("Lista attiva").assertExists()
+    }
+
+    @Test
+    fun `real settings button opens learned rules`() {
+        val viewModel = ActiveListViewModel(
+            shoppingRepository = FakeShoppingListRepository(),
+            catalogRepository = FakeCatalogRepository(),
+        )
+        val voiceViewModel = VoiceBottomSheetViewModel(FakeVoiceGateway())
+
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                AppNavigator(
+                    onActiveListEvent = viewModel::onEvent,
+                    activeListContent = { onEvent ->
+                        ActiveListScreen(
+                            viewModel = viewModel,
+                            voiceViewModel = voiceViewModel,
+                            voiceGateway = AndroidVoiceRecognitionGateway(),
+                            onEvent = onEvent,
+                        )
+                    },
+                    learnedRulesContent = { onBack ->
+                        androidx.compose.foundation.layout.Column {
+                            Text("Regole apprese")
+                            Button(onClick = onBack) { Text("Indietro") }
+                        }
+                    },
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithContentDescription("Impostazioni").performClick()
+        composeTestRule.onNodeWithText("Regole apprese").assertExists()
+        composeTestRule.onNodeWithText("Indietro").performClick()
+        composeTestRule
+            .onNodeWithContentDescription("Aggiungi voce")
+            .assertExists()
+    }
+
+    @Test
+    fun `voice gateway launcher follows composition lifecycle`() {
+        val viewModel = ActiveListViewModel(
+            shoppingRepository = FakeShoppingListRepository(),
+            catalogRepository = FakeCatalogRepository(),
+        )
+        val voiceViewModel = VoiceBottomSheetViewModel(FakeVoiceGateway())
+        val gateway = AndroidVoiceRecognitionGateway()
+        var showScreen by mutableStateOf(true)
+
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                if (showScreen) {
+                    ActiveListScreen(
+                        viewModel = viewModel,
+                        voiceViewModel = voiceViewModel,
+                        voiceGateway = gateway,
+                        onEvent = {},
+                    )
+                }
+            }
+        }
+
+        composeTestRule.waitForIdle()
+        assertTrue("il launcher deve essere registrato mentre la schermata è visibile", gateway.isLauncherRegistered)
+
+        composeTestRule.runOnIdle { showScreen = false }
+        composeTestRule.waitForIdle()
+        assertFalse("il launcher deve essere rilasciato all'uscita della schermata", gateway.isLauncherRegistered)
+    }
+
+    @Test
+    fun `all checked items keep presi section visible`() {
+        val viewModel = ActiveListViewModel(
+            shoppingRepository = FakeShoppingListRepository(items = listOf(checkedItem)),
+            catalogRepository = FakeCatalogRepository(),
+        )
+        val voiceViewModel = VoiceBottomSheetViewModel(FakeVoiceGateway())
+
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                ActiveListScreen(
+                    viewModel = viewModel,
+                    voiceViewModel = voiceViewModel,
+                    voiceGateway = AndroidVoiceRecognitionGateway(),
+                    onEvent = viewModel::onEvent,
+                )
+            }
+        }
+
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            composeTestRule.onAllNodesWithText("Concludi spesa").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeTestRule
+            .onNodeWithContentDescription("Presi, 1 voce. Doppio tocco per collassare.")
+            .assertExists()
+        composeTestRule.onNodeWithText("Concludi spesa").assertExists()
+        composeTestRule.onNode(
+            hasTestTag("presi_section") and hasAnyDescendant(hasText("Concludi spesa"))
+        ).assertExists()
+
+        composeTestRule.onNodeWithText("Concludi spesa").performClick()
+        composeTestRule
+            .onNodeWithText("Nessuna voce attiva da concludere")
+            .assertExists()
+    }
+
+    @Test
+    fun `single flow shows each item only once`() {
+        val taxonomy = listOf(
+            TaxonomyLevel.Level1(id = 1L, name = "Latticini", sortOrder = 1),
+            TaxonomyLevel.Level2(id = 2L, name = "Formaggi", sortOrder = 1, level1Id = 1L),
+            TaxonomyLevel.Level3(id = 3L, name = "Mozzarella", sortOrder = 1, level2Id = 2L),
+        )
+        val viewModel = ActiveListViewModel(
+            shoppingRepository = FakeShoppingListRepository(items = listOf(uncheckedItem)),
+            catalogRepository = FakeCatalogRepository(
+                taxonomy = taxonomy,
+                products = mapOf(
+                    1L to CanonicalProduct(id = 1L, name = "Mozzarella", level3Id = 3L),
+                ),
+            ),
+        )
+        val voiceViewModel = VoiceBottomSheetViewModel(FakeVoiceGateway())
+
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                ActiveListScreen(
+                    viewModel = viewModel,
+                    voiceViewModel = voiceViewModel,
+                    voiceGateway = AndroidVoiceRecognitionGateway(),
+                    onEvent = {},
+                )
+            }
+        }
+
+        val description = "Mozzarella, 2 pezzi, Latticini, Formaggi, Mozzarella, " +
+            "non selezionato. Doppio tocco per modificare."
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            composeTestRule.onAllNodesWithContentDescription(description)
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        composeTestRule.onAllNodesWithContentDescription(description).assertCountEquals(1)
+    }
+
+    @Test
+    fun `presi checkout button invokes callback`() {
+        var checkoutInvoked = false
+
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                PresiSection(
+                    items = listOf(checkedItem),
+                    productNames = mapOf(1L to "Mozzarella"),
+                    categoryLabels = mapOf(1L to "Latticini, Formaggi, Mozzarella"),
+                    onUncheck = {},
+                    onCheckout = { checkoutInvoked = true },
+                    colors = togoColors(),
+                    typography = togoTypography(),
+                    spacing = togoSpacing(),
+                    tokens = componentTokens(),
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Concludi spesa").assertExists().performClick()
+        assertTrue("il pulsante deve invocare il checkout", checkoutInvoked)
     }
 
     @Test
@@ -483,8 +753,9 @@ class ActiveListAccessibilityTest {
     // --- Fakes di dominio per comporre la schermata senza DB ---
 
     private class FakeShoppingListRepository(
-        private val items: List<ShoppingItem> = emptyList()
+        private val items: List<ShoppingItem> = emptyList(),
     ) : ShoppingListRepository {
+        override fun getAllItems(): Flow<List<ShoppingItem>> = flowOf(items)
         override fun getActiveItems(): Flow<List<ShoppingItem>> =
             flowOf(items.filter { !it.isChecked })
         override fun getCheckedItems(): Flow<List<ShoppingItem>> =

@@ -5,6 +5,7 @@ import it.togo.app.domain.category.CategoryCorrection
 import it.togo.app.domain.category.CategoryCorrector
 import it.togo.app.domain.model.LearnedRule
 import it.togo.app.domain.repository.LearnedRulesRepository
+import it.togo.app.domain.text.normalizeExpression
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.UUID
@@ -79,6 +80,7 @@ class CorrectCategoryUseCase(
         correction: CategoryCorrection
     ): LearnedRule = withContext(Dispatchers.IO) {
         val expression = assignment.userExpression
+            ?.let(::normalizeExpression)
             ?: throw IllegalStateException("userExpression mancante per creazione rule")
 
         // Atomic upsert via repository (handles race conditions)

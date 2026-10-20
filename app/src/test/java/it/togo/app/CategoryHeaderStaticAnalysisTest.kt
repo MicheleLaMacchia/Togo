@@ -44,14 +44,19 @@ class CategoryHeaderStaticAnalysisTest {
     fun `CategoryHeader disegna linea verticale sul lato sinistro`() {
         val source = sourceFile.readText()
 
-        // La linea va dall'alto (0,0) al basso (0, height) — solo lato sinistro
+        // La linea va dall'alto al basso sul lato sinistro, centrata sullo
+        // spessore per non essere tagliata a metà dal bordo del layout.
         assertTrue(
-            "drawLine deve partire da Offset(0f, 0f)",
-            source.contains("Offset(0f, 0f)")
+            "drawLine deve centrare lo stroke sul bordo sinistro",
+            source.contains("val x = strokeWidth / 2f")
         )
         assertTrue(
-            "drawLine deve terminare a Offset(0f, size.height)",
-            source.contains("Offset(0f, size.height)")
+            "drawLine deve partire dal bordo sinistro",
+            source.contains("Offset(x, 0f)")
+        )
+        assertTrue(
+            "drawLine deve terminare a Offset(x, size.height)",
+            source.contains("Offset(x, size.height)")
         )
     }
 }
