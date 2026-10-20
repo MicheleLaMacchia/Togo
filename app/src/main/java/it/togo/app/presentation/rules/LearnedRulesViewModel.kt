@@ -6,6 +6,7 @@ import it.togo.app.domain.model.LearnedRule
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.LearnedRulesRepository
 import it.togo.app.domain.usecase.LearnedRuleManager
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,7 +23,8 @@ import kotlinx.coroutines.Dispatchers
 class LearnedRulesViewModel(
     private val learnedRuleManager: LearnedRuleManager,
     private val catalogRepository: CatalogRepository,
-    private val learnedRulesRepository: LearnedRulesRepository
+    private val learnedRulesRepository: LearnedRulesRepository,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
@@ -35,7 +37,7 @@ class LearnedRulesViewModel(
     val uiState: StateFlow<LearnedRulesUiState> = _uiState.asStateFlow()
 
     init {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             val rulesAndSearch = combine(
                 learnedRulesRepository.getAll(),
                 _searchQuery,

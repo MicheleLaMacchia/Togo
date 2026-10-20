@@ -7,8 +7,12 @@ import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.ShoppingListRepository
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
@@ -39,7 +43,8 @@ import java.util.UUID
 class AddItemViewModel(
     private val catalogRepository: CatalogRepository,
     private val shoppingRepository: ShoppingListRepository,
-    private val editItem: ShoppingItem? = null
+    private val editItem: ShoppingItem? = null,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
 
     // Flag per modalità edit - ora parte dello UI state
@@ -47,6 +52,10 @@ class AddItemViewModel(
 
     // ---- State ----
     private val _uiState = MutableStateFlow(AddItemUiState(isEditMode = editItem != null))
+
+    /** Emesso dopo un insert/update riuscito; la sheet si chiude. */
+    private val _saved = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val saved: SharedFlow<Unit> = _saved.asSharedFlow()
     val uiState = _uiState
         .stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(), AddItemUiState(isEditMode = editItem != null))
 
@@ -250,19 +259,18 @@ class AddItemViewModel(
             )
         }
 
-        // Inserisci/aggiorna in repository
+        // Inserisci/aggiorna in repository, poi notifica la sheet.
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 if (isEditMode) {
                     shoppingRepository.update(item)
                 } else {
                     shoppingRepository.insert(item)
                 }
             }
+            handleReset()
+            _saved.emit(Unit)
         }
-
-        // Reset per nuova voce DOPO successo DB
-        handleReset()
     }
 
     private fun handleCancel() {

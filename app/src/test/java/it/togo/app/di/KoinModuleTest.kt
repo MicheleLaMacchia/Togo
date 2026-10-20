@@ -53,6 +53,14 @@ class KoinModuleTest {
     }
 
     @Test
+    fun `LearnedRulesViewModel e registrato nel modulo Koin`() {
+        val vm = GlobalContext.get().get<it.togo.app.presentation.rules.LearnedRulesViewModel>()
+
+        assertNotNull("LearnedRulesViewModel risolto via Koin", vm)
+        assertTrue("LearnedRulesViewModel è ViewModel", vm is androidx.lifecycle.ViewModel)
+    }
+
+    @Test
     fun `AddItemViewModel e registrato nel modulo Koin`() {
         val vm = GlobalContext.get().get<it.togo.app.presentation.additem.AddItemViewModel>()
 

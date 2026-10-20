@@ -1,6 +1,8 @@
 package it.togo.app.ui.theme
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.unit.dp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -100,14 +102,12 @@ class DesignSystemTokenTest {
 
     @Test
     fun `shapes have correct corner radii`() {
-        val shapes = TogoShapes
-        // RoundedCornerShape non espone direttamente il valore dp in modo testabile,
-        // ma possiamo verificare che le shape siano istanziate senza errori.
-        assertTrue("none shape deve essere istanziata", shapes.none != null)
-        assertTrue("sm shape deve essere istanziata", shapes.sm != null)
-        assertTrue("md shape deve essere istanziata", shapes.md != null)
-        assertTrue("lg shape deve essere istanziata", shapes.lg != null)
-        assertTrue("full shape deve essere istanziata", shapes.full != null)
+        assertEquals(RoundedCornerShape(0.dp), TogoShapes.none)
+        assertEquals(RoundedCornerShape(4.dp), TogoShapes.sm)
+        assertEquals(RoundedCornerShape(8.dp), TogoShapes.md)
+        assertEquals(RoundedCornerShape(12.dp), TogoShapes.lg)
+        // full è 9999dp (cerchio)
+        assertEquals(RoundedCornerShape(9999.dp), TogoShapes.full)
     }
 
     @Test
@@ -168,6 +168,36 @@ class DesignSystemTokenTest {
 
         val darkMetaContrast = contrastRatio(dark.inkPrimary, dark.surfaceCard)
         assertTrue("Dark itemMeta on surfaceCard = $darkMetaContrast:1, richiesto >=7:1", darkMetaContrast >= 7.0)
+    }
+
+    @Test
+    fun `quantity badge meets 7 to 1 in every row state`() {
+        // Il badge mantiene il fondo scuro anche nelle righe spuntate.
+        val badgeContrast = contrastRatio(TogoColorTokens.BadgeInk, TogoColorTokens.BadgeBg)
+        assertTrue(
+            "BadgeInk su BadgeBg = $badgeContrast:1, richiesto >=7:1",
+            badgeContrast >= 7.0,
+        )
+    }
+
+    @Test
+    fun `checked row name meets 7 to 1 on item row background`() {
+        // ItemRow usa inkPrimary per il nome anche in stato checked:
+        // inkSecondary nel tema dark si fermava a ~6,69:1.
+        val lightTokens = togoComponentTokensFrom(LightTogoColorSchemeImpl(), TogoShapes)
+        val darkTokens = togoComponentTokensFrom(DarkTogoColorSchemeImpl(), TogoShapes)
+
+        val lightRatio = contrastRatio(
+            LightTogoColorSchemeImpl().inkPrimary,
+            lightTokens.itemRow.background,
+        )
+        assertTrue("Light checked-row name = $lightRatio:1, richiesto >=7:1", lightRatio >= 7.0)
+
+        val darkRatio = contrastRatio(
+            DarkTogoColorSchemeImpl().inkPrimary,
+            darkTokens.itemRow.background,
+        )
+        assertTrue("Dark checked-row name = $darkRatio:1, richiesto >=7:1", darkRatio >= 7.0)
     }
 
     @Test

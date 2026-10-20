@@ -1,6 +1,11 @@
 package it.togo.app.presentation.activelist
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -28,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,7 +49,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import android.Manifest
 import android.content.pm.PackageManager
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.presentation.additem.AddItemBottomSheet
 import it.togo.app.presentation.voice.VoiceBottomSheet
 import it.togo.app.presentation.voice.VoiceBottomSheetViewModel
@@ -75,12 +84,36 @@ fun ActiveListScreen(
 
     val context = LocalContext.current
     var showAddItemSheet by remember { mutableStateOf(false) }
+    var editingItem by remember { mutableStateOf<ShoppingItem?>(null) }
 
     // Richiesta runtime permesso RECORD_AUDIO per il riconoscimento vocale
     val audioPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
-        if (granted) voiceViewModel.startListening()
+        if (granted) {
+            voiceViewModel.startListening()
+        } else {
+            val activity = context.findActivity()
+            val permanentlyDenied = activity != null &&
+                !ActivityCompat.shouldShowRequestPermissionRationale(
+                    activity,
+                    Manifest.permission.RECORD_AUDIO,
+                )
+            scope.launch {
+                val result = snackbarHostState.showSnackbar(
+                    message = if (permanentlyDenied) {
+                        "Permesso microfono negato. Abilitalo nelle impostazioni."
+                    } else {
+                        "Permesso microfono necessario per usare il comando vocale"
+                    },
+                    actionLabel = if (permanentlyDenied) "Impostazioni" else null,
+                    withDismissAction = permanentlyDenied,
+                )
+                if (permanentlyDenied && result == SnackbarResult.ActionPerformed) {
+                    context.startActivity(appSettingsIntent(context.packageName))
+                }
+            }
+        }
     }
 
     // Launcher per il risultato del riconoscimento vocale del sistema
@@ -89,8 +122,9 @@ fun ActiveListScreen(
     ) { result ->
         voiceGateway.onActivityResult(result.resultCode, result.data)
     }
-    androidx.compose.runtime.LaunchedEffect(voiceGateway) {
+    DisposableEffect(voiceGateway) {
         voiceGateway.registerLauncher(speechLauncher)
+        onDispose { voiceGateway.unregisterLauncher() }
     }
 
     // Lambda condivisa: avvia ascolto con controllo permesso
@@ -102,10 +136,13 @@ fun ActiveListScreen(
         else audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
     }
 
-    if (showAddItemSheet) {
+    if (showAddItemSheet || editingItem != null) {
         AddItemBottomSheet(
-            onConfirm = viewModel::onAddItemConfirmed,
-            onDismiss = { showAddItemSheet = false },
+            onDismiss = {
+                showAddItemSheet = false
+                editingItem = null
+            },
+            editItem = editingItem,
         )
     }
 
@@ -207,10 +244,14 @@ fun ActiveListScreen(
                     uiState.checkoutSnackbarMessage?.let { checkoutSnackbarMessage ->
                         Snackbar(
                             modifier = Modifier.fillMaxWidth(),
-                            action = {
-                                TextButton(onClick = { onEvent(UiEvent.UndoCheckout) }) {
-                                    Text("Annulla", color = colors.accentHighlight)
+                            action = if (uiState.checkedItemsForUndo.isNotEmpty()) {
+                                {
+                                    TextButton(onClick = { onEvent(UiEvent.UndoCheckout) }) {
+                                        Text("Annulla", color = colors.accentHighlight)
+                                    }
                                 }
+                            } else {
+                                null
                             },
                         ) {
                             Text(checkoutSnackbarMessage, style = typography.itemMeta, color = colors.inkInverse)
@@ -224,7 +265,7 @@ fun ActiveListScreen(
                             color = colors.error,
                             modifier = Modifier.padding(spacing.space4)
                         )
-                    } else if (uiState.activeGroups.isEmpty()) {
+                    } else if (uiState.activeGroups.isEmpty() && !uiState.hasCheckedItems) {
                         EmptyState(
                             onAddManual = {
                                 showAddItemSheet = true
@@ -245,7 +286,7 @@ fun ActiveListScreen(
                                     productNames = uiState.productNames,
                                     categoryLabels = uiState.categoryLabels,
                                     onCheckOff = { itemId, checked -> onEvent(UiEvent.CheckOff(itemId, checked)) },
-                                    onEdit = { item -> onEvent(UiEvent.EditItem(item)) },
+                                    onEdit = { item -> editingItem = item },
                                     onDelete = { itemId -> onEvent(UiEvent.DeleteItem(itemId)) },
                                     colors = colors,
                                     typography = typography,
@@ -275,4 +316,17 @@ fun ActiveListScreen(
                 }
             }
         )
+}
+
+/** Intent verso i dettagli dell'app, usato quando il permesso è negato per sempre. */
+internal fun appSettingsIntent(packageName: String): Intent = Intent(
+    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+    Uri.parse("package:$packageName"),
+)
+
+/** Risale al Context dell'Activity per la rationale del permesso. */
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }

@@ -4,10 +4,10 @@ import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.LearnedRulesRepository
+import it.togo.app.domain.text.normalizeExpression
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
-import java.text.Normalizer
 
 /**
  * Assegna la categoria canonica a un prodotto risolto.
@@ -87,25 +87,6 @@ class CategoryAssigner(
 
 private fun findLevel3(taxonomy: List<TaxonomyLevel>, id: Long): TaxonomyLevel.Level3? =
     taxonomy.firstOrNull { it is TaxonomyLevel.Level3 && it.id == id } as? TaxonomyLevel.Level3
-
-/**
- * Normalizzazione "accent-fold" identica a `CatalogQueries.normalize`:
- * trim, minuscole, decomposizione NFKD e rimozione dei segni diacritici.
- */
-private fun normalizeExpression(raw: String): String {
-    val decomposed = Normalizer.normalize(raw.trim().lowercase(), Normalizer.Form.NFKD)
-    return buildString(decomposed.length) {
-        for (ch in decomposed) {
-            val type = Character.getType(ch)
-            if (type != Character.NON_SPACING_MARK.toInt() &&
-                type != Character.COMBINING_SPACING_MARK.toInt() &&
-                type != Character.ENCLOSING_MARK.toInt()
-            ) {
-                append(ch)
-            }
-        }
-    }
-}
 
 /** Sibling L3 non user-defined nello stesso Level2 (escluso [level3] stesso). */
 private fun siblingsOf(

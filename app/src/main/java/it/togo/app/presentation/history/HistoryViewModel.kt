@@ -9,6 +9,7 @@ import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.HistoryRepository
 import it.togo.app.domain.repository.ShoppingListRepository
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,7 +27,8 @@ import kotlinx.coroutines.Dispatchers
 class HistoryViewModel(
     private val historyRepository: HistoryRepository,
     private val catalogRepository: CatalogRepository,
-    private val shoppingListRepository: ShoppingListRepository
+    private val shoppingListRepository: ShoppingListRepository,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
@@ -36,7 +38,7 @@ class HistoryViewModel(
     val uiState: StateFlow<HistoryUiState> = _uiState.asStateFlow()
 
     init {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             combine(
                 historyRepository.getAll(),
                 _searchQuery,
@@ -83,7 +85,7 @@ class HistoryViewModel(
      * Riaggiunge un prodotto dallo storico alla lista attiva.
      */
     fun reAddToActiveList(item: HistoricalItem) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             // Verifica se già presente nella lista attiva
             val activeItems = shoppingListRepository.getActiveItems().first()
             val alreadyExists = activeItems.any { it.productId == item.productId && !it.isChecked }

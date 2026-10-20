@@ -49,7 +49,12 @@ class LearnedRulesViewModelTest {
             coEvery { catalogRepo.getById(id) } returns product
         }
 
-        val vm = LearnedRulesViewModel(manager, catalogRepo, rulesRepo)
+        val vm = LearnedRulesViewModel(
+            learnedRuleManager = manager,
+            catalogRepository = catalogRepo,
+            learnedRulesRepository = rulesRepo,
+            ioDispatcher = testDispatcher,
+        )
         return Triple(vm, rulesRepo, manager)
     }
 
@@ -75,7 +80,7 @@ class LearnedRulesViewModelTest {
     fun `con regole mostra lista`() = runTest(testDispatcher) {
         val rules = listOf(sampleRule("r1"), sampleRule("r2", "caffè", productId = 2L))
         val (vm, _, _) = createViewModel(rules)
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         assertFalse(vm.uiState.value.isEmpty)
         assertEquals(2, vm.uiState.value.filteredRules.size)
@@ -85,10 +90,10 @@ class LearnedRulesViewModelTest {
     fun `ricerca per espressione filtra`() = runTest(testDispatcher) {
         val rules = listOf(sampleRule("r1", "latte"), sampleRule("r2", "caffè", productId = 2L))
         val (vm, _, _) = createViewModel(rules)
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         vm.onSearchQueryChange("latte")
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         assertEquals(1, vm.uiState.value.filteredRules.size)
         assertEquals("latte", vm.uiState.value.filteredRules[0].userExpression)
@@ -98,10 +103,10 @@ class LearnedRulesViewModelTest {
     fun `ricerca per nome prodotto filtra`() = runTest(testDispatcher) {
         val rules = listOf(sampleRule("r1", "latte"), sampleRule("r2", "caffè", productId = 2L))
         val (vm, _, _) = createViewModel(rules)
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         vm.onSearchQueryChange("latte intero")
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         assertEquals(1, vm.uiState.value.filteredRules.size)
         assertEquals("latte", vm.uiState.value.filteredRules[0].userExpression)
@@ -111,10 +116,10 @@ class LearnedRulesViewModelTest {
     fun `ricerca vuota mostra tutto`() = runTest(testDispatcher) {
         val rules = listOf(sampleRule("r1"), sampleRule("r2", productId = 2L))
         val (vm, _, _) = createViewModel(rules)
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         vm.onSearchQueryChange("")
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         assertEquals(2, vm.uiState.value.filteredRules.size)
     }
@@ -124,7 +129,7 @@ class LearnedRulesViewModelTest {
         // r2 punta a un prodotto non più in catalogo → regola orfana
         val rules = listOf(sampleRule("r1"), sampleRule("r2", productId = 999L))
         val (vm, _, _) = createViewModel(rules)
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         assertEquals(1, vm.uiState.value.filteredRules.size)
         assertEquals("r1", vm.uiState.value.filteredRules[0].id)
@@ -134,7 +139,7 @@ class LearnedRulesViewModelTest {
     fun `disattiva chiama manager`() = runTest(testDispatcher) {
         val rule = sampleRule()
         val (vm, _, manager) = createViewModel(listOf(rule))
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         vm.deactivateRule(rule)
         advanceUntilIdle()
@@ -146,7 +151,7 @@ class LearnedRulesViewModelTest {
     fun `riattiva chiama manager`() = runTest(testDispatcher) {
         val rule = sampleRule(active = false)
         val (vm, _, manager) = createViewModel(listOf(rule))
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         vm.reactivateRule(rule)
         advanceUntilIdle()
@@ -158,10 +163,10 @@ class LearnedRulesViewModelTest {
     fun `requestDelete apre dialog`() = runTest(testDispatcher) {
         val rule = sampleRule()
         val (vm, _, _) = createViewModel(listOf(rule))
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         vm.requestDelete(rule)
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         assertTrue(vm.uiState.value.isDeleteDialogOpen)
         assertEquals(rule, vm.uiState.value.ruleToDelete)
@@ -171,13 +176,13 @@ class LearnedRulesViewModelTest {
     fun `confirmDelete chiude dialog e chiama manager`() = runTest(testDispatcher) {
         val rule = sampleRule()
         val (vm, _, manager) = createViewModel(listOf(rule))
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         vm.requestDelete(rule)
-        Thread.sleep(200)
+        advanceUntilIdle()
         vm.confirmDelete()
         advanceUntilIdle()
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         coVerify { manager.delete(rule.id) }
         assertFalse(vm.uiState.value.isDeleteDialogOpen)
@@ -187,12 +192,12 @@ class LearnedRulesViewModelTest {
     fun `cancelDelete chiude dialog senza eliminare`() = runTest(testDispatcher) {
         val rule = sampleRule()
         val (vm, _, manager) = createViewModel(listOf(rule))
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         vm.requestDelete(rule)
-        Thread.sleep(200)
+        advanceUntilIdle()
         vm.cancelDelete()
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         assertFalse(vm.uiState.value.isDeleteDialogOpen)
         coVerify(exactly = 0) { manager.delete(any()) }
@@ -202,10 +207,10 @@ class LearnedRulesViewModelTest {
     fun `startEditCategory apre editing`() = runTest(testDispatcher) {
         val rule = sampleRule()
         val (vm, _, _) = createViewModel(listOf(rule))
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         vm.startEditCategory(rule)
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         assertNotNull(vm.uiState.value.editingRule)
         assertEquals(rule, vm.uiState.value.editingRule)
@@ -215,10 +220,10 @@ class LearnedRulesViewModelTest {
     fun `updateCategory chiama manager`() = runTest(testDispatcher) {
         val rule = sampleRule()
         val (vm, _, manager) = createViewModel(listOf(rule))
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         vm.startEditCategory(rule)
-        Thread.sleep(200)
+        advanceUntilIdle()
         vm.updateCategory(12L)
         advanceUntilIdle()
 
@@ -230,12 +235,12 @@ class LearnedRulesViewModelTest {
     fun `cancelEdit chiude editing`() = runTest(testDispatcher) {
         val rule = sampleRule()
         val (vm, _, _) = createViewModel(listOf(rule))
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         vm.startEditCategory(rule)
-        Thread.sleep(200)
+        advanceUntilIdle()
         vm.cancelEdit()
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         assertNull(vm.uiState.value.editingRule)
     }

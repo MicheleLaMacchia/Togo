@@ -59,18 +59,20 @@ fun CategoryHeader(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .drawBehind {
+                    val strokeWidth = tokens.categoryHeader.borderLeftWidth.toPx()
+                    val x = strokeWidth / 2f
+                    drawLine(
+                        color = tokens.categoryHeader.borderLeftColor,
+                        start = Offset(x, 0f),
+                        end = Offset(x, size.height),
+                        strokeWidth = strokeWidth,
+                    )
+                }
                 .padding(
                     horizontal = tokens.categoryHeader.paddingHorizontal,
                     vertical = tokens.categoryHeader.paddingVertical,
-                )
-                .drawBehind {
-                    drawLine(
-                        color = tokens.categoryHeader.borderLeftColor,
-                        start = Offset(0f, 0f),
-                        end = Offset(0f, size.height),
-                        strokeWidth = tokens.categoryHeader.borderLeftWidth.toPx(),
-                    )
-                },
+                ),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(spacing.space2),
         ) {

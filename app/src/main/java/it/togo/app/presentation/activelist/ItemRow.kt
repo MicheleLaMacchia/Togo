@@ -62,7 +62,7 @@ import it.togo.app.ui.theme.togoTypography
  *
  * Stati:
  * - Attivo: bordo crisp, testo inkPrimary, badge scuro
- * - Checked: testo barrato inkMuted, bordo/checkbox verde
+ * - Checked: testo barrato inkPrimary, bordo/checkbox verde
  *
  * Accessibilità:
  * - Attivo: la riga è cliccabile → modifica; la checkbox → spunta.
@@ -88,7 +88,9 @@ fun ItemRow(
     val swipeThresholdPx = with(LocalDensity.current) { 80.dp.toPx() }
 
     val isChecked = item.isChecked
-    val textColor = if (isChecked) colors.inkMuted else colors.inkPrimary
+    // Il testo barrato resta inkPrimary: inkMuted/inkSecondary non raggiungono
+    // il rapporto 7:1 richiesto su entrambi i temi.
+    val textColor = colors.inkPrimary
     val borderColor = if (isChecked) colors.accentSuccess else colors.borderCrisp
     val checkboxBorderColor = if (isChecked) colors.accentSuccess else colors.borderCrisp
     val checkboxBgColor = if (isChecked) colors.accentAction else Color.Transparent
@@ -121,19 +123,29 @@ fun ItemRow(
             .clip(tokens.itemRow.radius)
             .background(tokens.itemRow.swipeDeleteBackground),
     ) {
-        Icon(
-            imageVector = Icons.Filled.Delete,
-            contentDescription = "Elimina",
-            tint = tokens.itemRow.swipeDeleteIconColor,
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .padding(end = spacing.space4),
-        )
+        if (rowActionDescription != null) {
+            Icon(
+                imageVector = Icons.Filled.Delete,
+                contentDescription = "Elimina",
+                tint = tokens.itemRow.swipeDeleteIconColor,
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(end = spacing.space4),
+            )
+        }
 
         val baseModifier = Modifier
             .fillMaxWidth()
             .offset { IntOffset(horizontalDrag.roundToInt(), 0) }
-            .pointerInput(item.id, onDelete) {
+
+        // Le righe "Presi" (rowActionDescription == null) non hanno azione di
+        // tap né di swipe: niente combinedClickable e niente gesture di
+        // eliminazione, così TalkBack non espone azioni vuote. I dettagli
+        // accessibili restano (mergeDescendants) e la checkbox continua a
+        // funzionare. Le righe attive restano cliccabili → modifica e
+        // trascinabili → elimina.
+        val swipeModifier = if (rowActionDescription != null) {
+            baseModifier.pointerInput(item.id, onDelete) {
                 detectHorizontalDragGestures(
                     onHorizontalDrag = { change, dragAmount ->
                         change.consume()
@@ -146,53 +158,42 @@ fun ItemRow(
                     onDragCancel = { horizontalDrag = 0f },
                 )
             }
-
-        // Le righe "Presi" (rowActionDescription == null) non hanno azione di
-        // tap: si rimuove combinedClickable per non esporre un'azione vuota, ma
-        // i dettagli accessibili restano (mergeDescendants) e la checkbox
-        // continua a funzionare. Le righe attive restano cliccabili → modifica.
-        val interactiveModifier = if (rowActionDescription != null) {
-            baseModifier.combinedClickable(
-                onClick = onClick,
-                onLongClick = { /* long press shows swipe hint */ },
-            )
         } else {
             baseModifier
         }
 
-        Surface(
-            modifier = interactiveModifier.semantics(mergeDescendants = true) {
-                contentDescription = rowDescription
-            },
-            shape = tokens.itemRow.radius,
-            border = BorderStroke(tokens.itemRow.borderWidth, borderColor),
-            color = tokens.itemRow.background,
-            shadowElevation = 0.dp,
+        val rowClickModifier = if (rowActionDescription != null) {
+            Modifier.combinedClickable(onClick = onClick)
+        } else {
+            Modifier
+        }
+
+        // Il contenitore disegna card e bordo; la Row cliccabile e la
+        // checkbox sono sibling, così la semantica non viene fusa.
+        Box(
+            modifier = swipeModifier
+                .clip(tokens.itemRow.radius)
+                .background(tokens.itemRow.background)
+                .border(tokens.itemRow.borderWidth, borderColor, tokens.itemRow.radius),
         ) {
             Row(
-                modifier = Modifier
+                modifier = rowClickModifier
+                    .semantics(mergeDescendants = true) {
+                        contentDescription = rowDescription
+                    }
                     .fillMaxWidth()
                     .padding(
-                        horizontal = tokens.itemRow.paddingHorizontal,
-                        vertical = tokens.itemRow.paddingVertical,
+                        // Spazio per la checkbox sibling, dentro la card.
+                        start = tokens.itemRow.paddingHorizontal +
+                            tokens.checkboxUtility.size + spacing.space3,
+                        end = tokens.itemRow.paddingHorizontal,
+                        top = tokens.itemRow.paddingVertical,
+                        bottom = tokens.itemRow.paddingVertical,
                     ),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(spacing.space3),
             ) {
-                // 1. Checkbox quadrata utility (48dp touch target)
-                CheckboxUtility(
-                    checked = isChecked,
-                    contentDescription = checkboxDescription,
-                    onCheckedChange = { newChecked ->
-                        performShortHapticFeedback(context)
-                        onCheckChange(newChecked)
-                    },
-                    tokens = tokens.checkboxUtility,
-                    checkboxBorderColor = checkboxBorderColor,
-                    checkboxBgColor = checkboxBgColor,
-                )
-
-                // 2. Centro: nome + meta (brand/variante)
+                // Centro: nome + meta (brand/variante)
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -225,16 +226,33 @@ fun ItemRow(
                     }
                 }
 
-                // 3. Destra: badge quantità
+                // Destra: badge quantità
                 QuantityBadge(
                     quantity = item.quantity,
                     unit = item.unit.displayName,
                     tokens = tokens.quantityBadge,
                     typography = typography,
                     textColor = tokens.quantityBadge.textColor,
-                    backgroundColor = if (isChecked) colors.surfaceSubtle else tokens.quantityBadge.background,
+                    backgroundColor = tokens.quantityBadge.background,
                 )
             }
+
+            // Checkbox sibling: non è discendente della Row cliccabile, quindi
+            // TalkBack la espone come controllo separato con il proprio toggle.
+            CheckboxUtility(
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .padding(start = tokens.itemRow.paddingHorizontal),
+                checked = isChecked,
+                contentDescription = checkboxDescription,
+                onCheckedChange = { newChecked ->
+                    performShortHapticFeedback(context)
+                    onCheckChange(newChecked)
+                },
+                tokens = tokens.checkboxUtility,
+                checkboxBorderColor = checkboxBorderColor,
+                checkboxBgColor = checkboxBgColor,
+            )
         }
     }
 }
@@ -259,6 +277,7 @@ internal fun performShortHapticFeedback(context: Context) {
  */
 @Composable
 private fun CheckboxUtility(
+    modifier: Modifier = Modifier,
     checked: Boolean,
     contentDescription: String,
     onCheckedChange: (Boolean) -> Unit,
@@ -270,7 +289,7 @@ private fun CheckboxUtility(
     val borderWidth = tokens.borderWidth
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .size(size)
             .toggleable(
                 value = checked,

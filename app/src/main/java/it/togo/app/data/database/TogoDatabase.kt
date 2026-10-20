@@ -27,7 +27,7 @@ import it.togo.app.data.database.entity.TaxonomyLevel3Entity
         CanonicalProductEntity::class,
         it.togo.app.data.database.entity.SynonymEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class TogoDatabase : RoomDatabase() {
@@ -55,6 +55,7 @@ abstract class TogoDatabase : RoomDatabase() {
                     // riesegue e fallbackToDestructiveMigration scatta solo al cambio di
                     // versione). Per i soli ambienti dev: disinstallare o cancellare i dati.
                     .createFromAsset("catalog.db")
+                    .addMigrations(MIGRATION_1_2)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

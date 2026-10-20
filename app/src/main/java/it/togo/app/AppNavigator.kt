@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import it.togo.app.presentation.activelist.UiEvent
 
@@ -48,16 +49,20 @@ fun AppNavigator(
         mutableStateOf<Screen>(Screen.ActiveList)
     }
 
+    val stateHolder = rememberSaveableStateHolder()
+
     when (currentScreen) {
-        Screen.ActiveList -> activeListContent { event ->
-            if (event is UiEvent.NavigateToSettings) {
-                currentScreen = Screen.LearnedRules
-            } else {
-                onActiveListEvent(event)
+        Screen.ActiveList -> stateHolder.SaveableStateProvider("active_list") {
+            activeListContent { event ->
+                if (event is UiEvent.NavigateToSettings) {
+                    currentScreen = Screen.LearnedRules
+                } else {
+                    onActiveListEvent(event)
+                }
             }
         }
 
-        Screen.LearnedRules -> {
+        Screen.LearnedRules -> stateHolder.SaveableStateProvider("learned_rules") {
             BackHandler { currentScreen = Screen.ActiveList }
             learnedRulesContent { currentScreen = Screen.ActiveList }
         }

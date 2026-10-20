@@ -8,7 +8,6 @@ import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.ShoppingListRepository
 import it.togo.app.domain.usecase.ShareListUseCase
-import it.togo.app.presentation.additem.AddItemConfirmed
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -64,11 +63,10 @@ class ActiveListViewModel(
     private fun observeAllItems() {
         viewModelScope.launch {
             combine(
-                shoppingRepository.getActiveItems(),
-                shoppingRepository.getCheckedItems(),
+                shoppingRepository.getAllItems(),
                 taxonomyCache.filterNotNull()
-            ) { activeItems, checkedItems, taxonomy ->
-                buildUiState(activeItems, checkedItems, taxonomy)
+            ) { items, taxonomy ->
+                buildUiState(items, taxonomy)
             }
                 .onEach { newState ->
                     _uiState.value = newState
@@ -78,8 +76,7 @@ class ActiveListViewModel(
     }
 
     private suspend fun buildUiState(
-        activeItems: List<ShoppingItem>,
-        checkedItems: List<ShoppingItem>,
+        items: List<ShoppingItem>,
         taxonomy: TaxonomyCache
     ): ActiveListUiState {
         val (l1List, l2List, l3List) = taxonomy
@@ -88,10 +85,14 @@ class ActiveListViewModel(
         val l2ById = l2List.associateBy { it.id }
         val l3ById = l3List.associateBy { it.id }
 
+        // Una sola emissione: ogni voce è in esattamente una delle due liste.
+        val activeOnly = items.filterNot { it.isChecked }
+        val checkedItems = items.filter { it.isChecked }
+
         val itemsByL3 = mutableMapOf<Long, MutableList<ShoppingItem>>()
         val productNames = mutableMapOf<Long, String>()
         val categoryLabels = mutableMapOf<Long, String>()
-        for (item in activeItems) {
+        for (item in activeOnly) {
             val product = catalogRepository.getById(item.productId) ?: continue
             productNames[item.productId] = product.name
             categoryLabels[item.productId] = canonicalCategoryLabel(product, l1ById, l2ById, l3ById)
@@ -169,7 +170,6 @@ class ActiveListViewModel(
     fun onEvent(event: UiEvent) {
         when (event) {
             is UiEvent.CheckOff -> handleCheckOff(event.itemId, event.isChecked)
-            is UiEvent.EditItem -> handleEditItem(event.item)
             is UiEvent.VoiceCommand -> { }
             is UiEvent.DeleteItem -> handleDeleteItem(event.itemId)
             is UiEvent.NavigateToVoice -> { }
@@ -180,14 +180,6 @@ class ActiveListViewModel(
             is UiEvent.AddItemManual -> { }
             is UiEvent.UndoDelete -> handleUndoDelete()
             is UiEvent.UndoCheckout -> handleUndoCheckout()
-        }
-    }
-
-    fun onAddItemConfirmed(confirmed: AddItemConfirmed) {
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                shoppingRepository.insert(confirmed.item)
-            }
         }
     }
 
@@ -261,10 +253,6 @@ class ActiveListViewModel(
         }
     }
 
-    private fun handleEditItem(item: ShoppingItem) {
-        // Edit handled by ActiveListScreen via UiEvent
-    }
-
     private fun handleDeleteItem(itemId: String) {
         val item = findItem(itemId) ?: return
 
@@ -327,6 +315,8 @@ class ActiveListViewModel(
 
         if (items.isEmpty()) {
             _isCheckingOut = false
+            _uiState.value = _uiState.value.copy(checkedItemsForUndo = emptyList())
+            showCheckoutSnackbar("Nessuna voce attiva da concludere")
             return
         }
 

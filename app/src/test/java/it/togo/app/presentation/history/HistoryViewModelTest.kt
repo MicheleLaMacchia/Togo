@@ -17,6 +17,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.*
+import kotlinx.coroutines.test.advanceUntilIdle
 import org.junit.Before
 import org.junit.Test
 
@@ -50,7 +51,12 @@ class HistoryViewModelTest {
             coEvery { catalogRepo.getById(id) } returns product
         }
 
-        val vm = HistoryViewModel(historyRepo, catalogRepo, shoppingRepo)
+        val vm = HistoryViewModel(
+            historyRepository = historyRepo,
+            catalogRepository = catalogRepo,
+            shoppingListRepository = shoppingRepo,
+            ioDispatcher = testDispatcher,
+        )
         return Triple(vm, historyRepo, shoppingRepo)
     }
 
@@ -68,7 +74,7 @@ class HistoryViewModelTest {
             HistoricalItem(id = "2", productId = 2L, lastQuantity = 1.0, lastUnit = StandardUnit.KILOGRAM, purchasedAt = 2000L)
         )
         val (vm, _, _) = createViewModel(items)
-        Thread.sleep(200) // ViewModel usa Dispatchers.IO, attendi collect
+        advanceUntilIdle()
 
         assertFalse(vm.uiState.value.isEmpty)
         assertEquals(2, vm.uiState.value.filteredItems.size)
@@ -85,10 +91,10 @@ class HistoryViewModelTest {
             2L to CanonicalProduct(id = 2L, name = "Caffè", level3Id = 2L)
         )
         val (vm, _, _) = createViewModel(items, products)
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         vm.onSearchQueryChange("latte")
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         assertEquals("latte", vm.uiState.value.searchQuery)
         val filtered = vm.uiState.value.filteredItems
@@ -104,10 +110,10 @@ class HistoryViewModelTest {
             HistoricalItem(id = "1", productId = 1L, lastQuantity = 2.0, lastUnit = StandardUnit.LITER, purchasedAt = 1000L)
         )
         val (vm, _, _) = createViewModel(items)
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         vm.onSearchQueryChange("")
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         assertEquals(1, vm.uiState.value.filteredItems.size)
     }
@@ -118,10 +124,10 @@ class HistoryViewModelTest {
             HistoricalItem(id = "1", productId = 1L, lastQuantity = 2.0, lastUnit = StandardUnit.LITER, purchasedAt = 1000L)
         )
         val (vm, _, shoppingRepo) = createViewModel(items)
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         vm.reAddToActiveList(items[0])
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         coVerify { shoppingRepo.insert(any()) }
     }
@@ -144,11 +150,16 @@ class HistoryViewModelTest {
         coEvery { shoppingRepo.insert(any()) } returns Unit
         coEvery { catalogRepo.getById(any()) } returns null
 
-        val vm = HistoryViewModel(historyRepo, catalogRepo, shoppingRepo)
-        Thread.sleep(200)
+        val vm = HistoryViewModel(
+            historyRepository = historyRepo,
+            catalogRepository = catalogRepo,
+            shoppingListRepository = shoppingRepo,
+            ioDispatcher = testDispatcher,
+        )
+        advanceUntilIdle()
 
         vm.reAddToActiveList(items[0])
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         assertEquals("Già nella lista", vm.uiState.value.snackbarMessage)
         coVerify(exactly = 0) { shoppingRepo.insert(any()) }
@@ -166,7 +177,7 @@ class HistoryViewModelTest {
     fun `operazioni ViewModel completate sotto 100ms`() = runTest(testDispatcher) {
         val (vm, _, _) = createViewModel()
         vm.onSearchQueryChange("latte")
-        Thread.sleep(200)
+        advanceUntilIdle()
         vm.clearSnackbar()
     }
 }
