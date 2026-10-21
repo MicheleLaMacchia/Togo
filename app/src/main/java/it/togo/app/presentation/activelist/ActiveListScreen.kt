@@ -41,6 +41,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -147,8 +148,14 @@ fun ActiveListScreen(
         )
     }
 
-    voiceViewModel.onTextConfirmed = { text ->
-        onEvent(UiEvent.VoiceCommand(text))
+    val currentOnEvent by rememberUpdatedState(onEvent)
+    DisposableEffect(voiceViewModel) {
+        voiceViewModel.onTextConfirmed = { text ->
+            currentOnEvent(UiEvent.VoiceCommand(text))
+        }
+        onDispose {
+            voiceViewModel.onTextConfirmed = null
+        }
     }
 
     VoiceBottomSheet(

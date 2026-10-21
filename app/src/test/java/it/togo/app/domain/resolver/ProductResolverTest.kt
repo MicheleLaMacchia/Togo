@@ -18,11 +18,13 @@ class ProductResolverTest {
 
     // Mock CatalogRepository per test isolati
     private class MockCatalogRepository(
-        private val products: List<CanonicalProduct>
+        private val products: List<CanonicalProduct>,
+        private val exactSynonym: CanonicalProduct? = null,
     ) : CatalogRepository {
         override fun search(query: String): Flow<List<CanonicalProduct>> = flowOf(products)
         override suspend fun getById(id: Long): CanonicalProduct? = products.find { it.id == id }
         override fun getTaxonomy(): Flow<List<it.togo.app.domain.model.TaxonomyLevel>> = flowOf(emptyList())
+        override suspend fun getByExactSynonym(term: String): CanonicalProduct? = exactSynonym
     }
 
     @Test
@@ -182,6 +184,25 @@ class ProductResolverTest {
         assertTrue("deve essere Ambiguous", result is ResolutionResult.Ambiguous)
         val ambiguous = result as ResolutionResult.Ambiguous
         assertEquals(2, ambiguous.candidates.size)
+    }
+
+    @Test
+    fun `exact synonym beats ambiguous prefix candidates`() = runBlocking {
+        val target = CanonicalProduct(1, "Pane di Segale", 10)
+        val products = listOf(
+            target,
+            CanonicalProduct(2, "Pane di Grano", 11),
+        )
+        val resolver = ProductResolver(
+            MockCatalogRepository(products, exactSynonym = target)
+        )
+
+        val result = resolver.resolve("pane di")
+
+        assertTrue("deve essere Single", result is ResolutionResult.Single)
+        val single = result as ResolutionResult.Single
+        assertEquals(target, single.resolved.product)
+        assertEquals(1.0, single.resolved.confidence, 0.001)
     }
 
     @Test

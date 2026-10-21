@@ -17,6 +17,10 @@ import kotlinx.coroutines.launch
  * 2. `confirm()` → callback `onCommandConfirmed(ParsedCommand)` → chiudi
  * 3. `cancel()` → chiudi, nessuna azione
  * 4. `editText(newText)` → re-parsing → stato `Ready` aggiornato
+ *
+ * Privacy: il comando interpretato resta solo nello stato in memoria. Non viene
+ * persistito, loggato o inviato a endpoint remoti. [cancel] e [reset] lo
+ * eliminano dalla UI; [onCleared] rilascia anche il callback di conferma.
  */
 class VoiceConfirmationViewModel(
     private val parseUseCase: ParseVoiceCommandUseCase
@@ -78,5 +82,15 @@ class VoiceConfirmationViewModel(
      */
     fun reset() {
         _uiState.value = VoiceConfirmationUiState.Hidden
+    }
+
+    /**
+     * Alla distruzione del ViewModel il comando interpretato viene eliminato e
+     * il callback che trattiene la schermata viene rilasciato.
+     */
+    override fun onCleared() {
+        _uiState.value = VoiceConfirmationUiState.Hidden
+        onCommandConfirmed = null
+        super.onCleared()
     }
 }

@@ -76,3 +76,27 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-6-1-etichette-talkback-e-semantica-accessibile.md`
   summary: Separare o motivare le modifiche estranee alla 6.1 nel diff (dominio, parser, wizard, unità, tema, Docker).
   evidence: il diff dal baseline include cambi fuori dal perimetro accessibilità e viola il vincolo di non cambiare regole/stile oltre il necessario; separare i commit o documentare la deroga.
+
+## Deferred from: audit 6.4 Privacy Audio e Audit Performance (2026-10-21)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-6-4-privacy-audio-e-audit-performance.md`
+  summary: Implementare e cablare il rilevamento duplicati lato lista, oppure rimuovere il dialog duplicati non raggiungibile.
+  evidence: `app/src/main/java/it/togo/app/di/DomainModule.kt:42-43` ha `DetectDuplicateUseCase` e `ResolveDuplicateUseCase` commentate; non esistono classi use case nel dominio e `DuplicateResolutionDialog` non ha call site. La metrica di deduplicazione esatta (SM-2) resta BLOCCATA.
+- source_spec: `_bmad-output/implementation-artifacts/spec-6-4-privacy-audio-e-audit-performance.md`
+  summary: Cablare o rimuovere il flusso legacy `VoiceConfirmationViewModel`/`VoiceConfirmationSheet`.
+  evidence: entrambi sono registrati in `PresentationModule.kt` ma non hanno call site UI; il flusso realmente usato è `VoiceBottomSheet`. La privacy è coperta da `onCleared`, ma il codice morto va deciso in una storia dedicata.
+- source_spec: `_bmad-output/implementation-artifacts/spec-6-4-privacy-audio-e-audit-performance.md`
+  summary: Eliminare l'N+1 di `ActiveListViewModel.buildUiState` e i filtri annidati della tassonomia.
+  evidence: `app/src/main/java/it/togo/app/presentation/activelist/ActiveListViewModel.kt:95-96` e `107-109` eseguono un `getById` per prodotto; `117-123` filtrano L2 per ogni L1 e L3 per ogni L2 a ogni emissione. Richiede `getByIds`/cache e mappe `level1Id -> L2`/`level2Id -> L3`, fuori perimetro 6.4.
+- source_spec: `_bmad-output/implementation-artifacts/spec-6-4-privacy-audio-e-audit-performance.md`
+  summary: Aggiungere un limite esplicito alla lunghezza di `LEARNED_RULE.userExpression`.
+  evidence: `app/src/main/java/it/togo/app/data/database/entity/LearnedRuleEntity.kt:18` persiste l'espressione normalizzata senza bound; è l'eccezione privacy documentata, ma una frase molto lunga potrebbe restare in DB. La modifica richiede una regola di dominio/normalizzazione e test dedicati.
+- source_spec: `_bmad-output/implementation-artifacts/spec-6-4-privacy-audio-e-audit-performance.md`
+  summary: Correlare in modo forte ogni risultato del recognizer alla richiesta che lo ha originato.
+  evidence: `AndroidVoiceRecognitionGateway.kt:43-49` e `148-152` invalidano i risultati dopo reset/stop, ma un risultato della richiesta precedente che arrivasse dopo un nuovo `startListening()` non è distinguibile senza request id/request code dedicato. Rischio raro ma non eliminabile con l'attuale `ActivityResultLauncher` condiviso.
+- source_spec: `_bmad-output/implementation-artifacts/spec-6-4-privacy-audio-e-audit-performance.md`
+  summary: Eseguire il protocollo tempi manuali/voce su device e registrare le mediane.
+  evidence: `.\test-android.ps1` e `.\build-android.ps1` sono passati (486/486) e 6.4 è chiusa con deroga accettata: i tempi manuali/voce restano `BLOCCATA` perché richiedono misurazione su device reale (nessuna strumentazione in produzione). Protocollo al §4 di `audit-6-4-privacy-performance.md`, 10 run manuali + 10 vocali.
+- source_spec: `_bmad-output/implementation-artifacts/spec-6-4-privacy-audio-e-audit-performance.md`
+  summary: Aggiungere un corpus di utterance libere/casi manuali per SM-1, se il vincolo “nessuna riga inventata” viene revocato.
+  evidence: `CatalogAcceptanceSupport.acceptanceCases()` (`app/src/test/java/it/togo/app/acceptance/CatalogAcceptanceSupport.kt:89-132`) deriva solo `CANONICAL_PRODUCT` e `SYNONYM`; il test non misura il parsing di frasi complete. La scelta evita righe inventate ed è documentata nell'audit.

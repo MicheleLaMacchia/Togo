@@ -23,6 +23,21 @@ interface CatalogDao {
     @Query("SELECT * FROM CANONICAL_PRODUCT WHERE id = :id LIMIT 1")
     suspend fun getById(id: Long): CanonicalProductEntity?
 
+    /**
+     * Match esatto sul sinonimo già normalizzato (minuscolo + accent-fold).
+     * `DISTINCT` evita duplicati se lo stesso termine è ripetuto per prodotto;
+     * il chiamante deve trattare più prodotti distinti come non risolvibili.
+     */
+    @Query(
+        """
+        SELECT DISTINCT cp.* FROM CANONICAL_PRODUCT cp
+        JOIN SYNONYM s ON s.product_id = cp.id
+        WHERE s.term = :term
+        LIMIT 2
+        """
+    )
+    suspend fun getByExactSynonym(term: String): List<CanonicalProductEntity>
+
     @Query("SELECT * FROM TAXONOMY_LEVEL_1 ORDER BY sortOrder")
     fun getLevel1(): Flow<List<TaxonomyLevel1Entity>>
 

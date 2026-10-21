@@ -33,6 +33,16 @@ class RoomCatalogRepository(
             catalogDao.getById(id)?.toDomain()
         }
 
+    override suspend fun getByExactSynonym(term: String): CanonicalProduct? {
+        val normalized = CatalogQueries.normalize(term)
+        if (normalized.isEmpty()) return null
+        return withContext(Dispatchers.IO) {
+            catalogDao.getByExactSynonym(normalized)
+                .singleOrNull()
+                ?.toDomain()
+        }
+    }
+
     /**
      * Tassonomia piatta e ordinata per corsia: combina i tre livelli,
      * rispettando l'ordine L1 -> L2 -> L3 (AD-3: catalogo preinstallato).

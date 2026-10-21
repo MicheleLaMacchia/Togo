@@ -2,7 +2,7 @@
 title: 'Story 4.3: Parsing Comando Vocale e Scomposione Strutturata'
 type: 'feature'
 created: '2026-10-13'
-status: 'in-progress'
+status: 'done'
 context:
   - '{project-root}/_bmad-output/planning-artifacts/architecture/architecture-Togo-2026-10-07/ARCHITECTURE-SPINE.md'
   - '{project-root}/_bmad-output/planning-artifacts/ux-designs/ux-Togo-2026-10-07/DESIGN.md'

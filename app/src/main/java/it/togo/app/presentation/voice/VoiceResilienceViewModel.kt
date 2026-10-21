@@ -9,6 +9,7 @@ import it.togo.app.domain.voice.VoiceRecognitionGateway
 import it.togo.app.domain.voice.VoiceRecognitionState
 import it.togo.app.domain.voice.VoiceRecoveryAction
 import it.togo.app.domain.voice.VoiceResiliencePolicy
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -42,6 +43,12 @@ class VoiceResilienceViewModel(
 
     /** Callback per aprire impostazioni di sistema */
     var onOpenSettings: (() -> Unit)? = null
+
+    /**
+     * Retry programmato. Va annullato su cancel/onCleared: altrimenti il
+     * microfono potrebbe riaprirsi dopo che l'utente ha annullato.
+     */
+    private var retryJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -89,7 +96,8 @@ class VoiceResilienceViewModel(
             VoiceRecoveryAction.Retry -> {
                 _recoveryAction.value = VoiceRecoveryAction.NoAction
                 val delayMs = getNextRetryDelayMs()
-                viewModelScope.launch {
+                retryJob?.cancel()
+                retryJob = viewModelScope.launch {
                     delay(delayMs)
                     gateway.reset()
                     gateway.startListening()
@@ -119,11 +127,22 @@ class VoiceResilienceViewModel(
      * Annulla e resetta lo stato di resilienza.
      */
     fun cancel() {
+        retryJob?.cancel()
+        retryJob = null
         gateway.reset()
         fallbackHandler.reset()
         _isFallbackActive.value = false
         _recoveryAction.value = VoiceRecoveryAction.NoAction
         _errorMessage.value = null
+    }
+
+    override fun onCleared() {
+        retryJob?.cancel()
+        retryJob = null
+        gateway.reset()
+        onFallbackToManualInput = null
+        onOpenSettings = null
+        super.onCleared()
     }
 
     /**

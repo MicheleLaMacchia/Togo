@@ -2,7 +2,7 @@
 title: '6.2 Target Touch e Dynamic Type'
 type: 'feature'
 created: '2026-10-20'
-status: 'in-progress'
+status: 'done'
 route: 'dispatch'
 review_loop_iteration: 0
 baseline_commit: '31acf9826d2771c762ec04f7e67f217641d64db1'
@@ -124,5 +124,7 @@ così che possa interagire senza errori e leggere comodamente anche con font gra
 - Con TalkBack attivo, verificare che riga e checkbox continuino ad annunciare dati, stato e azioni come nella 6.1.
 
 ## Spec Change Log
+
+- 2026-10-21 — Allineamento stato: portato a `done` in `sprint-status.yaml` e nel frontmatter (implementazione applicata; dettagli nella nota implementativa del 6/10-2026).
 
 ## Review Triage Log

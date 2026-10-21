@@ -24,7 +24,14 @@ import java.util.Locale
  * per avviare il riconoscimento senza trattenere riferimenti a Activity (evita memory leak).
  *
  * Lingua: `it-IT` (BCP-47).
- * Nota: il riconoscimento può usare servizi remoti (non è offline).
+ *
+ * Privacy: TOGO non registra audio, non crea file o buffer PCM, non scrive il
+ * testo in log e non dichiara il permesso `INTERNET`. Il testo riconosciuto
+ * vive solo in [state] per l'operazione corrente e viene azzerato da [reset].
+ * Il riconoscimento è delegato a `RecognizerIntent`: il servizio dell'OS può
+ * usare la rete, ma nessun dato viene inviato direttamente dall'app.
+ *
+ * Nota: il riconoscimento può quindi usare servizi remoti (non è offline).
  */
 class AndroidVoiceRecognitionGateway : VoiceRecognitionGateway {
 
@@ -32,6 +39,14 @@ class AndroidVoiceRecognitionGateway : VoiceRecognitionGateway {
     override val state: StateFlow<VoiceRecognitionState> = _state.asStateFlow()
 
     private var launcher: ActivityResultLauncher<Intent>? = null
+
+    /**
+     * Finestra in cui un risultato del recognizer è ancora accettabile.
+     *
+     * `reset()`/`stopListening()` la chiudono: un risultato tardivo che arriva
+     * dopo l'annullamento non deve riportare il testo nello stato condiviso.
+     */
+    private var acceptResult = false
 
     companion object {
         const val EXTRA_LANGUAGE_VALUE = "it-IT"
@@ -58,6 +73,9 @@ class AndroidVoiceRecognitionGateway : VoiceRecognitionGateway {
      * composizione, evitando che il singleton trattenga un launcher obsoleto.
      */
     fun unregisterLauncher() {
+        // Non chiude la finestra del risultato: la rotazione ricrea il launcher
+        // mentre l'operazione vocale può essere ancora in corso. La chiusura è
+        // responsabilità di reset()/stopListening()/onCleared().
         launcher = null
     }
 
@@ -79,6 +97,7 @@ class AndroidVoiceRecognitionGateway : VoiceRecognitionGateway {
         // tramite [hasRecordAudioPermission]. Qui gestiamo solo l'assenza del launcher.
         val l = launcher
         if (l == null) {
+            acceptResult = false
             _state.value = VoiceRecognitionState.Error(
                 ErrorCode.NOT_AVAILABLE,
                 "Launcher non registrato. Chiamare registerLauncher() prima di startListening()."
@@ -94,9 +113,11 @@ class AndroidVoiceRecognitionGateway : VoiceRecognitionGateway {
         }
 
         try {
+            acceptResult = true
             l.launch(intent)
             _state.value = VoiceRecognitionState.Listening
         } catch (e: Exception) {
+            acceptResult = false
             _state.value = VoiceRecognitionState.Error(
                 ErrorCode.NOT_AVAILABLE,
                 "Riconoscimento vocale non disponibile: ${e.message}"
@@ -110,6 +131,7 @@ class AndroidVoiceRecognitionGateway : VoiceRecognitionGateway {
      */
     override fun stopListening() {
         if (!_state.value.isListening) return
+        acceptResult = false
         _state.value = VoiceRecognitionState.Idle
     }
 
@@ -117,6 +139,7 @@ class AndroidVoiceRecognitionGateway : VoiceRecognitionGateway {
      * Resetta lo stato a [VoiceRecognitionState.Idle].
      */
     override fun reset() {
+        acceptResult = false
         _state.value = VoiceRecognitionState.Idle
     }
 
@@ -125,6 +148,11 @@ class AndroidVoiceRecognitionGateway : VoiceRecognitionGateway {
      * Gestisce OK, CANCELED ed errori.
      */
     fun onActivityResult(resultCode: Int, data: Intent?) {
+        // Un risultato arrivato dopo cancel/reset/stop non appartiene più
+        // all'operazione corrente: non deve riaprire il testo riconosciuto.
+        if (!acceptResult) return
+        acceptResult = false
+
         when (resultCode) {
             android.app.Activity.RESULT_OK -> {
                 val results = data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)

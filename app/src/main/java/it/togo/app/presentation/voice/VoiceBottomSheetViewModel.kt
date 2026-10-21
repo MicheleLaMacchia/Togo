@@ -15,6 +15,12 @@ import kotlinx.coroutines.launch
  *
  * Osserva il [VoiceRecognitionGateway] e traduce i suoi stati in [VoiceBottomSheetUiState].
  * Espone azioni per conferma, modifica, riprova e annullamento.
+ *
+ * Privacy: il testo riconosciuto resta solo in memoria, dentro [uiState] e nello
+ * stato del gateway, per la durata dell'operazione vocale corrente. Non viene
+ * salvato su file, in database o in log e non viene inviato a endpoint remoti
+ * dall'app. [confirm], [cancel] e [onCleared] azzerano lo stato vocale; la
+ * distruzione del ViewModel azzera anche il callback di conferma.
  */
 class VoiceBottomSheetViewModel(
     private val gateway: VoiceRecognitionGateway
@@ -84,5 +90,16 @@ class VoiceBottomSheetViewModel(
     fun cancel() {
         gateway.reset()
         _uiState.value = VoiceBottomSheetUiState.Hidden
+    }
+
+    /**
+     * Alla distruzione del ViewModel il testo riconosciuto non deve sopravvivere:
+     * resetta il gateway e rilascia il callback che trattiene la schermata.
+     */
+    override fun onCleared() {
+        gateway.reset()
+        onTextConfirmed = null
+        _uiState.value = VoiceBottomSheetUiState.Hidden
+        super.onCleared()
     }
 }

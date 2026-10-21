@@ -2,7 +2,7 @@
 title: 'Story 3.5: Rilevamento Duplicati e Dialog Risoluzione'
 type: 'feature'
 created: '2026-10-12'
-status: 'in-progress'
+status: 'done'
 route: 'dispatch'
 review_loop_iteration: 0
 context:
@@ -91,5 +91,7 @@ context:
 ## Implementation Notes
 
 ## Spec Change Log
+
+- 2026-10-21 — Allineamento stato: portato a `done` in `sprint-status.yaml` e nel frontmatter.
 
 ## Review Triage Log

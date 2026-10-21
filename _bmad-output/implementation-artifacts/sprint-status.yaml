@@ -75,15 +75,15 @@ development_status:
   5-3-condivisione-lista-attiva-via-sharesheet: done
   epic-5-retrospective: optional
 
-  epic-6: in-progress
+  epic-6: done
   6-1-etichette-talkback-e-semantica-accessibile: done
   6-2-target-touch-e-dynamic-type: done
   6-3-dark-mode-completa: done
-  6-4-privacy-audio-e-audit-performance: backlog
+  6-4-privacy-audio-e-audit-performance: done
   epic-6-retrospective: optional
 
   epic-7: backlog
   7-1-aggiunta-nuovo-prodotto-canonico-su-categoria-esistente: backlog
   7-2-proposta-nuovo-livello-3-sotto-un-livello-2-esistente: backlog
   epic-7-retrospective: optional
-last_updated: 10-21-2026 12:56
+last_updated: 10-21-2026 17:04

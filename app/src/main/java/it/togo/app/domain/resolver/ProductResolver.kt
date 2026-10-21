@@ -14,10 +14,11 @@ import kotlinx.coroutines.withContext
  * Logica di risoluzione:
  * 1. Normalizza il termine (trim, lowercase, accent-fold NFKD)
  * 2. Se termine vuoto o troppo corto (<2 char) → None
- * 3. Cerca match esatti nella tabella SYNONYM (via CatalogRepository.search)
- * 4. Se match multipli con score uguale → Ambiguous
- * 5. Se un solo match → Single con confidence calcolata
- * 6. Se nessun match → None
+ * 3. Se il termine coincide esattamente con un sinonimo → Single (1.0)
+ * 4. Altrimenti cerca prodotti con la query LIKE condivisa
+ * 5. Se match multipli con score uguale → Ambiguous
+ * 6. Se un solo match → Single con confidence calcolata
+ * 7. Se nessun match → None
  *
  * Score di confidenza:
  * - 1.0 = match esatto (termine == sinonimo)
@@ -62,6 +63,16 @@ class ProductResolver(
 
         if (normalized.length < MIN_QUERY_LENGTH) {
             return@withContext ResolutionResult.None
+        }
+
+        // Un sinonimo esatto è un segnale univoco più forte del prefisso LIKE.
+        // Es. "pane di" è sinonimo di "Pane di Segale", anche se è prefisso
+        // di altri prodotti: senza questo passo diventerebbe Ambiguous.
+        val exactSynonym = catalogRepository.getByExactSynonym(normalized)
+        if (exactSynonym != null) {
+            return@withContext ResolutionResult.Single(
+                ResolvedProduct(exactSynonym, exactSynonym.name, 1.0)
+            )
         }
 
         // Cerca prodotti corrispondenti (max 50 dal DB)

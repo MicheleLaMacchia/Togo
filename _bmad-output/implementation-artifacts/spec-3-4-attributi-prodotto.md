@@ -2,7 +2,7 @@
 title: 'Story 3.4: Attributi Prodotto Contestuali — Marca, Variante, Conservazione'
 type: 'feature'
 created: '2026-10-12'
-status: 'in-progress'
+status: 'done'
 route: 'dispatch'
 review_loop_iteration: 0
 context:

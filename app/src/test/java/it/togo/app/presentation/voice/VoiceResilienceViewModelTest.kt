@@ -164,6 +164,25 @@ class VoiceResilienceViewModelTest {
     }
 
     @Test
+    fun `cancel annulla il retry programmato`() = runTest(testDispatcher) {
+        val gateway = FakeResilienceGateway()
+        val vm = VoiceResilienceViewModel(gateway)
+
+        // Un errore imposta un backoff > 0, così il retry resta schedulato.
+        gateway.emit(VoiceRecognitionState.Error(ErrorCode.NETWORK_ERROR, "Errore"))
+        advanceUntilIdle()
+        vm.executeRecovery(VoiceRecoveryAction.Retry)
+        vm.cancel()
+        advanceUntilIdle()
+
+        assertEquals(
+            "cancel non deve lasciare un retry che riapre il microfono",
+            0,
+            gateway.startCount,
+        )
+    }
+
+    @Test
     fun `backoff delay aumenta con fallimenti`() = runTest(testDispatcher) {
         val gateway = FakeResilienceGateway()
         val vm = VoiceResilienceViewModel(gateway)

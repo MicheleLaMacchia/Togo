@@ -130,3 +130,4 @@ context:
   - `CreateCanonicalProductUseCaseTest`: rimossi falsi positivi, verificati campi reali prodotto
   - `CategorySelectionWizardTest`: aggiunti test trim/spazi/vuoto
   - `NewProductDraftTest`: aggiunti test back-navigation reset dettagli
+- 2026-10-21 — Allineamento stato: portato a `done` in `sprint-status.yaml` e nel frontmatter (review e fix già completati).
