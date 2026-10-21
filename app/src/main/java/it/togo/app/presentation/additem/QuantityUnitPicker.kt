@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -217,7 +218,11 @@ private fun UnitChip(
 
     Box(
         modifier = Modifier
-            .padding(vertical = 4.dp)
+            .defaultMinSize(
+                minWidth = spacing.touchTargetMin,
+                minHeight = spacing.touchTargetMin,
+            )
+            .combinedClickable(onClick = onClick)
             .background(
                 color = if (selected) colors.inkPrimary else colors.surfaceCard,
                 shape = RoundedCornerShape(20.dp),
@@ -227,8 +232,7 @@ private fun UnitChip(
                 color = if (error && !selected) colors.accentWarning else colors.borderHairline,
                 shape = RoundedCornerShape(20.dp),
             )
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .combinedClickable(onClick = onClick),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(

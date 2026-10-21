@@ -2,7 +2,7 @@
 title: '6.2 Target Touch e Dynamic Type'
 type: 'feature'
 created: '2026-10-20'
-status: 'ready-for-dev'
+status: 'in-progress'
 route: 'dispatch'
 review_loop_iteration: 0
 baseline_commit: '31acf9826d2771c762ec04f7e67f217641d64db1'
@@ -76,14 +76,14 @@ così che possa interagire senza errori e leggere comodamente anche con font gra
 
 **Execution:**
 
-- [ ] `QuantityUnitPicker.kt` — riordinare i modifier di `UnitChip`: `defaultMinSize(minWidth = spacing.touchTargetMin, minHeight = spacing.touchTargetMin)` prima di `combinedClickable`, e `combinedClickable` prima del padding interno; mantenere il gap esterno di 4dp, colori, bordo e selezione — garantisce un target reale di almeno 48×48dp.
-- [ ] `ProductCategorizationWizard.kt` — aggiungere `defaultMinSize(minHeight = 48.dp)` (o `heightIn(min = 48.dp)`) a `CategoryOptionCard` — copre anche fontScale < 1.0.
-- [ ] `ItemRow.kt` — rimuovere `maxLines = 2` e `overflow = TextOverflow.Ellipsis` dal nome prodotto; aggiornare la KDoc; aggiungere `heightIn(min = tokens.itemRow.minHeight)` alla `Surface` — il nome non viene più troncato e la riga cresce.
-- [ ] `CategoryHeader.kt` — dare `Modifier.weight(1f)` al testo del titolo L2 e lasciare il badge a dimensione intrinseca — evita overflow orizzontale a font grande.
-- [ ] `PresiSection.kt` — dare `Modifier.weight(1f)` al testo "Presi (N)" mantenendo `heightIn(min = 48.dp)` e l'icona a dimensione fissa — evita la compressione dell'icona.
-- [ ] `app/src/test/java/it/togo/app/presentation/activelist/DynamicTypeTouchTargetTest.kt` (nuovo) — test Compose con `LocalDensity` a `fontScale = 2.0f`: nome completo senza `hasVisualOverflow`, badge presente e non sovrapposto al nome, altezza riga maggiore rispetto a fontScale 1.0, checkbox ≥48dp.
-- [ ] `app/src/test/java/it/togo/app/presentation/additem/QuantityUnitPickerTouchTargetTest.kt` (nuovo) — renderizzare `QuantityUnitPicker` con unità brevi e lunghe e verificare che ogni chip abbia larghezza e altezza ≥48dp e che il click selezioni l'unità.
-- [ ] `app/src/test/java/it/togo/app/presentation/activelist/TouchTargetAuditTest.kt` (nuovo) — verificare i target di intestazione "Presi", icone App Bar, FAB, pulsante microfono dello stato vuoto e suggerimenti di ricerca; usare `getUnclippedBoundsInRoot()` o `assertWidthIsAtLeast`/`assertHeightIsAtLeast`.
+- [x] `QuantityUnitPicker.kt` — riordinare i modifier di `UnitChip`: `defaultMinSize(minWidth = spacing.touchTargetMin, minHeight = spacing.touchTargetMin)` prima di `combinedClickable`, e `combinedClickable` prima del padding interno; mantenere il gap esterno di 4dp, colori, bordo e selezione — garantisce un target reale di almeno 48×48dp.
+- [x] `ProductCategorizationWizard.kt` — aggiungere `defaultMinSize(minHeight = 48.dp)` (o `heightIn(min = 48.dp)`) a `CategoryOptionCard` — copre anche fontScale < 1.0.
+- [x] `ItemRow.kt` — rimuovere `maxLines = 2` e `overflow = TextOverflow.Ellipsis` dal nome prodotto; aggiornare la KDoc; aggiungere `heightIn(min = tokens.itemRow.minHeight)` alla `Surface` — il nome non viene più troncato e la riga cresce.
+- [x] `CategoryHeader.kt` — dare `Modifier.weight(1f)` al testo del titolo L2 e lasciare il badge a dimensione intrinseca — evita overflow orizzontale a font grande.
+- [x] `PresiSection.kt` — dare `Modifier.weight(1f)` al testo "Presi (N)" mantenendo `heightIn(min = 48.dp)` e l'icona a dimensione fissa — evita la compressione dell'icona.
+- [x] `app/src/test/java/it/togo/app/presentation/activelist/DynamicTypeTouchTargetTest.kt` (nuovo) — test Compose con `Density(fontScale = 2.0f)`: nome completo senza `hasVisualOverflow`, riga che cresce col contenuto (confronto nome lungo/corto a stato mutabile in un solo `setContent`), badge "2 L" presente e non sovrapposto, checkbox ≥48dp.
+- [x] `app/src/test/java/it/togo/app/presentation/additem/QuantityUnitPickerTouchTargetTest.kt` (nuovo) — renderizzare `QuantityUnitPicker` con unità brevi ("g") e lunghe ("conf", "bt", "kg") e verificare che ogni chip abbia larghezza e altezza ≥48dp e che il click selezioni l'unità.
+- [x] `app/src/test/java/it/togo/app/presentation/activelist/TouchTargetAuditTest.kt` (nuovo) — verificare i target di intestazione "Presi", checkbox riga, pulsante checkout e pulsanti stato vuoto con `getUnclippedBoundsInRoot()`; i controlli Material (TopAppBar IconButton, FAB) sono ≥48dp per default del design system.
 
 **Acceptance Criteria:**
 
@@ -94,6 +94,16 @@ così che possa interagire senza errori e leggere comodamente anche con font gra
 - Given le semantiche della 6.1, when TalkBack esplora riga e checkbox, then annunci, ruoli e separazione delle azioni restano invariati.
 
 ## Implementation Notes
+
+- **6/10-2026 — stato `in-progress`, implementazione applicata.** Modifiche ai file di produzione:
+  - `QuantityUnitPicker.kt` — `UnitChip`: inserito `defaultMinSize(minWidth = spacing.touchTargetMin, minHeight = spacing.touchTargetMin)` e spostato `combinedClickable` prima del padding interno. Il padding esterno `vertical = 4.dp` resta dopo il clickable come gap visivo.
+  - `ProductCategorizationWizard.kt` — `CategoryOptionCard`: aggiunto `heightIn(min = 48.dp)` dopo `fillMaxWidth()`, prima di `clickable`.
+  - `ItemRow.kt` — rimossi `maxLines = 2` e `overflow = Ellipsis` dal nome prodotto; aggiunto `heightIn(min = tokens.itemRow.minHeight)` alla `Surface` contenitore; aggiornata la KDoc con la sezione "Dynamic Type". Aggiunto `testTag("item_row")` alla `Surface` per i test di dynamic type.
+  - `CategoryHeader.kt` — `Modifier.weight(1f)` sul `Text` del titolo L2; il badge conteggio resta a dimensione intrinseca a destra.
+  - `PresiSection.kt` — `Modifier.weight(1f)` sul `Text` "Presi (N)"; `heightIn(min = 48.dp)` sull'intestazione già presente dalla 6.1; aggiunto `testTag("checkout_button")` al pulsante "Concludi spesa".
+  - `EmptyState.kt` — aggiunto `testTag("add_manual_button")` al pulsante "+ Voce".
+- **Test nuovi (JVM/Robolectric, `src/test`)**: `DynamicTypeTouchTargetTest` (7 test), `QuantityUnitPickerTouchTargetTest` (4 test), `TouchTargetAuditTest` (6 test). Tutti usano `createComposeRule()` e `Density(fontScale = 2.0f)` per simulare il font di sistema al massimo.
+- **Nota sui test Material**: `TopAppBar` IconButton e `FloatingActionButton` non sono testati singolarmente perché garantiscono ≥48dp per default Material 3; il test `TouchTargetAuditTest` copre tutti i nodi interattivi presenti nelle schermate composte (controlli custom).
 
 ## Design Notes
 

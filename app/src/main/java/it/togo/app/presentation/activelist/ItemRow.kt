@@ -41,6 +41,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -63,6 +64,11 @@ import it.togo.app.ui.theme.togoTypography
  * Stati:
  * - Attivo: bordo crisp, testo inkPrimary, badge scuro
  * - Checked: testo barrato inkPrimary, bordo/checkbox verde
+ *
+ * Dynamic Type:
+ * - Il nome prodotto non viene mai troncato (niente maxLines/ellissi): la riga
+ *   cresce in altezza e il badge resta un fratello del nome nella Row, mai
+ *   sovrapposto. `minHeight` garantisce il target da 48dp anche a font piccolo.
  *
  * Accessibilità:
  * - Attivo: la riga è cliccabile → modifica; la checkbox → spunta.
@@ -170,8 +176,11 @@ fun ItemRow(
 
         // Il contenitore disegna card e bordo; la Row cliccabile e la
         // checkbox sono sibling, così la semantica non viene fusa.
+        // heightIn(min) garantisce il target da 48dp anche a font piccolo.
         Box(
             modifier = swipeModifier
+                .testTag("item_row")
+                .heightIn(min = tokens.itemRow.minHeight)
                 .clip(tokens.itemRow.radius)
                 .background(tokens.itemRow.background)
                 .border(tokens.itemRow.borderWidth, borderColor, tokens.itemRow.radius),
@@ -204,8 +213,6 @@ fun ItemRow(
                         text = productName,
                         style = typography.itemName,
                         color = textColor,
-                        maxLines = 2,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                         textDecoration = if (isChecked) TextDecoration.LineThrough else TextDecoration.None,
                     )
 

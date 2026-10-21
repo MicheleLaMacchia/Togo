@@ -118,6 +118,8 @@ fun PresiSection(
                 text = "Presi (${items.size})",
                 style = typography.sectionHeader,
                 color = colors.inkPrimary,
+                // Peso al testo: a font grande non comprime l'icona di espansione.
+                modifier = Modifier.weight(1f),
             )
             Icon(
                 imageVector = if (expanded)
@@ -173,7 +175,10 @@ fun PresiSection(
                             performShortHapticFeedback(context)
                             onCheckout()
                         },
-                        modifier = Modifier.fillMaxWidth().padding(bottom = spacing.space2),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("checkout_button")
+                            .padding(bottom = spacing.space2),
                         colors = androidx.compose.material3.ButtonDefaults.buttonColors(
                             containerColor = tokens.bottomSheet.checkoutButtonBackground,
                             contentColor = tokens.bottomSheet.checkoutButtonContent,

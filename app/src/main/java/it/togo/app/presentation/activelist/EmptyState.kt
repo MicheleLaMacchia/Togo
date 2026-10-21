@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import it.togo.app.ui.theme.componentTokens
@@ -92,7 +93,9 @@ fun EmptyState(
             // Pulsante "Voce" (primario)
             androidx.compose.material3.Button(
                 onClick = onAddManual,
-                modifier = Modifier.width(240.dp),
+                modifier = Modifier
+                    .width(240.dp)
+                    .testTag("add_manual_button"),
                 colors = androidx.compose.material3.ButtonDefaults.buttonColors(
                     containerColor = colors.inkPrimary,
                     contentColor = colors.inkInverse,

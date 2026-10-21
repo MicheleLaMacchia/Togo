@@ -80,9 +80,12 @@ fun CategoryHeader(
                 text = level2.name.uppercase(Locale.ROOT),
                 style = typography.sectionHeader,
                 color = colors.inkPrimary,
+                // A font grande il titolo va a capo invece di spingere il
+                // badge conteggio fuori schermo.
+                modifier = Modifier.weight(1f),
             )
 
-            // Badge count
+            // Badge count (dimensione intrinseca, resta visibile a destra)
             if (itemCount > 0) {
                 Box(
                     modifier = Modifier
