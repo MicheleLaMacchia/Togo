@@ -126,7 +126,7 @@ fun QuantityUnitPicker(
                             keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
                             imeAction = androidx.compose.ui.text.input.ImeAction.Next,
                         ),
-                        label = { Text("Quantità", style = togoTypography().caption, color = togoColors().inkMuted) },
+                        label = { Text("Quantità", style = togoTypography().caption, color = togoColors().inkSecondary) },
                     )
                 }
 
@@ -145,7 +145,7 @@ fun QuantityUnitPicker(
             }
 
             if (errorQuantity != null) {
-                Text(errorQuantity, style = typography.caption, color = togoColors().accentWarning)
+                Text(errorQuantity, style = typography.caption, color = togoColors().warningInk)
             }
         }
 
@@ -197,7 +197,7 @@ fun QuantityUnitPicker(
             }
 
             if (errorUnit != null) {
-                Text(errorUnit, style = typography.caption, color = togoColors().accentWarning)
+                Text(errorUnit, style = typography.caption, color = togoColors().warningInk)
             }
         }
     }

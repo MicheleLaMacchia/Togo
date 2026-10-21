@@ -82,7 +82,7 @@ fun LearnedRulesScreen(
             text = { Text("Eliminare la regola per '${uiState.ruleToDelete?.userExpression}'?", style = typography.itemMeta) },
             confirmButton = {
                 TextButton(onClick = { viewModel.confirmDelete() }) {
-                    Text("Elimina", color = colors.error)
+                    Text("Elimina", color = colors.warningInk)
                 }
             },
             dismissButton = {
@@ -274,14 +274,14 @@ private fun RuleItemRow(
             Text(
                 text = "Ultima applicazione: ${dateFormat.format(Date(rule.lastAppliedAt))}",
                 style = typography.caption,
-                color = colors.inkTertiary
+                color = colors.inkSecondary
             )
 
             // Stato
             Text(
                 text = if (rule.isActive) "Attiva" else "Disattivata",
                 style = typography.caption,
-                color = if (rule.isActive) colors.success else colors.warning
+                color = if (rule.isActive) colors.successInk else colors.warningInk
             )
 
             // Azioni
@@ -298,12 +298,12 @@ private fun RuleItemRow(
                     )
                 }
                 if (rule.isActive) {
-                    TextButton(onClick = onDeactivate) { Text("Disattiva", color = colors.warning) }
+                    TextButton(onClick = onDeactivate) { Text("Disattiva", color = colors.warningInk) }
                 } else {
                     TextButton(onClick = onReactivate) { Text("Riattiva", color = colors.accent) }
                 }
                 IconButton(onClick = onDelete) {
-                    Icon(imageVector = Icons.Filled.Delete, contentDescription = "Elimina", tint = colors.error)
+                    Icon(imageVector = Icons.Filled.Delete, contentDescription = "Elimina", tint = colors.warningInk)
                 }
             }
         }

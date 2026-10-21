@@ -84,6 +84,12 @@ data class DuplicateDialogTokens(
     val radius: RoundedCornerShape,
 )
 
+data class SnackbarTokens(
+    val container: Color,
+    val content: Color,
+    val action: Color,
+)
+
 /** Container di tutti i token component-level. */
 data class TogoComponentTokens(
     val appBar: AppBarTokens,
@@ -94,6 +100,7 @@ data class TogoComponentTokens(
     val voiceFab: VoiceFabTokens,
     val bottomSheet: BottomSheetTokens,
     val duplicateDialog: DuplicateDialogTokens,
+    val snackbar: SnackbarTokens,
 )
 
 /** Factory per costruire i token component dal tema corrente. */
@@ -110,7 +117,7 @@ fun togoComponentTokensFrom(
         background = colors.surfaceCard,
         radius = shapes.md,
         swipeDeleteBackground = colors.accentSuccess,
-        swipeDeleteIconColor = colors.inkInverse,
+        swipeDeleteIconColor = TogoColorTokens.OnAccent,
     ),
     checkboxUtility = CheckboxUtilityTokens(
         borderColor = colors.borderCrisp,
@@ -139,12 +146,18 @@ fun togoComponentTokensFrom(
         borderTopColor = colors.borderCrisp,
         radiusTop = shapes.lg,
         checkoutButtonBackground = colors.accentSuccess,
-        checkoutButtonContent = colors.inkInverse,
+        checkoutButtonContent = TogoColorTokens.OnAccent,
     ),
     duplicateDialog = DuplicateDialogTokens(
         background = colors.surfaceBase,
         borderColor = colors.borderCrisp,
         radius = shapes.lg,
+    ),
+    snackbar = SnackbarTokens(
+        // Superficie scura in entrambi i temi: in dark inverseSurface sarebbe bianca.
+        container = if (colors.isDark) colors.surfaceCard else colors.surfaceInverse,
+        content = TogoColorTokens.OnAccent,
+        action = TogoColorTokens.OnAccent,
     ),
 )
 

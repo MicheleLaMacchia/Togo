@@ -50,6 +50,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import it.togo.app.ui.theme.SHEET_SCRIM_ALPHA
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.TogoColorScheme
 import it.togo.app.ui.theme.TogoSpacingTokens
@@ -89,6 +90,7 @@ fun VoiceBottomSheet(
             onDismissRequest = onDismiss,
             sheetState = sheetState,
             containerColor = colors.surfaceBase,
+            scrimColor = colors.scrim.copy(alpha = SHEET_SCRIM_ALPHA),
             shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
         ) {
             Column(
@@ -178,12 +180,12 @@ private fun ListeningContent(
                 .size(72.dp)
                 .scale(scale),
             shape = CircleShape,
-            color = colors.accentWarning.copy(alpha = 0.15f),
+            color = colors.warningInk.copy(alpha = 0.15f),
         ) {
             Icon(
                 imageVector = Icons.Filled.Mic,
                 contentDescription = null,
-                tint = colors.accentWarning,
+                tint = colors.warningInk,
                 modifier = Modifier
                     .padding(spacing[4])
                     .size(32.dp),
@@ -352,7 +354,7 @@ private fun ErrorContent(
         Icon(
             imageVector = Icons.Filled.Close,
             contentDescription = null,
-            tint = colors.accentWarning,
+            tint = colors.warningInk,
             modifier = Modifier.size(48.dp),
         )
 

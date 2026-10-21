@@ -197,7 +197,7 @@ private fun HistoryItemRow(
                 Text(
                     text = dateFormat.format(Date(item.purchasedAt)),
                     style = typography.caption,
-                    color = colors.inkTertiary
+                    color = colors.inkSecondary
                 )
             }
 

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Sfondo finestra Dark: surface-base-dark (#0B0F17). Evita il flash bianco al cold start. -->
+    <color name="togo_window_background">#FF0B0F17</color>
+</resources>

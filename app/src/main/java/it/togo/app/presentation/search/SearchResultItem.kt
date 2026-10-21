@@ -49,7 +49,12 @@ fun SearchResultItem(
     val spacing = togoSpacing()
     val tokens = togoComponentTokens()
 
-    val highlightedName = buildAnnotatedStringHighlight(product.name, query)
+    val highlightedName = buildAnnotatedStringHighlight(
+        text = product.name,
+        query = query,
+        highlightBackground = colors.accentHighlight,
+        highlightForeground = colors.inkInverse,
+    )
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -114,22 +119,29 @@ fun SearchResultItem(
     }
 }
 
-private fun buildAnnotatedStringHighlight(text: String, query: String): androidx.compose.ui.text.AnnotatedString {
+internal fun buildAnnotatedStringHighlight(
+    text: String,
+    query: String,
+    highlightBackground: Color,
+    highlightForeground: Color,
+): androidx.compose.ui.text.AnnotatedString {
     val builder = androidx.compose.ui.text.AnnotatedString.Builder(text)
     if (query.isNotBlank()) {
-        val lowerText = text.lowercase()
-        val lowerQuery = query.lowercase()
-        var index = lowerText.indexOf(lowerQuery)
+        // indexOf(ignoreCase = true) cerca nella stringa originale: lowercase()
+        // può cambiare la lunghezza (es. 'İ') e far uscire dagli indici validi.
+        var index = text.indexOf(query, ignoreCase = true)
         while (index >= 0) {
+            val end = (index + query.length).coerceAtMost(text.length)
             builder.addStyle(
                 style = androidx.compose.ui.text.SpanStyle(
                     fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                    background = androidx.compose.ui.graphics.Color(0xFF2563EB), // accentHighlight
+                    color = highlightForeground,
+                    background = highlightBackground,
                 ),
                 start = index,
-                end = index + query.length,
+                end = end,
             )
-            index = lowerText.indexOf(lowerQuery, index + query.length)
+            index = text.indexOf(query, startIndex = end, ignoreCase = true)
         }
     }
     return builder.toAnnotatedString()

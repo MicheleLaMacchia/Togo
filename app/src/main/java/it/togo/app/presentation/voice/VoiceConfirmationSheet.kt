@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import it.togo.app.domain.parser.ParsedCommand
+import it.togo.app.ui.theme.SHEET_SCRIM_ALPHA
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.TogoColorScheme
 import it.togo.app.ui.theme.TogoSpacingTokens
@@ -73,6 +74,7 @@ fun VoiceConfirmationSheet(
             onDismissRequest = onDismiss,
             sheetState = sheetState,
             containerColor = colors.surfaceBase,
+            scrimColor = colors.scrim.copy(alpha = SHEET_SCRIM_ALPHA),
             shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
         ) {
             when (val state = uiState) {
@@ -139,13 +141,13 @@ private fun ReadyContent(
                 Icon(
                     imageVector = Icons.Filled.Warning,
                     contentDescription = null,
-                    tint = colors.accentWarning,
+                    tint = colors.warningInk,
                     modifier = Modifier.size(20.dp),
                 )
                 Text(
                     text = "Manca l'unità di misura, specifica",
                     style = typography.itemMeta,
-                    color = colors.accentWarning,
+                    color = colors.warningInk,
                 )
             }
         }
@@ -273,7 +275,7 @@ private fun CommandDisplay(
                 Text(
                     text = "Confidenza: ${(command.confidence * 100).toInt()}%",
                     style = typography.caption,
-                    color = colors.inkMuted,
+                    color = colors.inkSecondary,
                 )
             }
         }

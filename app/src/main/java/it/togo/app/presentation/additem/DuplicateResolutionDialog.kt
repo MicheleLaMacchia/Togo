@@ -1,5 +1,6 @@
 package it.togo.app.presentation.additem
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -7,9 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -24,6 +22,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import it.togo.app.domain.model.ResolutionOption
+import it.togo.app.ui.theme.togoColors
+import it.togo.app.ui.theme.togoComponentTokens
+import it.togo.app.ui.theme.togoTypography
 
 /**
  * Dialog di risoluzione duplicati.
@@ -50,14 +51,20 @@ fun DuplicateResolutionDialog(
     val message = "\"$productName\" è già presente con $currentQuantity. " +
         "Nuova quantità: $newQuantity. Cosa vuoi fare?"
 
+    val colors = togoColors()
+    val typography = togoTypography()
+    val tokens = togoComponentTokens()
+
     Dialog(onDismissRequest = { onSelect(ResolutionOption.CANCEL) }) {
-        Card(
+        Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface,
+            shape = tokens.duplicateDialog.radius,
+            color = tokens.duplicateDialog.background,
+            contentColor = colors.inkPrimary,
+            border = BorderStroke(
+                tokens.duplicateDialog.borderWidth,
+                tokens.duplicateDialog.borderColor,
             ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         ) {
             Column(
                 modifier = Modifier
@@ -68,9 +75,9 @@ fun DuplicateResolutionDialog(
                 // Titolo
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = typography.titleScreen,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = colors.inkPrimary,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -80,8 +87,8 @@ fun DuplicateResolutionDialog(
                 // Messaggio descrittivo
                 Text(
                     text = message,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = typography.itemName,
+                    color = colors.inkSecondary,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -102,7 +109,7 @@ fun DuplicateResolutionDialog(
                         ) {
                             Text(
                                 text = "Somma quantità (+$newQuantity → ${currentQuantity + newQuantity})",
-                                style = MaterialTheme.typography.labelLarge,
+                                style = typography.itemMeta,
                             )
                         }
                     }
@@ -115,7 +122,7 @@ fun DuplicateResolutionDialog(
                     ) {
                         Text(
                             text = "Sostituisci quantità ($newQuantity)",
-                            style = MaterialTheme.typography.labelLarge,
+                            style = typography.itemMeta,
                         )
                     }
 
@@ -127,7 +134,7 @@ fun DuplicateResolutionDialog(
                     ) {
                         Text(
                             text = "Crea voce separata",
-                            style = MaterialTheme.typography.labelLarge,
+                            style = typography.itemMeta,
                         )
                     }
 
@@ -138,8 +145,8 @@ fun DuplicateResolutionDialog(
                     ) {
                         Text(
                             text = "Annulla",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = typography.itemMeta,
+                            color = colors.inkSecondary,
                         )
                     }
                 }

@@ -78,7 +78,7 @@ development_status:
   epic-6: in-progress
   6-1-etichette-talkback-e-semantica-accessibile: done
   6-2-target-touch-e-dynamic-type: done
-  6-3-dark-mode-completa: backlog
+  6-3-dark-mode-completa: done
   6-4-privacy-audio-e-audit-performance: backlog
   epic-6-retrospective: optional
 
@@ -86,4 +86,4 @@ development_status:
   7-1-aggiunta-nuovo-prodotto-canonico-su-categoria-esistente: backlog
   7-2-proposta-nuovo-livello-3-sotto-un-livello-2-esistente: backlog
   epic-7-retrospective: optional
-last_updated: 10-20-2026 19:00
+last_updated: 10-21-2026 12:56

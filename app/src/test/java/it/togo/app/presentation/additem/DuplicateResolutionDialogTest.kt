@@ -6,6 +6,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import it.togo.app.domain.model.ResolutionOption
+import it.togo.app.ui.theme.TogoTheme
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -32,16 +33,19 @@ class DuplicateResolutionDialogTest {
 
     private fun showDialog(
         canSum: Boolean = true,
+        darkTheme: Boolean = false,
         onSelect: (ResolutionOption) -> Unit = {},
     ) {
         composeTestRule.setContent {
-            DuplicateResolutionDialog(
-                productName = "Latte UHT",
-                currentQuantity = 1.0,
-                newQuantity = 2.0,
-                canSum = canSum,
-                onSelect = onSelect,
-            )
+            TogoTheme(darkTheme = darkTheme) {
+                DuplicateResolutionDialog(
+                    productName = "Latte UHT",
+                    currentQuantity = 1.0,
+                    newQuantity = 2.0,
+                    canSum = canSum,
+                    onSelect = onSelect,
+                )
+            }
         }
     }
 
@@ -116,6 +120,21 @@ class DuplicateResolutionDialogTest {
             .performClick()
 
         assertEquals(ResolutionOption.SEPARATE, selectedOption)
+    }
+
+    @Test
+    fun `dialog keeps its content and actions in dark`() {
+        var selectedOption: ResolutionOption? = null
+        showDialog(darkTheme = true, onSelect = { selectedOption = it })
+
+        composeTestRule.onNodeWithText("Prodotto già in lista").assertExists()
+        composeTestRule
+            .onNodeWithText("Somma quantità (+2.0 → 3.0)")
+            .assertExists()
+            .assertHasClickAction()
+            .performClick()
+
+        assertEquals(ResolutionOption.SUM, selectedOption)
     }
 
     @Test

@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -246,23 +247,30 @@ fun ActiveListScreen(
                             modifier = Modifier.fillMaxWidth(),
                             action = if (uiState.checkedItemsForUndo.isNotEmpty()) {
                                 {
-                                    TextButton(onClick = { onEvent(UiEvent.UndoCheckout) }) {
-                                        Text("Annulla", color = colors.accentHighlight)
+                                    TextButton(
+                                        onClick = { onEvent(UiEvent.UndoCheckout) },
+                                        colors = ButtonDefaults.textButtonColors(
+                                            contentColor = tokens.snackbar.action,
+                                        ),
+                                    ) {
+                                        Text("Annulla")
                                     }
                                 }
                             } else {
                                 null
                             },
+                            containerColor = tokens.snackbar.container,
+                            contentColor = tokens.snackbar.content,
                         ) {
-                            Text(checkoutSnackbarMessage, style = typography.itemMeta, color = colors.inkInverse)
+                            Text(checkoutSnackbarMessage, style = typography.itemMeta)
                         }
                     }
 
                     if (uiState.error != null) {
                         Text(
-                                text = uiState.error.orEmpty(),
+                            text = uiState.error.orEmpty(),
                             style = typography.itemMeta,
-                            color = colors.error,
+                            color = colors.warningInk,
                             modifier = Modifier.padding(spacing.space4)
                         )
                     } else if (uiState.activeGroups.isEmpty() && !uiState.hasCheckedItems) {

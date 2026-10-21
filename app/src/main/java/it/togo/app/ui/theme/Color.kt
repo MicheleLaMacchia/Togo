@@ -44,13 +44,30 @@ object TogoColorTokens {
     val DarkInkSecondary = Color(0xFF94A3B8)       // #94A3B8
     val DarkBorderCrisp = Color(0xFF64748B)        // #64748B (WCAG >=3:1 su surfaceBase dark)
     val DarkAccentHighlight = Color(0xFF60A5FA)    // #60A5FA
+    /** Testo di warning/errore in dark: l'ambra condivisa #B45309 non raggiunge 4,5:1. */
+    val DarkWarningInk = Color(0xFFF59E0B)         // #F59E0B (WCAG >=8:1 su surfaceBase dark)
+
+    /** Testo di successo in dark: il verde condiviso #15803D dà ~3,4:1 su surfaceCard. */
+    val DarkSuccessInk = Color(0xFF4ADE80)         // #4ADE80 (WCAG >=9:1 su surfaceCard dark)
 
     // Token condivisi (identici in entrambi i temi)
     val AccentSuccess = LightAccentSuccess
     val AccentWarning = LightAccentWarning
     val BadgeBg = LightBadgeBg
     val BadgeInk = LightBadgeInk
+
+    /**
+     * Contenuto su superfici [AccentSuccess]/[AccentWarning] condivise.
+     * Bianco fisso: i due verdi/ambra non cambiano tra i temi.
+     */
+    val OnAccent = LightInkInverse
 }
+
+/** Alpha dello scrim dei ModalBottomSheet (DESIGN.md §7.5: rgba(15,23,42,0.6)). */
+const val SHEET_SCRIM_ALPHA = 0.6f
+
+/** Alpha del backdrop dell'overlay vocale (spec 6.3: rgba(15,23,42,0.7)). */
+const val VOICE_OVERLAY_SCRIM_ALPHA = 0.7f
 
 /** Costruisce la [ColorScheme] Material3 Light per TOGO. */
 private val LightTogoColorScheme: ColorScheme = lightColorScheme(
@@ -80,6 +97,7 @@ private val LightTogoColorScheme: ColorScheme = lightColorScheme(
     outlineVariant = TogoColorTokens.LightBorderHairline,
     scrim = TogoColorTokens.LightInkPrimary,
     inverseSurface = TogoColorTokens.LightSurfaceInverse,
+    inverseOnSurface = TogoColorTokens.LightInkInverse,
     inversePrimary = TogoColorTokens.LightInkInverse,
 )
 
@@ -109,9 +127,11 @@ private val DarkTogoColorScheme: ColorScheme = darkColorScheme(
     onSurfaceVariant = TogoColorTokens.DarkInkSecondary,
     outline = TogoColorTokens.DarkBorderCrisp,
     outlineVariant = TogoColorTokens.DarkBorderCrisp,
-    scrim = TogoColorTokens.DarkInkPrimary,
-    inverseSurface = TogoColorTokens.LightSurfaceBase,
-    inversePrimary = TogoColorTokens.LightInkPrimary,
+    scrim = TogoColorTokens.LightSurfaceInverse,
+    // Snackbar e tooltip in dark: superficie scura con testo chiaro, non bianca.
+    inverseSurface = TogoColorTokens.DarkSurfaceCard,
+    inverseOnSurface = TogoColorTokens.DarkInkPrimary,
+    inversePrimary = TogoColorTokens.OnAccent,
 )
 
 /** Sealed interface per accesso tipizzato ai token TOGO (Light/Dark). */
@@ -143,6 +163,15 @@ sealed interface TogoColorScheme {
     val warning: Color get() = accentWarning
     val error: Color get() = accentWarning
     val scrim: Color get() = surfaceInverse
+
+    /** Testo di warning/errore: in dark serve un'ambra più chiara. */
+    val warningInk: Color get() = accentWarning
+
+    /** Testo di successo: in dark serve un verde più chiaro. */
+    val successInk: Color get() = accentSuccess
+
+    /** Vero per la palette dark; evita branch sul tema nei component token. */
+    val isDark: Boolean get() = false
 }
 
 typealias TogoColors = TogoColorScheme
@@ -185,7 +214,19 @@ data class DarkTogoColorSchemeImpl(
     override val accentWarning: Color = TogoColorTokens.AccentWarning,
     override val badgeBg: Color = TogoColorTokens.BadgeBg,
     override val badgeInk: Color = TogoColorTokens.BadgeInk,
-) : TogoColorScheme
+) : TogoColorScheme {
+    // Lo scrim dei bottom sheet deve essere scuro anche in dark mode:
+    // surfaceInverse in dark è bianco e produrrebbe un velo chiaro.
+    override val scrim: Color get() = TogoColorTokens.LightSurfaceInverse
+
+    // L'ambra condivisa #B45309 su #0B0F17 dà 3,82:1: per il testo serve una variante chiara.
+    override val warningInk: Color get() = TogoColorTokens.DarkWarningInk
+
+    // Il verde condiviso #15803D su surfaceCard dà ~3,4:1: per il testo serve una variante chiara.
+    override val successInk: Color get() = TogoColorTokens.DarkSuccessInk
+
+    override val isDark: Boolean get() = true
+}
 
 /** CompositionLocal per il ColorScheme TOGO corrente (Light/Dark). */
 internal val LocalTogoColorScheme: ProvidableCompositionLocal<TogoColorScheme> =

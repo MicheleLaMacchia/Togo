@@ -358,7 +358,7 @@ private fun EnterDetailsStep(
             placeholder = { Text("Es. Latte di mandorla bio", style = typography.itemMeta) },
             isError = draft.errors.containsKey("productName"),
             supportingText = draft.errors["productName"]?.let { error ->
-                { Text(error, color = colors.error) }
+                { Text(error, color = colors.warningInk) }
             },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),

@@ -111,7 +111,7 @@ fun ProductSearchField(
                     Text(
                         "Cerca prodotto...",
                         style = typography.itemName,
-                        color = colors.inkMuted,
+                        color = colors.inkSecondary,
                     )
                 },
                 singleLine = true,

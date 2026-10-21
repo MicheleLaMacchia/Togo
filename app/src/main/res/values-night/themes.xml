@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Variante Dark di Theme.Togo: stessa risorsa, parent scuro.
+        Garantisce che finestra, sfondo e system bar non restino chiari
+        quando il sistema è in Dark Mode (evita il flash bianco al cold start).
+    -->
+    <style name="Theme.Togo" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/togo_window_background</item>
+        <item name="android:statusBarColor">@color/togo_window_background</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

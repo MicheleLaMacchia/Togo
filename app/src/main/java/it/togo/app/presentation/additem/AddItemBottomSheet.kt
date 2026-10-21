@@ -37,6 +37,7 @@ import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.ShoppingListRepository
+import it.togo.app.ui.theme.SHEET_SCRIM_ALPHA
 import it.togo.app.ui.theme.componentTokens
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
@@ -123,6 +124,7 @@ fun AddItemBottomSheet(
         },
         sheetState = sheetState,
         containerColor = colors.surfaceBase,
+        scrimColor = colors.scrim.copy(alpha = SHEET_SCRIM_ALPHA),
         shape = androidx.compose.foundation.shape.RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
     ) {
             Column(
@@ -304,27 +306,25 @@ fun AddItemBottomSheet(
                     }
 
                     if (uiState.currentStep < 4) {
+                        val canProceed = when (uiState.currentStep) {
+                            1 -> uiState.canProceedToStep2
+                            2 -> uiState.canProceedToStep3
+                            else -> true
+                        }
                         Button(
                             onClick = { viewModel.onEvent(AddItemUiEvent.NextStep) },
                             modifier = Modifier.weight(1f),
-                            enabled = when (uiState.currentStep) {
-                                1 -> uiState.canProceedToStep2
-                                2 -> uiState.canProceedToStep3
-                                3 -> true
-                                else -> true
-                            },
+                            enabled = canProceed,
                             colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                                containerColor = if (uiState.currentStep == 1 && !uiState.canProceedToStep2
-                                    || uiState.currentStep == 2 && !uiState.canProceedToStep3
-                                ) colors.borderHairline else colors.accentAction,
-                                contentColor = if (uiState.currentStep == 1 && !uiState.canProceedToStep2
-                                    || uiState.currentStep == 2 && !uiState.canProceedToStep3
-                                ) colors.inkMuted else colors.inkInverse,
+                                containerColor = colors.accentAction,
+                                contentColor = colors.inkInverse,
+                                // Disabilitato leggibile: borderHairline/inkMuted sono lo stesso
+                                // #64748B in dark e renderebbero il testo invisibile.
+                                disabledContainerColor = colors.surfaceSubtle,
+                                disabledContentColor = colors.inkSecondary,
                             ),
                         ) {
-                            Text("Avanti", style = typography.sectionHeader, color = if (uiState.currentStep == 1 && !uiState.canProceedToStep2
-                                || uiState.currentStep == 2 && !uiState.canProceedToStep3
-                            ) colors.inkMuted else colors.inkInverse)
+                            Text("Avanti", style = typography.sectionHeader)
                         }
                     } else {
                         // Step 4 - Conferma
@@ -333,14 +333,16 @@ fun AddItemBottomSheet(
                             modifier = Modifier.weight(1f),
                             enabled = uiState.isValidForConfirm,
                             colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                                containerColor = if (uiState.isValidForConfirm) colors.accentSuccess else colors.borderHairline,
-                                contentColor = if (uiState.isValidForConfirm) colors.inkInverse else colors.inkMuted,
+                                containerColor = colors.accentSuccess,
+                                // Il verde è condiviso tra i temi: il testo resta bianco fisso.
+                                contentColor = tokens.bottomSheet.checkoutButtonContent,
+                                disabledContainerColor = colors.surfaceSubtle,
+                                disabledContentColor = colors.inkSecondary,
                             ),
                         ) {
                             Text(
                                 text = if (viewModel.isEditMode) "Salva" else "Aggiungi",
                                 style = typography.sectionHeader,
-                                color = if (uiState.isValidForConfirm) colors.inkInverse else colors.inkMuted
                             )
                         }
                     }

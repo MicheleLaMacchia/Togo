@@ -4,11 +4,13 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -30,6 +32,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import it.togo.app.domain.voice.VoiceRecognitionState
+import it.togo.app.ui.theme.TogoColorScheme
+import it.togo.app.ui.theme.TogoColorTokens
+import it.togo.app.ui.theme.VOICE_OVERLAY_SCRIM_ALPHA
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
@@ -67,12 +72,8 @@ fun VoiceFab(
         label = "pulse",
     )
 
-    val fabColor = when {
-        isListening -> colors.error
-        isError -> colors.error
-        isResult -> colors.success
-        else -> colors.accent
-    }
+    val fabColor = voiceFabContainerColor(state, colors)
+    val fabContentColor = voiceFabContentColor(state, colors)
 
     val icon = when {
         isListening -> Icons.Filled.Mic
@@ -132,7 +133,8 @@ fun VoiceFab(
         FloatingActionButton(
             onClick = { if (enabled) onClick() },
             containerColor = if (enabled) fabColor else colors.surfaceSubtle,
-            contentColor = if (enabled) Color.White else colors.inkMuted,
+            // inkMuted su surfaceSubtle scende sotto 3:1 in light; inkSecondary è leggibile.
+            contentColor = if (enabled) fabContentColor else colors.inkSecondary,
             modifier = modifier
                 .size(56.dp)
                 .scale(pulseScale)
@@ -148,9 +150,49 @@ fun VoiceFab(
 }
 
 /**
+ * Colore di sfondo del FAB vocale per stato.
+ *
+ * Estratto per poter verificare nei test la coppia sfondo/contenuto senza
+ * dipendere da un rendering pixel.
+ */
+internal fun voiceFabContainerColor(state: VoiceRecognitionState, colors: TogoColorScheme): Color {
+    val isListening = state.isListening
+    val isError = state.isError
+    val isResult = state.isResult
+    return when {
+        isListening -> colors.error
+        isError -> colors.error
+        isResult -> colors.success
+        // Deviazione documentata: l'idle resta accentHighlight (blu) e non
+        // componentTokens().voiceFab.background (accentAction, cerchio scuro),
+        // per non cambiare lo stato visivo consolidato della 6.1.
+        else -> colors.accent
+    }
+}
+
+/**
+ * Colore del contenuto del FAB vocale.
+ *
+ * - accentHighlight cambia luminosità tra i temi → inkInverse, che si inverte.
+ * - error/success sono condivisi e scuri in entrambi i temi → bianco fisso.
+ */
+internal fun voiceFabContentColor(state: VoiceRecognitionState, colors: TogoColorScheme): Color {
+    val isListening = state.isListening
+    val isError = state.isError
+    val isResult = state.isResult
+    return if (isListening || isError || isResult) {
+        TogoColorTokens.OnAccent
+    } else {
+        colors.inkInverse
+    }
+}
+
+/**
  * Overlay schermo durante l'ascolto vocale.
  *
  * Mostra un indicatore visivo a schermo intero quando il microfono è attivo.
+ * Non è cablato nella UI corrente: il flusso reale usa [VoiceBottomSheet].
+ * Resta come componente predisposto e viene coperto dai test di contrasto.
  */
 @Composable
 fun VoiceListeningOverlay(
@@ -169,7 +211,7 @@ fun VoiceListeningOverlay(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(colors.scrim.copy(alpha = 0.7f)),
+                .background(colors.scrim.copy(alpha = VOICE_OVERLAY_SCRIM_ALPHA)),
             contentAlignment = Alignment.Center,
         ) {
             Column(
@@ -182,7 +224,7 @@ fun VoiceListeningOverlay(
                     modifier = Modifier
                         .size(80.dp)
                         .background(
-                            color = colors.error.copy(alpha = 0.2f),
+                            color = TogoColorTokens.OnAccent.copy(alpha = 0.2f),
                             shape = CircleShape,
                         ),
                     contentAlignment = Alignment.Center,
@@ -190,7 +232,7 @@ fun VoiceListeningOverlay(
                     Icon(
                         imageVector = Icons.Filled.Mic,
                         contentDescription = null,
-                        tint = colors.error,
+                        tint = TogoColorTokens.OnAccent,
                         modifier = Modifier.size(40.dp),
                     )
                 }
@@ -198,26 +240,29 @@ fun VoiceListeningOverlay(
                 Text(
                     text = "Ascolto in corso...",
                     style = typography.sectionHeader,
-                    color = Color.White,
+                    color = TogoColorTokens.LightInkInverse,
                     textAlign = TextAlign.Center,
                 )
 
                 Text(
                     text = "Dimmi un prodotto da aggiungere alla lista",
                     style = typography.itemMeta,
-                    color = Color.White.copy(alpha = 0.8f),
+                    color = TogoColorTokens.LightInkInverse.copy(alpha = 0.8f),
                     textAlign = TextAlign.Center,
                 )
 
                 Surface(
                     onClick = onCancel,
                     shape = CircleShape,
-                    color = Color.White.copy(alpha = 0.2f),
+                    color = Color.Transparent,
+                    contentColor = TogoColorTokens.LightInkInverse,
+                    border = BorderStroke(1.dp, TogoColorTokens.LightInkInverse),
+                    modifier = Modifier.heightIn(min = 48.dp),
                 ) {
                     Text(
                         text = "Annulla",
                         style = typography.itemTitle,
-                        color = Color.White,
+                        color = TogoColorTokens.LightInkInverse,
                         modifier = Modifier.padding(horizontal = spacing.space4, vertical = spacing.space2),
                     )
                 }
