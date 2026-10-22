@@ -53,6 +53,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import it.togo.app.core.TogoLog
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.presentation.additem.AddItemBottomSheet
 import it.togo.app.presentation.voice.VoiceBottomSheet
@@ -172,18 +173,48 @@ fun ActiveListScreen(
                 TopAppBar(
                     title = { Text("Spesa (${uiState.activeCount})", style = typography.sectionHeader) },
                     navigationIcon = {
-                        IconButton(onClick = { onEvent(UiEvent.NavigateToHistory) }) {
+                        IconButton(onClick = {
+                            TogoLog.d("TopBar: tap su Cronologia")
+                            onEvent(UiEvent.NavigateToHistory)
+                        }) {
                             Icon(Icons.Filled.History, contentDescription = "Storico")
                         }
                     },
                     actions = {
                         IconButton(onClick = {
+                            TogoLog.d("TopBar: tap su Condividi")
                             scope.launch {
                                 val intent = viewModel.shareListIntent()
-                                if (intent != null) {
-                                    (context as? android.app.Activity)?.startActivity(
-                                        Intent.createChooser(intent, "Condividi lista spesa")
-                                    )
+                                val activity = context.findActivity()
+                                when {
+                                    intent == null -> {
+                                        TogoLog.w(
+                                            "Condividi: nessun articolo attivo da condividere",
+                                        )
+                                        snackbarHostState.showSnackbar(
+                                            "Nessun articolo da condividere: " +
+                                                "la lista attiva è vuota"
+                                        )
+                                    }
+
+                                    activity == null -> {
+                                        TogoLog.w(
+                                            "Condividi: context senza Activity, chooser non avviato",
+                                        )
+                                        snackbarHostState.showSnackbar(
+                                            "Impossibile aprire la condivisione"
+                                        )
+                                    }
+
+                                    else -> {
+                                        TogoLog.d("Condividi: apertura chooser di sistema")
+                                        activity.startActivity(
+                                            Intent.createChooser(
+                                                intent,
+                                                "Condividi lista spesa",
+                                            )
+                                        )
+                                    }
                                 }
                             }
                         }) {

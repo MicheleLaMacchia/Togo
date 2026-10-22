@@ -445,6 +445,12 @@ class ActiveListAccessibilityTest {
                             Button(onClick = onBack) { Text("Indietro") }
                         }
                     },
+                    historyContent = { onBack ->
+                        androidx.compose.foundation.layout.Column {
+                            Text("Storico")
+                            Button(onClick = onBack) { Text("Indietro") }
+                        }
+                    },
                 )
             }
         }
@@ -479,6 +485,12 @@ class ActiveListAccessibilityTest {
                     learnedRulesContent = { onBack ->
                         androidx.compose.foundation.layout.Column {
                             Text("Regole apprese")
+                            Button(onClick = onBack) { Text("Indietro") }
+                        }
+                    },
+                    historyContent = { onBack ->
+                        androidx.compose.foundation.layout.Column {
+                            Text("Storico")
                             Button(onClick = onBack) { Text("Indietro") }
                         }
                     },
@@ -556,8 +568,10 @@ class ActiveListAccessibilityTest {
         ).assertExists()
 
         composeTestRule.onNodeWithText("Concludi spesa").performClick()
+        // Le voci in "Presi" sono quelle da concludere (spec 2-5): il checkout
+        // non deve lamentare "nessuna voce attiva".
         composeTestRule
-            .onNodeWithText("Nessuna voce attiva da concludere")
+            .onNodeWithText("Spesa conclusa (1 voci)")
             .assertExists()
     }
 

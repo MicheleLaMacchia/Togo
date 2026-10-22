@@ -8,6 +8,7 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
+import it.togo.app.core.TogoLog
 import it.togo.app.presentation.activelist.UiEvent
 
 /**
@@ -19,31 +20,48 @@ import it.togo.app.presentation.activelist.UiEvent
 private sealed interface Screen {
     data object ActiveList : Screen
     data object LearnedRules : Screen
+    data object History : Screen
+
+    val saveKey: String
+        get() = when (this) {
+            Screen.ActiveList -> "active_list"
+            Screen.LearnedRules -> "learned_rules"
+            Screen.History -> "history"
+        }
 }
 
 /** Salva la schermata corrente tra le rotazioni. */
 private val ScreenSaver = Saver<Screen, String>(
-    save = { screen -> if (screen is Screen.LearnedRules) "learned_rules" else "active_list" },
-    restore = { value -> if (value == "learned_rules") Screen.LearnedRules else Screen.ActiveList },
+    save = { screen -> screen.saveKey },
+    restore = { value ->
+        when (value) {
+            "learned_rules" -> Screen.LearnedRules
+            "history" -> Screen.History
+            else -> Screen.ActiveList
+        }
+    },
 )
 
 /**
  * Host di navigazione a stato.
  *
- * - Da [UiEvent.NavigateToSettings] apre le Regole apprese.
- * - Da Regole apprese il tasto Back di sistema/gesture torna alla lista.
+ * - [UiEvent.NavigateToHistory] apre lo Storico.
+ * - [UiEvent.NavigateToSettings] apre le Regole apprese.
+ * - Da Storico e Regole apprese il tasto Back di sistema/gesture torna alla lista.
  * - Gli altri eventi sono delegati a [onActiveListEvent].
  *
  * @param onActiveListEvent gestore degli eventi della Lista Attiva non relativi
  *   alla navigazione (tipicamente `ActiveListViewModel::onEvent`).
  * @param activeListContent contenuto della Lista Attiva, con l'evento da inoltrare.
  * @param learnedRulesContent contenuto delle Regole apprese, con il callback di ritorno.
+ * @param historyContent contenuto dello Storico, con il callback di ritorno.
  */
 @Composable
 fun AppNavigator(
     onActiveListEvent: (UiEvent) -> Unit,
     activeListContent: @Composable ((UiEvent) -> Unit) -> Unit,
     learnedRulesContent: @Composable (() -> Unit) -> Unit,
+    historyContent: @Composable (() -> Unit) -> Unit,
 ) {
     var currentScreen by rememberSaveable(stateSaver = ScreenSaver) {
         mutableStateOf<Screen>(Screen.ActiveList)
@@ -51,20 +69,30 @@ fun AppNavigator(
 
     val stateHolder = rememberSaveableStateHolder()
 
+    fun navigateTo(target: Screen) {
+        TogoLog.d("Navigazione: ${currentScreen.saveKey} -> ${target.saveKey}")
+        currentScreen = target
+    }
+
     when (currentScreen) {
-        Screen.ActiveList -> stateHolder.SaveableStateProvider("active_list") {
+        Screen.ActiveList -> stateHolder.SaveableStateProvider(Screen.ActiveList.saveKey) {
             activeListContent { event ->
-                if (event is UiEvent.NavigateToSettings) {
-                    currentScreen = Screen.LearnedRules
-                } else {
-                    onActiveListEvent(event)
+                when (event) {
+                    is UiEvent.NavigateToSettings -> navigateTo(Screen.LearnedRules)
+                    is UiEvent.NavigateToHistory -> navigateTo(Screen.History)
+                    else -> onActiveListEvent(event)
                 }
             }
         }
 
-        Screen.LearnedRules -> stateHolder.SaveableStateProvider("learned_rules") {
-            BackHandler { currentScreen = Screen.ActiveList }
-            learnedRulesContent { currentScreen = Screen.ActiveList }
+        Screen.LearnedRules -> stateHolder.SaveableStateProvider(Screen.LearnedRules.saveKey) {
+            BackHandler { navigateTo(Screen.ActiveList) }
+            learnedRulesContent { navigateTo(Screen.ActiveList) }
+        }
+
+        Screen.History -> stateHolder.SaveableStateProvider(Screen.History.saveKey) {
+            BackHandler { navigateTo(Screen.ActiveList) }
+            historyContent { navigateTo(Screen.ActiveList) }
         }
     }
 }

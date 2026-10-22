@@ -44,14 +44,23 @@ class HistoryViewModel(
                 _searchQuery,
                 _snackbarMessage
             ) { items, query, snackbarMsg ->
+                // Il nome serve sia alla ricerca sia alla riga: risolviamolo
+                // una volta per emissione (lo storico è piccolo).
+                val productNames = items.mapNotNull { item ->
+                    catalogRepository.getById(item.productId)?.let { product ->
+                        item.productId to product.name
+                    }
+                }.toMap()
+
                 val filtered = if (query.isBlank()) {
                     items
                 } else {
-                    filterItemsByName(items, query)
+                    filterItemsByName(items, query, productNames)
                 }
                 HistoryUiState(
                     items = items,
                     filteredItems = filtered,
+                    productNames = productNames,
                     searchQuery = query,
                     isEmpty = filtered.isEmpty(),
                     snackbarMessage = snackbarMsg
@@ -72,12 +81,14 @@ class HistoryViewModel(
     /**
      * Cerca prodotti nello storico per nome (case-insensitive, accent-fold).
      */
-    private suspend fun filterItemsByName(items: List<HistoricalItem>, query: String): List<HistoricalItem> {
+    private fun filterItemsByName(
+        items: List<HistoricalItem>,
+        query: String,
+        productNames: Map<Long, String>,
+    ): List<HistoricalItem> {
         val normalizedQuery = CatalogQueries.normalize(query).lowercase()
         return items.filter { item ->
-            val product = catalogRepository.getById(item.productId)
-            val productName = product?.name?.lowercase() ?: ""
-            productName.contains(normalizedQuery)
+            productNames[item.productId]?.lowercase()?.contains(normalizedQuery) == true
         }.sortedByDescending { it.purchasedAt }
     }
 

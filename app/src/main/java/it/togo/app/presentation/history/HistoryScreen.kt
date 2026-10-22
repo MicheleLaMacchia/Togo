@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import it.togo.app.core.TogoLog
 import it.togo.app.domain.model.HistoricalItem
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
@@ -67,6 +68,10 @@ fun HistoryScreen(
             snackbarHostState.showSnackbar(message)
             viewModel.clearSnackbar()
         }
+    }
+
+    LaunchedEffect(Unit) {
+        TogoLog.d("HistoryScreen: aperta")
     }
 
     Scaffold(
@@ -127,6 +132,8 @@ fun HistoryScreen(
                     items(uiState.filteredItems, key = { it.id }) { item ->
                         HistoryItemRow(
                             item = item,
+                            productName = uiState.productNames[item.productId]
+                                ?: "Prodotto #${item.productId}",
                             onReAdd = { viewModel.reAddToActiveList(item) },
                             colors = colors,
                             typography = typography,
@@ -163,6 +170,7 @@ private fun EmptyState(
 @Composable
 private fun HistoryItemRow(
     item: HistoricalItem,
+    productName: String,
     onReAdd: () -> Unit,
     colors: it.togo.app.ui.theme.TogoColors,
     typography: it.togo.app.ui.theme.TogoTypography,
@@ -185,7 +193,7 @@ private fun HistoryItemRow(
             Column(modifier = Modifier.weight(1f)) {
                 // Nome prodotto reale (da catalogo, con fallback a ID)
                 Text(
-                    text = "Prodotto #${item.productId}",
+                    text = productName,
                     style = typography.itemTitle,
                     color = colors.inkPrimary
                 )

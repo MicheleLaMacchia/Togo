@@ -5,6 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import it.togo.app.presentation.activelist.ActiveListScreen
 import it.togo.app.presentation.activelist.ActiveListViewModel
+import it.togo.app.presentation.history.HistoryScreen
+import it.togo.app.presentation.history.HistoryViewModel
 import it.togo.app.presentation.rules.LearnedRulesScreen
 import it.togo.app.presentation.rules.LearnedRulesViewModel
 import it.togo.app.presentation.voice.VoiceBottomSheetViewModel
@@ -18,6 +20,7 @@ class MainActivity : ComponentActivity(), KoinComponent {
     private val viewModel: ActiveListViewModel by inject()
     private val voiceViewModel: VoiceBottomSheetViewModel by inject()
     private val learnedRulesViewModel: LearnedRulesViewModel by inject()
+    private val historyViewModel: HistoryViewModel by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,6 +38,12 @@ class MainActivity : ComponentActivity(), KoinComponent {
                     learnedRulesContent = { onBack ->
                         LearnedRulesScreen(
                             viewModel = learnedRulesViewModel,
+                            onBack = onBack,
+                        )
+                    },
+                    historyContent = { onBack ->
+                        HistoryScreen(
+                            viewModel = historyViewModel,
                             onBack = onBack,
                         )
                     },

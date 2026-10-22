@@ -2,6 +2,7 @@ package it.togo.app.presentation.activelist
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import it.togo.app.core.TogoLog
 import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.TaxonomyLevel
@@ -69,7 +70,14 @@ class ActiveListViewModel(
                 buildUiState(items, taxonomy)
             }
                 .onEach { newState ->
-                    _uiState.value = newState
+                    // I campi transitori (snackbar/undo) non arrivano dal DB:
+                    // vanno preservati, altrimenti l'emissione Room successiva
+                    // al checkout cancellerebbe subito il messaggio e l'undo.
+                    val current = _uiState.value
+                    _uiState.value = newState.copy(
+                        checkoutSnackbarMessage = current.checkoutSnackbarMessage,
+                        checkedItemsForUndo = current.checkedItemsForUndo,
+                    )
                 }
                 .launchIn(viewModelScope)
         }
@@ -168,22 +176,39 @@ class ActiveListViewModel(
     }
 
     fun onEvent(event: UiEvent) {
+        TogoLog.d("ActiveList.onEvent: $event")
         when (event) {
             is UiEvent.CheckOff -> handleCheckOff(event.itemId, event.isChecked)
+            // Gestito dal VoiceBottomSheetViewModel (sheet vocale).
             is UiEvent.VoiceCommand -> { }
             is UiEvent.DeleteItem -> handleDeleteItem(event.itemId)
+            // Apre il foglio vocale: gestito direttamente dalla UI.
             is UiEvent.NavigateToVoice -> { }
+            // Navigazione: gestita da AppNavigator prima di arrivare qui.
             is UiEvent.NavigateToHistory -> { }
+            // Navigazione: gestita da AppNavigator prima di arrivare qui.
             is UiEvent.NavigateToSettings -> { }
+            // La UI chiama direttamente shareListIntent().
             is UiEvent.ShareList -> { }
             is UiEvent.Checkout -> handleCheckout()
+            // Apre il bottom sheet di inserimento manuale: gestito dalla UI.
             is UiEvent.AddItemManual -> { }
             is UiEvent.UndoDelete -> handleUndoDelete()
             is UiEvent.UndoCheckout -> handleUndoCheckout()
         }
     }
 
-    suspend fun shareListIntent(): android.content.Intent? = shareListUseCase()
+    suspend fun shareListIntent(): android.content.Intent? {
+        val intent = shareListUseCase()
+        TogoLog.d(
+            if (intent == null) {
+                "ShareList: nessun articolo non spuntato, intent nullo"
+            } else {
+                "ShareList: intent pronto"
+            }
+        )
+        return intent
+    }
 
     private fun findItem(itemId: String): ShoppingItem? {
         return _uiState.value.activeGroups
@@ -305,51 +330,78 @@ class ActiveListViewModel(
         }
     }
 
+    /**
+     * Conclude la spesa: sposta atomicamente le voci spuntate ("Presi") nello
+     * storico e le rimuove dalla lista attiva (spec 2-5).
+     *
+     * La transazione è in `ShoppingListRepository.checkout`: se fallisce le
+     * voci restano in "Presi" e viene mostrato un errore.
+     */
     private fun handleCheckout() {
         if (_isCheckingOut) return
         _isCheckingOut = true
 
-        val items = _uiState.value.activeGroups
-            .flatMap { it.level2Groups.flatMap { it.level3Groups.flatMap { it.items } } }
-            .filter { !it.isChecked }
+        // Le voci da concludere sono quelle spuntate, non quelle attive:
+        // il pulsante vive nella sezione "Presi".
+        val items = _uiState.value.checkedItems
 
         if (items.isEmpty()) {
             _isCheckingOut = false
             _uiState.value = _uiState.value.copy(checkedItemsForUndo = emptyList())
-            showCheckoutSnackbar("Nessuna voce attiva da concludere")
+            showCheckoutSnackbar("Nessuna voce in 'Presi' da concludere")
             return
         }
-
-        _uiState.value = _uiState.value.copy(
-            checkedItemsForUndo = items
-        )
 
         viewModelScope.launch {
             try {
                 withContext(Dispatchers.IO) {
-                    items.forEach { item ->
-                        shoppingRepository.update(item.copyWith(isChecked = true))
-                    }
+                    shoppingRepository.checkout(items.map { it.id })
                 }
+                TogoLog.i("Checkout: ${items.size} voci spostate nello storico")
+                _uiState.value = _uiState.value.copy(checkedItemsForUndo = items)
                 showCheckoutSnackbar("Spesa conclusa (${items.size} voci)")
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = "Checkout fallito: ${e.message}")
+                TogoLog.e("Checkout fallito", e)
+                _uiState.value = _uiState.value.copy(
+                    error = "Checkout fallito: ${e.message}",
+                    checkedItemsForUndo = emptyList(),
+                )
             } finally {
                 _isCheckingOut = false
             }
         }
     }
 
+    /**
+     * Annulla il checkout: le voci erano state rimosse dalla lista attiva dalla
+     * transazione, quindi vanno reinserite (non aggiornate) come non spuntate.
+     *
+     * Le righe di storico restano registrate (scelta di prodotto, spec 2-5).
+     */
     private fun handleUndoCheckout() {
-        _uiState.value.checkedItemsForUndo.forEach { item ->
-            val unchecked = item.copyWith(isChecked = false)
-            viewModelScope.launch {
+        val items = _uiState.value.checkedItemsForUndo
+        if (items.isEmpty()) return
+
+        _uiState.value = _uiState.value.copy(
+            checkedItemsForUndo = emptyList(),
+            checkoutSnackbarMessage = null,
+        )
+
+        viewModelScope.launch {
+            try {
                 withContext(Dispatchers.IO) {
-                    shoppingRepository.update(unchecked)
+                    items.forEach { item ->
+                        shoppingRepository.insert(item.copyWith(isChecked = false))
+                    }
                 }
+                TogoLog.i("Undo checkout: ${items.size} voci ripristinate in lista")
+            } catch (e: Exception) {
+                TogoLog.e("Undo checkout fallito", e)
+                _uiState.value = _uiState.value.copy(
+                    error = "Annulla checkout fallito: ${e.message}",
+                )
             }
         }
-        _uiState.value = _uiState.value.copy(checkedItemsForUndo = emptyList())
     }
 
     private data class TaxonomyCache(

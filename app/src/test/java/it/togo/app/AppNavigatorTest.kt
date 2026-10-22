@@ -26,6 +26,7 @@ import it.togo.app.presentation.rules.LearnedRulesViewModel
 import it.togo.app.ui.theme.TogoTheme
 import kotlinx.coroutines.flow.flowOf
 import org.junit.After
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -58,6 +59,9 @@ class AppNavigatorTest {
                     activeListContent = { onEvent ->
                         Column {
                             Text("Lista attiva")
+                            Button(onClick = { onEvent(UiEvent.NavigateToHistory) }) {
+                                Text("Apri storico")
+                            }
                             Button(onClick = { onEvent(UiEvent.NavigateToSettings) }) {
                                 Text("Apri impostazioni")
                             }
@@ -66,6 +70,14 @@ class AppNavigatorTest {
                     learnedRulesContent = { onBack ->
                         Column {
                             Text("Regole apprese")
+                            Button(onClick = onBack) {
+                                Text("Indietro")
+                            }
+                        }
+                    },
+                    historyContent = { onBack ->
+                        Column {
+                            Text("Storico")
                             Button(onClick = onBack) {
                                 Text("Indietro")
                             }
@@ -112,6 +124,9 @@ class AppNavigatorTest {
                     learnedRulesContent = { onBack ->
                         LearnedRulesScreen(viewModel = rulesViewModel, onBack = onBack)
                     },
+                    historyContent = { onBack ->
+                        Button(onClick = onBack) { Text("Indietro") }
+                    },
                 )
             }
         }
@@ -139,6 +154,9 @@ class AppNavigatorTest {
                         }
                     },
                     learnedRulesContent = { onBack ->
+                        Button(onClick = onBack) { Text("Indietro") }
+                    },
+                    historyContent = { onBack ->
                         Button(onClick = onBack) { Text("Indietro") }
                     },
                 )
@@ -172,6 +190,12 @@ class AppNavigatorTest {
                             Button(onClick = onBack) { Text("Indietro") }
                         }
                     },
+                    historyContent = { onBack ->
+                        Column {
+                            Text("Storico")
+                            Button(onClick = onBack) { Text("Indietro") }
+                        }
+                    },
                 )
             }
         }
@@ -196,5 +220,98 @@ class AppNavigatorTest {
         }
 
         composeTestRule.onNodeWithText("Lista attiva").assertExists()
+    }
+
+    @Test
+    fun `history opens from active list and back button returns`() {
+        setNavigatorContent()
+
+        composeTestRule.onNodeWithText("Apri storico").performClick()
+        composeTestRule.onNodeWithText("Storico").assertExists()
+
+        composeTestRule.onNodeWithText("Indietro").performClick()
+        composeTestRule.onNodeWithText("Lista attiva").assertExists()
+    }
+
+    @Test
+    fun `system back from history returns to active list`() {
+        setNavigatorContent()
+
+        composeTestRule.onNodeWithText("Apri storico").performClick()
+        composeTestRule.onNodeWithText("Storico").assertExists()
+
+        composeTestRule.runOnUiThread {
+            composeTestRule.activity.onBackPressedDispatcher.onBackPressed()
+        }
+
+        composeTestRule.onNodeWithText("Lista attiva").assertExists()
+    }
+
+    @Test
+    fun `history destination survives recreation`() {
+        val restorationTester = StateRestorationTester(composeTestRule)
+        restorationTester.setContent {
+            TogoTheme(darkTheme = false) {
+                AppNavigator(
+                    onActiveListEvent = {},
+                    activeListContent = { onEvent ->
+                        Button(onClick = { onEvent(UiEvent.NavigateToHistory) }) {
+                            Text("Apri storico")
+                        }
+                    },
+                    learnedRulesContent = { onBack ->
+                        Button(onClick = onBack) { Text("Indietro") }
+                    },
+                    historyContent = { onBack ->
+                        Column {
+                            Text("Storico")
+                            Button(onClick = onBack) { Text("Indietro") }
+                        }
+                    },
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Apri storico").performClick()
+        composeTestRule.onNodeWithText("Storico").assertExists()
+
+        restorationTester.emulateSavedInstanceStateRestore()
+
+        composeTestRule.onNodeWithText("Storico").assertExists()
+    }
+
+    @Test
+    fun `history event is handled by navigator and not forwarded to active list`() {
+        val received = mutableListOf<UiEvent>()
+
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                AppNavigator(
+                    onActiveListEvent = { received += it },
+                    activeListContent = { onEvent ->
+                        Button(onClick = { onEvent(UiEvent.NavigateToHistory) }) {
+                            Text("Apri storico")
+                        }
+                    },
+                    learnedRulesContent = { onBack ->
+                        Button(onClick = onBack) { Text("Indietro") }
+                    },
+                    historyContent = { onBack ->
+                        Column {
+                            Text("Storico")
+                            Button(onClick = onBack) { Text("Indietro") }
+                        }
+                    },
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Apri storico").performClick()
+        composeTestRule.onNodeWithText("Storico").assertExists()
+
+        assertTrue(
+            "NavigateToHistory è di navigazione e non va inoltrato al ViewModel",
+            received.none { it is UiEvent.NavigateToHistory },
+        )
     }
 }

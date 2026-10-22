@@ -8,6 +8,8 @@ import it.togo.app.domain.model.HistoricalItem
 data class HistoryUiState(
     val items: List<HistoricalItem> = emptyList(),
     val filteredItems: List<HistoricalItem> = emptyList(),
+    /** Nome prodotto per `productId`, risolto dal catalogo per la UI. */
+    val productNames: Map<Long, String> = emptyMap(),
     val searchQuery: String = "",
     val isSearching: Boolean = false,
     val isEmpty: Boolean = true,

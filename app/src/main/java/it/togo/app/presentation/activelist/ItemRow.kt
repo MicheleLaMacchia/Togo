@@ -4,6 +4,8 @@ import android.content.Context
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
+import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
@@ -18,22 +20,26 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +51,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.StandardUnit
@@ -91,7 +100,46 @@ fun ItemRow(
     val spacing = togoSpacing()
     val tokens = componentTokens()
     val context = androidx.compose.ui.platform.LocalContext.current
-    val swipeThresholdPx = with(LocalDensity.current) { 80.dp.toPx() }
+    val scope = rememberCoroutineScope()
+
+    // Larghezza dell'azione rivelata dallo swipe (touch target ≥48dp).
+    val revealWidth = 88.dp
+    val revealWidthPx = with(LocalDensity.current) { revealWidth.toPx() }
+    val settleThresholdPx = revealWidthPx / 2f
+
+    var horizontalDrag by remember(item.id) { mutableStateOf(0f) }
+    var isRevealed by remember(item.id) { mutableStateOf(false) }
+    var settleJob by remember(item.id) { mutableStateOf<Job?>(null) }
+
+    /**
+     * Porta la riga alla posizione [target] (0 = chiusa, -revealWidth = aperta)
+     * e, se aperta, la richiude da sola dopo 3 secondi. Il timer vive nello
+     * stesso job dell'animazione: un nuovo drag lo cancella (onDragStart), così
+     * la riga non si richiude mentre l'utente la sta trascinando.
+     */
+    fun settleTo(target: Float) {
+        settleJob?.cancel()
+        isRevealed = target < 0f
+        settleJob = scope.launch {
+            animate(
+                initialValue = horizontalDrag,
+                targetValue = target,
+                animationSpec = tween(durationMillis = 180),
+            ) { value, _ -> horizontalDrag = value }
+            horizontalDrag = target
+
+            if (target < 0f) {
+                delay(3000)
+                animate(
+                    initialValue = horizontalDrag,
+                    targetValue = 0f,
+                    animationSpec = tween(durationMillis = 180),
+                ) { value, _ -> horizontalDrag = value }
+                horizontalDrag = 0f
+                isRevealed = false
+            }
+        }
+    }
 
     val isChecked = item.isChecked
     // Il testo barrato resta inkPrimary: inkMuted/inkSecondary non raggiungono
@@ -120,8 +168,6 @@ fun ItemRow(
         "Spunta $productName."
     }
 
-    var horizontalDrag by remember(item.id) { mutableStateOf(0f) }
-
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -129,15 +175,26 @@ fun ItemRow(
             .clip(tokens.itemRow.radius)
             .background(tokens.itemRow.swipeDeleteBackground),
     ) {
+        // Azione dietro la card: resta scoperta quando la riga è spostata a
+        // sinistra. È un vero bottone, apribile con TalkBack, non solo un'icona.
         if (rowActionDescription != null) {
-            Icon(
-                imageVector = Icons.Filled.Delete,
-                contentDescription = "Elimina",
-                tint = tokens.itemRow.swipeDeleteIconColor,
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .padding(end = spacing.space4),
-            )
+            Box(
+                modifier = Modifier.matchParentSize(),
+                contentAlignment = Alignment.CenterEnd,
+            ) {
+                IconButton(
+                    onClick = { onDelete() },
+                    modifier = Modifier
+                        .width(revealWidth)
+                        .fillMaxHeight(),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Delete,
+                        contentDescription = "Elimina $productName",
+                        tint = tokens.itemRow.swipeDeleteIconColor,
+                    )
+                }
+            }
         }
 
         val baseModifier = Modifier
@@ -149,19 +206,28 @@ fun ItemRow(
         // eliminazione, così TalkBack non espone azioni vuote. I dettagli
         // accessibili restano (mergeDescendants) e la checkbox continua a
         // funzionare. Le righe attive restano cliccabili → modifica e
-        // trascinabili → elimina.
+        // trascinabili → rivelano il bottone elimina (poi tap per confermare).
         val swipeModifier = if (rowActionDescription != null) {
             baseModifier.pointerInput(item.id, onDelete) {
                 detectHorizontalDragGestures(
+                    onDragStart = {
+                        // Cancella il timer di auto-chiusura mentre l'utente
+                        // trascina: la riga non deve richiudersi sotto il dito.
+                        settleJob?.cancel()
+                    },
                     onHorizontalDrag = { change, dragAmount ->
                         change.consume()
-                        horizontalDrag = (horizontalDrag + dragAmount).coerceIn(-swipeThresholdPx, 0f)
+                        horizontalDrag = (horizontalDrag + dragAmount)
+                            .coerceIn(-revealWidthPx, 0f)
                     },
                     onDragEnd = {
-                        if (horizontalDrag <= -swipeThresholdPx) onDelete()
-                        horizontalDrag = 0f
+                        // Lo swipe non elimina più: apre (e la riga resta
+                        // aperta) oppure richiude se non ha superato la metà.
+                        settleTo(
+                            if (horizontalDrag <= -settleThresholdPx) -revealWidthPx else 0f
+                        )
                     },
-                    onDragCancel = { horizontalDrag = 0f },
+                    onDragCancel = { settleTo(0f) },
                 )
             }
         } else {
@@ -169,7 +235,13 @@ fun ItemRow(
         }
 
         val rowClickModifier = if (rowActionDescription != null) {
-            Modifier.combinedClickable(onClick = onClick)
+            Modifier.combinedClickable(
+                onClick = {
+                    // Con la riga aperta il tap la richiude invece di aprire
+                    // l'editor: evita tocchi accidentali sull'azione scoperta.
+                    if (isRevealed) settleTo(0f) else onClick()
+                },
+            )
         } else {
             Modifier
         }
