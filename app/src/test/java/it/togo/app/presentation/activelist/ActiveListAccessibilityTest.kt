@@ -570,9 +570,15 @@ class ActiveListAccessibilityTest {
         composeTestRule.onNodeWithText("Concludi spesa").performClick()
         // Le voci in "Presi" sono quelle da concludere (spec 2-5): il checkout
         // non deve lamentare "nessuna voce attiva".
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            composeTestRule.onAllNodesWithText("Spesa conclusa (1 voci)")
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        // Regressione 22/10: una sola snackbar, nessun testo duplicato.
         composeTestRule
-            .onNodeWithText("Spesa conclusa (1 voci)")
-            .assertExists()
+            .onAllNodesWithText("Spesa conclusa (1 voci)")
+            .assertCountEquals(1)
     }
 
     @Test

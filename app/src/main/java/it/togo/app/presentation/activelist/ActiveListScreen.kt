@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
@@ -27,15 +28,17 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -77,6 +80,23 @@ fun ActiveListScreen(
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+
+    // Un solo punto di visualizzazione per il checkout: la snackbar passa
+    // dall'host Material invece di essere composta nel contenuto. Evita due
+    // testi sovrapposti nella stessa posizione (vedi segnalazione 22/10).
+    LaunchedEffect(uiState.checkoutSnackbarMessage) {
+        val message = uiState.checkoutSnackbarMessage ?: return@LaunchedEffect
+        val result = snackbarHostState.showSnackbar(
+            message = message,
+            actionLabel = if (uiState.checkedItemsForUndo.isNotEmpty()) "Annulla" else null,
+            // Il timer dei 5 s resta nel ViewModel; quando azzera il messaggio
+            // questo effetto viene cancellato e la snackbar si chiude.
+            duration = SnackbarDuration.Indefinite,
+        )
+        if (result == SnackbarResult.ActionPerformed) {
+            onEvent(UiEvent.UndoCheckout)
+        }
+    }
 
     val colors = togoColors()
     val typography = togoTypography()
@@ -272,7 +292,43 @@ fun ActiveListScreen(
                 }
             },
             floatingActionButtonPosition = androidx.compose.material3.FabPosition.End,
-            snackbarHost = { SnackbarHost(snackbarHostState) },
+            snackbarHost = {
+                SnackbarHost(snackbarHostState) { data ->
+                    val actionLabel = data.visuals.actionLabel
+                    Snackbar(
+                        action = if (actionLabel != null) {
+                            {
+                                TextButton(
+                                    onClick = { data.performAction() },
+                                    colors = ButtonDefaults.textButtonColors(
+                                        contentColor = tokens.snackbar.action,
+                                    ),
+                                ) {
+                                    Text(actionLabel)
+                                }
+                            }
+                        } else {
+                            null
+                        },
+                        dismissAction = if (data.visuals.withDismissAction) {
+                            {
+                                IconButton(onClick = { data.dismiss() }) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Close,
+                                        contentDescription = "Chiudi",
+                                    )
+                                }
+                            }
+                        } else {
+                            null
+                        },
+                        containerColor = tokens.snackbar.container,
+                        contentColor = tokens.snackbar.content,
+                    ) {
+                        Text(data.visuals.message, style = typography.itemMeta)
+                    }
+                }
+            },
             content = { innerPadding ->
                 Column(
                     modifier = Modifier
@@ -280,30 +336,6 @@ fun ActiveListScreen(
                         .fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(spacing.space2)
                 ) {
-                    uiState.checkoutSnackbarMessage?.let { checkoutSnackbarMessage ->
-                        Snackbar(
-                            modifier = Modifier.fillMaxWidth(),
-                            action = if (uiState.checkedItemsForUndo.isNotEmpty()) {
-                                {
-                                    TextButton(
-                                        onClick = { onEvent(UiEvent.UndoCheckout) },
-                                        colors = ButtonDefaults.textButtonColors(
-                                            contentColor = tokens.snackbar.action,
-                                        ),
-                                    ) {
-                                        Text("Annulla")
-                                    }
-                                }
-                            } else {
-                                null
-                            },
-                            containerColor = tokens.snackbar.container,
-                            contentColor = tokens.snackbar.content,
-                        ) {
-                            Text(checkoutSnackbarMessage, style = typography.itemMeta)
-                        }
-                    }
-
                     if (uiState.error != null) {
                         Text(
                             text = uiState.error.orEmpty(),
