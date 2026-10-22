@@ -54,8 +54,8 @@ data class TaxonomyLevel2Entity(
     ]
 )
 data class TaxonomyLevel3Entity(
-    @PrimaryKey
-    val id: Long,
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
     @ColumnInfo(name = "level2_id")
     val level2Id: Long,
     val name: String,

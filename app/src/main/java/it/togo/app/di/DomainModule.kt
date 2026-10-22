@@ -7,6 +7,7 @@ import it.togo.app.domain.parser.VoiceCommandParser
 import it.togo.app.domain.usecase.AssignCanonicalCategoryUseCase
 import it.togo.app.domain.usecase.CorrectCategoryUseCase
 import it.togo.app.domain.usecase.CreateCanonicalProductUseCase
+import it.togo.app.domain.usecase.CreateUserLevel3UseCase
 import it.togo.app.domain.usecase.LearnedRuleManager
 import it.togo.app.domain.usecase.ParseVoiceCommandUseCase
 import it.togo.app.domain.voice.VoiceRecognitionGateway
@@ -26,6 +27,7 @@ val domainModule: Module = module {
     // Domain Wizard (Story 3.7) - Categorizzazione prodotto sconosciuto
     single { CategorySelectionWizard(get()) }
     single { CreateCanonicalProductUseCase(get()) }
+    single { CreateUserLevel3UseCase(get()) }
 
     // Voice Recognition (Story 4.1) - Gateway disaccoppiato da Activity
     single { AndroidVoiceRecognitionGateway() } bind VoiceRecognitionGateway::class

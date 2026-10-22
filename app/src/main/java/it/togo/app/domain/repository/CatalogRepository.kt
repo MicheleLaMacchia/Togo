@@ -37,4 +37,26 @@ interface CatalogRepository {
      */
     suspend fun insertProduct(name: String, level3Id: Long): CanonicalProduct =
         throw UnsupportedOperationException("insertProduct non implementato dal repository")
+
+    /**
+     * Livelli 3 appartenenti a [level2Id] (predefiniti e user-defined).
+     *
+     * Usato dal controllo duplicati della proposta di un nuovo Livello 3
+     * (Story 7.2) e per aggiornare la tassonomia dopo la creazione. Il default
+     * lancia eccezione per non obbligare i fake preesistenti dei test a
+     * implementarlo: l'implementazione di produzione deve fare override.
+     */
+    suspend fun getLevel3ByLevel2(level2Id: Long): List<TaxonomyLevel.Level3> =
+        throw UnsupportedOperationException("getLevel3ByLevel2 non implementato dal repository")
+
+    /**
+     * Inserisce un Livello 3 user-defined sotto [level2Id] e ritorna il livello
+     * con l'ID assegnato dal DB (`is_user_defined = 1`). Il `sortOrder` è
+     * calcolato dal repository in fondo alla categoria.
+     *
+     * Il default lancia eccezione per compatibilità con i fake dei test;
+     * l'implementazione di produzione deve fare override.
+     */
+    suspend fun insertLevel3(name: String, level2Id: Long): TaxonomyLevel.Level3 =
+        throw UnsupportedOperationException("insertLevel3 non implementato dal repository")
 }

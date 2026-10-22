@@ -8,7 +8,10 @@ import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.ShoppingListRepository
 import it.togo.app.domain.usecase.CreateCanonicalProductUseCase
+import it.togo.app.domain.usecase.CreateLevel3Result
 import it.togo.app.domain.usecase.CreateProductResult
+import it.togo.app.domain.usecase.CreateUserLevel3UseCase
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -47,6 +50,7 @@ class AddItemViewModel(
     private val catalogRepository: CatalogRepository,
     private val shoppingRepository: ShoppingListRepository,
     private val createProductUseCase: CreateCanonicalProductUseCase,
+    private val createLevel3UseCase: CreateUserLevel3UseCase,
     private val editItem: ShoppingItem? = null,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
@@ -154,6 +158,12 @@ class AddItemViewModel(
             is AddItemUiEvent.CreateNewProduct -> handleCreateNewProduct()
             is AddItemUiEvent.ConfirmDuplicateProduct -> handleConfirmDuplicate()
             is AddItemUiEvent.DismissDuplicateWarning -> handleDismissDuplicateWarning()
+            is AddItemUiEvent.ShowLevel3Proposal -> handleShowLevel3Proposal()
+            is AddItemUiEvent.HideLevel3Proposal -> handleHideLevel3Proposal()
+            is AddItemUiEvent.NewLevel3NameChanged -> handleNewLevel3NameChanged(event.name)
+            is AddItemUiEvent.CreateNewLevel3 -> handleCreateNewLevel3()
+            is AddItemUiEvent.ConfirmDuplicateLevel3 -> handleConfirmDuplicateLevel3()
+            is AddItemUiEvent.DismissDuplicateLevel3Warning -> handleDismissDuplicateLevel3Warning()
         }
     }
 
@@ -197,6 +207,11 @@ class AddItemViewModel(
                 newProductError = null,
                 duplicateCandidate = null,
                 isCreatingProduct = false,
+                isLevel3ProposalVisible = false,
+                newLevel3Name = "",
+                level3ProposalError = null,
+                duplicateLevel3Candidate = null,
+                isCreatingLevel3 = false,
             )
         }
         viewModelScope.launch {
@@ -218,6 +233,11 @@ class AddItemViewModel(
                 newProductError = null,
                 duplicateCandidate = null,
                 isCreatingProduct = false,
+                isLevel3ProposalVisible = false,
+                newLevel3Name = "",
+                level3ProposalError = null,
+                duplicateLevel3Candidate = null,
+                isCreatingLevel3 = false,
             )
         }
     }
@@ -227,35 +247,62 @@ class AddItemViewModel(
     }
 
     private fun handleNewProductLevel1Selected(level1Id: Long) {
+        // La UI disabilita i dropdown durante le creazioni; la guardia evita
+        // che un evento programmatico azzeri `isCreatingLevel3` a metà scrittura.
+        if (_uiState.value.isCreatingLevel3 || _uiState.value.isCreatingProduct) return
         _uiState.update {
             it.copy(
                 newProductLevel1Id = level1Id,
                 newProductLevel2Id = null,
                 newProductLevel3Id = null,
                 newProductError = null,
+                isLevel3ProposalVisible = false,
+                newLevel3Name = "",
+                level3ProposalError = null,
+                duplicateLevel3Candidate = null,
+                isCreatingLevel3 = false,
             )
         }
     }
 
     private fun handleNewProductLevel2Selected(level2Id: Long) {
+        // Vedi `handleNewProductLevel1Selected`: non azzerare le guardie di
+        // creazione mentre una scrittura è in corso.
+        if (_uiState.value.isCreatingLevel3 || _uiState.value.isCreatingProduct) return
         _uiState.update {
             it.copy(
                 newProductLevel2Id = level2Id,
                 newProductLevel3Id = null,
                 newProductError = null,
+                isLevel3ProposalVisible = false,
+                newLevel3Name = "",
+                level3ProposalError = null,
+                duplicateLevel3Candidate = null,
+                isCreatingLevel3 = false,
             )
         }
     }
 
     private fun handleNewProductLevel3Selected(level3Id: Long) {
-        _uiState.update { it.copy(newProductLevel3Id = level3Id, newProductError = null) }
+        if (_uiState.value.isCreatingLevel3 || _uiState.value.isCreatingProduct) return
+        _uiState.update {
+            it.copy(
+                newProductLevel3Id = level3Id,
+                newProductError = null,
+                isLevel3ProposalVisible = false,
+                newLevel3Name = "",
+                level3ProposalError = null,
+                duplicateLevel3Candidate = null,
+            )
+        }
     }
 
     private fun handleCreateNewProduct() {
         val state = _uiState.value
         // Guardia di rientranza: due eventi ravvicinati (doppio tap prima della
-        // recomposition) inserirebbero due prodotti identici.
-        if (state.isCreatingProduct) return
+        // recomposition) inserirebbero due prodotti identici. Blocca anche la
+        // creazione mentre è in corso quella di un Livello 3 (Story 7.2).
+        if (state.isCreatingProduct || state.isCreatingLevel3) return
         val name = state.newProductName.trim()
         val level3Id = state.newProductLevel3Id
 
@@ -271,7 +318,15 @@ class AddItemViewModel(
             return
         }
 
-        _uiState.update { it.copy(isCreatingProduct = true, newProductError = null) }
+        // Evita due dialog contemporanei: la creazione prodotto prende priorità
+        // sull'eventuale avviso di duplicato del Livello 3.
+        _uiState.update {
+            it.copy(
+                isCreatingProduct = true,
+                newProductError = null,
+                duplicateLevel3Candidate = null,
+            )
+        }
         viewModelScope.launch {
             try {
                 handleCreateProductResult(
@@ -290,7 +345,7 @@ class AddItemViewModel(
 
     private fun handleConfirmDuplicate() {
         val state = _uiState.value
-        if (state.isCreatingProduct) return
+        if (state.isCreatingProduct || state.isCreatingLevel3) return
         val level3Id = state.newProductLevel3Id ?: return
         if (state.duplicateCandidate == null) return
         val name = state.newProductName.trim()
@@ -330,6 +385,11 @@ class AddItemViewModel(
                         newProductError = null,
                         duplicateCandidate = null,
                         isCreatingProduct = false,
+                        isLevel3ProposalVisible = false,
+                        newLevel3Name = "",
+                        level3ProposalError = null,
+                        duplicateLevel3Candidate = null,
+                        isCreatingLevel3 = false,
                     )
                 }
                 // Riuso: porta allo step 2 e imposta PIECE se il prodotto non ha unità.
@@ -338,13 +398,184 @@ class AddItemViewModel(
 
             is CreateProductResult.Duplicate -> {
                 _uiState.update {
-                    it.copy(duplicateCandidate = result.candidate, isCreatingProduct = false)
+                    it.copy(
+                        duplicateCandidate = result.candidate,
+                        // Un solo dialog alla volta: la conferma prodotto ha
+                        // priorità sull'eventuale avviso del Livello 3.
+                        duplicateLevel3Candidate = null,
+                        isCreatingProduct = false,
+                    )
                 }
             }
 
             is CreateProductResult.Invalid -> {
                 _uiState.update {
                     it.copy(newProductError = result.message, isCreatingProduct = false)
+                }
+            }
+        }
+    }
+
+    // ---- Story 7.2: proposta di un nuovo Livello 3 ----
+
+    private fun handleShowLevel3Proposal() {
+        val state = _uiState.value
+        if (state.isCreatingLevel3 || state.isCreatingProduct) return
+        if (state.newProductLevel2Id == null) return
+        _uiState.update {
+            it.copy(
+                isLevel3ProposalVisible = true,
+                newLevel3Name = "",
+                level3ProposalError = null,
+                duplicateLevel3Candidate = null,
+                isCreatingLevel3 = false,
+            )
+        }
+    }
+
+    private fun handleHideLevel3Proposal() {
+        if (_uiState.value.isCreatingLevel3 || _uiState.value.isCreatingProduct) return
+        _uiState.update {
+            it.copy(
+                isLevel3ProposalVisible = false,
+                newLevel3Name = "",
+                level3ProposalError = null,
+                duplicateLevel3Candidate = null,
+                isCreatingLevel3 = false,
+            )
+        }
+    }
+
+    private fun handleNewLevel3NameChanged(name: String) {
+        _uiState.update { it.copy(newLevel3Name = name, level3ProposalError = null) }
+    }
+
+    private fun handleCreateNewLevel3() {
+        val state = _uiState.value
+        // Guardia di rientranza contro il doppio tap e contro la creazione
+        // concorrente di un prodotto (stessa guardia di `handleCreateNewProduct`).
+        if (state.isCreatingLevel3 || state.isCreatingProduct) return
+        val level2Id = state.newProductLevel2Id
+        val name = state.newLevel3Name.trim()
+
+        if (level2Id == null) {
+            _uiState.update { it.copy(level3ProposalError = "Seleziona il Livello 2") }
+            return
+        }
+        if (name.isEmpty()) {
+            _uiState.update {
+                it.copy(level3ProposalError = "Inserisci il nome del nuovo Livello 3")
+            }
+            return
+        }
+
+        _uiState.update {
+            it.copy(
+                isCreatingLevel3 = true,
+                level3ProposalError = null,
+                duplicateLevel3Candidate = null,
+                duplicateCandidate = null,
+            )
+        }
+        viewModelScope.launch {
+            try {
+                handleCreateLevel3Result(
+                    createLevel3UseCase(name = name, level2Id = level2Id, confirmDuplicate = false)
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isCreatingLevel3 = false,
+                        level3ProposalError = "Errore durante la creazione del Livello 3",
+                    )
+                }
+            }
+        }
+    }
+
+    private fun handleConfirmDuplicateLevel3() {
+        val state = _uiState.value
+        if (state.isCreatingLevel3 || state.isCreatingProduct) return
+        val level2Id = state.newProductLevel2Id ?: return
+        if (state.duplicateLevel3Candidate == null) return
+        val name = state.newLevel3Name.trim()
+
+        _uiState.update { it.copy(duplicateLevel3Candidate = null, isCreatingLevel3 = true) }
+        viewModelScope.launch {
+            try {
+                handleCreateLevel3Result(
+                    createLevel3UseCase(name = name, level2Id = level2Id, confirmDuplicate = true)
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isCreatingLevel3 = false,
+                        level3ProposalError = "Errore durante la creazione del Livello 3",
+                    )
+                }
+            }
+        }
+    }
+
+    private fun handleDismissDuplicateLevel3Warning() {
+        _uiState.update { it.copy(duplicateLevel3Candidate = null) }
+    }
+
+    /**
+     * Gestione comune degli esiti della use case (creazione diretta e conferma duplicato).
+     *
+     * Il risultato può arrivare dopo che l'utente ha chiuso il form o ha
+     * cambiato Livello 2: in quel caso va scartato, altrimenti selezionerebbe
+     * un Livello 3 appartenente a una categoria non più attiva.
+     *
+     * Il nuovo L3 viene aggiunto allo snapshot di tassonomia già in stato
+     * (il repository lo ha persistito): si evita un reload che potrebbe
+     * fallire dopo una scrittura già riuscita.
+     */
+    private fun handleCreateLevel3Result(result: CreateLevel3Result) {
+        val state = _uiState.value
+        if (!state.isNewProductFormVisible || !state.isLevel3ProposalVisible) return
+
+        when (result) {
+            is CreateLevel3Result.Created -> {
+                if (state.newProductLevel2Id != result.level3.level2Id) {
+                    _uiState.update { it.copy(isCreatingLevel3 = false) }
+                    return
+                }
+                _uiState.update {
+                    it.copy(
+                        taxonomy = it.taxonomy + result.level3,
+                        newProductLevel3Id = result.level3.id,
+                        isLevel3ProposalVisible = false,
+                        newLevel3Name = "",
+                        level3ProposalError = null,
+                        duplicateLevel3Candidate = null,
+                        isCreatingLevel3 = false,
+                    )
+                }
+            }
+
+            is CreateLevel3Result.Duplicate -> {
+                if (state.newProductLevel2Id != result.candidate.level2Id) {
+                    _uiState.update { it.copy(isCreatingLevel3 = false) }
+                    return
+                }
+                _uiState.update {
+                    it.copy(
+                        duplicateLevel3Candidate = result.candidate,
+                        duplicateCandidate = null,
+                        isCreatingLevel3 = false,
+                    )
+                }
+            }
+
+            is CreateLevel3Result.Invalid -> {
+                _uiState.update {
+                    it.copy(level3ProposalError = result.message, isCreatingLevel3 = false)
                 }
             }
         }
@@ -501,10 +732,12 @@ class AddItemViewModel(
             catalogRepository: CatalogRepository,
             shoppingRepository: ShoppingListRepository,
             createProductUseCase: CreateCanonicalProductUseCase,
+            createLevel3UseCase: CreateUserLevel3UseCase,
         ): AddItemViewModel = AddItemViewModel(
             catalogRepository = catalogRepository,
             shoppingRepository = shoppingRepository,
             createProductUseCase = createProductUseCase,
+            createLevel3UseCase = createLevel3UseCase,
         )
 
         /** Factory per modalità EDIT */
@@ -512,11 +745,13 @@ class AddItemViewModel(
             catalogRepository: CatalogRepository,
             shoppingRepository: ShoppingListRepository,
             createProductUseCase: CreateCanonicalProductUseCase,
+            createLevel3UseCase: CreateUserLevel3UseCase,
             item: ShoppingItem,
         ): AddItemViewModel = AddItemViewModel(
             catalogRepository = catalogRepository,
             shoppingRepository = shoppingRepository,
             createProductUseCase = createProductUseCase,
+            createLevel3UseCase = createLevel3UseCase,
             editItem = item,
         )
     }

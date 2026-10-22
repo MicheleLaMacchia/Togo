@@ -120,3 +120,39 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-7-1-aggiunta-prodotto-canonico.md`
   summary: Allineare `tools/generate_catalog.py` al nuovo DDL `AUTOINCREMENT`.
   evidence: il generatore dell'asset usa ancora `id INTEGER NOT NULL PRIMARY KEY`; Room ignora `AUTOINCREMENT` nella validazione, quindi non c'è impatto runtime, ma il prossimo `catalog.db` generato divergerebbe dall'entità.
+
+## Deferred from: spec-7-2-proposta-nuovo-livello-3.md (2026-10-22)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-7-2-proposta-nuovo-livello-3.md`
+  summary: Rendere atomico il calcolo del `sortOrder` dei nuovi Livelli 3.
+  evidence: `CatalogDao.nextLevel3SortOrder` (`CatalogDao.kt:89-90`) e `insertLevel3` (`CatalogDao.kt:97-98`) sono due statement separati: due creazioni concorrenti nello stesso Livello 2 potrebbero ricevere lo stesso `sortOrder`. Rischio accettato in 7.2 (utente singolo + guardia nel ViewModel); da rivalutare con una transazione Room dedicata se in futuro la creazione diventa concorrente.
+
+## Deferred from: code review of spec-7-2-proposta-nuovo-livello-3.md (2026-10-22)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-7-2-proposta-nuovo-livello-3.md`
+  summary: Allineare `CategoryAssigner`/`CategoryCorrector` alla presenza di L3 user-defined.
+  evidence: `CategoryAssigner.kt:38,62,76,97` e `CategoryCorrector.kt:62` escludono gli L3 user-defined da default, fallback, regole apprese e correzione. La pipeline di assegnazione automatica non è cablata in produzione e la spec 3.6 impone L3 canonici non user-defined; quando verrà collegata, decidere se consentire gli L3 user-defined per i prodotti user-defined.
+- source_spec: `_bmad-output/implementation-artifacts/spec-7-2-proposta-nuovo-livello-3.md`
+  summary: Aggiungere un test sheet-level per il dialog duplicato L3.
+  evidence: `AddItemBottomSheet.kt:409-416` monta `DuplicateLevel3WarningDialog`, ma nessun test compone la sheet; i test esistenti coprono solo il dialog isolato e lo stato del ViewModel. Estrarre i mount in un composable stateless o usare un harness Koin/ViewModel.
+- source_spec: `_bmad-output/implementation-artifacts/spec-7-2-proposta-nuovo-livello-3.md`
+  summary: Coprire i consumer di `getTaxonomy()` con un L3 user-defined.
+  evidence: la rimozione del filtro in `CatalogDao.kt:50` rende visibile il nuovo L3 a lista attiva, condivisione e assegnazione; i test esistenti verificano solo DAO/repository e non il testo condiviso o le opzioni dei consumer.
+- source_spec: `_bmad-output/implementation-artifacts/spec-7-2-proposta-nuovo-livello-3.md`
+  summary: Allineare la regola duplicati di `CategorySelectionWizard`.
+  evidence: `CategorySelectionWizard.kt:50-54` usa `trim + lowercase` senza accent-fold, mentre la 7.2 usa `ProductNameNormalizer`; il wizard non è cablato, ma alla sua attivazione le due definizioni divergerebbero.
+- source_spec: `_bmad-output/implementation-artifacts/spec-7-2-proposta-nuovo-livello-3.md`
+  summary: Definire un limite di lunghezza e la gestione dei caratteri di controllo per i nomi L3.
+  evidence: `CreateUserLevel3UseCase.kt:47-58` valida solo nome non vuoto e normalizzazione non vuota; il nome viene mostrato in dropdown, dialog, lista e condivisione.
+- source_spec: `_bmad-output/implementation-artifacts/spec-7-2-proposta-nuovo-livello-3.md`
+  summary: Aggiungere rinomina/eliminazione dei Livelli 3 user-defined.
+  evidence: dopo la creazione il L3 resta nel catalogo senza UI di gestione; come per i prodotti user-defined della 7.1, serve una storia dedicata.
+- source_spec: `_bmad-output/implementation-artifacts/spec-7-2-proposta-nuovo-livello-3.md`
+  summary: Verificare scroll/IME del pannello L3 su schermi bassi.
+  evidence: `AddItemBottomSheet.kt:137-143` non ha `verticalScroll`/`imePadding`; il pannello 7.2 aggiunge campo, errore e due pulsanti e potrebbe essere coperto dalla tastiera. La verifica manuale su device è già BLOCCATA.
+- source_spec: `_bmad-output/implementation-artifacts/spec-7-2-proposta-nuovo-livello-3.md`
+  summary: Estrarre il reset dei campi L3 in un helper o sealed state.
+  evidence: il blocco di reset è duplicato in `handleShowNewProductForm`, `handleHideNewProductForm`, `handleNewProductLevel1Selected`, `handleNewProductLevel2Selected`, `handleNewProductLevel3Selected` e `handleCreateProductResult.Created`; le guardie 7.2 evitano gli stati incoerenti, ma il debito di manutenzione resta.
+- source_spec: `_bmad-output/implementation-artifacts/spec-7-2-proposta-nuovo-livello-3.md`
+  summary: Aggiungere un indice composto e un tie-breaker per `sortOrder` dei L3.
+  evidence: `getLevel3`/`getLevel3ByLevel2` ordinano solo per `sortOrder` e non esiste un indice `(level2_id, sortOrder)`; con creazioni concorrenti `MAX+1` può produrre pareggi. Stessa radice del defer sul calcolo non transazionale.

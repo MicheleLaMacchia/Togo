@@ -59,8 +59,11 @@ abstract class TogoDatabase : RoomDatabase() {
                     // `autoGenerate`, quindi l'identity hash dello schema Room cambia
                     // pur restando version = 2. Un "togo.db" creato da una build
                     // precedente fallisce il check di identità all'avvio.
+                    // Story 7.2 (2026-10-22): anche `TaxonomyLevel3Entity.id` usa
+                    // `autoGenerate`; l'identity hash cambia di nuovo.
                     // Opzione accettata: in ambiente dev azzerare i dati prima del
                     // primo avvio (disinstallare l'app o `adb shell pm clear it.togo.app`).
+                    // Un solo reset copre 7.1 e 7.2.
                     .createFromAsset("catalog.db")
                     .addMigrations(MIGRATION_1_2)
                     .fallbackToDestructiveMigration()

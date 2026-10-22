@@ -10,6 +10,7 @@ import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.ShoppingListRepository
 import it.togo.app.domain.usecase.CreateCanonicalProductUseCase
+import it.togo.app.domain.usecase.CreateUserLevel3UseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.drop
@@ -65,6 +66,7 @@ class AddItemViewModelEditTest {
             catalogRepository = catalogRepository,
             shoppingRepository = shoppingRepository,
             createProductUseCase = CreateCanonicalProductUseCase(catalogRepository),
+            createLevel3UseCase = CreateUserLevel3UseCase(catalogRepository),
             editItem = existing,
             ioDispatcher = testDispatcher,
         )

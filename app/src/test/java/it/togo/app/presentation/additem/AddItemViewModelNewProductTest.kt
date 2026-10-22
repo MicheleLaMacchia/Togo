@@ -7,6 +7,7 @@ import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.ShoppingListRepository
 import it.togo.app.domain.usecase.CreateCanonicalProductUseCase
+import it.togo.app.domain.usecase.CreateUserLevel3UseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -102,6 +103,7 @@ class AddItemViewModelNewProductTest {
             catalogRepository = repository,
             shoppingRepository = mockk<ShoppingListRepository>(relaxed = true),
             createProductUseCase = CreateCanonicalProductUseCase(repository),
+            createLevel3UseCase = CreateUserLevel3UseCase(repository),
             ioDispatcher = testDispatcher,
         )
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {

@@ -47,6 +47,13 @@ data class AddItemUiState(
     val isCreatingProduct: Boolean = false,
     val taxonomy: List<TaxonomyLevel> = emptyList(),
 
+    // Story 7.2: proposta di un nuovo Livello 3 sotto un Livello 2 esistente
+    val isLevel3ProposalVisible: Boolean = false,
+    val newLevel3Name: String = "",
+    val level3ProposalError: String? = null,
+    val duplicateLevel3Candidate: TaxonomyLevel.Level3? = null,
+    val isCreatingLevel3: Boolean = false,
+
     // Stato UI
     val isLoading: Boolean = false,
     val currentStep: Int = 1, // 1=ricerca, 2=quantità/unità, 3=attributi, 4=conferma
@@ -132,6 +139,26 @@ sealed interface AddItemUiEvent {
 
     /** L'utente annulla l'avviso di possibile duplicato */
     object DismissDuplicateWarning : AddItemUiEvent
+
+    // ---- Story 7.2: proposta di un nuovo Livello 3 ----
+
+    /** Apre il pannello "Proponi nuovo Livello 3" (richiede un Livello 2 selezionato) */
+    object ShowLevel3Proposal : AddItemUiEvent
+
+    /** Chiude il pannello di proposta senza creare nulla */
+    object HideLevel3Proposal : AddItemUiEvent
+
+    /** Cambio nome del nuovo Livello 3 */
+    data class NewLevel3NameChanged(val name: String) : AddItemUiEvent
+
+    /** Richiesta di creazione del Livello 3 (può produrre un avviso duplicato) */
+    object CreateNewLevel3 : AddItemUiEvent
+
+    /** L'utente procede nonostante l'avviso di duplicato sul Livello 3 */
+    object ConfirmDuplicateLevel3 : AddItemUiEvent
+
+    /** L'utente annulla l'avviso di duplicato sul Livello 3 */
+    object DismissDuplicateLevel3Warning : AddItemUiEvent
 }
 
 /** Risultato conferma: ShoppingItem pronto per insert */

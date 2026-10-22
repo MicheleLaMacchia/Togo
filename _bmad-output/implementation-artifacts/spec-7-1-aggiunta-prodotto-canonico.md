@@ -3,7 +3,7 @@ title: '7.1 Aggiunta Nuovo Prodotto Canonico su Categoria Esistente'
 type: 'feature'
 created: '2026-10-21'
 updated: '2026-10-22'
-status: 'review'
+status: 'done'
 story: 7.1
 epic: 7
 baseline_commit: '9ca14829e542e4a1af12a100000207b21b329592'
@@ -111,8 +111,8 @@ Il controllo produce un avviso con possibilità di procedere; NON va aggiunto un
 
 ### Rischi/BLOCCATE
 
-- **BLOCCATA — verifica di compilazione e test**: nessun comando Gradle è stato eseguito (vincolo dell'incarico). Stato "test scritti, non eseguiti"; non è possibile affermare che la suite passi. File di riferimento: `app/src/test/java/it/togo/app/presentation/additem/AddItemViewModelNewProductTest.kt`, `app/src/test/java/it/togo/app/data/repository/RoomCatalogRepositoryUserProductTest.kt`.
-- **BLOCCATA — verifica manuale su device**: flusso utente reale non osservato.
+- **Verifica build/test — OK (2026-10-22, eseguita dall'utente)**: `.\test-android.ps1` e `.\build-android.ps1` hanno completato con esito positivo dopo il fix del test di performance `CategorySelectionWizardTest`. File di riferimento: `app/src/test/java/it/togo/app/presentation/additem/AddItemViewModelNewProductTest.kt`, `app/src/test/java/it/togo/app/data/repository/RoomCatalogRepositoryUserProductTest.kt`.
+- **Verifica manuale su device — non eseguita**: flusso utente reale non osservato.
 - **Risolto — upgrade di un DB esistente (opzione A)**: `autoGenerate` cambia l'identità dello schema Room ma `TogoDatabase.version` resta 2 (decisione 6). Un DB creato da una build precedente fallisce `checkIdentity` a runtime. Scelta accettata: azzerare i dati in ambiente dev prima del primo avvio. Documentato in `TogoDatabase.kt` e nella decisione 6.
 - **Rischio residuo — sinonimo non transazionale**: `RoomCatalogRepository.insertProduct` inserisce prodotto e sinonimo in due statement separati; un fallimento tra i due lascerebbe un prodotto ricercabile solo con nome accentato. Impatto molto basso (DB locale), tracciato in `deferred-work.md` se si vuole una `@Transaction`.
 
@@ -175,3 +175,4 @@ Rilievi respinti o rinviati: entry point visibile solo con query >= 2 caratteri 
 - 2026-10-21: creazione iniziale stato `in-progress -> review`
 - 2026-10-22: code review; corretto il meccanismo di ricerca (sinonimo accent-fold), fix UI/accessibilità, test aggiunti; stato resta `review` su richiesta esplicita (verifica build/test ancora BLOCCATA)
 - 2026-10-22: decisione DB risolta con opzione A — reset dati dev documentato in `TogoDatabase.kt`, nessun bump di versione
+- 2026-10-22: test e build eseguiti dall'utente con esito OK; storia chiusa `done`

@@ -41,6 +41,7 @@ import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.ShoppingListRepository
 import it.togo.app.domain.usecase.CreateCanonicalProductUseCase
+import it.togo.app.domain.usecase.CreateUserLevel3UseCase
 import it.togo.app.ui.theme.SHEET_SCRIM_ALPHA
 import it.togo.app.ui.theme.componentTokens
 import it.togo.app.ui.theme.togoColors
@@ -102,6 +103,7 @@ fun AddItemBottomSheet(
                     catalogRepository = GlobalContext.get().get<CatalogRepository>(),
                     shoppingRepository = GlobalContext.get().get<ShoppingListRepository>(),
                     createProductUseCase = GlobalContext.get().get<CreateCanonicalProductUseCase>(),
+                    createLevel3UseCase = GlobalContext.get().get<CreateUserLevel3UseCase>(),
                     editItem = editItem,
                 )
             }
@@ -256,10 +258,18 @@ fun AddItemBottomSheet(
                                 level3Id = uiState.newProductLevel3Id,
                                 error = uiState.newProductError,
                                 isSaving = uiState.isCreatingProduct,
+                                isLevel3ProposalVisible = uiState.isLevel3ProposalVisible,
+                                newLevel3Name = uiState.newLevel3Name,
+                                level3ProposalError = uiState.level3ProposalError,
+                                isCreatingLevel3 = uiState.isCreatingLevel3,
                                 onNameChange = { viewModel.onEvent(AddItemUiEvent.NewProductNameChanged(it)) },
                                 onLevel1Select = { viewModel.onEvent(AddItemUiEvent.NewProductLevel1Selected(it.id)) },
                                 onLevel2Select = { viewModel.onEvent(AddItemUiEvent.NewProductLevel2Selected(it.id)) },
                                 onLevel3Select = { viewModel.onEvent(AddItemUiEvent.NewProductLevel3Selected(it.id)) },
+                                onShowLevel3Proposal = { viewModel.onEvent(AddItemUiEvent.ShowLevel3Proposal) },
+                                onHideLevel3Proposal = { viewModel.onEvent(AddItemUiEvent.HideLevel3Proposal) },
+                                onNewLevel3NameChange = { viewModel.onEvent(AddItemUiEvent.NewLevel3NameChanged(it)) },
+                                onCreateLevel3 = { viewModel.onEvent(AddItemUiEvent.CreateNewLevel3) },
                                 onCancel = { viewModel.onEvent(AddItemUiEvent.HideNewProductForm) },
                                 onCreate = { viewModel.onEvent(AddItemUiEvent.CreateNewProduct) },
                             )
@@ -391,6 +401,17 @@ fun AddItemBottomSheet(
             newProductName = uiState.newProductName,
             onConfirm = { viewModel.onEvent(AddItemUiEvent.ConfirmDuplicateProduct) },
             onDismiss = { viewModel.onEvent(AddItemUiEvent.DismissDuplicateWarning) },
+        )
+    }
+
+    // Story 7.2: avviso duplicato per il nuovo Livello 3. Il ViewModel azzera
+    // l'altro candidato, quindi i due dialog non sono mai visibili insieme.
+    uiState.duplicateLevel3Candidate?.let { candidate ->
+        DuplicateLevel3WarningDialog(
+            candidateName = candidate.name,
+            newLevel3Name = uiState.newLevel3Name,
+            onConfirm = { viewModel.onEvent(AddItemUiEvent.ConfirmDuplicateLevel3) },
+            onDismiss = { viewModel.onEvent(AddItemUiEvent.DismissDuplicateLevel3Warning) },
         )
     }
 }

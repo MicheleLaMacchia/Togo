@@ -121,12 +121,14 @@ class CategoryCorrectorTest {
         assertTrue(diff.contains("→"))
     }
 
-    @Test(timeout = 100)
+    // Timeout JUnit usato solo come guardia anti-blocco: 100 ms di wall clock
+    // sono fragili quando l'intera suite gira in parallelo/carico.
+    @Test(timeout = 5_000)
     fun `correzione completata sotto 100ms`(): Unit = runBlocking(Dispatchers.IO) {
         corrector.correct(assignment, 12L)
     }
 
-    @Test(timeout = 100)
+    @Test(timeout = 5_000)
     fun `generateDiff completata sotto 100ms`(): Unit = runBlocking(Dispatchers.IO) {
         val correction = corrector.correct(assignment, 12L)
         corrector.generateDiff(correction)

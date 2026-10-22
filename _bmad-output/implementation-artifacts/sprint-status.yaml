@@ -82,8 +82,8 @@ development_status:
   6-4-privacy-audio-e-audit-performance: done
   epic-6-retrospective: optional
 
-  epic-7: in-progress
-  7-1-aggiunta-nuovo-prodotto-canonico-su-categoria-esistente: review
-  7-2-proposta-nuovo-livello-3-sotto-un-livello-2-esistente: backlog
+  epic-7: done
+  7-1-aggiunta-nuovo-prodotto-canonico-su-categoria-esistente: done
+  7-2-proposta-nuovo-livello-3-sotto-un-livello-2-esistente: done
   epic-7-retrospective: optional
-last_updated: 10-22-2026 18:30
+last_updated: 10-22-2026

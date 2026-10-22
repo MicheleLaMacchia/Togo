@@ -4,12 +4,14 @@ import it.togo.app.data.database.CatalogQueries
 import it.togo.app.data.database.dao.CatalogDao
 import it.togo.app.data.database.entity.CanonicalProductEntity
 import it.togo.app.data.database.entity.SynonymEntity
+import it.togo.app.data.database.entity.TaxonomyLevel3Entity
 import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.repository.CatalogRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -71,6 +73,26 @@ class RoomCatalogRepository(
                 )
             }
 
+            entity.copy(id = id).toDomain()
+        }
+
+    override suspend fun getLevel3ByLevel2(level2Id: Long): List<TaxonomyLevel.Level3> =
+        withContext(Dispatchers.IO) {
+            catalogDao.getLevel3ByLevel2(level2Id).first().map { it.toDomain() }
+        }
+
+    override suspend fun insertLevel3(name: String, level2Id: Long): TaxonomyLevel.Level3 =
+        withContext(Dispatchers.IO) {
+            val trimmed = name.trim()
+            val sortOrder = catalogDao.nextLevel3SortOrder(level2Id)
+            val entity = TaxonomyLevel3Entity(
+                id = 0,
+                level2Id = level2Id,
+                name = trimmed,
+                sortOrder = sortOrder,
+                isUserDefined = true,
+            )
+            val id = catalogDao.insertLevel3(entity)
             entity.copy(id = id).toDomain()
         }
 

@@ -47,7 +47,7 @@ interface CatalogDao {
     @Query("SELECT * FROM TAXONOMY_LEVEL_2 ORDER BY sortOrder")
     fun getLevel2(): Flow<List<TaxonomyLevel2Entity>>
 
-    @Query("SELECT * FROM TAXONOMY_LEVEL_3 WHERE is_user_defined = 0 ORDER BY sortOrder")
+    @Query("SELECT * FROM TAXONOMY_LEVEL_3 ORDER BY sortOrder")
     fun getLevel3(): Flow<List<TaxonomyLevel3Entity>>
 
     @Query("SELECT * FROM TAXONOMY_LEVEL_2 WHERE level1_id = :level1Id ORDER BY sortOrder")
@@ -79,4 +79,21 @@ interface CatalogDao {
      */
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertSynonym(entity: SynonymEntity): Long
+
+    /**
+     * Prossimo `sortOrder` libero nello stesso Livello 2: il nuovo Livello 3
+     * viene inserito in fondo alla categoria. Calcolo in due statement
+     * (max + insert), non transazionale: rischio di race trascurabile
+     * (utente singolo + guardia nel ViewModel).
+     */
+    @Query("SELECT COALESCE(MAX(sortOrder), 0) + 1 FROM TAXONOMY_LEVEL_3 WHERE level2_id = :level2Id")
+    suspend fun nextLevel3SortOrder(level2Id: Long): Int
+
+    /**
+     * Inserisce un Livello 3. Con `id = 0` Room usa NULL e SQLite assegna il
+     * rowid (`autoGenerate`). Nessun conflitto UNIQUE sul nome: l'avviso di
+     * duplicato è applicativo e consente di procedere.
+     */
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertLevel3(entity: TaxonomyLevel3Entity): Long
 }
