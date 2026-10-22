@@ -36,6 +36,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import it.togo.app.domain.model.CanonicalProduct
+import it.togo.app.presentation.components.UserDefinedBadge
 import it.togo.app.ui.theme.componentTokens
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
@@ -199,13 +200,23 @@ private fun ProductSuggestionItem(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(spacing.space1),
         ) {
-            Text(
-                text = product.name,
-                style = typography.itemName,
-                color = colors.inkPrimary,
-                maxLines = 1,
-                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(spacing.space2),
+            ) {
+                Text(
+                    text = product.name,
+                    modifier = Modifier.weight(1f),
+                    style = typography.itemName,
+                    color = colors.inkPrimary,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                )
+                if (product.isUserDefined) {
+                    UserDefinedBadge()
+                }
+            }
 
             // Path tassonomico
             val path = buildList<String> {

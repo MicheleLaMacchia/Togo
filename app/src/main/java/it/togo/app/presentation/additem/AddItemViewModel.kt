@@ -7,6 +7,8 @@ import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.ShoppingListRepository
+import it.togo.app.domain.usecase.CreateCanonicalProductUseCase
+import it.togo.app.domain.usecase.CreateProductResult
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -15,6 +17,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
@@ -43,6 +46,7 @@ import java.util.UUID
 class AddItemViewModel(
     private val catalogRepository: CatalogRepository,
     private val shoppingRepository: ShoppingListRepository,
+    private val createProductUseCase: CreateCanonicalProductUseCase,
     private val editItem: ShoppingItem? = null,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
@@ -141,6 +145,15 @@ class AddItemViewModel(
             is AddItemUiEvent.Confirm -> handleConfirm()
             is AddItemUiEvent.Cancel -> handleCancel()
             is AddItemUiEvent.Reset -> handleReset()
+            is AddItemUiEvent.ShowNewProductForm -> handleShowNewProductForm()
+            is AddItemUiEvent.HideNewProductForm -> handleHideNewProductForm()
+            is AddItemUiEvent.NewProductNameChanged -> handleNewProductNameChanged(event.name)
+            is AddItemUiEvent.NewProductLevel1Selected -> handleNewProductLevel1Selected(event.level1Id)
+            is AddItemUiEvent.NewProductLevel2Selected -> handleNewProductLevel2Selected(event.level2Id)
+            is AddItemUiEvent.NewProductLevel3Selected -> handleNewProductLevel3Selected(event.level3Id)
+            is AddItemUiEvent.CreateNewProduct -> handleCreateNewProduct()
+            is AddItemUiEvent.ConfirmDuplicateProduct -> handleConfirmDuplicate()
+            is AddItemUiEvent.DismissDuplicateWarning -> handleDismissDuplicateWarning()
         }
     }
 
@@ -167,6 +180,173 @@ class AddItemViewModel(
                 currentStep = 2,
                 errors = emptyMap(),
             )
+        }
+    }
+
+    // ---- Story 7.1: creazione prodotto canonico user-defined ----
+
+    private fun handleShowNewProductForm() {
+        val prefill = _uiState.value.searchQuery.trim()
+        _uiState.update {
+            it.copy(
+                isNewProductFormVisible = true,
+                newProductName = prefill,
+                newProductLevel1Id = null,
+                newProductLevel2Id = null,
+                newProductLevel3Id = null,
+                newProductError = null,
+                duplicateCandidate = null,
+                isCreatingProduct = false,
+            )
+        }
+        viewModelScope.launch {
+            try {
+                val levels = catalogRepository.getTaxonomy().first()
+                _uiState.update { it.copy(taxonomy = levels) }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(newProductError = "Errore durante il caricamento delle categorie")
+                }
+            }
+        }
+    }
+
+    private fun handleHideNewProductForm() {
+        _uiState.update {
+            it.copy(
+                isNewProductFormVisible = false,
+                newProductError = null,
+                duplicateCandidate = null,
+                isCreatingProduct = false,
+            )
+        }
+    }
+
+    private fun handleNewProductNameChanged(name: String) {
+        _uiState.update { it.copy(newProductName = name, newProductError = null) }
+    }
+
+    private fun handleNewProductLevel1Selected(level1Id: Long) {
+        _uiState.update {
+            it.copy(
+                newProductLevel1Id = level1Id,
+                newProductLevel2Id = null,
+                newProductLevel3Id = null,
+                newProductError = null,
+            )
+        }
+    }
+
+    private fun handleNewProductLevel2Selected(level2Id: Long) {
+        _uiState.update {
+            it.copy(
+                newProductLevel2Id = level2Id,
+                newProductLevel3Id = null,
+                newProductError = null,
+            )
+        }
+    }
+
+    private fun handleNewProductLevel3Selected(level3Id: Long) {
+        _uiState.update { it.copy(newProductLevel3Id = level3Id, newProductError = null) }
+    }
+
+    private fun handleCreateNewProduct() {
+        val state = _uiState.value
+        // Guardia di rientranza: due eventi ravvicinati (doppio tap prima della
+        // recomposition) inserirebbero due prodotti identici.
+        if (state.isCreatingProduct) return
+        val name = state.newProductName.trim()
+        val level3Id = state.newProductLevel3Id
+
+        if (name.isEmpty()) {
+            _uiState.update { it.copy(newProductError = "Inserisci il nome del prodotto") }
+            return
+        }
+        if (state.newProductLevel1Id == null ||
+            state.newProductLevel2Id == null ||
+            level3Id == null
+        ) {
+            _uiState.update { it.copy(newProductError = "Seleziona Livello 1, Livello 2 e Livello 3") }
+            return
+        }
+
+        _uiState.update { it.copy(isCreatingProduct = true, newProductError = null) }
+        viewModelScope.launch {
+            try {
+                handleCreateProductResult(
+                    createProductUseCase(name = name, level3Id = level3Id, confirmDuplicate = false)
+                )
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isCreatingProduct = false,
+                        newProductError = "Errore durante la creazione del prodotto",
+                    )
+                }
+            }
+        }
+    }
+
+    private fun handleConfirmDuplicate() {
+        val state = _uiState.value
+        if (state.isCreatingProduct) return
+        val level3Id = state.newProductLevel3Id ?: return
+        if (state.duplicateCandidate == null) return
+        val name = state.newProductName.trim()
+
+        _uiState.update { it.copy(duplicateCandidate = null, isCreatingProduct = true) }
+        viewModelScope.launch {
+            try {
+                handleCreateProductResult(
+                    createProductUseCase(name = name, level3Id = level3Id, confirmDuplicate = true)
+                )
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isCreatingProduct = false,
+                        newProductError = "Errore durante la creazione del prodotto",
+                    )
+                }
+            }
+        }
+    }
+
+    private fun handleDismissDuplicateWarning() {
+        _uiState.update { it.copy(duplicateCandidate = null) }
+    }
+
+    /** Gestione comune degli esiti della use case (creazione diretta e conferma duplicato). */
+    private fun handleCreateProductResult(result: CreateProductResult) {
+        when (result) {
+            is CreateProductResult.Created -> {
+                _uiState.update {
+                    it.copy(
+                        isNewProductFormVisible = false,
+                        newProductName = "",
+                        newProductLevel1Id = null,
+                        newProductLevel2Id = null,
+                        newProductLevel3Id = null,
+                        newProductError = null,
+                        duplicateCandidate = null,
+                        isCreatingProduct = false,
+                    )
+                }
+                // Riuso: porta allo step 2 e imposta PIECE se il prodotto non ha unità.
+                handleProductSelected(result.product)
+            }
+
+            is CreateProductResult.Duplicate -> {
+                _uiState.update {
+                    it.copy(duplicateCandidate = result.candidate, isCreatingProduct = false)
+                }
+            }
+
+            is CreateProductResult.Invalid -> {
+                _uiState.update {
+                    it.copy(newProductError = result.message, isCreatingProduct = false)
+                }
+            }
         }
     }
 
@@ -212,6 +392,12 @@ class AddItemViewModel(
     }
 
     private fun handlePreviousStep() {
+        // Con il form "Nuovo prodotto" aperto, "Indietro" chiude il form
+        // senza cambiare step (Story 7.1).
+        if (_uiState.value.isNewProductFormVisible) {
+            handleHideNewProductForm()
+            return
+        }
         _uiState.update { state ->
             // In edit mode, non permettere di tornare allo step 1 (ricerca)
             val minStep = if (isEditMode) 2 else 1
@@ -313,14 +499,25 @@ class AddItemViewModel(
     companion object {
         fun forInsert(
             catalogRepository: CatalogRepository,
-            shoppingRepository: ShoppingListRepository
-        ): AddItemViewModel = AddItemViewModel(catalogRepository, shoppingRepository)
+            shoppingRepository: ShoppingListRepository,
+            createProductUseCase: CreateCanonicalProductUseCase,
+        ): AddItemViewModel = AddItemViewModel(
+            catalogRepository = catalogRepository,
+            shoppingRepository = shoppingRepository,
+            createProductUseCase = createProductUseCase,
+        )
 
         /** Factory per modalità EDIT */
         fun forEdit(
             catalogRepository: CatalogRepository,
             shoppingRepository: ShoppingListRepository,
-            item: ShoppingItem
-        ): AddItemViewModel = AddItemViewModel(catalogRepository, shoppingRepository, item)
+            createProductUseCase: CreateCanonicalProductUseCase,
+            item: ShoppingItem,
+        ): AddItemViewModel = AddItemViewModel(
+            catalogRepository = catalogRepository,
+            shoppingRepository = shoppingRepository,
+            createProductUseCase = createProductUseCase,
+            editItem = item,
+        )
     }
 }

@@ -2,6 +2,8 @@ package it.togo.app.data.repository
 
 import it.togo.app.data.database.CatalogQueries
 import it.togo.app.data.database.dao.CatalogDao
+import it.togo.app.data.database.entity.CanonicalProductEntity
+import it.togo.app.data.database.entity.SynonymEntity
 import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.repository.CatalogRepository
@@ -42,6 +44,35 @@ class RoomCatalogRepository(
                 ?.toDomain()
         }
     }
+
+    override suspend fun getByLevel3(level3Id: Long): List<CanonicalProduct> =
+        withContext(Dispatchers.IO) {
+            catalogDao.getByLevel3(level3Id).map { it.toDomain() }
+        }
+
+    override suspend fun insertProduct(name: String, level3Id: Long): CanonicalProduct =
+        withContext(Dispatchers.IO) {
+            val trimmed = name.trim()
+            val entity = CanonicalProductEntity(
+                id = 0,
+                level3Id = level3Id,
+                name = trimmed,
+                isUserDefined = true,
+            )
+            val id = catalogDao.insertProduct(entity)
+
+            // La ricerca (`CatalogQueries.SEARCH`) normalizza solo la query e
+            // confronta il nome grezzo: senza questo sinonimo accent-fold un
+            // prodotto come "Caffè" non sarebbe trovato digitando "caffe".
+            val folded = CatalogQueries.normalize(trimmed)
+            if (folded.isNotEmpty()) {
+                catalogDao.insertSynonym(
+                    SynonymEntity(id = 0, productId = id, term = folded)
+                )
+            }
+
+            entity.copy(id = id).toDomain()
+        }
 
     /**
      * Tassonomia piatta e ordinata per corsia: combina i tre livelli,

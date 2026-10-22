@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import it.togo.app.domain.model.CanonicalProduct
+import it.togo.app.presentation.components.UserDefinedBadge
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoComponentTokens
 import it.togo.app.ui.theme.togoSpacing
@@ -106,13 +107,23 @@ fun SearchResultItem(
                     .fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
-                Text(
-                    text = highlightedName,
-                    style = typography.itemName,
-                    color = colors.inkPrimary,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(spacing[2]),
+                ) {
+                    Text(
+                        text = highlightedName,
+                        modifier = Modifier.weight(1f),
+                        style = typography.itemName,
+                        color = colors.inkPrimary,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    if (product.isUserDefined) {
+                        UserDefinedBadge()
+                    }
+                }
 
             }
         }

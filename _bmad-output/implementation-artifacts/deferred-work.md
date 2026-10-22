@@ -48,7 +48,6 @@
   evidence: il nuovo test copre registrazione/rilascio del launcher; il ramo di diniego del permesso resta verificato solo staticamente e manualmente.
 
 ## Deferred from: code review of spec-6-1-etichette-talkback-e-semantica-accessibile.md (2026-10-20)
-
 - source_spec: `_bmad-output/implementation-artifacts/spec-6-1-etichette-talkback-e-semantica-accessibile.md`
   summary: Introdurre una query batch o una cache per i prodotti in `ActiveListViewModel.buildUiState`.
   evidence: `catalogRepository.getById` è chiamato per ogni item a ogni emissione; il pattern preesiste ed è esteso dal nuovo loop checked. Richiede un'API repository o una cache condivisa.
@@ -100,3 +99,24 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-6-4-privacy-audio-e-audit-performance.md`
   summary: Aggiungere un corpus di utterance libere/casi manuali per SM-1, se il vincolo “nessuna riga inventata” viene revocato.
   evidence: `CatalogAcceptanceSupport.acceptanceCases()` (`app/src/test/java/it/togo/app/acceptance/CatalogAcceptanceSupport.kt:89-132`) deriva solo `CANONICAL_PRODUCT` e `SYNONYM`; il test non misura il parsing di frasi complete. La scelta evita righe inventate ed è documentata nell'audit.
+
+## Deferred from: code review of spec-7-1-aggiunta-prodotto-canonico.md (2026-10-22)
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-7-1-aggiunta-prodotto-canonico.md`
+  summary: Wizard 5-step non raggiungibile dalla UI di produzione.
+  evidence: `ProductCategorizationWizard.kt` esiste ma non è stato cablato; la Story 7.1 usa `NewProductForm`. Fuori perimetro 7.1.
+- source_spec: `_bmad-output/implementation-artifacts/spec-7-1-aggiunta-prodotto-canonico.md`
+  summary: Bug `NewProductDraft.toCanonicalProduct` con `id = finalLevel3Id`.
+  evidence: `NewProductDraft.kt:172` imposta `id = finalLevel3Id`; la Story 7.1 non usa quella classe. Va corretto o rimosso insieme al wizard.
+- source_spec: `_bmad-output/implementation-artifacts/spec-7-1-aggiunta-prodotto-canonico.md`
+  summary: Nessun percorso di modifica o eliminazione per i prodotti user-defined.
+  evidence: dopo la creazione il prodotto resta nel catalogo senza UI dedicata. Serve una storia di gestione del catalogo utente (rinomina, eliminazione, controllo dei duplicati storici).
+- source_spec: `_bmad-output/implementation-artifacts/spec-7-1-aggiunta-prodotto-canonico.md`
+  summary: `handlePreviousStep` con form aperto non è raggiungibile dalla UI.
+  evidence: `AddItemBottomSheet.kt` nasconde la barra di navigazione quando `isNewProductFormVisible` è true; il tasto di sistema chiude l'intero bottom sheet. Il ramo è coperto da test ma non esposto. Da decidere se aggiungere un `BackHandler` o rimuovere il ramo.
+- source_spec: `_bmad-output/implementation-artifacts/spec-7-1-aggiunta-prodotto-canonico.md`
+  summary: Fallimento del caricamento tassonomia senza retry nel form.
+  evidence: `AddItemViewModel.kt:202-211` mostra "Errore durante il caricamento delle categorie" ma lascia i dropdown vuoti e l'errore viene azzerato al primo evento successivo. Richiede uno stato di retry o la chiusura del form.
+- source_spec: `_bmad-output/implementation-artifacts/spec-7-1-aggiunta-prodotto-canonico.md`
+  summary: Allineare `tools/generate_catalog.py` al nuovo DDL `AUTOINCREMENT`.
+  evidence: il generatore dell'asset usa ancora `id INTEGER NOT NULL PRIMARY KEY`; Room ignora `AUTOINCREMENT` nella validazione, quindi non c'è impatto runtime, ma il prossimo `catalog.db` generato divergerebbe dall'entità.

@@ -3,6 +3,7 @@ package it.togo.app.presentation.additem
 import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.StandardUnit
+import it.togo.app.domain.model.TaxonomyLevel
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -34,6 +35,17 @@ data class AddItemUiState(
     // Validazione
     val errors: Map<String, String> = emptyMap(),
     val isEditMode: Boolean = false,
+
+    // Story 7.1: creazione prodotto canonico user-defined (sotto-flusso dello step 1)
+    val isNewProductFormVisible: Boolean = false,
+    val newProductName: String = "",
+    val newProductLevel1Id: Long? = null,
+    val newProductLevel2Id: Long? = null,
+    val newProductLevel3Id: Long? = null,
+    val newProductError: String? = null,
+    val duplicateCandidate: CanonicalProduct? = null,
+    val isCreatingProduct: Boolean = false,
+    val taxonomy: List<TaxonomyLevel> = emptyList(),
 
     // Stato UI
     val isLoading: Boolean = false,
@@ -91,6 +103,35 @@ sealed interface AddItemUiEvent {
 
     /** Reset completo (nuova voce) */
     object Reset : AddItemUiEvent
+
+    // ---- Story 7.1: creazione prodotto canonico user-defined ----
+
+    /** Apre il form compatto "Nuovo prodotto" dallo step 1 */
+    object ShowNewProductForm : AddItemUiEvent
+
+    /** Chiude il form e torna alla ricerca */
+    object HideNewProductForm : AddItemUiEvent
+
+    /** Cambio nome prodotto nel form */
+    data class NewProductNameChanged(val name: String) : AddItemUiEvent
+
+    /** Selezione Livello 1 tra quelli esistenti */
+    data class NewProductLevel1Selected(val level1Id: Long) : AddItemUiEvent
+
+    /** Selezione Livello 2 tra quelli esistenti */
+    data class NewProductLevel2Selected(val level2Id: Long) : AddItemUiEvent
+
+    /** Selezione Livello 3 tra quelli esistenti */
+    data class NewProductLevel3Selected(val level3Id: Long) : AddItemUiEvent
+
+    /** Richiesta di creazione prodotto (può produrre un avviso duplicato) */
+    object CreateNewProduct : AddItemUiEvent
+
+    /** L'utente procede nonostante l'avviso di possibile duplicato */
+    object ConfirmDuplicateProduct : AddItemUiEvent
+
+    /** L'utente annulla l'avviso di possibile duplicato */
+    object DismissDuplicateWarning : AddItemUiEvent
 }
 
 /** Risultato conferma: ShoppingItem pronto per insert */

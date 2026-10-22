@@ -1,113 +1,171 @@
 package it.togo.app.domain.usecase
 
-import io.mockk.*
 import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.TaxonomyLevel
-import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.repository.CatalogRepository
-import it.togo.app.domain.wizard.NewProductDraft
-import it.togo.app.domain.wizard.WizardStep
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
-import org.junit.Assert.*
-import org.junit.Before
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
+/**
+ * Test della creazione prodotto canonico user-defined su L3 esistente (Story 7.1).
+ *
+ * Il fake implementa `getByLevel3`/`insertProduct` in memoria: il confronto
+ * duplicati è uguaglianza dopo normalizzazione nello stesso Livello 3.
+ */
 class CreateCanonicalProductUseCaseTest {
 
-    private lateinit var catalogRepository: CatalogRepository
-    private lateinit var useCase: CreateCanonicalProductUseCase
+    private val level3Id = 12L
+    private val otherLevel3Id = 13L
 
-    private val level1 = TaxonomyLevel.Level1(1, "Alimentari", 1)
-    private val level2 = TaxonomyLevel.Level2(10, "Bevande", 1, 1)
-    private val level3 = TaxonomyLevel.Level3(12, "Bevande", 2, 10, false)
+    private class InMemoryCatalogRepository(
+        initial: List<CanonicalProduct> = emptyList(),
+    ) : CatalogRepository {
 
-    private val validDraft = NewProductDraft.empty()
-        .withLevel1(level1).withLevel2(level2).withLevel3(level3)
-        .withProductName("Latte di avena bio")
-        .withUnits(listOf(StandardUnit.LITER, StandardUnit.MILLILITER))
-        .withSelectedUnit(StandardUnit.LITER).withQuantity(1.0)
-        .withAttributes("Coop", "bio", null).withStep(WizardStep.CONFIRM)
+        val products = initial.toMutableList()
+        var insertCount = 0
+            private set
+        private var nextId = 1_000L
 
-    @Before
-    fun setup() {
-        catalogRepository = mockk<CatalogRepository>()
-        useCase = CreateCanonicalProductUseCase(catalogRepository)
+        override fun search(query: String): Flow<List<CanonicalProduct>> =
+            flowOf(products.filter { it.name.contains(query, ignoreCase = true) })
+
+        override suspend fun getById(id: Long): CanonicalProduct? =
+            products.firstOrNull { it.id == id }
+
+        override fun getTaxonomy(): Flow<List<TaxonomyLevel>> = flowOf(emptyList())
+
+        override suspend fun getByLevel3(level3Id: Long): List<CanonicalProduct> =
+            products.filter { it.level3Id == level3Id }
+
+        override suspend fun insertProduct(name: String, level3Id: Long): CanonicalProduct {
+            val product = CanonicalProduct(
+                id = nextId++,
+                name = name.trim(),
+                level3Id = level3Id,
+                isUserDefined = true,
+            )
+            products += product
+            insertCount++
+            return product
+        }
+    }
+
+    private fun existing(name: String, level3Id: Long = this.level3Id) = CanonicalProduct(
+        id = 1L,
+        name = name,
+        level3Id = level3Id,
+    )
+
+    @Test
+    fun `nome vuoto ritorna Invalid e non inserisce`() = runTest {
+        val repository = InMemoryCatalogRepository()
+        val useCase = CreateCanonicalProductUseCase(repository)
+
+        val result = useCase(name = "   ", level3Id = level3Id)
+
+        assertTrue(result is CreateProductResult.Invalid)
+        assertEquals("Inserisci il nome del prodotto", (result as CreateProductResult.Invalid).message)
+        assertEquals(0, repository.insertCount)
     }
 
     @Test
-    fun `crea prodotto user-defined e verifica tutti i campi`(): Unit = runBlocking(Dispatchers.IO) {
-        val product = useCase(validDraft)
+    fun `livello 3 non valido ritorna Invalid e non inserisce`() = runTest {
+        val repository = InMemoryCatalogRepository()
+        val useCase = CreateCanonicalProductUseCase(repository)
+
+        val result = useCase(name = "Latte di avena", level3Id = 0L)
+
+        assertTrue(result is CreateProductResult.Invalid)
+        assertEquals(0, repository.insertCount)
+    }
+
+    @Test
+    fun `duplicato nello stesso L3 senza conferma ritorna Duplicate e non inserisce`() = runTest {
+        val candidate = existing("Latte di avena")
+        val repository = InMemoryCatalogRepository(listOf(candidate))
+        val useCase = CreateCanonicalProductUseCase(repository)
+
+        val result = useCase(name = "latte di avena", level3Id = level3Id)
+
+        assertTrue(result is CreateProductResult.Duplicate)
+        assertEquals(candidate, (result as CreateProductResult.Duplicate).candidate)
+        assertEquals(0, repository.insertCount)
+    }
+
+    @Test
+    fun `duplicato con conferma esplicita crea il prodotto`() = runTest {
+        val candidate = existing("Latte di avena")
+        val repository = InMemoryCatalogRepository(listOf(candidate))
+        val useCase = CreateCanonicalProductUseCase(repository)
+
+        val result = useCase(
+            name = "  Latte di avena  ",
+            level3Id = level3Id,
+            confirmDuplicate = true,
+        )
+
+        assertTrue(result is CreateProductResult.Created)
+        assertEquals(1, repository.insertCount)
+        assertEquals(2, repository.products.size)
+        assertEquals("Latte di avena", (result as CreateProductResult.Created).product.name)
+    }
+
+    @Test
+    fun `stesso nome in un L3 diverso viene creato`() = runTest {
+        val repository = InMemoryCatalogRepository(listOf(existing("Latte di avena", level3Id)))
+        val useCase = CreateCanonicalProductUseCase(repository)
+
+        val result = useCase(name = "Latte di avena", level3Id = otherLevel3Id)
+
+        assertTrue(result is CreateProductResult.Created)
+        assertEquals(otherLevel3Id, (result as CreateProductResult.Created).product.level3Id)
+        assertEquals(1, repository.insertCount)
+    }
+
+    @Test
+    fun `varianti accentate e con spazi sono considerate duplicato`() = runTest {
+        val repository = InMemoryCatalogRepository(listOf(existing("Caffè")))
+        val useCase = CreateCanonicalProductUseCase(repository)
+
+        val lower = useCase(name = "caffe", level3Id = level3Id)
+        val spaced = useCase(name = "  CAFFÈ  ", level3Id = level3Id)
+
+        assertTrue(lower is CreateProductResult.Duplicate)
+        assertTrue(spaced is CreateProductResult.Duplicate)
+        assertEquals(0, repository.insertCount)
+    }
+
+    @Test
+    fun `prodotto creato e user-defined sul L3 corretto`() = runTest {
+        val repository = InMemoryCatalogRepository()
+        val useCase = CreateCanonicalProductUseCase(repository)
+
+        val result = useCase(name = "  Latte di avena bio  ", level3Id = level3Id)
+
+        assertTrue(result is CreateProductResult.Created)
+        val product = (result as CreateProductResult.Created).product
+        assertNotNull(product)
+        assertTrue(product.isUserDefined)
+        assertEquals(level3Id, product.level3Id)
         assertEquals("Latte di avena bio", product.name)
-        assertTrue(product.isUserDefined)
-        assertEquals(1L, product.level1Id)
-        assertEquals(10L, product.level2Id)
-        assertEquals(12L, product.level3Id)
-        assertEquals("Alimentari", product.level1Name)
-        assertEquals("Bevande", product.level2Name)
-        assertEquals("Bevande", product.level3Name)
-        assertTrue(product.id > 0)
+        assertTrue(product.id > 0L)
     }
 
     @Test
-    fun `crea prodotto con nuovo L3`(): Unit = runBlocking(Dispatchers.IO) {
-        val draft = NewProductDraft.empty()
-            .withLevel1(level1).withLevel2(level2).withNewLevel3("Latte di avena")
-            .withProductName("Latte di avena").withUnits(listOf(StandardUnit.LITER))
-            .withSelectedUnit(StandardUnit.LITER).withQuantity(1.0).withStep(WizardStep.CONFIRM)
-        val product = useCase(draft)
-        assertEquals("Latte di avena", product.name)
-        assertEquals("Latte di avena", product.level3Name)
-        assertEquals(-1L, product.level3Id)
-        assertTrue(product.isUserDefined)
-    }
+    fun `nome composto solo da spazi accentati non validi ritorna Invalid`() = runTest {
+        // Il nome composto solo da segni diacritici non produce testo dopo
+        // la normalizzazione: nessun insert.
+        val repository = InMemoryCatalogRepository()
+        val useCase = CreateCanonicalProductUseCase(repository)
 
-    @Test
-    fun `prodotto creato con unita compatibili corrette`(): Unit = runBlocking(Dispatchers.IO) {
-        assertEquals(listOf(StandardUnit.LITER, StandardUnit.MILLILITER), useCase(validDraft).compatibleUnits)
-    }
+        val result = useCase(name = "\u0301\u0301", level3Id = level3Id)
 
-    @Test
-    fun `prodotto creato con attributi corretti`(): Unit = runBlocking(Dispatchers.IO) {
-        assertEquals(listOf("Coop"), useCase(validDraft).commonBrands)
-    }
-
-    @Test
-    fun `nome prodotto vuoto lancia eccezione`(): Unit = runBlocking(Dispatchers.IO) {
-        val ex = assertThrows(IllegalArgumentException::class.java) {
-            runBlocking { useCase(validDraft.withProductName("")) }
-        }
-        assertTrue(ex.message?.contains("Nome prodotto") == true)
-    }
-
-    @Test
-    fun `quantita zero lancia eccezione`(): Unit = runBlocking(Dispatchers.IO) {
-        val ex = assertThrows(IllegalArgumentException::class.java) {
-            runBlocking { useCase(validDraft.withQuantity(0.0)) }
-        }
-        assertTrue(ex.message?.contains("Quantità") == true)
-    }
-
-    @Test
-    fun `draft non a CONFIRM lancia eccezione`(): Unit = runBlocking(Dispatchers.IO) {
-        assertThrows(IllegalArgumentException::class.java) {
-            runBlocking { useCase(validDraft.withStep(WizardStep.ENTER_DETAILS)) }
-        }
-    }
-
-    @Test
-    fun `senza L1 lancia eccezione`(): Unit = runBlocking(Dispatchers.IO) {
-        val invalidDraft = NewProductDraft.empty()
-            .withLevel2(level2).withLevel3(level3).withProductName("Test")
-            .withUnits(listOf(StandardUnit.LITER)).withSelectedUnit(StandardUnit.LITER)
-            .withQuantity(1.0).withStep(WizardStep.CONFIRM)
-        assertThrows(IllegalArgumentException::class.java) {
-            runBlocking { useCase(invalidDraft) }
-        }
-    }
-
-    @Test(timeout = 100)
-    fun `creazione prodotto completata sotto 100ms`(): Unit = runBlocking(Dispatchers.IO) {
-        useCase(validDraft)
+        assertTrue(result is CreateProductResult.Invalid)
+        assertEquals(0, repository.insertCount)
     }
 }

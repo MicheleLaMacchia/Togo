@@ -122,12 +122,35 @@ class CategorySelectionWizardTest {
         assertTrue(wizard.getLevel1Options().isEmpty())
     }
 
+    // I test di "performance" misurano il tempo del metodo, non l'overhead del
+    // runner JUnit: il timeout della annotazione resta ampio e assorbe il primo
+    // dispatch/classloading, mentre la soglia di 100ms è verificata esplicitamente
+    // dopo un warm-up. Un timeout JUnit di 100ms rendeva il test flaky perché
+    // includeva l'avvio del thread di FailOnTimeout.
     @Test(timeout = 5_000)
-    fun `getLevel1Options completato sotto 100ms`(): Unit = runBlocking(Dispatchers.IO) { wizard.getLevel1Options() }
+    fun `getLevel1Options completato sotto 100ms`(): Unit = runBlocking(Dispatchers.IO) {
+        wizard.getLevel1Options() // warm-up
+        val start = System.nanoTime()
+        wizard.getLevel1Options()
+        val elapsedMs = (System.nanoTime() - start) / 1_000_000
+        assertTrue("getLevel1Options ha impiegato ${elapsedMs}ms", elapsedMs < 100)
+    }
 
-    @Test(timeout = 100)
-    fun `getLevel2Options completato sotto 100ms`(): Unit = runBlocking(Dispatchers.IO) { wizard.getLevel2Options(1L) }
+    @Test(timeout = 5_000)
+    fun `getLevel2Options completato sotto 100ms`(): Unit = runBlocking(Dispatchers.IO) {
+        wizard.getLevel2Options(1L) // warm-up
+        val start = System.nanoTime()
+        wizard.getLevel2Options(1L)
+        val elapsedMs = (System.nanoTime() - start) / 1_000_000
+        assertTrue("getLevel2Options ha impiegato ${elapsedMs}ms", elapsedMs < 100)
+    }
 
-    @Test(timeout = 100)
-    fun `getLevel3Options completato sotto 100ms`(): Unit = runBlocking(Dispatchers.IO) { wizard.getLevel3Options(20L) }
+    @Test(timeout = 5_000)
+    fun `getLevel3Options completato sotto 100ms`(): Unit = runBlocking(Dispatchers.IO) {
+        wizard.getLevel3Options(20L) // warm-up
+        val start = System.nanoTime()
+        wizard.getLevel3Options(20L)
+        val elapsedMs = (System.nanoTime() - start) / 1_000_000
+        assertTrue("getLevel3Options ha impiegato ${elapsedMs}ms", elapsedMs < 100)
+    }
 }

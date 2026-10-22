@@ -9,6 +9,7 @@ import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.ShoppingListRepository
+import it.togo.app.domain.usecase.CreateCanonicalProductUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.drop
@@ -63,6 +64,7 @@ class AddItemViewModelEditTest {
         val viewModel = AddItemViewModel(
             catalogRepository = catalogRepository,
             shoppingRepository = shoppingRepository,
+            createProductUseCase = CreateCanonicalProductUseCase(catalogRepository),
             editItem = existing,
             ioDispatcher = testDispatcher,
         )

@@ -3,6 +3,7 @@ package it.togo.app.di
 import it.togo.app.MainViewModel
 import it.togo.app.domain.repository.ShoppingListRepository
 import it.togo.app.domain.repository.CatalogRepository
+import it.togo.app.domain.usecase.CreateCanonicalProductUseCase
 import it.togo.app.domain.usecase.ParseVoiceCommandUseCase
 import it.togo.app.domain.voice.VoiceRecognitionGateway
 import it.togo.app.presentation.activelist.ActiveListViewModel
@@ -65,6 +66,7 @@ val presentationModule: Module = module {
     viewModel { AddItemViewModel(
         catalogRepository = get<CatalogRepository>(),
         shoppingRepository = get<ShoppingListRepository>(),
+        createProductUseCase = get<CreateCanonicalProductUseCase>(),
     ) }
 
     // Future ViewModels will be added here (Epic 4, 5):

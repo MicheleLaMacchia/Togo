@@ -81,8 +81,8 @@ data class TaxonomyLevel3Entity(
     ]
 )
 data class CanonicalProductEntity(
-    @PrimaryKey
-    val id: Long,
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
     @ColumnInfo(name = "level3_id")
     val level3Id: Long,
     val name: String,

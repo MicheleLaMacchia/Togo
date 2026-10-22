@@ -9,13 +9,16 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
@@ -37,6 +40,7 @@ import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.ShoppingListRepository
+import it.togo.app.domain.usecase.CreateCanonicalProductUseCase
 import it.togo.app.ui.theme.SHEET_SCRIM_ALPHA
 import it.togo.app.ui.theme.componentTokens
 import it.togo.app.ui.theme.togoColors
@@ -97,6 +101,7 @@ fun AddItemBottomSheet(
                 AddItemViewModel(
                     catalogRepository = GlobalContext.get().get<CatalogRepository>(),
                     shoppingRepository = GlobalContext.get().get<ShoppingListRepository>(),
+                    createProductUseCase = GlobalContext.get().get<CreateCanonicalProductUseCase>(),
                     editItem = editItem,
                 )
             }
@@ -159,7 +164,11 @@ fun AddItemBottomSheet(
                 ) {
                     Text(
                         text = when (uiState.currentStep) {
-                            1 -> if (viewModel.isEditMode) "Modifica voce" else "Cerca prodotto"
+                            1 -> when {
+                                viewModel.isEditMode -> "Modifica voce"
+                                uiState.isNewProductFormVisible -> "Nuovo prodotto"
+                                else -> "Cerca prodotto"
+                            }
                             2 -> "Quantità e unità"
                             3 -> "Attributi (opzionali)"
                             4 -> "Conferma"
@@ -183,7 +192,8 @@ fun AddItemBottomSheet(
                     }
                 }
 
-                // Progress indicator step
+                // Progress indicator step (nascosto nel form "Nuovo prodotto" della Story 7.1)
+                if (!uiState.isNewProductFormVisible) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -225,6 +235,7 @@ fun AddItemBottomSheet(
                         }
                     }
                 }
+                }
 
                 // Contenuto step
                 Column(
@@ -235,13 +246,32 @@ fun AddItemBottomSheet(
                     verticalArrangement = Arrangement.spacedBy(spacing.space3),
                 ) {
                     when (uiState.currentStep) {
-                        1 -> if (!viewModel.isEditMode) SearchStep(
-                            query = uiState.searchQuery,
-                            onQueryChange = { viewModel.onEvent(AddItemUiEvent.SearchQueryChanged(it)) },
-                            results = uiState.searchResults,
-                            isSearching = uiState.isLoading,
-                            onProductClick = { viewModel.onEvent(AddItemUiEvent.ProductSelected(it)) },
-                        )
+                        1 -> when {
+                            viewModel.isEditMode -> Unit
+                            uiState.isNewProductFormVisible -> NewProductForm(
+                                name = uiState.newProductName,
+                                taxonomy = uiState.taxonomy,
+                                level1Id = uiState.newProductLevel1Id,
+                                level2Id = uiState.newProductLevel2Id,
+                                level3Id = uiState.newProductLevel3Id,
+                                error = uiState.newProductError,
+                                isSaving = uiState.isCreatingProduct,
+                                onNameChange = { viewModel.onEvent(AddItemUiEvent.NewProductNameChanged(it)) },
+                                onLevel1Select = { viewModel.onEvent(AddItemUiEvent.NewProductLevel1Selected(it.id)) },
+                                onLevel2Select = { viewModel.onEvent(AddItemUiEvent.NewProductLevel2Selected(it.id)) },
+                                onLevel3Select = { viewModel.onEvent(AddItemUiEvent.NewProductLevel3Selected(it.id)) },
+                                onCancel = { viewModel.onEvent(AddItemUiEvent.HideNewProductForm) },
+                                onCreate = { viewModel.onEvent(AddItemUiEvent.CreateNewProduct) },
+                            )
+                            else -> SearchStep(
+                                query = uiState.searchQuery,
+                                onQueryChange = { viewModel.onEvent(AddItemUiEvent.SearchQueryChanged(it)) },
+                                results = uiState.searchResults,
+                                isSearching = uiState.isLoading,
+                                onProductClick = { viewModel.onEvent(AddItemUiEvent.ProductSelected(it)) },
+                                onAddNewProduct = { viewModel.onEvent(AddItemUiEvent.ShowNewProductForm) },
+                            )
+                        }
                         2 -> QuantityUnitStep(
                             quantity = uiState.quantity,
                             onQuantityChange = { viewModel.onEvent(AddItemUiEvent.QuantityChanged(it)) },
@@ -284,7 +314,8 @@ fun AddItemBottomSheet(
                     }
                 }
 
-                // Bottoni navigazione
+                // Bottoni navigazione (nascosti nel form "Nuovo prodotto": le azioni sono nel form)
+                if (!uiState.isNewProductFormVisible) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -347,9 +378,20 @@ fun AddItemBottomSheet(
                         }
                     }
                 }
+                }
 
                 androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(bottom = spacing.space4))
             }
+    }
+
+    // Story 7.1: avviso duplicato applicativo (nessun vincolo UNIQUE nel DB).
+    uiState.duplicateCandidate?.let { candidate ->
+        DuplicateProductWarningDialog(
+            candidateName = candidate.name,
+            newProductName = uiState.newProductName,
+            onConfirm = { viewModel.onEvent(AddItemUiEvent.ConfirmDuplicateProduct) },
+            onDismiss = { viewModel.onEvent(AddItemUiEvent.DismissDuplicateWarning) },
+        )
     }
 }
 
@@ -361,14 +403,41 @@ fun SearchStep(
     results: List<CanonicalProduct>,
     isSearching: Boolean,
     onProductClick: (CanonicalProduct) -> Unit,
+    onAddNewProduct: () -> Unit,
 ) {
-    ProductSearchField(
-        query = query,
-        onQueryChange = onQueryChange,
-        results = results,
-        isSearching = isSearching,
-        onProductClick = onProductClick,
-    )
+    val colors = togoColors()
+    val typography = togoTypography()
+    val spacing = togoSpacing()
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(spacing.space2),
+    ) {
+        ProductSearchField(
+            query = query,
+            onQueryChange = onQueryChange,
+            results = results,
+            isSearching = isSearching,
+            onProductClick = onProductClick,
+        )
+
+        // Story 7.1: accesso alla creazione manuale dopo una ricerca senza match.
+        if (query.trim().length >= 2) {
+            TextButton(
+                onClick = onAddNewProduct,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = spacing.touchTargetMin),
+                colors = ButtonDefaults.textButtonColors(contentColor = colors.accentAction),
+            ) {
+                Text(
+                    text = "Non trovi il prodotto? Aggiungilo al catalogo",
+                    style = typography.itemMeta,
+                    textAlign = TextAlign.Center,
+                )
+            }
+        }
+    }
 }
 
 /** Step 2: Quantità + Unità */

@@ -54,6 +54,13 @@ abstract class TogoDatabase : RoomDatabase() {
                     // version = 1 senza catalogo) NON riceve l'asset (createFromAsset non
                     // riesegue e fallbackToDestructiveMigration scatta solo al cambio di
                     // versione). Per i soli ambienti dev: disinstallare o cancellare i dati.
+                    //
+                    // Story 7.1 (2026-10-22): `CanonicalProductEntity.id` usa
+                    // `autoGenerate`, quindi l'identity hash dello schema Room cambia
+                    // pur restando version = 2. Un "togo.db" creato da una build
+                    // precedente fallisce il check di identità all'avvio.
+                    // Opzione accettata: in ambiente dev azzerare i dati prima del
+                    // primo avvio (disinstallare l'app o `adb shell pm clear it.togo.app`).
                     .createFromAsset("catalog.db")
                     .addMigrations(MIGRATION_1_2)
                     .fallbackToDestructiveMigration()

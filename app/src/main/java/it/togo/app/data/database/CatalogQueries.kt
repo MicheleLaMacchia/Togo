@@ -1,6 +1,7 @@
 package it.togo.app.data.database
 
 import java.text.Normalizer
+import java.util.Locale
 
 /**
  * SQL e normalizzazioni condivisi per la ricerca nel catalogo.
@@ -40,7 +41,7 @@ object CatalogQueries {
      * rimozione dei segni diacritici (es. "Caffè" -> "caffe").
      */
     fun normalize(raw: String): String {
-        val decomposed = Normalizer.normalize(raw.trim().lowercase(), Normalizer.Form.NFKD)
+        val decomposed = Normalizer.normalize(raw.trim().lowercase(Locale.ROOT), Normalizer.Form.NFKD)
         return buildString(decomposed.length) {
             for (ch in decomposed) {
                 val type = Character.getType(ch)
