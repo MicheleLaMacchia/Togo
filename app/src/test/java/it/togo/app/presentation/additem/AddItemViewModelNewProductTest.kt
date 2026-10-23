@@ -234,11 +234,11 @@ class AddItemViewModelNewProductTest {
         assertEquals(2, repository.products.value.size)
         assertNotNull(state.selectedProduct)
         assertTrue(state.selectedProduct!!.isUserDefined)
-        assertEquals(StandardUnit.PIECE, state.selectedUnit)
+        assertEquals(StandardUnit.LITER, state.selectedUnit)
     }
 
     @Test
-    fun `creazione normale passa allo step 2 con unita PIECE e prodotto user-defined`() =
+    fun `creazione normale passa allo step 2 con unita risolta dalla categoria`() =
         runTest(testDispatcher) {
             val repository = FakeCatalogRepository(taxonomy = listOf(level1, level2, level3))
             val viewModel = createViewModel(repository)
@@ -252,7 +252,7 @@ class AddItemViewModelNewProductTest {
             val state = viewModel.uiState.value
             assertFalse(state.isNewProductFormVisible)
             assertEquals(2, state.currentStep)
-            assertEquals(StandardUnit.PIECE, state.selectedUnit)
+            assertEquals(StandardUnit.LITER, state.selectedUnit)
             assertNotNull(state.selectedProduct)
             assertTrue(state.selectedProduct!!.isUserDefined)
             assertEquals("Latte di avena", state.selectedProduct!!.name)

@@ -73,7 +73,11 @@ class RoomCatalogRepository(
                 )
             }
 
-            entity.copy(id = id).toDomain()
+            // Rilegge il prodotto con la tassonomia: così il dominio riceve
+            // i nomi di L1/L2/L3 e può assegnare le unità compatibili anche
+            // per i prodotti appena creati dall'utente.
+            catalogDao.getById(id)?.toDomain()
+                ?: entity.copy(id = id).toDomain()
         }
 
     override suspend fun getLevel3ByLevel2(level2Id: Long): List<TaxonomyLevel.Level3> =

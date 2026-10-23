@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.Index
 import androidx.room.ColumnInfo
+import it.togo.app.domain.product.ProductUnitResolver
 
 @Entity(
     tableName = "TAXONOMY_LEVEL_1",
@@ -89,11 +90,62 @@ data class CanonicalProductEntity(
     @ColumnInfo(name = "is_user_defined")
     val isUserDefined: Boolean = false
 ) {
-    fun toDomain(): it.togo.app.domain.model.CanonicalProduct = it.togo.app.domain.model.CanonicalProduct(
-        id = id,
-        name = name,
-        level3Id = level3Id,
-        isUserDefined = isUserDefined
-    )
+    fun toDomain(): it.togo.app.domain.model.CanonicalProduct {
+        val product = it.togo.app.domain.model.CanonicalProduct(
+            id = id,
+            name = name,
+            level3Id = level3Id,
+            isUserDefined = isUserDefined
+        )
+        return product.copy(
+            compatibleUnits = ProductUnitResolver.forProduct(product),
+        )
+    }
+}
+
+/**
+ * Proiezione di lettura di un prodotto canonico con la sua tassonomia.
+ *
+ * Room la usa come tipo di ritorno delle query che fanno JOIN sui tre livelli:
+ * in questo modo il dominio riceve già `level3Name`/`level2Name`/`level1Name`
+ * e può risolvere le unità compatibili senza query aggiuntive.
+ *
+ * Non è una `@Entity`: serve solo per il mapping del cursor, quindi non viene
+ * creata né aggiornata da Room.
+ */
+data class CanonicalProductRow(
+    val id: Long,
+    @ColumnInfo(name = "level3_id")
+    val level3Id: Long,
+    val name: String,
+    @ColumnInfo(name = "is_user_defined")
+    val isUserDefined: Boolean,
+    @ColumnInfo(name = "level3Name")
+    val level3Name: String?,
+    @ColumnInfo(name = "level2Name")
+    val level2Name: String?,
+    @ColumnInfo(name = "level2Id")
+    val level2Id: Long?,
+    @ColumnInfo(name = "level1Name")
+    val level1Name: String?,
+    @ColumnInfo(name = "level1Id")
+    val level1Id: Long?,
+) {
+    fun toDomain(): it.togo.app.domain.model.CanonicalProduct {
+        val product = it.togo.app.domain.model.CanonicalProduct(
+            id = id,
+            name = name,
+            level3Id = level3Id,
+            isUserDefined = isUserDefined,
+            level3Name = level3Name,
+            level2Name = level2Name,
+            level2Id = level2Id,
+            level1Name = level1Name,
+            level1Id = level1Id,
+        )
+        return product.copy(
+            compatibleUnits = ProductUnitResolver.forProduct(product),
+        )
+    }
 }
 

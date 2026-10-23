@@ -5,6 +5,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import it.togo.app.data.database.TogoDatabase
 import it.togo.app.data.database.dao.CatalogDao
+import it.togo.app.domain.model.StandardUnit
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -94,6 +95,10 @@ class RoomCatalogRepositoryUserProductTest {
         assertNotNull(loaded)
         assertTrue(loaded!!.isUserDefined)
         assertEquals("Latte di avena bio", loaded.name)
+        assertEquals("Bevande vegetali", loaded.level3Name)
+        assertEquals("Bevande", loaded.level2Name)
+        assertEquals("Alimentari", loaded.level1Name)
+        assertTrue(loaded.compatibleUnits.contains(StandardUnit.LITER))
 
         val inCategory = repository.getByLevel3(level3Bevande)
         assertTrue(inCategory.any { it.id == created.id })
@@ -108,7 +113,9 @@ class RoomCatalogRepositoryUserProductTest {
         val created = repository.insertProduct("Latte di avena bio", level3Bevande)
 
         val results = repository.search("latte di avena").first()
-        assertTrue(results.any { it.id == created.id })
+        val result = results.first { it.id == created.id }
+        assertEquals("Bevande vegetali", result.level3Name)
+        assertTrue(result.compatibleUnits.contains(StandardUnit.LITER))
     }
 
     @Test

@@ -89,6 +89,9 @@ class CatalogDaoUserProductTest {
         assertEquals(true, loaded!!.isUserDefined)
         assertEquals("Latte di avena bio", loaded.name)
         assertEquals(level3Id, loaded.level3Id)
+        assertEquals("Bevande vegetali", loaded.level3Name)
+        assertEquals("Bevande", loaded.level2Name)
+        assertEquals("Alimentari", loaded.level1Name)
 
         val byLevel3 = dao.getByLevel3(level3Id)
         assertTrue(byLevel3.any { it.id == id })

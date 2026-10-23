@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.StandardUnit
+import it.togo.app.domain.product.ProductUnitResolver
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.ShoppingListRepository
 import it.togo.app.domain.usecase.CreateCanonicalProductUseCase
@@ -109,9 +110,10 @@ class AddItemViewModel(
                     val product = catalogRepository.getById(item.productId)
                         ?: throw IllegalStateException("Prodotto non più disponibile nel catalogo")
                     
-                    val compatible = product.compatibleUnits
-                        .ifEmpty { listOf(StandardUnit.PIECE) }
-                    
+                    val compatible = compatibleUnitsFor(product)
+                        .toMutableList()
+                        .apply { if (item.unit !in this) add(item.unit) }
+
                     _uiState.update {
                         it.copy(
                             selectedProduct = product,
@@ -173,11 +175,13 @@ class AddItemViewModel(
     }
 
     private fun handleProductSelected(product: CanonicalProduct) {
-        // Determina unità compatibili per il prodotto
-        val compatible = product.compatibleUnits
-            .ifEmpty { listOf(StandardUnit.PIECE) }
+        // Le unità arrivano già risolte dal repository; il resolver è il
+        // fallback per i repository fake e per i prodotti legacy senza metadati.
+        val compatible = compatibleUnitsFor(product)
 
-        val defaultUnit = compatible.firstOrNull { it == StandardUnit.PIECE } ?: compatible.first()
+        // L'ordine è significativo: il resolver mette per primo il default
+        // merceologico (kg per pasta/carne, L per bevande, pz per le uova).
+        val defaultUnit = compatible.first()
 
         _uiState.update {
             it.copy(
@@ -191,6 +195,12 @@ class AddItemViewModel(
                 errors = emptyMap(),
             )
         }
+    }
+
+    private fun compatibleUnitsFor(product: CanonicalProduct): List<StandardUnit> {
+        val resolved = product.compatibleUnits
+            .ifEmpty { ProductUnitResolver.forProduct(product) }
+        return resolved.ifEmpty { listOf(StandardUnit.PIECE) }
     }
 
     // ---- Story 7.1: creazione prodotto canonico user-defined ----
@@ -392,7 +402,7 @@ class AddItemViewModel(
                         isCreatingLevel3 = false,
                     )
                 }
-                // Riuso: porta allo step 2 e imposta PIECE se il prodotto non ha unità.
+                // Riuso: porta allo step 2 e applica le unità della categoria.
                 handleProductSelected(result.product)
             }
 

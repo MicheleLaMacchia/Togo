@@ -16,8 +16,19 @@ import java.util.Locale
  */
 object CatalogQueries {
 
+    /**
+     * Oltre ai campi di `CANONICAL_PRODUCT`, espone i nomi dei tre livelli di
+     * tassonomia: servono a [it.togo.app.data.database.entity.CanonicalProductRow]
+     * per risolvere le unità compatibili senza query aggiuntive.
+     */
     const val SEARCH: String = """
-        SELECT cp.* FROM CANONICAL_PRODUCT cp
+        SELECT cp.*,
+               t3.name AS level3Name,
+               t2.name AS level2Name,
+               t2.id AS level2Id,
+               t1.name AS level1Name,
+               t1.id AS level1Id
+        FROM CANONICAL_PRODUCT cp
         JOIN TAXONOMY_LEVEL_3 t3 ON cp.level3_id = t3.id
         JOIN TAXONOMY_LEVEL_2 t2 ON t3.level2_id = t2.id
         JOIN TAXONOMY_LEVEL_1 t1 ON t2.level1_id = t1.id

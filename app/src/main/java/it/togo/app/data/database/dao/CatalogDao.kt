@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import it.togo.app.data.database.CatalogQueries
 import it.togo.app.data.database.entity.CanonicalProductEntity
+import it.togo.app.data.database.entity.CanonicalProductRow
 import it.togo.app.data.database.entity.TaxonomyLevel1Entity
 import it.togo.app.data.database.entity.TaxonomyLevel2Entity
 import it.togo.app.data.database.entity.TaxonomyLevel3Entity
@@ -21,10 +22,25 @@ interface CatalogDao {
      * Query vuota (dopo normalizzazione) => nessun risultato per il guard `:query != ''`.
      */
     @Query(CatalogQueries.SEARCH)
-    fun search(query: String): Flow<List<CanonicalProductEntity>>
+    fun search(query: String): Flow<List<CanonicalProductRow>>
 
-    @Query("SELECT * FROM CANONICAL_PRODUCT WHERE id = :id LIMIT 1")
-    suspend fun getById(id: Long): CanonicalProductEntity?
+    @Query(
+        """
+        SELECT cp.*,
+               t3.name AS level3Name,
+               t2.name AS level2Name,
+               t2.id AS level2Id,
+               t1.name AS level1Name,
+               t1.id AS level1Id
+        FROM CANONICAL_PRODUCT cp
+        LEFT JOIN TAXONOMY_LEVEL_3 t3 ON cp.level3_id = t3.id
+        LEFT JOIN TAXONOMY_LEVEL_2 t2 ON t3.level2_id = t2.id
+        LEFT JOIN TAXONOMY_LEVEL_1 t1 ON t2.level1_id = t1.id
+        WHERE cp.id = :id
+        LIMIT 1
+        """
+    )
+    suspend fun getById(id: Long): CanonicalProductRow?
 
     /**
      * Match esatto sul sinonimo già normalizzato (minuscolo + accent-fold).
@@ -33,13 +49,22 @@ interface CatalogDao {
      */
     @Query(
         """
-        SELECT DISTINCT cp.* FROM CANONICAL_PRODUCT cp
+        SELECT DISTINCT cp.*,
+               t3.name AS level3Name,
+               t2.name AS level2Name,
+               t2.id AS level2Id,
+               t1.name AS level1Name,
+               t1.id AS level1Id
+        FROM CANONICAL_PRODUCT cp
         JOIN SYNONYM s ON s.product_id = cp.id
+        LEFT JOIN TAXONOMY_LEVEL_3 t3 ON cp.level3_id = t3.id
+        LEFT JOIN TAXONOMY_LEVEL_2 t2 ON t3.level2_id = t2.id
+        LEFT JOIN TAXONOMY_LEVEL_1 t1 ON t2.level1_id = t1.id
         WHERE s.term = :term
         LIMIT 2
         """
     )
-    suspend fun getByExactSynonym(term: String): List<CanonicalProductEntity>
+    suspend fun getByExactSynonym(term: String): List<CanonicalProductRow>
 
     @Query("SELECT * FROM TAXONOMY_LEVEL_1 ORDER BY sortOrder")
     fun getLevel1(): Flow<List<TaxonomyLevel1Entity>>
@@ -60,8 +85,23 @@ interface CatalogDao {
      * Prodotti canonici di un Livello 3, ordinati per nome.
      * Usato dal controllo duplicati applicativo (Story 7.1).
      */
-    @Query("SELECT * FROM CANONICAL_PRODUCT WHERE level3_id = :level3Id ORDER BY name")
-    suspend fun getByLevel3(level3Id: Long): List<CanonicalProductEntity>
+    @Query(
+        """
+        SELECT cp.*,
+               t3.name AS level3Name,
+               t2.name AS level2Name,
+               t2.id AS level2Id,
+               t1.name AS level1Name,
+               t1.id AS level1Id
+        FROM CANONICAL_PRODUCT cp
+        LEFT JOIN TAXONOMY_LEVEL_3 t3 ON cp.level3_id = t3.id
+        LEFT JOIN TAXONOMY_LEVEL_2 t2 ON t3.level2_id = t2.id
+        LEFT JOIN TAXONOMY_LEVEL_1 t1 ON t2.level1_id = t1.id
+        WHERE cp.level3_id = :level3Id
+        ORDER BY cp.name
+        """
+    )
+    suspend fun getByLevel3(level3Id: Long): List<CanonicalProductRow>
 
     /**
      * Inserisce un prodotto canonico. Con `id = 0` Room usa NULL e SQLite
