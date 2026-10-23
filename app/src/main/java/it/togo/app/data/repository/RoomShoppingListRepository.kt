@@ -3,6 +3,7 @@ package it.togo.app.data.repository
 import it.togo.app.data.database.dao.ShoppingItemDao
 import it.togo.app.data.database.dao.HistoryDao
 import it.togo.app.data.database.entity.ShoppingItemEntity
+import it.togo.app.domain.model.HistoricalItem
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.repository.ShoppingListRepository
 import kotlinx.coroutines.Dispatchers
@@ -60,33 +61,62 @@ class RoomShoppingListRepository(
 
         if (checkedItems.isEmpty()) return true
 
-        // Batch read history items - use distinct productIds to avoid duplicates
-        val productIds = checkedItems.map { it.productId }.distinct()
-        val historyMap = historyDao.getByProductIds(productIds)
+        // Lo storico distingue le varianti: due voci dello stesso prodotto con
+        // marca/variante differenti restano due righe separate.
+        val checkedGroups = checkedItems.groupBy {
+            HistoryKey(it.productId, it.brand, it.variant, it.condition)
+        }
+        val productIds = checkedGroups.keys.map { it.productId }.distinct()
+        val existingRows = historyDao.getByProductIds(productIds)
+        val existingByKey = existingRows.associateBy {
+            HistoryKey(it.productId, it.brand, it.variant, it.condition)
+        }.toMutableMap()
+
+        // Le righe create prima della migrazione non hanno attributi: possono
+        // essere riutilizzate per il primo acquisto di una variante.
+        val legacyByProduct = existingRows
+            .filter { it.brand == null && it.variant == null && it.condition == null }
             .associateBy { it.productId }
+            .toMutableMap()
 
         val now = System.currentTimeMillis()
-        val historicalItems = checkedItems.groupBy { it.productId }.map { (productId, items) ->
-            val existing = historyMap[productId]
+        val historicalItems = checkedGroups.map { (key, items) ->
+            val exactMatch = existingByKey.remove(key)
+            val existing = exactMatch ?: legacyByProduct.remove(key.productId)
             if (existing != null) {
-                // Use first item as reference, sum quantities
+                // La stessa riga non deve essere aggiornata due volte se nello
+                // stesso checkout convivono variante e voce senza attributi.
+                if (existing.brand == null && existing.variant == null && existing.condition == null) {
+                    legacyByProduct.remove(key.productId)
+                }
+                existingByKey.remove(
+                    HistoryKey(existing.productId, existing.brand, existing.variant, existing.condition)
+                )
                 val totalQuantity = items.sumOf { it.quantity }
                 val firstItem = items.first()
-                existing.toDomain().increment(totalQuantity, firstItem.unit).toEntity()
+                existing.toDomain().increment(
+                    quantity = totalQuantity,
+                    unit = firstItem.unit,
+                    brand = key.brand,
+                    variant = key.variant,
+                    condition = key.condition,
+                ).toEntity()
             } else {
-                // Create new historical item with summed quantities
                 val totalQuantity = items.sumOf { it.quantity }
                 val firstItem = items.first()
-                it.togo.app.domain.model.HistoricalItem(
+                HistoricalItem(
                     id = firstItem.id,
-                    productId = firstItem.productId,
+                    productId = key.productId,
                     lastQuantity = totalQuantity,
                     lastUnit = firstItem.unit,
+                    brand = key.brand,
+                    variant = key.variant,
+                    condition = key.condition,
                     purchasedAt = now,
                     purchaseCount = 1
                 ).toEntity()
             }
-        }.toList()
+        }
 
         // Upsert to history
         historicalItems.forEach { historyDao.upsertHistorical(it) }
@@ -100,3 +130,10 @@ class RoomShoppingListRepository(
         return true
     }
 }
+
+private data class HistoryKey(
+    val productId: Long,
+    val brand: String?,
+    val variant: String?,
+    val condition: String?,
+)

@@ -133,6 +133,77 @@ class HistoryViewModelTest {
     }
 
     @Test
+    fun `reAdd conserva marca variante e conservazione`() = runTest(testDispatcher) {
+        val item = HistoricalItem(
+            id = "1",
+            productId = 1L,
+            lastQuantity = 2.0,
+            lastUnit = StandardUnit.LITER,
+            brand = "Coop",
+            variant = "Intero",
+            condition = "Fresco",
+            purchasedAt = 1000L,
+        )
+        val (vm, _, shoppingRepo) = createViewModel(listOf(item))
+        advanceUntilIdle()
+
+        vm.reAddToActiveList(item)
+        advanceUntilIdle()
+
+        coVerify {
+            shoppingRepo.insert(match {
+                it.productId == 1L &&
+                    it.brand == "Coop" &&
+                    it.variant == "Intero" &&
+                    it.condition == "Fresco"
+            })
+        }
+    }
+
+    @Test
+    fun `reAdd di una variante diversa non è bloccato`() = runTest(testDispatcher) {
+        val historyItem = HistoricalItem(
+            id = "1",
+            productId = 1L,
+            lastQuantity = 2.0,
+            lastUnit = StandardUnit.LITER,
+            brand = "Coop",
+            variant = "Intero",
+            purchasedAt = 1000L,
+        )
+        val otherVariant = ShoppingItem(
+            id = "active-1",
+            productId = 1L,
+            quantity = 2.0,
+            unit = StandardUnit.LITER,
+            brand = "Esselunga",
+            variant = "Parzialmente scremato",
+            isChecked = false,
+        )
+        val historyRepo = mockk<HistoryRepository>()
+        val catalogRepo = mockk<CatalogRepository>()
+        val shoppingRepo = mockk<ShoppingListRepository>()
+
+        every { historyRepo.getAll() } returns flowOf(listOf(historyItem))
+        every { shoppingRepo.getActiveItems() } returns flowOf(listOf(otherVariant))
+        coEvery { shoppingRepo.insert(any()) } returns Unit
+        coEvery { catalogRepo.getById(any()) } returns null
+
+        val vm = HistoryViewModel(
+            historyRepository = historyRepo,
+            catalogRepository = catalogRepo,
+            shoppingListRepository = shoppingRepo,
+            ioDispatcher = testDispatcher,
+        )
+        advanceUntilIdle()
+
+        vm.reAddToActiveList(historyItem)
+        advanceUntilIdle()
+
+        coVerify { shoppingRepo.insert(any()) }
+    }
+
+    @Test
     fun `reAdd duplicato mostra snackbar`() = runTest(testDispatcher) {
         val items = listOf(
             HistoricalItem(id = "1", productId = 1L, lastQuantity = 2.0, lastUnit = StandardUnit.LITER, purchasedAt = 1000L)

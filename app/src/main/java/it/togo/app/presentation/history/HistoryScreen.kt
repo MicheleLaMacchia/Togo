@@ -197,6 +197,20 @@ private fun HistoryItemRow(
                     style = typography.itemTitle,
                     color = colors.inkPrimary
                 )
+                // Marca, variante e conservazione sono opzionali: mostriamo solo
+                // quelle valorizzate, separate da un punto mediano.
+                val attributes = listOfNotNull(
+                    item.brand?.takeIf { it.isNotBlank() },
+                    item.variant?.takeIf { it.isNotBlank() },
+                    item.condition?.takeIf { it.isNotBlank() },
+                )
+                if (attributes.isNotEmpty()) {
+                    Text(
+                        text = attributes.joinToString(" · "),
+                        style = typography.itemMeta,
+                        color = colors.inkSecondary
+                    )
+                }
                 Text(
                     text = "${item.lastQuantity} ${item.lastUnit.displayName}",
                     style = typography.itemMeta,

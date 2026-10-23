@@ -79,7 +79,8 @@ class HistoryViewModel(
     }
 
     /**
-     * Cerca prodotti nello storico per nome (case-insensitive, accent-fold).
+     * Cerca prodotti nello storico per nome o attributi (case-insensitive,
+     * accent-fold). Gli attributi sono marca, variante e conservazione.
      */
     private fun filterItemsByName(
         items: List<HistoricalItem>,
@@ -88,7 +89,10 @@ class HistoryViewModel(
     ): List<HistoricalItem> {
         val normalizedQuery = CatalogQueries.normalize(query).lowercase()
         return items.filter { item ->
-            productNames[item.productId]?.lowercase()?.contains(normalizedQuery) == true
+            productNames[item.productId]?.lowercase()?.contains(normalizedQuery) == true ||
+                listOfNotNull(item.brand, item.variant, item.condition).any { value ->
+                    CatalogQueries.normalize(value).lowercase().contains(normalizedQuery)
+                }
         }.sortedByDescending { it.purchasedAt }
     }
 
@@ -97,21 +101,31 @@ class HistoryViewModel(
      */
     fun reAddToActiveList(item: HistoricalItem) {
         viewModelScope.launch(ioDispatcher) {
-            // Verifica se già presente nella lista attiva
+            // Verifica se la stessa variante è già presente nella lista attiva
             val activeItems = shoppingListRepository.getActiveItems().first()
-            val alreadyExists = activeItems.any { it.productId == item.productId && !it.isChecked }
+            val alreadyExists = activeItems.any {
+                it.productId == item.productId &&
+                    !it.isChecked &&
+                    it.brand == item.brand &&
+                    it.variant == item.variant &&
+                    it.condition == item.condition
+            }
 
             if (alreadyExists) {
                 _snackbarMessage.value = "Già nella lista"
                 return@launch
             }
 
-            // Inserisce nuovo ShoppingItem con ultima quantità/unità dallo storico
+            // Inserisce nuovo ShoppingItem con ultima quantità/unità e attributi
+            // dallo storico: la voce riaggiunta resta riconoscibile.
             shoppingListRepository.insert(
                 ShoppingItem(
                     productId = item.productId,
                     quantity = item.lastQuantity,
-                    unit = item.lastUnit
+                    unit = item.lastUnit,
+                    brand = item.brand,
+                    variant = item.variant,
+                    condition = item.condition,
                 )
             )
             _snackbarMessage.value = "Aggiunto alla lista"

@@ -27,7 +27,7 @@ import it.togo.app.data.database.entity.TaxonomyLevel3Entity
         CanonicalProductEntity::class,
         it.togo.app.data.database.entity.SynonymEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class TogoDatabase : RoomDatabase() {
@@ -65,7 +65,7 @@ abstract class TogoDatabase : RoomDatabase() {
                     // primo avvio (disinstallare l'app o `adb shell pm clear it.togo.app`).
                     // Un solo reset copre 7.1 e 7.2.
                     .createFromAsset("catalog.db")
-                    .addMigrations(MIGRATION_1_2)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

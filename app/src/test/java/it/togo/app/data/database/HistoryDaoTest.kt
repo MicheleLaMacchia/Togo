@@ -57,6 +57,28 @@ class HistoryDaoTest {
     }
 
     @Test
+    fun `insert and getAll preserva gli attributi della variante`() = runBlocking {
+        val item = HistoricalItemEntity(
+            id = "hist-attrs",
+            productId = 11,
+            lastQuantity = 2.0,
+            lastUnit = StandardUnit.LITER,
+            brand = "Coop",
+            variant = "Intero",
+            condition = "Fresco",
+            purchasedAt = System.currentTimeMillis(),
+            purchaseCount = 1
+        )
+
+        dao.insert(item)
+
+        val stored = dao.getAll().first().single()
+        assertEquals("Coop", stored.brand)
+        assertEquals("Intero", stored.variant)
+        assertEquals("Fresco", stored.condition)
+    }
+
+    @Test
     fun `upsertHistorical increments purchaseCount`() = runBlocking {
         val item = HistoricalItemEntity(
             id = "hist-2",

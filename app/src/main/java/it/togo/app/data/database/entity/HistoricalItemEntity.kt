@@ -17,6 +17,9 @@ data class HistoricalItemEntity(
     val productId: Long,
     val lastQuantity: Double,
     val lastUnit: StandardUnit,
+    val brand: String? = null,
+    val variant: String? = null,
+    val condition: String? = null,
     val purchasedAt: Long,
     val purchaseCount: Int
 ) {
@@ -25,6 +28,9 @@ data class HistoricalItemEntity(
         productId = productId,
         lastQuantity = lastQuantity,
         lastUnit = lastUnit,
+        brand = brand,
+        variant = variant,
+        condition = condition,
         purchasedAt = purchasedAt,
         purchaseCount = purchaseCount
     )
