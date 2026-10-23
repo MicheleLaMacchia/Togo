@@ -2,12 +2,16 @@ package it.togo.app.presentation.additem
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import it.togo.app.domain.category.AssignmentSource
+import it.togo.app.domain.category.CategoryAssignment
 import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.StandardUnit
+import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.product.ProductUnitResolver
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.ShoppingListRepository
+import it.togo.app.domain.usecase.CorrectCategoryUseCase
 import it.togo.app.domain.usecase.CreateCanonicalProductUseCase
 import it.togo.app.domain.usecase.CreateLevel3Result
 import it.togo.app.domain.usecase.CreateProductResult
@@ -54,6 +58,7 @@ class AddItemViewModel(
     private val createLevel3UseCase: CreateUserLevel3UseCase,
     private val editItem: ShoppingItem? = null,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val correctCategoryUseCase: CorrectCategoryUseCase? = null,
 ) : ViewModel() {
 
     // Flag per modalità edit - ora parte dello UI state
@@ -94,10 +99,25 @@ class AddItemViewModel(
     init {
         searchResults.launchIn(viewModelScope)
         _searchQuery.value = ""
+        loadTaxonomy()
         if (isEditMode) {
             initializeEditMode()
         } else {
             _searchQuery.value = ""
+        }
+    }
+
+    /** Carica la tassonomia per il form prodotto e per la correzione categoria. */
+    private fun loadTaxonomy() {
+        viewModelScope.launch {
+            try {
+                val levels = catalogRepository.getTaxonomy().first()
+                _uiState.update { it.copy(taxonomy = levels) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                // La UI mostra un errore solo quando serve davvero (creazione o correzione).
+            }
         }
     }
 
@@ -127,6 +147,12 @@ class AddItemViewModel(
                             condition = item.condition ?: "",
                             currentStep = 2, // In modifica si parte da step 2 (quantità/unità)
                             errors = emptyMap(),
+                            isCategoryCorrectionVisible = false,
+                            categoryCorrectionError = null,
+                            categoryCorrectionMessage = null,
+                            pendingCategoryCorrection = null,
+                            pendingCategoryAssignment = null,
+                            correctedCategoryPath = null,
                         )
                     }
                 } catch (e: Exception) {
@@ -166,6 +192,19 @@ class AddItemViewModel(
             is AddItemUiEvent.CreateNewLevel3 -> handleCreateNewLevel3()
             is AddItemUiEvent.ConfirmDuplicateLevel3 -> handleConfirmDuplicateLevel3()
             is AddItemUiEvent.DismissDuplicateLevel3Warning -> handleDismissDuplicateLevel3Warning()
+            is AddItemUiEvent.ShowCategoryCorrection -> handleShowCategoryCorrection()
+            is AddItemUiEvent.HideCategoryCorrection -> handleHideCategoryCorrection()
+            is AddItemUiEvent.CategoryCorrectionLevel1Selected ->
+                handleCategoryCorrectionLevel1Selected(event.level1Id)
+            is AddItemUiEvent.CategoryCorrectionLevel2Selected ->
+                handleCategoryCorrectionLevel2Selected(event.level2Id)
+            is AddItemUiEvent.CategoryCorrectionLevel3Selected ->
+                handleCategoryCorrectionLevel3Selected(event.level3Id)
+            is AddItemUiEvent.CategoryCorrectionExpressionChanged ->
+                handleCategoryCorrectionExpressionChanged(event.expression)
+            is AddItemUiEvent.ApplyCategoryCorrection -> handleApplyCategoryCorrection()
+            is AddItemUiEvent.ConfirmRememberCategory -> handleConfirmRememberCategory()
+            is AddItemUiEvent.DismissRememberCategory -> handleDismissRememberCategory()
         }
     }
 
@@ -193,6 +232,12 @@ class AddItemViewModel(
                 quantityText = "1",
                 currentStep = 2,
                 errors = emptyMap(),
+                isCategoryCorrectionVisible = false,
+                categoryCorrectionError = null,
+                categoryCorrectionMessage = null,
+                pendingCategoryCorrection = null,
+                pendingCategoryAssignment = null,
+                correctedCategoryPath = null,
             )
         }
     }
@@ -591,6 +636,242 @@ class AddItemViewModel(
         }
     }
 
+    // ---- Story 3.6: correzione categoria + regola appresa ----
+
+    private fun handleShowCategoryCorrection() {
+        val state = _uiState.value
+        val product = state.selectedProduct ?: return
+        if (correctCategoryUseCase == null) {
+            _uiState.update {
+                it.copy(categoryCorrectionMessage = "Correzione categoria non disponibile")
+            }
+            return
+        }
+
+        val level3 = state.taxonomy
+            .filterIsInstance<TaxonomyLevel.Level3>()
+            .firstOrNull { it.id == product.level3Id }
+        val level2 = level3?.let { selected ->
+            state.taxonomy.filterIsInstance<TaxonomyLevel.Level2>()
+                .firstOrNull { it.id == selected.level2Id }
+        }
+        val level1 = level2?.let { selected ->
+            state.taxonomy.filterIsInstance<TaxonomyLevel.Level1>()
+                .firstOrNull { it.id == selected.level1Id }
+        }
+
+        _uiState.update {
+            it.copy(
+                isCategoryCorrectionVisible = true,
+                categoryCorrectionLevel1Id = level1?.id ?: product.level1Id,
+                categoryCorrectionLevel2Id = level2?.id ?: product.level2Id,
+                categoryCorrectionLevel3Id = level3?.id ?: product.level3Id,
+                categoryCorrectionExpression = state.searchQuery.trim().ifBlank { product.name },
+                categoryCorrectionError = null,
+                categoryCorrectionMessage = null,
+            )
+        }
+    }
+
+    private fun handleHideCategoryCorrection() {
+        if (_uiState.value.isSavingCategoryRule) return
+        _uiState.update {
+            it.copy(
+                isCategoryCorrectionVisible = false,
+                categoryCorrectionError = null,
+            )
+        }
+    }
+
+    private fun handleCategoryCorrectionLevel1Selected(level1Id: Long) {
+        _uiState.update {
+            it.copy(
+                categoryCorrectionLevel1Id = level1Id,
+                categoryCorrectionLevel2Id = null,
+                categoryCorrectionLevel3Id = null,
+                categoryCorrectionError = null,
+            )
+        }
+    }
+
+    private fun handleCategoryCorrectionLevel2Selected(level2Id: Long) {
+        _uiState.update {
+            it.copy(
+                categoryCorrectionLevel2Id = level2Id,
+                categoryCorrectionLevel3Id = null,
+                categoryCorrectionError = null,
+            )
+        }
+    }
+
+    private fun handleCategoryCorrectionLevel3Selected(level3Id: Long) {
+        _uiState.update {
+            it.copy(
+                categoryCorrectionLevel3Id = level3Id,
+                categoryCorrectionError = null,
+            )
+        }
+    }
+
+    private fun handleCategoryCorrectionExpressionChanged(expression: String) {
+        _uiState.update {
+            it.copy(
+                categoryCorrectionExpression = expression,
+                categoryCorrectionError = null,
+            )
+        }
+    }
+
+    private fun handleApplyCategoryCorrection() {
+        val state = _uiState.value
+        if (state.isSavingCategoryRule) return
+        val product = state.selectedProduct ?: return
+        val useCase = correctCategoryUseCase
+        if (useCase == null) {
+            _uiState.update {
+                it.copy(categoryCorrectionError = "Correzione categoria non disponibile")
+            }
+            return
+        }
+        val newLevel3Id = state.categoryCorrectionLevel3Id
+        if (newLevel3Id == null) {
+            _uiState.update {
+                it.copy(categoryCorrectionError = "Seleziona una categoria")
+            }
+            return
+        }
+        val expression = state.categoryCorrectionExpression.trim().ifBlank { product.name }
+
+        val assignment = CategoryAssignment(
+            suggestedLevel3Id = product.level3Id,
+            confidence = 1.0,
+            source = AssignmentSource.DEFAULT,
+            product = product,
+            userExpression = expression,
+        )
+
+        _uiState.update {
+            it.copy(isSavingCategoryRule = true, categoryCorrectionError = null)
+        }
+        viewModelScope.launch {
+            try {
+                val correction = useCase(assignment, newLevel3Id)
+                if (!correction.isEffective) {
+                    _uiState.update {
+                        it.copy(
+                            isSavingCategoryRule = false,
+                            categoryCorrectionError =
+                                "Seleziona una categoria diversa da quella attuale",
+                        )
+                    }
+                    return@launch
+                }
+                val canRemember = useCase.canShowRememberPrompt(assignment, correction)
+                _uiState.update {
+                    it.copy(
+                        isCategoryCorrectionVisible = false,
+                        isSavingCategoryRule = false,
+                        pendingCategoryCorrection = if (canRemember) correction else null,
+                        pendingCategoryAssignment = if (canRemember) assignment else null,
+                        correctedCategoryPath = categoryPathFor(
+                            newLevel3Id,
+                            state.taxonomy,
+                        ),
+                        categoryCorrectionMessage = if (canRemember) {
+                            null
+                        } else {
+                            "Nessuna regola salvata"
+                        },
+                    )
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isSavingCategoryRule = false,
+                        categoryCorrectionError =
+                            e.message ?: "Errore durante la correzione della categoria",
+                    )
+                }
+            }
+        }
+    }
+
+    private fun handleConfirmRememberCategory() {
+        val state = _uiState.value
+        if (state.isSavingCategoryRule) return
+        val correction = state.pendingCategoryCorrection ?: return
+        val assignment = state.pendingCategoryAssignment ?: return
+        val useCase = correctCategoryUseCase
+        if (useCase == null) {
+            _uiState.update {
+                it.copy(categoryCorrectionMessage = "Correzione categoria non disponibile")
+            }
+            return
+        }
+
+        _uiState.update { it.copy(isSavingCategoryRule = true) }
+        viewModelScope.launch {
+            try {
+                useCase.confirmRemember(assignment, correction)
+                _uiState.update {
+                    it.copy(
+                        isSavingCategoryRule = false,
+                        pendingCategoryCorrection = null,
+                        pendingCategoryAssignment = null,
+                        categoryCorrectionMessage = "Regola appresa salvata",
+                    )
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isSavingCategoryRule = false,
+                        pendingCategoryCorrection = null,
+                        pendingCategoryAssignment = null,
+                        categoryCorrectionMessage =
+                            "Errore durante il salvataggio della regola",
+                    )
+                }
+            }
+        }
+    }
+
+    private fun handleDismissRememberCategory() {
+        if (_uiState.value.isSavingCategoryRule) return
+        correctCategoryUseCase?.declineRemember()
+        _uiState.update {
+            it.copy(
+                isSavingCategoryRule = false,
+                pendingCategoryCorrection = null,
+                pendingCategoryAssignment = null,
+                categoryCorrectionMessage = "Nessuna regola salvata",
+            )
+        }
+    }
+
+    /** Percorso L1 > L2 > L3 della categoria, con fallback leggibile. */
+    private fun categoryPathFor(
+        level3Id: Long,
+        taxonomy: List<TaxonomyLevel>,
+    ): String {
+        val level3 = taxonomy
+            .filterIsInstance<TaxonomyLevel.Level3>()
+            .firstOrNull { it.id == level3Id }
+            ?: return "Categoria #$level3Id"
+        val level2 = taxonomy
+            .filterIsInstance<TaxonomyLevel.Level2>()
+            .firstOrNull { it.id == level3.level2Id }
+        val level1 = level2?.let { selected ->
+            taxonomy.filterIsInstance<TaxonomyLevel.Level1>()
+                .firstOrNull { it.id == selected.level1Id }
+        }
+        return listOfNotNull(level1?.name, level2?.name, level3.name)
+            .joinToString(" > ")
+    }
+
     private fun handleQuantityChanged(quantityText: String) {
         _uiState.update {
             it.copy(
@@ -753,11 +1034,13 @@ class AddItemViewModel(
             shoppingRepository: ShoppingListRepository,
             createProductUseCase: CreateCanonicalProductUseCase,
             createLevel3UseCase: CreateUserLevel3UseCase,
+            correctCategoryUseCase: CorrectCategoryUseCase? = null,
         ): AddItemViewModel = AddItemViewModel(
             catalogRepository = catalogRepository,
             shoppingRepository = shoppingRepository,
             createProductUseCase = createProductUseCase,
             createLevel3UseCase = createLevel3UseCase,
+            correctCategoryUseCase = correctCategoryUseCase,
         )
 
         /** Factory per modalità EDIT */
@@ -767,11 +1050,13 @@ class AddItemViewModel(
             createProductUseCase: CreateCanonicalProductUseCase,
             createLevel3UseCase: CreateUserLevel3UseCase,
             item: ShoppingItem,
+            correctCategoryUseCase: CorrectCategoryUseCase? = null,
         ): AddItemViewModel = AddItemViewModel(
             catalogRepository = catalogRepository,
             shoppingRepository = shoppingRepository,
             createProductUseCase = createProductUseCase,
             createLevel3UseCase = createLevel3UseCase,
+            correctCategoryUseCase = correctCategoryUseCase,
             editItem = item,
         )
     }

@@ -1,5 +1,7 @@
 package it.togo.app.presentation.additem
 
+import it.togo.app.domain.category.CategoryAssignment
+import it.togo.app.domain.category.CategoryCorrection
 import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.StandardUnit
@@ -55,6 +57,21 @@ data class AddItemUiState(
     val duplicateLevel3Candidate: TaxonomyLevel.Level3? = null,
     val isCreatingLevel3: Boolean = false,
 
+    // Story 3.6: correzione categoria + regola appresa
+    val isCategoryCorrectionVisible: Boolean = false,
+    val categoryCorrectionLevel1Id: Long? = null,
+    val categoryCorrectionLevel2Id: Long? = null,
+    val categoryCorrectionLevel3Id: Long? = null,
+    val categoryCorrectionExpression: String = "",
+    val categoryCorrectionError: String? = null,
+    /** Correzione valida in attesa della scelta "Ricorda questa scelta?". */
+    val pendingCategoryCorrection: CategoryCorrection? = null,
+    val pendingCategoryAssignment: CategoryAssignment? = null,
+    val isSavingCategoryRule: Boolean = false,
+    /** Percorso della categoria corretta, mostrato nel riepilogo. */
+    val correctedCategoryPath: String? = null,
+    val categoryCorrectionMessage: String? = null,
+
     // Stato UI
     val isLoading: Boolean = false,
     val currentStep: Int = 1, // 1=ricerca, 2=quantità/unità, 3=attributi, 4=conferma
@@ -74,6 +91,16 @@ data class AddItemUiState(
     /** Tutti i campi obbligatori validi per conferma */
     val isValidForConfirm: Boolean
         get() = canProceedToStep3 && selectedProduct != null
+
+    /** Categoria mostrata nel riepilogo: corretta se presente, altrimenti quella del prodotto. */
+    val selectedCategoryPath: String
+        get() = correctedCategoryPath
+            ?: selectedProduct?.let { product ->
+                listOfNotNull(product.level1Name, product.level2Name, product.level3Name)
+                    .joinToString(" > ")
+                    .ifBlank { "Categoria #${product.level3Id}" }
+            }
+            ?: ""
 }
 
 /** Converte il testo della quantità in numero, accettando anche la virgola. */
@@ -172,6 +199,31 @@ sealed interface AddItemUiEvent {
 
     /** L'utente annulla l'avviso di duplicato sul Livello 3 */
     object DismissDuplicateLevel3Warning : AddItemUiEvent
+
+    // ---- Story 3.6: correzione categoria e regola appresa ----
+
+    /** Apre il dialog "Correggi categoria" per il prodotto selezionato. */
+    object ShowCategoryCorrection : AddItemUiEvent
+
+    /** Chiude il dialog senza applicare la correzione. */
+    object HideCategoryCorrection : AddItemUiEvent
+
+    data class CategoryCorrectionLevel1Selected(val level1Id: Long) : AddItemUiEvent
+
+    data class CategoryCorrectionLevel2Selected(val level2Id: Long) : AddItemUiEvent
+
+    data class CategoryCorrectionLevel3Selected(val level3Id: Long) : AddItemUiEvent
+
+    data class CategoryCorrectionExpressionChanged(val expression: String) : AddItemUiEvent
+
+    /** Valida la correzione e apre la richiesta "Ricorda questa scelta?". */
+    object ApplyCategoryCorrection : AddItemUiEvent
+
+    /** Crea la regola appresa per espressione + prodotto + categoria. */
+    object ConfirmRememberCategory : AddItemUiEvent
+
+    /** Chiude il prompt senza creare una regola. */
+    object DismissRememberCategory : AddItemUiEvent
 }
 
 /** Risultato conferma: ShoppingItem pronto per insert */

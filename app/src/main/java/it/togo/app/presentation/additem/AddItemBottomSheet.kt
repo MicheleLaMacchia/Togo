@@ -40,6 +40,7 @@ import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.ShoppingListRepository
+import it.togo.app.domain.usecase.CorrectCategoryUseCase
 import it.togo.app.domain.usecase.CreateCanonicalProductUseCase
 import it.togo.app.domain.usecase.CreateUserLevel3UseCase
 import it.togo.app.ui.theme.SHEET_SCRIM_ALPHA
@@ -104,6 +105,7 @@ fun AddItemBottomSheet(
                     shoppingRepository = GlobalContext.get().get<ShoppingListRepository>(),
                     createProductUseCase = GlobalContext.get().get<CreateCanonicalProductUseCase>(),
                     createLevel3UseCase = GlobalContext.get().get<CreateUserLevel3UseCase>(),
+                    correctCategoryUseCase = GlobalContext.get().get<CorrectCategoryUseCase>(),
                     editItem = editItem,
                 )
             }
@@ -312,7 +314,12 @@ fun AddItemBottomSheet(
                                 brand = uiState.brand,
                                 variant = uiState.variant,
                                 condition = uiState.condition,
+                                categoryPath = uiState.selectedCategoryPath,
+                                categoryMessage = uiState.categoryCorrectionMessage,
                                 errorQuantity = uiState.errors["quantity"],
+                                onCorrectCategory = {
+                                    viewModel.onEvent(AddItemUiEvent.ShowCategoryCorrection)
+                                },
                                 onConfirm = {
                                     viewModel.onEvent(AddItemUiEvent.Confirm)
                                 },
@@ -417,6 +424,44 @@ fun AddItemBottomSheet(
             newLevel3Name = uiState.newLevel3Name,
             onConfirm = { viewModel.onEvent(AddItemUiEvent.ConfirmDuplicateLevel3) },
             onDismiss = { viewModel.onEvent(AddItemUiEvent.DismissDuplicateLevel3Warning) },
+        )
+    }
+
+    // Story 3.6: correzione categoria + possibilità di ricordare la scelta.
+    if (uiState.isCategoryCorrectionVisible) {
+        CategoryCorrectionDialog(
+            taxonomy = uiState.taxonomy,
+            level1Id = uiState.categoryCorrectionLevel1Id,
+            level2Id = uiState.categoryCorrectionLevel2Id,
+            level3Id = uiState.categoryCorrectionLevel3Id,
+            expression = uiState.categoryCorrectionExpression,
+            error = uiState.categoryCorrectionError,
+            isSaving = uiState.isSavingCategoryRule,
+            onLevel1Select = {
+                viewModel.onEvent(AddItemUiEvent.CategoryCorrectionLevel1Selected(it))
+            },
+            onLevel2Select = {
+                viewModel.onEvent(AddItemUiEvent.CategoryCorrectionLevel2Selected(it))
+            },
+            onLevel3Select = {
+                viewModel.onEvent(AddItemUiEvent.CategoryCorrectionLevel3Selected(it))
+            },
+            onExpressionChange = {
+                viewModel.onEvent(AddItemUiEvent.CategoryCorrectionExpressionChanged(it))
+            },
+            onConfirm = { viewModel.onEvent(AddItemUiEvent.ApplyCategoryCorrection) },
+            onDismiss = { viewModel.onEvent(AddItemUiEvent.HideCategoryCorrection) },
+        )
+    }
+
+    if (uiState.pendingCategoryCorrection != null) {
+        RememberCategoryDialog(
+            expression = uiState.pendingCategoryAssignment
+                ?.userExpression
+                .orEmpty(),
+            isSaving = uiState.isSavingCategoryRule,
+            onConfirm = { viewModel.onEvent(AddItemUiEvent.ConfirmRememberCategory) },
+            onDismiss = { viewModel.onEvent(AddItemUiEvent.DismissRememberCategory) },
         )
     }
 }
@@ -525,6 +570,9 @@ fun ConfirmStep(
     colors: it.togo.app.ui.theme.TogoColorScheme,
     typography: it.togo.app.ui.theme.TogoTypography,
     spacing: it.togo.app.ui.theme.TogoSpacing,
+    categoryPath: String = "",
+    categoryMessage: String? = null,
+    onCorrectCategory: () -> Unit = {},
 ) {
     val colorsLocal = colors
     val typographyLocal = typography
@@ -546,6 +594,33 @@ fun ConfirmStep(
             if (brand.isNotBlank()) SummaryRow("Marca", brand, colorsLocal, typographyLocal)
             if (variant.isNotBlank()) SummaryRow("Variante", variant, colorsLocal, typographyLocal)
             if (condition.isNotBlank()) SummaryRow("Conservazione", condition, colorsLocal, typographyLocal)
+            SummaryRow(
+                "Categoria",
+                categoryPath.ifBlank { "Categoria non assegnata" },
+                colorsLocal,
+                typographyLocal,
+            )
+        }
+
+        TextButton(
+            onClick = onCorrectCategory,
+            modifier = Modifier.padding(horizontal = 8.dp),
+        ) {
+            Text("Correggi categoria", style = typographyLocal.itemMeta)
+        }
+
+        if (categoryMessage != null) {
+            val messageColor = when {
+                categoryMessage == "Regola appresa salvata" -> colorsLocal.successInk
+                categoryMessage == "Nessuna regola salvata" -> colorsLocal.inkSecondary
+                else -> colorsLocal.warningInk
+            }
+            Text(
+                text = categoryMessage,
+                style = typographyLocal.caption,
+                color = messageColor,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
         }
 
         if (errorQuantity != null) {
