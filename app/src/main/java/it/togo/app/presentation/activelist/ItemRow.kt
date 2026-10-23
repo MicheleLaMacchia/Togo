@@ -12,7 +12,6 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
@@ -33,7 +32,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -66,18 +64,18 @@ import it.togo.app.ui.theme.togoTypography
  * Riga prodotto nella lista attiva.
  *
  * Struttura (3 zone orizzontali):
- * 1. Checkbox quadrata (touch target 48dp)
+ * 1. Checkbox compatta (area di tocco 48dp)
  * 2. Nome prodotto + meta opzionale (brand/variante)
- * 3. Badge quantità
+ * 3. Quantità allineata a destra, senza badge
  *
  * Stati:
- * - Attivo: bordo crisp, testo inkPrimary, badge scuro
+ * - Attivo: bordo crisp, testo inkPrimary
  * - Checked: testo barrato inkPrimary, bordo/checkbox verde
  *
  * Dynamic Type:
  * - Il nome prodotto non viene mai troncato (niente maxLines/ellissi): la riga
- *   cresce in altezza e il badge resta un fratello del nome nella Row, mai
- *   sovrapposto. `minHeight` garantisce il target da 48dp anche a font piccolo.
+ *   cresce in altezza e la quantità resta un fratello del nome nella Row, mai
+ *   sovrapposta. `minHeight` garantisce il target da 48dp anche a font piccolo.
  *
  * Accessibilità:
  * - Attivo: la riga è cliccabile → modifica; la checkbox → spunta.
@@ -305,14 +303,12 @@ fun ItemRow(
                     }
                 }
 
-                // Destra: badge quantità
-                QuantityBadge(
+                // Destra: quantità senza badge, allineata al bordo della riga.
+                QuantityText(
                     quantity = item.quantity,
                     unit = item.unit.displayName,
-                    tokens = tokens.quantityBadge,
                     typography = typography,
-                    textColor = tokens.quantityBadge.textColor,
-                    backgroundColor = tokens.quantityBadge.background,
+                    color = colors.inkPrimary,
                 )
             }
 
@@ -347,12 +343,14 @@ internal fun performShortHapticFeedback(context: Context) {
 }
 
 /**
- * Checkbox quadrata stile utility (48dp touch target, bordo 2dp).
+ * Checkbox compatta con area di tocco accessibile da 48dp.
  *
- * È un controllo accessibile vero e proprio: [Modifier.toggleable] espone
- * ruolo `Checkbox`, stato di spunta e azione di toggle; la descrizione
- * contiene nome prodotto e azione ("Spunta"/"Deseleziona"). L'icona interna è
- * decorativa (`contentDescription = null`) per evitare annunci duplicati.
+ * Il riquadro visivo è più piccolo (`visualSize` del token) ma l'area
+ * interattiva resta 48dp. È un controllo accessibile vero e proprio:
+ * [Modifier.toggleable] espone ruolo `Checkbox`, stato di spunta e azione di
+ * toggle; la descrizione contiene nome prodotto e azione
+ * ("Spunta"/"Deseleziona"). L'icona interna è decorativa
+ * (`contentDescription = null`) per evitare annunci duplicati.
  */
 @Composable
 private fun CheckboxUtility(
@@ -364,30 +362,38 @@ private fun CheckboxUtility(
     checkboxBorderColor: Color,
     checkboxBgColor: Color,
 ) {
-    val size = tokens.size // 48dp per touch target
+    val touchTargetSize = tokens.size
+    val visualSize = tokens.visualSize
     val borderWidth = tokens.borderWidth
 
     Box(
         modifier = modifier
-            .size(size)
+            .size(touchTargetSize)
             .toggleable(
                 value = checked,
                 role = Role.Checkbox,
                 onValueChange = onCheckedChange,
             )
-            .semantics(mergeDescendants = true) { this.contentDescription = contentDescription }
-            .background(checkboxBgColor, tokens.radius)
-            .border(borderWidth, checkboxBorderColor, tokens.radius)
-            .clip(tokens.radius),
-        contentAlignment = androidx.compose.ui.Alignment.Center,
+            .semantics(mergeDescendants = true) { this.contentDescription = contentDescription },
+        contentAlignment = Alignment.Center,
     ) {
-        if (checked) {
-            Icon(
-                imageVector = Icons.Filled.Check,
-                contentDescription = null,
-                tint = tokens.checkColor,
-                modifier = Modifier.size(size * 0.55f),
-            )
+        Box(
+            modifier = Modifier
+                .size(visualSize)
+                .testTag("checkbox_visual")
+                .background(checkboxBgColor, tokens.radius)
+                .border(borderWidth, checkboxBorderColor, tokens.radius)
+                .clip(tokens.radius),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (checked) {
+                Icon(
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = null,
+                    tint = tokens.checkColor,
+                    modifier = Modifier.size(visualSize * 0.55f),
+                )
+            }
         }
     }
 }
@@ -429,32 +435,19 @@ internal fun StandardUnit.italianName(quantity: Double): String {
     }
 }
 
-/** Badge quantità (pill compatta) */
+/** Quantità + unità, senza sfondo, allineata al bordo destro della riga. */
 @Composable
-private fun QuantityBadge(
+private fun QuantityText(
     quantity: Double,
     unit: String,
-    tokens: it.togo.app.ui.theme.QuantityBadgeTokens,
     typography: it.togo.app.ui.theme.TogoTypography,
-    textColor: Color,
-    backgroundColor: Color,
+    color: Color,
 ) {
     // Condivide il formato robusto con TalkBack: no notazione scientifica o
     // troncamento errato degli zeri nelle quantità grandi.
-    val text = "${formatQuantity(quantity)} $unit"
-    Surface(
-        modifier = Modifier
-            .padding(horizontal = tokens.paddingHorizontal, vertical = tokens.paddingVertical)
-            .heightIn(min = 24.dp)
-        ,
-        shape = tokens.radius,
-        color = backgroundColor,
-        border = BorderStroke(1.dp, tokens.borderColor),
-    ) {
-        Text(
-            text = text,
-            style = typography.itemMeta, // usa typography passata, non togoTypography() globale
-            color = textColor,
-        )
-    }
+    Text(
+        text = "${formatQuantity(quantity)} $unit",
+        style = typography.itemMeta,
+        color = color,
+    )
 }

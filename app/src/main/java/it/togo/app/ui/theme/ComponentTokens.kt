@@ -34,7 +34,10 @@ data class ItemRowTokens(
 )
 
 data class CheckboxUtilityTokens(
+    /** Area di tocco minima accessibile (48dp). */
     val size: Dp = 48.dp,
+    /** Riquadro visivo della checkbox, più piccolo dell'area di tocco. */
+    val visualSize: Dp = 24.dp,
     val borderWidth: Dp = 2.dp,
     val borderColor: Color,
     val radius: RoundedCornerShape,

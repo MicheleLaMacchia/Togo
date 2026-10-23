@@ -771,7 +771,7 @@ class ActiveListAccessibilityTest {
     }
 
     @Test
-    fun `quantity badge and talkback agree for large quantities`() {
+    fun `quantity text and talkback agree for large quantities`() {
         val item = uncheckedItem.copy(quantity = 1.0E10)
         composeTestRule.setContent {
             TogoTheme(darkTheme = false) {

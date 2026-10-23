@@ -5,11 +5,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.assertHeightIsAtLeast
+import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertWidthIsAtLeast
+import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
@@ -27,8 +30,8 @@ import org.robolectric.RobolectricTestRunner
  * Test Dynamic Type della riga prodotto a fontScale 2.0 (Story 6.2).
  *
  * Verifica che a font massimo il nome prodotto non venga troncato, la riga
- * cresca in altezza (anziché troncare), il badge resti leggibile e non
- * sovrapposto al nome, e la checkbox mantenga il target ≥48dp.
+ * cresca in altezza (anziché troncare), la quantità resti leggibile e non
+ * sovrapposta al nome, e la checkbox mantenga il target ≥48dp.
  *
  * NOTA: le asserzioni sui bounds usano `assertWidthIsAtLeast` /
  * `assertHeightIsAtLeast` (Dp) anziché confronti manuali, perché il tipo
@@ -148,10 +151,10 @@ class DynamicTypeTouchTargetTest {
     }
 
     @Test
-    fun `badge quantity stays legible and beside the name at max font`() {
+    fun `quantity stays legible and beside the name at max font`() {
         setRow()
 
-        // Badge "2 L" (displayName) interamente visibile e con larghezza utile.
+        // Quantità "2 L" (displayName) interamente visibile e con larghezza utile.
         composeTestRule
             .onNodeWithText("2 L")
             .assertIsDisplayed()
@@ -166,6 +169,16 @@ class DynamicTypeTouchTargetTest {
             .onNodeWithContentDescription("Spunta $longName.")
             .assertHeightIsAtLeast(48.dp)
             .assertWidthIsAtLeast(48.dp)
+    }
+
+    @Test
+    fun `checkbox visual square is smaller than its touch target`() {
+        setRow()
+
+        composeTestRule
+            .onNodeWithTag("checkbox_visual", useUnmergedTree = true)
+            .assertWidthIsEqualTo(24.dp)
+            .assertHeightIsEqualTo(24.dp)
     }
 
     @Test
