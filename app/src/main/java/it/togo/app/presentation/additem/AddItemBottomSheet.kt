@@ -283,7 +283,7 @@ fun AddItemBottomSheet(
                             )
                         }
                         2 -> QuantityUnitStep(
-                            quantity = uiState.quantity,
+                            quantityText = uiState.quantityText,
                             onQuantityChange = { viewModel.onEvent(AddItemUiEvent.QuantityChanged(it)) },
                             selectedUnit = uiState.selectedUnit,
                             onUnitChange = { viewModel.onEvent(AddItemUiEvent.UnitChanged(it)) },
@@ -312,6 +312,7 @@ fun AddItemBottomSheet(
                                 brand = uiState.brand,
                                 variant = uiState.variant,
                                 condition = uiState.condition,
+                                errorQuantity = uiState.errors["quantity"],
                                 onConfirm = {
                                     viewModel.onEvent(AddItemUiEvent.Confirm)
                                 },
@@ -349,7 +350,9 @@ fun AddItemBottomSheet(
                     if (uiState.currentStep < 4) {
                         val canProceed = when (uiState.currentStep) {
                             1 -> uiState.canProceedToStep2
-                            2 -> uiState.canProceedToStep3
+                            // Anche con quantità vuota l'utente può premere
+                            // "Avanti": il ViewModel mostra l'errore e resta qui.
+                            2 -> uiState.selectedUnit != null
                             else -> true
                         }
                         Button(
@@ -372,7 +375,9 @@ fun AddItemBottomSheet(
                         Button(
                             onClick = { viewModel.onEvent(AddItemUiEvent.Confirm) },
                             modifier = Modifier.weight(1f),
-                            enabled = uiState.isValidForConfirm,
+                            // La validazione finale (quantità inclusa) avviene
+                            // in handleConfirm, così il messaggio è visibile.
+                            enabled = uiState.selectedProduct != null && uiState.selectedUnit != null,
                             colors = androidx.compose.material3.ButtonDefaults.buttonColors(
                                 containerColor = colors.accentSuccess,
                                 // Il verde è condiviso tra i temi: il testo resta bianco fisso.
@@ -464,8 +469,8 @@ fun SearchStep(
 /** Step 2: Quantità + Unità */
 @Composable
 fun QuantityUnitStep(
-    quantity: Double,
-    onQuantityChange: (Double) -> Unit,
+    quantityText: String,
+    onQuantityChange: (String) -> Unit,
     selectedUnit: StandardUnit?,
     onUnitChange: (StandardUnit) -> Unit,
     compatibleUnits: List<StandardUnit>,
@@ -473,7 +478,7 @@ fun QuantityUnitStep(
     errorUnit: String?,
 ) {
     QuantityUnitPicker(
-        quantity = quantity,
+        quantityText = quantityText,
         onQuantityChange = onQuantityChange,
         selectedUnit = selectedUnit,
         onUnitChange = onUnitChange,
@@ -514,6 +519,7 @@ fun ConfirmStep(
     brand: String,
     variant: String,
     condition: String,
+    errorQuantity: String?,
     onConfirm: () -> Unit,
     onBack: () -> Unit,
     colors: it.togo.app.ui.theme.TogoColorScheme,
@@ -536,10 +542,19 @@ fun ConfirmStep(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             SummaryRow("Prodotto", product.name, colorsLocal, typographyLocal)
-            SummaryRow("Quantità", "${quantity.toString().trimEnd('0').trimEnd('.')} ${unit.displayName}", colorsLocal, typographyLocal)
+            SummaryRow("Quantità", "${formatQuantityText(quantity)} ${unit.displayName}", colorsLocal, typographyLocal)
             if (brand.isNotBlank()) SummaryRow("Marca", brand, colorsLocal, typographyLocal)
             if (variant.isNotBlank()) SummaryRow("Variante", variant, colorsLocal, typographyLocal)
             if (condition.isNotBlank()) SummaryRow("Conservazione", condition, colorsLocal, typographyLocal)
+        }
+
+        if (errorQuantity != null) {
+            Text(
+                text = errorQuantity,
+                style = typographyLocal.caption,
+                color = colorsLocal.warningInk,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
         }
     }
 }

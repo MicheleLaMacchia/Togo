@@ -35,7 +35,7 @@ class QuantityUnitPickerTouchTargetTest {
         composeTestRule.setContent {
             TogoTheme(darkTheme = false) {
                 QuantityUnitPicker(
-                    quantity = 1.0,
+                    quantityText = "1",
                     onQuantityChange = {},
                     selectedUnit = selected,
                     onUnitChange = { selected = it },

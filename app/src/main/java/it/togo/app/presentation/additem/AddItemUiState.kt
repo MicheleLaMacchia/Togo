@@ -23,7 +23,8 @@ data class AddItemUiState(
 
     // Step 2: Prodotto selezionato + quantità/unità
     val selectedProduct: CanonicalProduct? = null,
-    val quantity: Double = 1.0,
+    /** Testo grezzo del campo quantità: può essere vuoto mentre l'utente cancella. */
+    val quantityText: String = "1",
     val selectedUnit: StandardUnit? = null,
     val compatibleUnits: List<StandardUnit> = emptyList(),
 
@@ -58,18 +59,30 @@ data class AddItemUiState(
     val isLoading: Boolean = false,
     val currentStep: Int = 1, // 1=ricerca, 2=quantità/unità, 3=attributi, 4=conferma
 ) {
+    /** Quantità numerica derivata dal testo; 0 se vuota o non valida. */
+    val quantity: Double
+        get() = parseQuantityText(quantityText) ?: 0.0
+
     /** Prodotto selezionato valido per procedere allo step 2 */
     val canProceedToStep2: Boolean
         get() = selectedProduct != null
 
     /** Quantità > 0 e unità selezionata per procedere allo step 3 */
     val canProceedToStep3: Boolean
-        get() = quantity > 0 && selectedUnit != null
+        get() = quantityText.isNotBlank() && quantity > 0 && selectedUnit != null
 
     /** Tutti i campi obbligatori validi per conferma */
     val isValidForConfirm: Boolean
         get() = canProceedToStep3 && selectedProduct != null
 }
+
+/** Converte il testo della quantità in numero, accettando anche la virgola. */
+internal fun parseQuantityText(raw: String): Double? =
+    raw.trim().replace(',', '.').toDoubleOrNull()?.takeIf { it.isFinite() }
+
+/** Formatta un valore numerico per il campo quantità, senza zeri superflui. */
+internal fun formatQuantityText(value: Double): String =
+    java.math.BigDecimal.valueOf(value).stripTrailingZeros().toPlainString()
 
 /**
  * Eventi UI per AddItemViewModel.
@@ -81,8 +94,8 @@ sealed interface AddItemUiEvent {
     /** Selezione prodotto dai risultati ricerca */
     data class ProductSelected(val product: CanonicalProduct) : AddItemUiEvent
 
-    /** Cambio quantità (stepper/input) */
-    data class QuantityChanged(val quantity: Double) : AddItemUiEvent
+    /** Cambio quantità (stepper/input), come testo grezzo */
+    data class QuantityChanged(val quantityText: String) : AddItemUiEvent
 
     /** Cambio unità selezionata */
     data class UnitChanged(val unit: StandardUnit) : AddItemUiEvent

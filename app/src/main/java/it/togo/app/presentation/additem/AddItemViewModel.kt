@@ -119,7 +119,7 @@ class AddItemViewModel(
                             searchQuery = product.name,
                             compatibleUnits = compatible,
                             selectedUnit = item.unit, // Singola assegnazione: usa l'unità dell'item in edit
-                            quantity = item.quantity,
+                            quantityText = formatQuantityText(item.quantity),
                             brand = item.brand ?: "",
                             variant = item.variant ?: "",
                             condition = item.condition ?: "",
@@ -139,7 +139,7 @@ class AddItemViewModel(
         when (event) {
             is AddItemUiEvent.SearchQueryChanged -> handleSearchQueryChanged(event.query)
             is AddItemUiEvent.ProductSelected -> handleProductSelected(event.product)
-            is AddItemUiEvent.QuantityChanged -> handleQuantityChanged(event.quantity)
+            is AddItemUiEvent.QuantityChanged -> handleQuantityChanged(event.quantityText)
             is AddItemUiEvent.UnitChanged -> handleUnitChanged(event.unit)
             is AddItemUiEvent.BrandChanged -> handleBrandChanged(event.brand)
             is AddItemUiEvent.VariantChanged -> handleVariantChanged(event.variant)
@@ -186,7 +186,7 @@ class AddItemViewModel(
                 searchQuery = product.name,
                 compatibleUnits = compatible,
                 selectedUnit = defaultUnit,
-                quantity = 1.0,
+                quantityText = "1",
                 currentStep = 2,
                 errors = emptyMap(),
             )
@@ -581,10 +581,12 @@ class AddItemViewModel(
         }
     }
 
-    private fun handleQuantityChanged(quantity: Double) {
+    private fun handleQuantityChanged(quantityText: String) {
         _uiState.update {
             it.copy(
-                quantity = maxOf(0.0, quantity),
+                // Conserva il testo così com'è: l'utente può svuotare il campo.
+                // La validazione avviene su "Avanti"/"Aggiungi".
+                quantityText = quantityText,
                 errors = it.errors.minus("quantity"),
             )
         }
@@ -711,19 +713,27 @@ class AddItemViewModel(
                 if (!state.canProceedToStep2) errors["product"] = "Seleziona un prodotto"
             }
             2 -> {
-                if (state.quantity <= 0) errors["quantity"] = "Quantità deve essere > 0"
+                quantityValidationError(state)?.let { errors["quantity"] = it }
                 if (state.selectedUnit == null) errors["unit"] = "Seleziona un'unità"
             }
             3 -> {} // Attributi opzionali
             4 -> {
                 if (!state.isValidForConfirm) {
                     if (!state.canProceedToStep2) errors["product"] = "Seleziona un prodotto"
-                    if (state.quantity <= 0) errors["quantity"] = "Quantità deve essere > 0"
+                    quantityValidationError(state)?.let { errors["quantity"] = it }
                     if (state.selectedUnit == null) errors["unit"] = "Seleziona un'unità"
                 }
             }
         }
         return errors
+    }
+
+    /** Messaggio di errore per il campo quantità, o null se valido. */
+    private fun quantityValidationError(state: AddItemUiState): String? = when {
+        state.quantityText.isBlank() -> "Inserisci una quantità"
+        parseQuantityText(state.quantityText) == null -> "Inserisci una quantità valida"
+        state.quantity <= 0 -> "La quantità deve essere maggiore di zero"
+        else -> null
     }
 
     /** Factory per modalità INSERT */

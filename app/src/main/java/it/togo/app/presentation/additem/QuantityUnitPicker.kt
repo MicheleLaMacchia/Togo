@@ -43,8 +43,8 @@ import it.togo.app.ui.theme.togoTypography
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun QuantityUnitPicker(
-    quantity: Double,
-    onQuantityChange: (Double) -> Unit,
+    quantityText: String,
+    onQuantityChange: (String) -> Unit,
     selectedUnit: StandardUnit?,
     onUnitChange: (StandardUnit) -> Unit,
     compatibleUnits: List<StandardUnit>,
@@ -54,6 +54,7 @@ fun QuantityUnitPicker(
     val colors = togoColors()
     val typography = togoTypography()
     val spacing = togoSpacing()
+    val quantity = parseQuantityText(quantityText) ?: 0.0
 
     Column(
         modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.space2),
@@ -73,7 +74,11 @@ fun QuantityUnitPicker(
             ) {
                 // Pulsante meno
                 Button(
-                    onClick = { onQuantityChange(maxOf(0.1, quantity - getStep(quantity))) },
+                    onClick = {
+                        onQuantityChange(
+                            formatQuantityText(maxOf(0.1, quantity - getStep(quantity)))
+                        )
+                    },
                     modifier = Modifier.size(48.dp),
                     colors = androidx.compose.material3.ButtonDefaults.buttonColors(
                         containerColor = togoColors().surfaceSubtle,
@@ -101,10 +106,8 @@ fun QuantityUnitPicker(
                     contentAlignment = Alignment.Center,
                 ) {
                     androidx.compose.material3.TextField(
-                        value = quantity.toString().trimEnd('0').trimEnd('.'),
-                        onValueChange = { text ->
-                            text.toDoubleOrNull()?.let { onQuantityChange(maxOf(0.1, it)) }
-                        },
+                        value = quantityText,
+                        onValueChange = onQuantityChange,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 12.dp),
@@ -123,7 +126,7 @@ fun QuantityUnitPicker(
                             errorContainerColor = Color.Transparent,
                         ),
                         keyboardOptions = KeyboardOptions(
-                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
+                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal,
                             imeAction = androidx.compose.ui.text.input.ImeAction.Next,
                         ),
                         label = { Text("Quantità", style = togoTypography().caption, color = togoColors().inkSecondary) },
@@ -132,7 +135,11 @@ fun QuantityUnitPicker(
 
                 // Pulsante più
                 Button(
-                    onClick = { onQuantityChange(minOf(9999.0, quantity + getStep(quantity))) },
+                    onClick = {
+                        onQuantityChange(
+                            formatQuantityText(minOf(9999.0, quantity + getStep(quantity)))
+                        )
+                    },
                     modifier = Modifier.size(48.dp),
                     colors = androidx.compose.material3.ButtonDefaults.buttonColors(
                         containerColor = togoColors().surfaceSubtle,
