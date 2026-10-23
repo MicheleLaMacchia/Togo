@@ -97,7 +97,10 @@ class LearnedRulesDaoTest {
         dao.deactivate("rule-3")
 
         allRules = dao.getAll().first()
-        assertEquals(0, allRules.size) // Inactive rules filtered out
+        // La gestione delle regole deve mostrare anche quelle disattivate,
+        // così l'utente può riattivarle.
+        assertEquals(1, allRules.size)
+        assertFalse(allRules[0].isActive)
     }
 
     @Test

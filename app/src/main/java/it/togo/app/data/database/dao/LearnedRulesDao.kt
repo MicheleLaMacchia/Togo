@@ -12,7 +12,12 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface LearnedRulesDao {
 
-    @Query("SELECT * FROM LEARNED_RULE WHERE isActive = 1 ORDER BY lastAppliedAt DESC")
+    /**
+     * Tutte le regole, attive e inattive: la schermata di gestione deve poter
+     * mostrare e riattivare quelle disattivate. L'assegnazione categoria usa
+     * [getByExpression] e continua a ignorare le regole con `isActive = 0`.
+     */
+    @Query("SELECT * FROM LEARNED_RULE ORDER BY isActive DESC, lastAppliedAt DESC")
     fun getAll(): Flow<List<LearnedRuleEntity>>
 
     @Query("SELECT * FROM LEARNED_RULE WHERE userExpression = :expression LIMIT 1")

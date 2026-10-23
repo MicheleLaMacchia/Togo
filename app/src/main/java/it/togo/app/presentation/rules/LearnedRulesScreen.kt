@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -97,6 +98,7 @@ fun LearnedRulesScreen(
     uiState.editingRule?.let { rule ->
         EditCategoryDialog(
             rule = rule,
+            categoryOptions = uiState.categoryOptions,
             onConfirm = { newLevel3Id -> viewModel.updateCategory(newLevel3Id) },
             onDismiss = { viewModel.cancelEdit() },
             colors = colors,
@@ -132,20 +134,35 @@ fun LearnedRulesScreen(
             OutlinedTextField(
                 value = uiState.searchQuery,
                 onValueChange = { viewModel.onSearchQueryChange(it) },
-                label = { Text("Cerca per espressione o prodotto", style = typography.caption) },
+                label = { Text("Cerca per espressione, prodotto o categoria", style = typography.caption) },
                 leadingIcon = { Icon(imageVector = Icons.Filled.Search, contentDescription = null) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp)
             )
 
+            Text(
+                text = "Filtra solo le regole esistenti: non cerca nel catalogo prodotti.",
+                style = typography.caption,
+                color = colors.inkSecondary,
+            )
+
             if (uiState.isEmpty) {
-                EmptyState(query = uiState.searchQuery, colors = colors, typography = typography, spacing = spacing)
+                EmptyState(
+                    query = uiState.searchQuery,
+                    hasRules = uiState.hasRules,
+                    colors = colors,
+                    typography = typography,
+                    spacing = spacing,
+                )
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(spacing.space2)) {
                     items(uiState.filteredRules, key = { it.id }) { rule ->
                         RuleItemRow(
                             rule = rule,
+                            productName = uiState.productNames[rule.productId],
+                            categoryName = uiState.categoryNames[rule.id],
+                            categoryPath = uiState.categoryPaths[rule.id],
                             onEditCategory = { viewModel.startEditCategory(rule) },
                             onDeactivate = { viewModel.deactivateRule(rule) },
                             onReactivate = { viewModel.reactivateRule(rule) },
@@ -164,21 +181,20 @@ fun LearnedRulesScreen(
 @Composable
 private fun EditCategoryDialog(
     rule: LearnedRule,
+    categoryOptions: List<CategoryOption>,
     onConfirm: (Long) -> Unit,
     onDismiss: () -> Unit,
     colors: it.togo.app.ui.theme.TogoColors,
     typography: it.togo.app.ui.theme.TogoTypography,
     spacing: it.togo.app.ui.theme.TogoSpacing
 ) {
-    // Per MVP: selezione da lista L3 fissa (in futuro: dropdown tassonomia)
-    val categories = listOf(
-        5L to "Latticini",
-        12L to "Bevande",
-        13L to "Frutta e Verdura",
-        14L to "Carne e Pesce",
-        15L to "Pasta e Riso"
-    )
-    var selectedLevel3Id by remember { mutableStateOf(rule.level3Id) }
+    var selectedLevel3Id by remember(rule.id, categoryOptions) {
+        mutableStateOf(
+            categoryOptions.firstOrNull { it.id == rule.level3Id }?.id
+                ?: categoryOptions.firstOrNull()?.id
+                ?: rule.level3Id
+        )
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -187,21 +203,36 @@ private fun EditCategoryDialog(
             Column {
                 Text("Regola: ${rule.userExpression}", style = typography.itemMeta)
                 Spacer(modifier = Modifier.height(spacing.space2))
-                categories.forEach { (id, name) ->
-                    TextButton(
-                        onClick = { selectedLevel3Id = id },
-                        modifier = Modifier.fillMaxWidth()
+                if (categoryOptions.isEmpty()) {
+                    Text(
+                        text = "Categorie non disponibili",
+                        style = typography.itemMeta,
+                        color = colors.inkSecondary,
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.heightIn(max = 360.dp),
                     ) {
-                        Text(
-                            text = name,
-                            color = if (selectedLevel3Id == id) colors.accent else colors.inkPrimary
-                        )
+                        items(categoryOptions, key = { it.id }) { option ->
+                            TextButton(
+                                onClick = { selectedLevel3Id = option.id },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = option.label,
+                                    color = if (selectedLevel3Id == option.id) colors.accent else colors.inkPrimary
+                                )
+                            }
+                        }
                     }
                 }
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(selectedLevel3Id) }) {
+            TextButton(
+                onClick = { onConfirm(selectedLevel3Id) },
+                enabled = categoryOptions.isNotEmpty(),
+            ) {
                 Text("Conferma")
             }
         },
@@ -216,27 +247,59 @@ private fun EditCategoryDialog(
 @Composable
 private fun EmptyState(
     query: String,
+    hasRules: Boolean,
     colors: it.togo.app.ui.theme.TogoColors,
     typography: it.togo.app.ui.theme.TogoTypography,
     spacing: it.togo.app.ui.theme.TogoSpacing
 ) {
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = spacing.space4),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.spacedBy(
+            spacing.space2,
+            Alignment.CenterVertically,
+        )
     ) {
+        val title = if (query.isBlank() || !hasRules) {
+            "Nessuna regola appresa"
+        } else {
+            "Nessun risultato per «$query»"
+        }
+        val explanation = when {
+            !hasRules ->
+                "Le regole vengono create quando correggi la categoria di un prodotto " +
+                    "e scegli «Ricorda questa scelta»."
+            query.isNotBlank() ->
+                "La ricerca filtra solo le regole esistenti per espressione, " +
+                    "nome prodotto o categoria."
+            else -> null
+        }
+
         Text(
-            text = if (query.isBlank()) "Nessuna regola appresa" else "Nessun risultato per '$query'",
-            style = typography.itemMeta,
-            color = colors.inkSecondary,
+            text = title,
+            style = typography.itemTitle,
+            color = colors.inkPrimary,
             textAlign = TextAlign.Center
         )
+        if (explanation != null) {
+            Text(
+                text = explanation,
+                style = typography.itemMeta,
+                color = colors.inkSecondary,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 
 @Composable
 private fun RuleItemRow(
     rule: LearnedRule,
+    productName: String?,
+    categoryName: String?,
+    categoryPath: String?,
     onEditCategory: () -> Unit,
     onDeactivate: () -> Unit,
     onReactivate: () -> Unit,
@@ -263,12 +326,25 @@ private fun RuleItemRow(
                 color = colors.inkPrimary
             )
 
-            // Nome prodotto e categoria (da catalogo, con fallback a ID)
+            // Nome prodotto e categoria risolti da catalogo/tassonomia,
+            // con fallback leggibile se il dato non è più disponibile.
             Text(
-                text = "Prodotto #${rule.productId} • L3: ${rule.level3Id}",
+                text = "Prodotto: ${productName ?: "Prodotto #${rule.productId}"}",
                 style = typography.itemMeta,
                 color = colors.inkSecondary
             )
+            Text(
+                text = "Categoria: ${categoryName ?: "Categoria #${rule.level3Id}"}",
+                style = typography.itemMeta,
+                color = colors.inkSecondary
+            )
+            if (!categoryPath.isNullOrBlank() && categoryPath != categoryName) {
+                Text(
+                    text = categoryPath,
+                    style = typography.caption,
+                    color = colors.inkSecondary
+                )
+            }
 
             // Data ultima applicazione
             Text(

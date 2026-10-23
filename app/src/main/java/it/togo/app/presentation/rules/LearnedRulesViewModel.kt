@@ -2,7 +2,9 @@ package it.togo.app.presentation.rules
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.LearnedRule
+import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.LearnedRulesRepository
 import it.togo.app.domain.usecase.LearnedRuleManager
@@ -10,8 +12,10 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 
@@ -38,11 +42,22 @@ class LearnedRulesViewModel(
 
     init {
         viewModelScope.launch(ioDispatcher) {
-            val rulesAndSearch = combine(
+            // Se la tassonomia non è disponibile la schermata resta usabile:
+            // mostra i fallback con gli ID invece di non emettere alcuno stato.
+            val taxonomyFlow = try {
+                catalogRepository.getTaxonomy()
+                    .catch { emit(emptyList<TaxonomyLevel>()) }
+            } catch (_: Exception) {
+                flowOf(emptyList<TaxonomyLevel>())
+            }
+            val content = combine(
                 learnedRulesRepository.getAll(),
+                taxonomyFlow,
                 _searchQuery,
                 _snackbarMessage,
-            ) { rules, query, snackbar -> Triple(rules, query, snackbar) }
+            ) { rules, taxonomy, query, snackbar ->
+                Content(rules, taxonomy, query, snackbar)
+            }
 
             val dialogState = combine(
                 _isDeleteDialogOpen,
@@ -50,33 +65,103 @@ class LearnedRulesViewModel(
                 _editingRule,
             ) { dialogOpen, deleteRule, editingRule -> Triple(dialogOpen, deleteRule, editingRule) }
 
-            combine(rulesAndSearch, dialogState) { (rules, query, snackbar), (dialogOpen, deleteRule, editingRule) ->
-                // Filtra regole orfane (prodotto non più nel catalogo)
+            combine(content, dialogState) { current, (dialogOpen, deleteRule, editingRule) ->
+                val level1ById = current.taxonomy
+                    .filterIsInstance<TaxonomyLevel.Level1>()
+                    .associateBy { it.id }
+                val level2ById = current.taxonomy
+                    .filterIsInstance<TaxonomyLevel.Level2>()
+                    .associateBy { it.id }
+                val level3ById = current.taxonomy
+                    .filterIsInstance<TaxonomyLevel.Level3>()
+                    .associateBy { it.id }
+
+                val categoryOptions = level3ById.values
+                    .filterNot { it.isUserDefined }
+                    .sortedWith(compareBy({ it.sortOrder }, { it.name }))
+                    .map { level3 ->
+                        val level2 = level2ById[level3.level2Id]
+                        val level1 = level2?.let { level1ById[it.level1Id] }
+                        CategoryOption(
+                            id = level3.id,
+                            label = listOfNotNull(level1?.name, level2?.name, level3.name)
+                                .joinToString(" > "),
+                        )
+                    }
+
+                // Filtra regole orfane (prodotto non più nel catalogo) e
+                // risolve i nomi da mostrare: prima erano visibili solo gli ID.
                 val productNames = mutableMapOf<Long, String>()
-                for (rule in rules) {
-                    catalogRepository.getById(rule.productId)?.let { product ->
-                        productNames[rule.productId] = product.name
+                val categoryNames = mutableMapOf<String, String>()
+                val categoryPaths = mutableMapOf<String, String>()
+                val products = mutableMapOf<Long, CanonicalProduct?>()
+                val validRules = mutableListOf<LearnedRule>()
+
+                for (rule in current.rules) {
+                    val product = if (products.containsKey(rule.productId)) {
+                        products[rule.productId]
+                    } else {
+                        catalogRepository.getById(rule.productId).also {
+                            products[rule.productId] = it
+                        }
+                    } ?: continue
+
+                    validRules += rule
+                    productNames[rule.productId] = product.name
+
+                    val level3 = level3ById[rule.level3Id]
+                    val level2 = level3?.let { level2ById[it.level2Id] }
+                    val level1 = level2?.let { level1ById[it.level1Id] }
+                    // Se la tassonomia non è disponibile ma la regola punta alla
+                    // categoria di default del prodotto, i nomi sul prodotto sono
+                    // un fallback affidabile. Per categorie corrette diverse non
+                    // inventiamo un nome: mostriamo l'ID.
+                    val useProductNames = level3 == null && rule.level3Id == product.level3Id
+                    categoryNames[rule.id] = level3?.name
+                        ?: product.level3Name.takeIf { useProductNames }
+                        ?: "#${rule.level3Id}"
+                    categoryPaths[rule.id] = if (useProductNames) {
+                        listOfNotNull(
+                            product.level1Name,
+                            product.level2Name,
+                            product.level3Name,
+                        ).joinToString(" > ").ifBlank { categoryNames.getValue(rule.id) }
+                    } else {
+                        listOfNotNull(level1?.name, level2?.name, level3?.name)
+                            .joinToString(" > ")
+                            .ifBlank { categoryNames.getValue(rule.id) }
                     }
                 }
-                val validRules = rules.filter { it.productId in productNames }
-                // Ricerca combinata: espressione OR nome prodotto
-                val filtered = if (query.isBlank()) {
+
+                // Ricerca combinata: espressione, nome prodotto o categoria.
+                val query = current.query.trim()
+                val filtered = if (query.isEmpty()) {
                     validRules
                 } else {
                     validRules.filter { rule ->
+                        val productName = productNames[rule.productId].orEmpty()
+                        val categoryName = categoryNames[rule.id].orEmpty()
+                        val categoryPath = categoryPaths[rule.id].orEmpty()
                         rule.userExpression.contains(query, ignoreCase = true) ||
-                            (productNames[rule.productId]?.contains(query, ignoreCase = true) == true)
+                            productName.contains(query, ignoreCase = true) ||
+                            categoryName.contains(query, ignoreCase = true) ||
+                            categoryPath.contains(query, ignoreCase = true)
                     }
                 }
+
                 LearnedRulesUiState(
                     rules = validRules,
                     filteredRules = filtered,
-                    searchQuery = query,
+                    searchQuery = current.query,
                     isEmpty = filtered.isEmpty(),
                     isDeleteDialogOpen = dialogOpen,
                     ruleToDelete = deleteRule,
                     editingRule = editingRule,
-                    snackbarMessage = snackbar
+                    snackbarMessage = current.snackbar,
+                    productNames = productNames,
+                    categoryNames = categoryNames,
+                    categoryPaths = categoryPaths,
+                    categoryOptions = categoryOptions,
                 )
             }.distinctUntilChanged().collect { state ->
                 _uiState.value = state
@@ -166,4 +251,11 @@ class LearnedRulesViewModel(
     fun clearSnackbar() {
         _snackbarMessage.value = null
     }
+
+    private data class Content(
+        val rules: List<LearnedRule>,
+        val taxonomy: List<TaxonomyLevel>,
+        val query: String,
+        val snackbar: String?,
+    )
 }

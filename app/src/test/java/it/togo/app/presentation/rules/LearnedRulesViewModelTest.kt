@@ -3,6 +3,7 @@ package it.togo.app.presentation.rules
 import io.mockk.*
 import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.LearnedRule
+import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.LearnedRulesRepository
 import it.togo.app.domain.usecase.LearnedRuleManager
@@ -33,13 +34,15 @@ class LearnedRulesViewModelTest {
     private fun createViewModel(
         rules: List<LearnedRule> = emptyList(),
         // Il ViewModel filtra le regole orfane: servono i prodotti in catalogo.
-        products: Map<Long, CanonicalProduct> = mapOf(1L to product1, 2L to product2)
+        products: Map<Long, CanonicalProduct> = mapOf(1L to product1, 2L to product2),
+        taxonomy: List<TaxonomyLevel> = sampleTaxonomy,
     ): Triple<LearnedRulesViewModel, LearnedRulesRepository, LearnedRuleManager> {
         val rulesRepo = mockk<LearnedRulesRepository>()
         val catalogRepo = mockk<CatalogRepository>()
         val manager = mockk<LearnedRuleManager>()
 
         every { rulesRepo.getAll() } returns flowOf(rules)
+        every { catalogRepo.getTaxonomy() } returns flowOf(taxonomy)
         coEvery { catalogRepo.getById(any()) } returns null
         coEvery { manager.deactivate(any()) } returns sampleRule()
         coEvery { manager.reactivate(any()) } returns sampleRule()
@@ -62,13 +65,23 @@ class LearnedRulesViewModelTest {
         id: String = "r1",
         expression: String = "latte",
         active: Boolean = true,
-        productId: Long = 1L
+        productId: Long = 1L,
+        level3Id: Long = 5L,
     ) = LearnedRule(
-        id = id, userExpression = expression, productId = productId, level3Id = 5L, isActive = active
+        id = id, userExpression = expression, productId = productId, level3Id = level3Id, isActive = active
     )
 
     private val product1 = CanonicalProduct(id = 1L, name = "Latte Intero", level3Id = 5L)
     private val product2 = CanonicalProduct(id = 2L, name = "Caffè Macinato", level3Id = 12L)
+
+    private val sampleTaxonomy = listOf(
+        TaxonomyLevel.Level1(id = 1L, name = "Freschi", sortOrder = 1),
+        TaxonomyLevel.Level1(id = 2L, name = "Dispensa", sortOrder = 2),
+        TaxonomyLevel.Level2(id = 10L, name = "Latticini", sortOrder = 1, level1Id = 1L),
+        TaxonomyLevel.Level2(id = 20L, name = "Caffè", sortOrder = 2, level1Id = 2L),
+        TaxonomyLevel.Level3(id = 5L, name = "Latte", sortOrder = 1, level2Id = 10L),
+        TaxonomyLevel.Level3(id = 12L, name = "Caffè macinato", sortOrder = 1, level2Id = 20L),
+    )
 
     @Test
     fun `stato iniziale vuoto`() = runTest(testDispatcher) {
@@ -78,7 +91,7 @@ class LearnedRulesViewModelTest {
 
     @Test
     fun `con regole mostra lista`() = runTest(testDispatcher) {
-        val rules = listOf(sampleRule("r1"), sampleRule("r2", "caffè", productId = 2L))
+        val rules = listOf(sampleRule("r1"), sampleRule("r2", "caffè", productId = 2L, level3Id = 12L))
         val (vm, _, _) = createViewModel(rules)
         advanceUntilIdle()
 
@@ -88,7 +101,7 @@ class LearnedRulesViewModelTest {
 
     @Test
     fun `ricerca per espressione filtra`() = runTest(testDispatcher) {
-        val rules = listOf(sampleRule("r1", "latte"), sampleRule("r2", "caffè", productId = 2L))
+        val rules = listOf(sampleRule("r1", "latte"), sampleRule("r2", "caffè", productId = 2L, level3Id = 12L))
         val (vm, _, _) = createViewModel(rules)
         advanceUntilIdle()
 
@@ -101,7 +114,7 @@ class LearnedRulesViewModelTest {
 
     @Test
     fun `ricerca per nome prodotto filtra`() = runTest(testDispatcher) {
-        val rules = listOf(sampleRule("r1", "latte"), sampleRule("r2", "caffè", productId = 2L))
+        val rules = listOf(sampleRule("r1", "latte"), sampleRule("r2", "caffè", productId = 2L, level3Id = 12L))
         val (vm, _, _) = createViewModel(rules)
         advanceUntilIdle()
 
@@ -122,6 +135,43 @@ class LearnedRulesViewModelTest {
         advanceUntilIdle()
 
         assertEquals(2, vm.uiState.value.filteredRules.size)
+    }
+
+    @Test
+    fun `mostra nome prodotto e categoria invece degli ID`() = runTest(testDispatcher) {
+        val rules = listOf(sampleRule("r1"), sampleRule("r2", "caffè", productId = 2L, level3Id = 12L))
+        val (vm, _, _) = createViewModel(rules)
+        advanceUntilIdle()
+
+        assertEquals("Latte Intero", vm.uiState.value.productNames[1L])
+        assertEquals("Latte", vm.uiState.value.categoryNames["r1"])
+        assertEquals("Freschi > Latticini > Latte", vm.uiState.value.categoryPaths["r1"])
+        assertEquals("Caffè macinato", vm.uiState.value.categoryNames["r2"])
+        assertTrue(vm.uiState.value.categoryOptions.any { it.label == "Freschi > Latticini > Latte" })
+    }
+
+    @Test
+    fun `regole disattivate restano visibili`() = runTest(testDispatcher) {
+        val rules = listOf(sampleRule("r1", active = false))
+        val (vm, _, _) = createViewModel(rules)
+        advanceUntilIdle()
+
+        assertEquals(1, vm.uiState.value.filteredRules.size)
+        assertFalse(vm.uiState.value.filteredRules[0].isActive)
+        assertTrue(vm.uiState.value.hasRules)
+    }
+
+    @Test
+    fun `ricerca per categoria filtra`() = runTest(testDispatcher) {
+        val rules = listOf(sampleRule("r1"), sampleRule("r2", "caffè", productId = 2L, level3Id = 12L))
+        val (vm, _, _) = createViewModel(rules)
+        advanceUntilIdle()
+
+        vm.onSearchQueryChange("latticini")
+        advanceUntilIdle()
+
+        assertEquals(1, vm.uiState.value.filteredRules.size)
+        assertEquals("r1", vm.uiState.value.filteredRules[0].id)
     }
 
     @Test
