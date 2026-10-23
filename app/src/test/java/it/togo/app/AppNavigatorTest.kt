@@ -37,8 +37,9 @@ import org.robolectric.annotation.Config
 /**
  * Test JVM (Robolectric) per l'host di navigazione a stato.
  *
- * Verifica che Impostazioni apra le Regole apprese e che sia il pulsante
- * "Indietro" sia il Back di sistema riportino alla Lista Attiva.
+ * Verifica che l'ingranaggio apra le Impostazioni, che da lì si accedano alle
+ * Regole apprese e che pulsante "Indietro" e Back di sistema seguano la gerarchia
+ * Regole apprese → Impostazioni → Lista Attiva.
  */
 @OptIn(ExperimentalTestApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -67,9 +68,31 @@ class AppNavigatorTest {
                             }
                         }
                     },
+                    settingsContent = { onOpenLearnedRules, onOpenAbout, onBack ->
+                        Column {
+                            Text("Impostazioni")
+                            Button(onClick = onOpenLearnedRules) {
+                                Text("Regole apprese")
+                            }
+                            Button(onClick = onOpenAbout) {
+                                Text("Informazioni su TOGO")
+                            }
+                            Button(onClick = onBack) {
+                                Text("Indietro")
+                            }
+                        }
+                    },
                     learnedRulesContent = { onBack ->
                         Column {
                             Text("Regole apprese")
+                            Button(onClick = onBack) {
+                                Text("Indietro")
+                            }
+                        }
+                    },
+                    aboutContent = { onBack ->
+                        Column {
+                            Text("Informazioni su TOGO")
                             Button(onClick = onBack) {
                                 Text("Indietro")
                             }
@@ -94,8 +117,26 @@ class AppNavigatorTest {
 
         composeTestRule.onNodeWithText("Lista attiva").assertExists()
         composeTestRule.onNodeWithText("Apri impostazioni").performClick()
+        composeTestRule.onNodeWithText("Impostazioni").assertExists()
+        composeTestRule.onNodeWithText("Regole apprese").performClick()
         composeTestRule.onNodeWithText("Regole apprese").assertExists()
 
+        composeTestRule.onNodeWithText("Indietro").performClick()
+        composeTestRule.onNodeWithText("Impostazioni").assertExists()
+        composeTestRule.onNodeWithText("Indietro").performClick()
+        composeTestRule.onNodeWithText("Lista attiva").assertExists()
+    }
+
+    @Test
+    fun `settings opens about and back button returns to active list`() {
+        setNavigatorContent()
+
+        composeTestRule.onNodeWithText("Apri impostazioni").performClick()
+        composeTestRule.onNodeWithText("Informazioni su TOGO").performClick()
+        composeTestRule.onNodeWithText("Informazioni su TOGO").assertExists()
+
+        composeTestRule.onNodeWithText("Indietro").performClick()
+        composeTestRule.onNodeWithText("Impostazioni").assertExists()
         composeTestRule.onNodeWithText("Indietro").performClick()
         composeTestRule.onNodeWithText("Lista attiva").assertExists()
     }
@@ -105,6 +146,7 @@ class AppNavigatorTest {
         val catalogRepository = mockk<CatalogRepository>()
         val rulesRepository = mockk<LearnedRulesRepository>()
         every { rulesRepository.getAll() } returns flowOf(emptyList())
+        every { catalogRepository.getTaxonomy() } returns flowOf(emptyList())
         coEvery { catalogRepository.getById(any()) } returns null
         val rulesViewModel = LearnedRulesViewModel(
             learnedRuleManager = mockk<LearnedRuleManager>(relaxed = true),
@@ -121,6 +163,13 @@ class AppNavigatorTest {
                             Text("Apri impostazioni")
                         }
                     },
+                    settingsContent = { onOpenLearnedRules, _, onBack ->
+                        Column {
+                            Text("Impostazioni")
+                            Button(onClick = onOpenLearnedRules) { Text("Regole apprese") }
+                            Button(onClick = onBack) { Text("Indietro") }
+                        }
+                    },
                     learnedRulesContent = { onBack ->
                         LearnedRulesScreen(viewModel = rulesViewModel, onBack = onBack)
                     },
@@ -132,8 +181,11 @@ class AppNavigatorTest {
         }
 
         composeTestRule.onNodeWithText("Apri impostazioni").performClick()
+        composeTestRule.onNodeWithText("Regole apprese").performClick()
         composeTestRule.onNodeWithText("Regole apprese").assertExists()
         composeTestRule.onNodeWithContentDescription("Indietro").performClick()
+        composeTestRule.onNodeWithText("Impostazioni").assertExists()
+        composeTestRule.onNodeWithText("Indietro").performClick()
         composeTestRule.onNodeWithText("Apri impostazioni").assertExists()
     }
 
@@ -152,6 +204,9 @@ class AppNavigatorTest {
                                 Text("Apri impostazioni")
                             }
                         }
+                    },
+                    settingsContent = { _, _, onBack ->
+                        Button(onClick = onBack) { Text("Indietro") }
                     },
                     learnedRulesContent = { onBack ->
                         Button(onClick = onBack) { Text("Indietro") }
@@ -184,6 +239,9 @@ class AppNavigatorTest {
                             Text("Apri impostazioni")
                         }
                     },
+                    settingsContent = { onOpenLearnedRules, _, _ ->
+                        Button(onClick = onOpenLearnedRules) { Text("Apri regole") }
+                    },
                     learnedRulesContent = { onBack ->
                         Column {
                             Text("Regole apprese")
@@ -201,6 +259,7 @@ class AppNavigatorTest {
         }
 
         composeTestRule.onNodeWithText("Apri impostazioni").performClick()
+        composeTestRule.onNodeWithText("Apri regole").performClick()
         composeTestRule.onNodeWithText("Regole apprese").assertExists()
 
         restorationTester.emulateSavedInstanceStateRestore()
@@ -209,17 +268,73 @@ class AppNavigatorTest {
     }
 
     @Test
-    fun `system back from learned rules returns to active list`() {
+    fun `about destination survives recreation`() {
+        val restorationTester = StateRestorationTester(composeTestRule)
+        restorationTester.setContent {
+            TogoTheme(darkTheme = false) {
+                AppNavigator(
+                    onActiveListEvent = {},
+                    activeListContent = { onEvent ->
+                        Button(onClick = { onEvent(UiEvent.NavigateToSettings) }) {
+                            Text("Apri impostazioni")
+                        }
+                    },
+                    settingsContent = { _, onOpenAbout, _ ->
+                        Button(onClick = onOpenAbout) { Text("Apri informazioni") }
+                    },
+                    learnedRulesContent = { onBack ->
+                        Button(onClick = onBack) { Text("Indietro") }
+                    },
+                    aboutContent = { onBack ->
+                        Column {
+                            Text("Informazioni su TOGO")
+                            Button(onClick = onBack) { Text("Indietro") }
+                        }
+                    },
+                    historyContent = { onBack ->
+                        Button(onClick = onBack) { Text("Indietro") }
+                    },
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Apri impostazioni").performClick()
+        composeTestRule.onNodeWithText("Apri informazioni").performClick()
+        composeTestRule.onNodeWithText("Informazioni su TOGO").assertExists()
+
+        restorationTester.emulateSavedInstanceStateRestore()
+
+        composeTestRule.onNodeWithText("Informazioni su TOGO").assertExists()
+    }
+
+    @Test
+    fun `system back from about returns to settings`() {
         setNavigatorContent()
 
         composeTestRule.onNodeWithText("Apri impostazioni").performClick()
+        composeTestRule.onNodeWithText("Informazioni su TOGO").performClick()
+        composeTestRule.onNodeWithText("Informazioni su TOGO").assertExists()
+
+        composeTestRule.runOnUiThread {
+            composeTestRule.activity.onBackPressedDispatcher.onBackPressed()
+        }
+
+        composeTestRule.onNodeWithText("Impostazioni").assertExists()
+    }
+
+    @Test
+    fun `system back from learned rules returns to settings`() {
+        setNavigatorContent()
+
+        composeTestRule.onNodeWithText("Apri impostazioni").performClick()
+        composeTestRule.onNodeWithText("Regole apprese").performClick()
         composeTestRule.onNodeWithText("Regole apprese").assertExists()
 
         composeTestRule.runOnUiThread {
             composeTestRule.activity.onBackPressedDispatcher.onBackPressed()
         }
 
-        composeTestRule.onNodeWithText("Lista attiva").assertExists()
+        composeTestRule.onNodeWithText("Impostazioni").assertExists()
     }
 
     @Test
@@ -259,6 +374,9 @@ class AppNavigatorTest {
                             Text("Apri storico")
                         }
                     },
+                    settingsContent = { _, _, onBack ->
+                        Button(onClick = onBack) { Text("Indietro") }
+                    },
                     learnedRulesContent = { onBack ->
                         Button(onClick = onBack) { Text("Indietro") }
                     },
@@ -292,6 +410,9 @@ class AppNavigatorTest {
                         Button(onClick = { onEvent(UiEvent.NavigateToHistory) }) {
                             Text("Apri storico")
                         }
+                    },
+                    settingsContent = { _, _, onBack ->
+                        Button(onClick = onBack) { Text("Indietro") }
                     },
                     learnedRulesContent = { onBack ->
                         Button(onClick = onBack) { Text("Indietro") }

@@ -36,6 +36,7 @@ import it.togo.app.domain.repository.ShoppingListRepository
 import it.togo.app.domain.voice.ErrorCode
 import it.togo.app.domain.voice.VoiceRecognitionGateway
 import it.togo.app.domain.voice.VoiceRecognitionState
+import it.togo.app.presentation.settings.SettingsScreen
 import it.togo.app.presentation.voice.VoiceBottomSheetViewModel
 import it.togo.app.ui.theme.TogoTheme
 import it.togo.app.ui.theme.componentTokens
@@ -439,6 +440,13 @@ class ActiveListAccessibilityTest {
                             }
                         }
                     },
+                    settingsContent = { onOpenLearnedRules, _, onBack ->
+                        androidx.compose.foundation.layout.Column {
+                            Text("Menù impostazioni")
+                            Button(onClick = onOpenLearnedRules) { Text("Regole apprese") }
+                            Button(onClick = onBack) { Text("Indietro") }
+                        }
+                    },
                     learnedRulesContent = { onBack ->
                         androidx.compose.foundation.layout.Column {
                             Text("Regole apprese")
@@ -457,7 +465,11 @@ class ActiveListAccessibilityTest {
 
         composeTestRule.onNodeWithText("Lista attiva").assertExists()
         composeTestRule.onNodeWithText("Impostazioni").performClick()
+        composeTestRule.onNodeWithText("Menù impostazioni").assertExists()
+        composeTestRule.onNodeWithText("Regole apprese").performClick()
         composeTestRule.onNodeWithText("Regole apprese").assertExists()
+        composeTestRule.onNodeWithText("Indietro").performClick()
+        composeTestRule.onNodeWithText("Menù impostazioni").assertExists()
         composeTestRule.onNodeWithText("Indietro").performClick()
         composeTestRule.onNodeWithText("Lista attiva").assertExists()
     }
@@ -482,6 +494,13 @@ class ActiveListAccessibilityTest {
                             onEvent = onEvent,
                         )
                     },
+                    settingsContent = { onOpenLearnedRules, onOpenAbout, onBack ->
+                        SettingsScreen(
+                            onOpenLearnedRules = onOpenLearnedRules,
+                            onOpenAbout = onOpenAbout,
+                            onBack = onBack,
+                        )
+                    },
                     learnedRulesContent = { onBack ->
                         androidx.compose.foundation.layout.Column {
                             Text("Regole apprese")
@@ -500,7 +519,12 @@ class ActiveListAccessibilityTest {
 
         composeTestRule.onNodeWithContentDescription("Impostazioni").performClick()
         composeTestRule.onNodeWithText("Regole apprese").assertExists()
+        composeTestRule.onNodeWithText("Informazioni su TOGO").assertExists()
+        composeTestRule.onNodeWithText("Regole apprese").performClick()
+        composeTestRule.onNodeWithText("Regole apprese").assertExists()
         composeTestRule.onNodeWithText("Indietro").performClick()
+        composeTestRule.onNodeWithText("Regole apprese").assertExists()
+        composeTestRule.onNodeWithContentDescription("Indietro").performClick()
         composeTestRule
             .onNodeWithContentDescription("Aggiungi voce")
             .assertExists()

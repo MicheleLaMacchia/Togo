@@ -9,6 +9,7 @@ import it.togo.app.presentation.history.HistoryScreen
 import it.togo.app.presentation.history.HistoryViewModel
 import it.togo.app.presentation.rules.LearnedRulesScreen
 import it.togo.app.presentation.rules.LearnedRulesViewModel
+import it.togo.app.presentation.settings.SettingsScreen
 import it.togo.app.presentation.voice.VoiceBottomSheetViewModel
 import it.togo.app.ui.theme.TogoTheme
 import it.togo.app.ui.theme.isSystemDarkTheme
@@ -33,6 +34,13 @@ class MainActivity : ComponentActivity(), KoinComponent {
                             viewModel = viewModel,
                             voiceViewModel = voiceViewModel,
                             onEvent = onEvent,
+                        )
+                    },
+                    settingsContent = { onOpenLearnedRules, onOpenAbout, onBack ->
+                        SettingsScreen(
+                            onOpenLearnedRules = onOpenLearnedRules,
+                            onOpenAbout = onOpenAbout,
+                            onBack = onBack,
                         )
                     },
                     learnedRulesContent = { onBack ->
