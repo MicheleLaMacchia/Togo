@@ -98,10 +98,19 @@ class VoiceFallbackHandlerTest {
         assertTrue(shouldFallback)
     }
 
-    @Test(timeout = 100)
+    // La guardia JUnit assorbe l'avvio della classe; la soglia di 100ms misura
+    // solo le operazioni, dopo un warm-up.
+    @Test(timeout = 15_000)
     fun `operazioni handler completate sotto 100ms`() {
         handler.recordFailure(ErrorCode.NETWORK_ERROR)
         handler.recordSuccess()
+        handler.reset() // warm-up
+
+        val start = System.nanoTime()
+        handler.recordFailure(ErrorCode.NETWORK_ERROR)
+        handler.recordSuccess()
         handler.reset()
+        val elapsedMs = (System.nanoTime() - start) / 1_000_000
+        assertTrue("operazioni handler hanno impiegato ${elapsedMs}ms", elapsedMs < 100)
     }
 }

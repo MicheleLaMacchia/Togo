@@ -107,13 +107,21 @@ class VoiceRecognitionGatewayTest {
         assertEquals(VoiceRecognitionState.Idle, gateway.state.value)
     }
 
-    @Test(timeout = 100)
+    // La guardia JUnit assorbe l'avvio di runTest e del dispatcher; la soglia
+    // di 100ms misura solo le operazioni, dopo un warm-up.
+    @Test(timeout = 15_000)
     fun `operazioni gateway completate sotto 100ms`() = runTest(testDispatcher) {
         val gateway = FakeVoiceRecognitionGateway()
+        gateway.startListening()
+        gateway.stopListening()
+        gateway.reset() // warm-up
 
+        val start = System.nanoTime()
         gateway.startListening()
         gateway.stopListening()
         gateway.reset()
+        val elapsedMs = (System.nanoTime() - start) / 1_000_000
+        assertTrue("operazioni gateway hanno impiegato ${elapsedMs}ms", elapsedMs < 100)
     }
 }
 

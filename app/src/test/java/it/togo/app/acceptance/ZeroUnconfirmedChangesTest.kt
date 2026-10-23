@@ -27,6 +27,9 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
  * Accettazione SM-C2 (Story 6.4): zero modifiche non confermate.
@@ -37,8 +40,13 @@ import org.junit.Test
  * non un percorso di conferma end-to-end: quando l'inserimento vocale sarà
  * cablato, questo test andrà sostituito da un test che distingua testo
  * confermato e non confermato.
+ *
+ * Robolectric è necessario perché `ActiveListViewModel.onEvent` usa
+ * [it.togo.app.core.TogoLog], che a sua volta usa `android.util.Log`.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
 class ZeroUnconfirmedChangesTest {
 
     private val testDispatcher = StandardTestDispatcher()

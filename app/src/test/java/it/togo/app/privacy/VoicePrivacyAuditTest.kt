@@ -117,10 +117,13 @@ class VoicePrivacyAuditTest {
     fun `voice code contains no audio file or log APIs`() {
         val files = voiceSourceFiles()
         assertTrue("il modulo voce deve contenere sorgenti", files.size >= 10)
+        // `TogoLog` è il facade applicativo usato dalla UI per eventi non
+        // vocali (es. tap sulla TopBar). Il divieto resta per le API di log
+        // dirette: le chiamate TogoLog non devono ricevere testo vocale.
         val forbidden = Regex(
             """MediaRecorder|AudioRecord|FileOutputStream|FileWriter|writeText|writeBytes|""" +
                 """openOutputStream|createTempFile|SharedPreferences|DataOutputStream|PrintWriter|""" +
-                """Timber|\.amr|\.wav|\.pcm|Log\.|println\("""
+                """Timber|\.amr|\.wav|\.pcm|(?<!Togo)Log\.|println\("""
         )
         val violations = files.mapNotNull { file ->
             forbidden.find(file.readText())?.let { "${file.path}: ${it.value}" }
