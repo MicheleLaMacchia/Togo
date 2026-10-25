@@ -53,8 +53,12 @@ class ProductSearchFieldBadgeTest {
                     query = "latte",
                     onQueryChange = {},
                     results = listOf(normalProduct, userProduct),
+                    categoryResults = emptyList(),
+                    activeCategory = null,
                     isSearching = false,
                     onProductClick = {},
+                    onCategoryClick = {},
+                    onClearCategoryFilter = {},
                 )
             }
         }

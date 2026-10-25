@@ -149,3 +149,30 @@ data class CanonicalProductRow(
     }
 }
 
+/**
+ * Proiezione di lettura di un Livello 3 con il percorso tassonomico e il numero
+ * di prodotti che contiene.
+ *
+ * Usata dalla ricerca per categorie: le categorie vuote vengono scartate lato
+ * repository, così l'utente non vede risultati su cui non può fare nulla.
+ */
+data class TaxonomyLevel3PathRow(
+    val id: Long,
+    val name: String,
+    @ColumnInfo(name = "level2Name")
+    val level2Name: String?,
+    @ColumnInfo(name = "level1Name")
+    val level1Name: String?,
+    @ColumnInfo(name = "productCount")
+    val productCount: Int,
+) {
+    fun toCategoryResult(): it.togo.app.domain.model.CatalogCategoryResult =
+        it.togo.app.domain.model.CatalogCategoryResult(
+            id = id,
+            name = name,
+            level1Name = level1Name,
+            level2Name = level2Name,
+            productCount = productCount,
+        )
+}
+

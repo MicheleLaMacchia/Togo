@@ -6,6 +6,7 @@ import it.togo.app.data.database.entity.CanonicalProductEntity
 import it.togo.app.data.database.entity.SynonymEntity
 import it.togo.app.data.database.entity.TaxonomyLevel3Entity
 import it.togo.app.domain.model.CanonicalProduct
+import it.togo.app.domain.model.CatalogCategoryResult
 import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.repository.CatalogRepository
 import kotlinx.coroutines.Dispatchers
@@ -29,6 +30,28 @@ class RoomCatalogRepository(
         }
         return catalogDao.search(normalized).map { entities ->
             entities.map { it.toDomain() }
+        }
+    }
+
+    override fun searchCategories(query: String): Flow<List<CatalogCategoryResult>> {
+        // Il confronto è accent-fold in Kotlin: "caffe" deve trovare "Caffè".
+        // La tassonomia ha poche decine di righe, quindi filtrare qui è
+        // equivalente a una query SQL ma senza perdere gli accenti.
+        val normalized = CatalogQueries.normalize(query)
+        if (normalized.isEmpty()) {
+            return flowOf(emptyList())
+        }
+        return catalogDao.getLevel3WithPath().map { rows ->
+            rows.asSequence()
+                .filter { it.productCount > 0 }
+                .map { row -> row to CatalogQueries.normalize(row.name) }
+                .filter { (_, name) -> name.contains(normalized) }
+                // Le categorie che iniziano con il termine vengono prima
+                // (es. "pasta" -> "Pasta secca", non "Formaggi a pasta morbida").
+                // A parità di gruppo resta l'ordine tassonomico della query.
+                .sortedBy { (_, name) -> if (name.startsWith(normalized)) 0 else 1 }
+                .map { (row, _) -> row.toCategoryResult() }
+                .toList()
         }
     }
 

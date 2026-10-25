@@ -6,6 +6,7 @@ import it.togo.app.domain.catalog.ProductNameNormalizer
 import it.togo.app.domain.category.AssignmentSource
 import it.togo.app.domain.category.CategoryAssignment
 import it.togo.app.domain.model.CanonicalProduct
+import it.togo.app.domain.model.CatalogCategoryResult
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.model.TaxonomyLevel
@@ -20,10 +21,12 @@ import it.togo.app.domain.usecase.CreateUserLevel3UseCase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
@@ -81,21 +84,57 @@ class AddItemViewModel(
         .distinctUntilChanged()
         .flatMapLatest { query ->
             if (query.length >= 2) {
-                catalogRepository.search(query)
-                    .map { results -> results }
+                // Prodotti e categorie viaggiano insieme: i primi restano in
+                // testa, le categorie vengono mostrate dopo un divisorio.
+                combine(
+                    catalogRepository.search(query),
+                    searchCategoriesSafely(query),
+                ) { products, categories -> products to categories }
                     .onStart { _uiState.update { it.copy(isLoading = true) } }
                     .onCompletion { _uiState.update { it.copy(isLoading = false) } }
                     .catch { error ->
                         _uiState.update { it.copy(isLoading = false, errors = it.errors + ("search" to (error.message ?: "Errore ricerca"))) }
-                        emit(emptyList())
+                        emit(emptyList<CanonicalProduct>() to emptyList<CatalogCategoryResult>())
                     }
-                    .onEach { results -> _uiState.update { it.copy(searchResults = results) } }
+                    .onEach { (products, categories) ->
+                        _uiState.update { state ->
+                            // Con un filtro categoria attivo la lista mostra i
+                            // prodotti della categoria, non i risultati testuali.
+                            if (state.activeCategory != null) {
+                                state.copy(isLoading = false)
+                            } else {
+                                state.copy(
+                                    searchResults = products,
+                                    categoryResults = categories,
+                                    isLoading = false,
+                                )
+                            }
+                        }
+                    }
             } else {
-                kotlinx.coroutines.flow.flowOf(emptyList<CanonicalProduct>())
-                    .onEach { _uiState.update { it.copy(searchResults = emptyList(), isLoading = false) } }
+                kotlinx.coroutines.flow.flowOf(
+                    emptyList<CanonicalProduct>() to emptyList<CatalogCategoryResult>()
+                )
+                    .onEach {
+                        _uiState.update { state ->
+                            if (state.activeCategory != null) {
+                                state.copy(isLoading = false)
+                            } else {
+                                state.copy(
+                                    searchResults = emptyList(),
+                                    categoryResults = emptyList(),
+                                    isLoading = false,
+                                )
+                            }
+                        }
+                    }
             }
         }
-        .stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(), emptyList())
+        .stateIn(
+            viewModelScope,
+            kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(),
+            emptyList<CanonicalProduct>() to emptyList<CatalogCategoryResult>(),
+        )
 
     init {
         searchResults.launchIn(viewModelScope)
@@ -213,11 +252,27 @@ class AddItemViewModel(
         }
     }
 
+    /**
+     * Le categorie sono un extra: se il repository non le implementa (fake dei
+     * test, versioni precedenti) la ricerca dei prodotti deve continuare a
+     * funzionare invece di fallire in blocco.
+     */
+    private fun searchCategoriesSafely(query: String): Flow<List<CatalogCategoryResult>> {
+        val flow = try {
+            catalogRepository.searchCategories(query)
+        } catch (e: Exception) {
+            return kotlinx.coroutines.flow.flowOf(emptyList())
+        }
+        return flow.catch { emit(emptyList()) }
+    }
+
     /** Handle UI events */
     fun onEvent(event: AddItemUiEvent) {
         when (event) {
             is AddItemUiEvent.SearchQueryChanged -> handleSearchQueryChanged(event.query)
             is AddItemUiEvent.ProductSelected -> handleProductSelected(event.product)
+            is AddItemUiEvent.CategorySelected -> handleCategorySelected(event.category)
+            is AddItemUiEvent.ClearCategoryFilter -> handleClearCategoryFilter()
             is AddItemUiEvent.QuantityChanged -> handleQuantityChanged(event.quantityText)
             is AddItemUiEvent.UnitChanged -> handleUnitChanged(event.unit)
             is AddItemUiEvent.BrandChanged -> handleBrandChanged(event.brand)
@@ -260,8 +315,80 @@ class AddItemViewModel(
     }
 
     private fun handleSearchQueryChanged(query: String) {
-        _uiState.update { it.copy(searchQuery = query, errors = emptyMap()) }
+        _uiState.update {
+            it.copy(
+                searchQuery = query,
+                errors = emptyMap(),
+                // Digitare esce dal filtro categoria e riprende la ricerca.
+                activeCategory = null,
+                categoryResults = emptyList(),
+            )
+        }
         _searchQuery.value = query
+    }
+
+    /**
+     * L'utente ha scelto una categoria dai risultati: la lista mostra i
+     * prodotti della categoria (già ordinati per nome dal repository).
+     */
+    private fun handleCategorySelected(category: CatalogCategoryResult) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errors = emptyMap()) }
+            try {
+                val products = catalogRepository.getByLevel3(category.id)
+                _uiState.update {
+                    it.copy(
+                        searchResults = products,
+                        categoryResults = emptyList(),
+                        activeCategory = category,
+                        isLoading = false,
+                    )
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errors = it.errors + ("search" to (e.message ?: "Errore ricerca")),
+                    )
+                }
+            }
+        }
+    }
+
+    /** Rimuove il filtro categoria e riesegue la ricerca testuale corrente. */
+    private fun handleClearCategoryFilter() {
+        val snapshot = _uiState.value
+        _uiState.update {
+            it.copy(
+                activeCategory = null,
+                searchResults = emptyList(),
+                categoryResults = emptyList(),
+            )
+        }
+        if (snapshot.searchQuery.trim().length < 2) return
+        viewModelScope.launch {
+            try {
+                val products = catalogRepository.search(snapshot.searchQuery).first()
+                val categories = catalogRepository.searchCategories(snapshot.searchQuery).first()
+                _uiState.update {
+                    // Se nel frattempo l'utente ha cambiato query o riaperto
+                    // un filtro, lo stato più recente vince.
+                    if (it.searchQuery == snapshot.searchQuery && it.activeCategory == null) {
+                        it.copy(searchResults = products, categoryResults = categories)
+                    } else {
+                        it
+                    }
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(errors = it.errors + ("search" to (e.message ?: "Errore ricerca")))
+                }
+            }
+        }
     }
 
     private fun handleProductSelected(product: CanonicalProduct) {
@@ -277,6 +404,8 @@ class AddItemViewModel(
             it.copy(
                 selectedProduct = product,
                 searchResults = emptyList(),
+                categoryResults = emptyList(),
+                activeCategory = null,
                 searchQuery = product.name,
                 compatibleUnits = compatible,
                 selectedUnit = defaultUnit,

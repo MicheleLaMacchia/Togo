@@ -3,6 +3,7 @@ package it.togo.app.presentation.additem
 import it.togo.app.domain.category.CategoryAssignment
 import it.togo.app.domain.category.CategoryCorrection
 import it.togo.app.domain.model.CanonicalProduct
+import it.togo.app.domain.model.CatalogCategoryResult
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.model.TaxonomyLevel
@@ -21,6 +22,10 @@ data class AddItemUiState(
     // Step 1: Ricerca
     val searchQuery: String = "",
     val searchResults: List<CanonicalProduct> = emptyList(),
+    /** Categorie (Livelli 3) che corrispondono alla query, mostrate dopo i prodotti. */
+    val categoryResults: List<CatalogCategoryResult> = emptyList(),
+    /** Categoria selezionata: se valorizzata, la lista mostra i suoi prodotti. */
+    val activeCategory: CatalogCategoryResult? = null,
     val isSearching: Boolean = false,
 
     // Step 2: Prodotto selezionato + quantità/unità
@@ -124,6 +129,12 @@ sealed interface AddItemUiEvent {
 
     /** Selezione prodotto dai risultati ricerca */
     data class ProductSelected(val product: CanonicalProduct) : AddItemUiEvent
+
+    /** Selezione di una categoria: filtra i risultati ai suoi prodotti. */
+    data class CategorySelected(val category: CatalogCategoryResult) : AddItemUiEvent
+
+    /** Rimuove il filtro categoria e torna alla ricerca testuale. */
+    object ClearCategoryFilter : AddItemUiEvent
 
     /** Cambio quantità (stepper/input), come testo grezzo */
     data class QuantityChanged(val quantityText: String) : AddItemUiEvent

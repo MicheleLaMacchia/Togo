@@ -10,6 +10,7 @@ import it.togo.app.data.database.entity.CanonicalProductRow
 import it.togo.app.data.database.entity.TaxonomyLevel1Entity
 import it.togo.app.data.database.entity.TaxonomyLevel2Entity
 import it.togo.app.data.database.entity.TaxonomyLevel3Entity
+import it.togo.app.data.database.entity.TaxonomyLevel3PathRow
 import it.togo.app.data.database.entity.SynonymEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -23,6 +24,29 @@ interface CatalogDao {
      */
     @Query(CatalogQueries.SEARCH)
     fun search(query: String): Flow<List<CanonicalProductRow>>
+
+    /**
+     * Tutti i Livelli 3 con percorso tassonomico e numero di prodotti.
+     *
+     * Il filtro testuale è fatto in Kotlin (`CatalogQueries.normalize`) perché
+     * SQLite `LIKE` non fa accent-fold: la tassonomia è composta da poche
+     * decine di righe, quindi il costo è trascurabile e "caffe" trova "Caffè".
+     * La query resta un Flow: le categorie create dall'utente compaiono subito.
+     */
+    @Query(
+        """
+        SELECT t3.id AS id,
+               t3.name AS name,
+               t2.name AS level2Name,
+               t1.name AS level1Name,
+               (SELECT COUNT(*) FROM CANONICAL_PRODUCT cp WHERE cp.level3_id = t3.id) AS productCount
+        FROM TAXONOMY_LEVEL_3 t3
+        JOIN TAXONOMY_LEVEL_2 t2 ON t2.id = t3.level2_id
+        JOIN TAXONOMY_LEVEL_1 t1 ON t1.id = t2.level1_id
+        ORDER BY t1.sortOrder, t2.sortOrder, t3.sortOrder
+        """
+    )
+    fun getLevel3WithPath(): Flow<List<TaxonomyLevel3PathRow>>
 
     @Query(
         """

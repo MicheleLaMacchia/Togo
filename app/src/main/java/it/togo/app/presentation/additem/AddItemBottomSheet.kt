@@ -37,6 +37,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import it.togo.app.domain.model.CanonicalProduct
+import it.togo.app.domain.model.CatalogCategoryResult
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.repository.CatalogRepository
@@ -291,8 +292,12 @@ fun AddItemBottomSheet(
                                 query = uiState.searchQuery,
                                 onQueryChange = { viewModel.onEvent(AddItemUiEvent.SearchQueryChanged(it)) },
                                 results = uiState.searchResults,
+                                categoryResults = uiState.categoryResults,
+                                activeCategory = uiState.activeCategory,
                                 isSearching = uiState.isLoading,
                                 onProductClick = { viewModel.onEvent(AddItemUiEvent.ProductSelected(it)) },
+                                onCategoryClick = { viewModel.onEvent(AddItemUiEvent.CategorySelected(it)) },
+                                onClearCategoryFilter = { viewModel.onEvent(AddItemUiEvent.ClearCategoryFilter) },
                                 onAddNewProduct = { viewModel.onEvent(AddItemUiEvent.ShowNewProductForm) },
                             )
                         }
@@ -486,8 +491,12 @@ fun SearchStep(
     query: String,
     onQueryChange: (String) -> Unit,
     results: List<CanonicalProduct>,
+    categoryResults: List<CatalogCategoryResult>,
+    activeCategory: CatalogCategoryResult?,
     isSearching: Boolean,
     onProductClick: (CanonicalProduct) -> Unit,
+    onCategoryClick: (CatalogCategoryResult) -> Unit,
+    onClearCategoryFilter: () -> Unit,
     onAddNewProduct: () -> Unit,
 ) {
     val colors = togoColors()
@@ -502,8 +511,12 @@ fun SearchStep(
             query = query,
             onQueryChange = onQueryChange,
             results = results,
+            categoryResults = categoryResults,
+            activeCategory = activeCategory,
             isSearching = isSearching,
             onProductClick = onProductClick,
+            onCategoryClick = onCategoryClick,
+            onClearCategoryFilter = onClearCategoryFilter,
         )
 
         // Story 7.1: accesso alla creazione manuale dopo una ricerca senza match.

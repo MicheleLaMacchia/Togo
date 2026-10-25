@@ -1,11 +1,26 @@
 package it.togo.app.domain.repository
 
 import it.togo.app.domain.model.CanonicalProduct
+import it.togo.app.domain.model.CatalogCategoryResult
 import it.togo.app.domain.model.TaxonomyLevel
 import kotlinx.coroutines.flow.Flow
 
 interface CatalogRepository {
     fun search(query: String): Flow<List<CanonicalProduct>>
+
+    /**
+     * Categorie (Livelli 3) il cui nome corrisponde a [query].
+     *
+     * Servono a dare un risultato utile quando la query è un termine generico
+     * che non è il nome di un prodotto (es. "pasta": i prodotti si chiamano
+     * Spaghetti, Penne, ...). Il chiamante mostra i prodotti prima e le
+     * categorie dopo, separate da un divisorio.
+     *
+     * Il default vuoto mantiene compatibili i repository fake dei test.
+     */
+    fun searchCategories(query: String): Flow<List<CatalogCategoryResult>> =
+        kotlinx.coroutines.flow.flowOf(emptyList())
+
     suspend fun getById(id: Long): CanonicalProduct?
     fun getTaxonomy(): Flow<List<TaxonomyLevel>>
 

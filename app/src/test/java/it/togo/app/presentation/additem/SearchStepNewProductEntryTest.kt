@@ -40,8 +40,12 @@ class SearchStepNewProductEntryTest {
                     query = "latte",
                     onQueryChange = {},
                     results = emptyList(),
+                    categoryResults = emptyList(),
+                    activeCategory = null,
                     isSearching = false,
                     onProductClick = {},
+                    onCategoryClick = {},
+                    onClearCategoryFilter = {},
                     onAddNewProduct = { clicked++ },
                 )
             }
@@ -60,8 +64,12 @@ class SearchStepNewProductEntryTest {
                     query = "a",
                     onQueryChange = {},
                     results = emptyList(),
+                    categoryResults = emptyList(),
+                    activeCategory = null,
                     isSearching = false,
                     onProductClick = {},
+                    onCategoryClick = {},
+                    onClearCategoryFilter = {},
                     onAddNewProduct = {},
                 )
             }
