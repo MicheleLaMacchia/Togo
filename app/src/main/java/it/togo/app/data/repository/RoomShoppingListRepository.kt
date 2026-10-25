@@ -105,14 +105,15 @@ class RoomShoppingListRepository(
         if (checkedItems.isEmpty()) return true
 
         // Lo storico distingue le varianti: due voci dello stesso prodotto con
-        // marca/variante differenti restano due righe separate.
+        // marca/variante differenti restano due righe separate. Il confronto è
+        // case-insensitive: "Coop" e "coop" sono la stessa variante.
         val checkedGroups = checkedItems.groupBy {
-            HistoryKey(it.productId, it.brand, it.variant, it.condition)
+            HistoryKey.of(it.productId, it.brand, it.variant, it.condition)
         }
         val productIds = checkedGroups.keys.map { it.productId }.distinct()
         val existingRows = historyDao.getByProductIds(productIds)
         val existingByKey = existingRows.associateBy {
-            HistoryKey(it.productId, it.brand, it.variant, it.condition)
+            HistoryKey.of(it.productId, it.brand, it.variant, it.condition)
         }.toMutableMap()
 
         // Le righe create prima della migrazione non hanno attributi: possono
@@ -133,16 +134,23 @@ class RoomShoppingListRepository(
                     legacyByProduct.remove(key.productId)
                 }
                 existingByKey.remove(
-                    HistoryKey(existing.productId, existing.brand, existing.variant, existing.condition)
+                    HistoryKey.of(
+                        existing.productId,
+                        existing.brand,
+                        existing.variant,
+                        existing.condition,
+                    )
                 )
                 val totalQuantity = items.sumOf { it.quantity }
                 val firstItem = items.first()
                 existing.toDomain().increment(
                     quantity = totalQuantity,
                     unit = firstItem.unit,
-                    brand = key.brand,
-                    variant = key.variant,
-                    condition = key.condition,
+                    // Conserva la forma scritta dall'utente (capitalized), non
+                    // quella normalizzata usata solo per il confronto.
+                    brand = firstItem.brand,
+                    variant = firstItem.variant,
+                    condition = firstItem.condition,
                 ).toEntity()
             } else {
                 val totalQuantity = items.sumOf { it.quantity }
@@ -152,9 +160,9 @@ class RoomShoppingListRepository(
                     productId = key.productId,
                     lastQuantity = totalQuantity,
                     lastUnit = firstItem.unit,
-                    brand = key.brand,
-                    variant = key.variant,
-                    condition = key.condition,
+                    brand = firstItem.brand,
+                    variant = firstItem.variant,
+                    condition = firstItem.condition,
                     purchasedAt = now,
                     purchaseCount = 1
                 ).toEntity()
@@ -179,4 +187,22 @@ private data class HistoryKey(
     val brand: String?,
     val variant: String?,
     val condition: String?,
-)
+) {
+    companion object {
+        /** Chiave case-insensitive su marca, variante e conservazione. */
+        fun of(
+            productId: Long,
+            brand: String?,
+            variant: String?,
+            condition: String?,
+        ): HistoryKey = HistoryKey(
+            productId = productId,
+            brand = normalize(brand),
+            variant = normalize(variant),
+            condition = normalize(condition),
+        )
+
+        private fun normalize(value: String?): String? =
+            value?.trim()?.lowercase(Locale.ROOT)?.ifEmpty { null }
+    }
+}

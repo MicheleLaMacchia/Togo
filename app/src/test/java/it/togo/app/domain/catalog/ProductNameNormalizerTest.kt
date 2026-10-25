@@ -40,4 +40,26 @@ class ProductNameNormalizerTest {
     fun `nomi diversi restano diversi`() {
         assertEquals(false, ProductNameNormalizer.normalize("Latte intero") == ProductNameNormalizer.normalize("Latte parzialmente scremato"))
     }
+
+    @Test
+    fun `capitalized rende maiuscola la prima lettera e minuscolo il resto`() {
+        assertEquals("Pasta", ProductNameNormalizer.capitalizeFirstWord("pasta"))
+        assertEquals("Pasta", ProductNameNormalizer.capitalizeFirstWord("PASTA"))
+        assertEquals("Pasta", ProductNameNormalizer.capitalizeFirstWord("  pasta  "))
+        assertEquals("Barilla", ProductNameNormalizer.capitalizeFirstWord("bArIlLa"))
+    }
+
+    @Test
+    fun `capitalized mantiene accenti e collassa gli spazi`() {
+        assertEquals(
+            "Caffè macinato",
+            ProductNameNormalizer.capitalizeFirstWord("  CAFFÈ   MACINATO "),
+        )
+    }
+
+    @Test
+    fun `capitalized di stringa vuota resta vuota`() {
+        assertEquals("", ProductNameNormalizer.capitalizeFirstWord(""))
+        assertEquals("", ProductNameNormalizer.capitalizeFirstWord("   "))
+    }
 }

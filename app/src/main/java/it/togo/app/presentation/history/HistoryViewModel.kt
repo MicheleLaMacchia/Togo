@@ -18,6 +18,11 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
+import java.util.Locale
+
+/** Confronto case-insensitive e tollerante agli spazi tra due attributi. */
+private fun String?.sameTextAs(other: String?): Boolean =
+    this?.trim()?.lowercase(Locale.ROOT) == other?.trim()?.lowercase(Locale.ROOT)
 
 /**
  * ViewModel MVI per la schermata Storico.
@@ -101,14 +106,15 @@ class HistoryViewModel(
      */
     fun reAddToActiveList(item: HistoricalItem) {
         viewModelScope.launch(ioDispatcher) {
-            // Verifica se la stessa variante è già presente nella lista attiva
+            // Verifica se la stessa variante è già presente nella lista attiva.
+            // Il confronto ignora il case: "Coop" e "coop" sono la stessa voce.
             val activeItems = shoppingListRepository.getActiveItems().first()
             val alreadyExists = activeItems.any {
                 it.productId == item.productId &&
                     !it.isChecked &&
-                    it.brand == item.brand &&
-                    it.variant == item.variant &&
-                    it.condition == item.condition
+                    it.brand.sameTextAs(item.brand) &&
+                    it.variant.sameTextAs(item.variant) &&
+                    it.condition.sameTextAs(item.condition)
             }
 
             if (alreadyExists) {

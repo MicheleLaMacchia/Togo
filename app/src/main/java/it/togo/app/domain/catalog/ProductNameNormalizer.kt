@@ -41,4 +41,26 @@ object ProductNameNormalizer {
         }
         return WHITESPACE.replace(withoutMarks, " ").trim()
     }
+
+    /**
+     * Forma "capitalized" usata per salvare prodotti, marche e varianti:
+     * iniziale maiuscola, resto minuscolo, spazi interni collassati.
+     *
+     * "pasta", "PASTA" e "  pasta  " diventano tutte "Pasta", così la stessa
+     * cosa non genera valori diversi nel catalogo. Per le stringhe che iniziano
+     * con cifre o simboli viene resa maiuscola la prima lettera (es. "3 pane"
+     * -> "3 Pane").
+     */
+    fun capitalizeFirstWord(raw: String): String {
+        val collapsed = WHITESPACE.replace(raw.trim(), " ").trim()
+        if (collapsed.isEmpty()) return ""
+
+        val lower = collapsed.lowercase(Locale.ROOT)
+        val firstLetter = lower.indexOfFirst { it.isLetter() }
+        if (firstLetter < 0) return lower
+
+        return lower.substring(0, firstLetter) +
+            lower[firstLetter].uppercaseChar() +
+            lower.substring(firstLetter + 1)
+    }
 }

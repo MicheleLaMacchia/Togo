@@ -35,7 +35,9 @@ class CreateCanonicalProductUseCase(
     /**
      * Crea un prodotto canonico su un Livello 3 esistente.
      *
-     * @param name nome digitato dall'utente (viene salvato con trim)
+     * @param name nome digitato dall'utente: viene salvato in forma
+     *   "capitalized" ("pasta"/"PASTA" -> "Pasta"), così lo stesso prodotto non
+     *   genera nomi diversi nel catalogo
      * @param level3Id Livello 3 esistente selezionato nel form
      * @param confirmDuplicate true se l'utente ha confermato l'avviso di duplicato
      */
@@ -52,7 +54,8 @@ class CreateCanonicalProductUseCase(
             return CreateProductResult.Invalid("Seleziona il Livello 3")
         }
 
-        val normalized = ProductNameNormalizer.normalize(trimmed)
+        val displayName = ProductNameNormalizer.capitalizeFirstWord(trimmed)
+        val normalized = ProductNameNormalizer.normalize(displayName)
         if (normalized.isEmpty()) {
             return CreateProductResult.Invalid("Inserisci un nome valido")
         }
@@ -64,6 +67,6 @@ class CreateCanonicalProductUseCase(
             return CreateProductResult.Duplicate(candidate)
         }
 
-        return CreateProductResult.Created(catalogRepository.insertProduct(trimmed, level3Id))
+        return CreateProductResult.Created(catalogRepository.insertProduct(displayName, level3Id))
     }
 }

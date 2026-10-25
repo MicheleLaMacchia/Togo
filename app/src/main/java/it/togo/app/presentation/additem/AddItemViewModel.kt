@@ -2,6 +2,7 @@ package it.togo.app.presentation.additem
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import it.togo.app.domain.catalog.ProductNameNormalizer
 import it.togo.app.domain.category.AssignmentSource
 import it.togo.app.domain.category.CategoryAssignment
 import it.togo.app.domain.model.CanonicalProduct
@@ -998,14 +999,19 @@ class AddItemViewModel(
         val product = state.selectedProduct ?: return
         val unit = state.selectedUnit ?: return
 
+        // Marca e variante si salvano sempre in forma "capitalized": "barilla"
+        // e "BARILLA" diventano "Barilla", così non nascono duplicati.
+        val brand = ProductNameNormalizer.capitalizeFirstWord(state.brand).ifBlank { null }
+        val variant = ProductNameNormalizer.capitalizeFirstWord(state.variant).ifBlank { null }
+
         val item = if (isEditMode) {
             // Modalità EDIT: aggiorna item esistente mantenendo ID e timestamp creato
             editItem!!.copy(
                 productId = state.selectedProduct!!.id,
                 quantity = state.quantity,
                 unit = unit,
-                brand = state.brand.ifBlank { null },
-                variant = state.variant.ifBlank { null },
+                brand = brand,
+                variant = variant,
                 condition = state.condition.ifBlank { null },
                 isChecked = editItem!!.isChecked, // mantiene stato check
                 updatedAt = System.currentTimeMillis(),
@@ -1017,8 +1023,8 @@ class AddItemViewModel(
                 productId = product.id,
                 quantity = state.quantity,
                 unit = unit,
-                brand = state.brand.ifBlank { null },
-                variant = state.variant.ifBlank { null },
+                brand = brand,
+                variant = variant,
                 condition = state.condition.ifBlank { null },
                 isChecked = false,
                 createdAt = System.currentTimeMillis(),
