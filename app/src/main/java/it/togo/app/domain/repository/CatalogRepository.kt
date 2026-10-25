@@ -54,6 +54,30 @@ interface CatalogRepository {
         throw UnsupportedOperationException("insertProduct non implementato dal repository")
 
     /**
+     * Prodotti creati dall'utente, con il percorso tassonomico.
+     *
+     * Usato dalla sezione "I miei prodotti" delle Impostazioni. Il default
+     * vuoto mantiene compatibili i repository fake dei test.
+     */
+    fun getUserProducts(): Flow<List<CanonicalProduct>> = kotlinx.coroutines.flow.flowOf(emptyList())
+
+    /**
+     * Rinomina/sposta un prodotto user-defined. Ritorna false se il prodotto
+     * non esiste o è preinstallato.
+     *
+     * Il default mantiene compatibili i repository fake dei test.
+     */
+    suspend fun updateUserProduct(id: Long, name: String, level3Id: Long): Boolean = false
+
+    /**
+     * Elimina un prodotto user-defined dal catalogo. Non tocca le voci già in
+     * lista o nello storico (scelta esplicita dell'utente).
+     *
+     * Il default mantiene compatibili i repository fake dei test.
+     */
+    suspend fun deleteUserProduct(id: Long): Boolean = false
+
+    /**
      * Livelli 3 appartenenti a [level2Id] (predefiniti e user-defined).
      *
      * Usato dal controllo duplicati della proposta di un nuovo Livello 3

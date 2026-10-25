@@ -23,17 +23,27 @@ data class ProductAttribute(
 
     /** Lista di valori comuni per la marca (selezionabili da tendina) */
     val brandSuggestions: List<String>
-        get() = if (hasBrand) listOf(
-            "Coop", "Conad", "Esselunga", "Carrefour", "Decathlon",
-            "Findus", "Barilla", "Ferrero", "Nestlé", "Danone",
-            "Parmalat", "Galbani", "Santal", "Levissima", "San Benedetto"
-        ) else emptyList()
+        get() = if (hasBrand) defaultBrands else emptyList()
 
     /** Verifica se almeno un attributo è supportato */
     val hasAnyAttribute: Boolean
         get() = hasBrand || hasVariant || hasCondition
 
     companion object {
+        /**
+         * Marche predefinite, presenti nell'app fin dal primo avvio.
+         *
+         * Non vengono salvate nel registro `USER_ATTRIBUTE`: le Impostazioni
+         * mostrano solo le marche aggiunte dall'utente. La lista è pubblica
+         * perché anche la migrazione e il repository dei suggerimenti devono
+         * poterle riconoscere (e non registrarle).
+         */
+        val defaultBrands: List<String> = listOf(
+            "Coop", "Conad", "Esselunga", "Carrefour", "Decathlon",
+            "Findus", "Barilla", "Ferrero", "Nestlé", "Danone",
+            "Parmalat", "Galbani", "Santal", "Levissima", "San Benedetto"
+        )
+
         /**
          * Factory per creare attributi in base al L3.
          * Regole di pertinenza:

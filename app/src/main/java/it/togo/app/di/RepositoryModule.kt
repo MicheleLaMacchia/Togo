@@ -6,10 +6,12 @@ import it.togo.app.data.repository.RoomShoppingListRepository
 import it.togo.app.data.repository.RoomHistoryRepository
 import it.togo.app.data.repository.RoomLearnedRulesRepository
 import it.togo.app.data.repository.RoomCatalogRepository
+import it.togo.app.data.repository.RoomUserAttributeRepository
 import it.togo.app.domain.repository.ShoppingListRepository
 import it.togo.app.domain.repository.HistoryRepository
 import it.togo.app.domain.repository.LearnedRulesRepository
 import it.togo.app.domain.repository.CatalogRepository
+import it.togo.app.domain.repository.UserAttributeRepository
 
 val repositoryModule: Module = module {
     // Repository implementations - single instance per repository
@@ -17,4 +19,5 @@ val repositoryModule: Module = module {
     single<CatalogRepository> { RoomCatalogRepository(get()) }
     single<HistoryRepository> { RoomHistoryRepository(get()) }
     single<LearnedRulesRepository> { RoomLearnedRulesRepository(get()) }
+    single<UserAttributeRepository> { RoomUserAttributeRepository(get()) }
 }

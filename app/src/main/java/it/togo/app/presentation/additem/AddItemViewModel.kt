@@ -10,9 +10,11 @@ import it.togo.app.domain.model.CatalogCategoryResult
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.model.TaxonomyLevel
+import it.togo.app.domain.model.UserAttributeType
 import it.togo.app.domain.product.ProductUnitResolver
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.ShoppingListRepository
+import it.togo.app.domain.repository.UserAttributeRepository
 import it.togo.app.domain.usecase.CorrectCategoryUseCase
 import it.togo.app.domain.usecase.CreateCanonicalProductUseCase
 import it.togo.app.domain.usecase.CreateLevel3Result
@@ -63,6 +65,7 @@ class AddItemViewModel(
     private val editItem: ShoppingItem? = null,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val correctCategoryUseCase: CorrectCategoryUseCase? = null,
+    private val userAttributeRepository: UserAttributeRepository? = null,
 ) : ViewModel() {
 
     // Flag per modalità edit - ora parte dello UI state
@@ -149,18 +152,22 @@ class AddItemViewModel(
     }
 
     /**
-     * Osserva marche/varianti già usate (lista attiva + storico): un valore
-     * digitato una volta resta disponibile come suggerimento nelle voci
-     * successive. Un errore qui non deve impedire l'uso del form.
+     * Osserva le marche/varianti aggiunte dall'utente. In produzione il
+     * registro `USER_ATTRIBUTE` è la fonte dei suggerimenti, così eliminare un
+     * valore dalle Impostazioni lo rimuove davvero anche dai suggerimenti.
+     * Senza registro (test/fake) si ricade sul comportamento storico basato su
+     * lista attiva + storico.
      */
     private fun observeAttributeSuggestions() {
         viewModelScope.launch {
             try {
-                shoppingRepository.getAttributeSuggestions().collect { suggestions ->
+                val suggestions = userAttributeRepository?.observeSuggestions()
+                    ?: shoppingRepository.getAttributeSuggestions()
+                suggestions.collect { values ->
                     _uiState.update {
                         it.copy(
-                            brandSuggestions = suggestions.brands,
-                            variantSuggestions = suggestions.variants,
+                            brandSuggestions = values.brands,
+                            variantSuggestions = values.variants,
                         )
                     }
                 }
@@ -1168,6 +1175,19 @@ class AddItemViewModel(
                     shoppingRepository.update(item)
                 } else {
                     shoppingRepository.insert(item)
+                }
+                // Registra i valori digitati dall'utente: restano disponibili
+                // come suggerimenti e compaiono nelle Impostazioni. I valori
+                // predefiniti e i duplicati vengono ignorati dal repository.
+                // Best-effort: un errore del registro non deve impedire il
+                // salvataggio della voce.
+                try {
+                    userAttributeRepository?.remember(UserAttributeType.BRAND, brand.orEmpty())
+                    userAttributeRepository?.remember(UserAttributeType.VARIANT, variant.orEmpty())
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (_: Exception) {
+                    // I suggerimenti restano quelli già noti.
                 }
             }
             handleReset()

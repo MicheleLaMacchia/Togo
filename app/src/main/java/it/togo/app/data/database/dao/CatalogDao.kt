@@ -136,6 +136,48 @@ interface CatalogDao {
     suspend fun insertProduct(entity: CanonicalProductEntity): Long
 
     /**
+     * Prodotti canonici creati dall'utente (`is_user_defined = 1`), con il
+     * percorso tassonomico. Alimenta la sezione "I miei prodotti" delle
+     * Impostazioni.
+     */
+    @Query(
+        """
+        SELECT cp.*,
+               t3.name AS level3Name,
+               t2.name AS level2Name,
+               t2.id AS level2Id,
+               t1.name AS level1Name,
+               t1.id AS level1Id
+        FROM CANONICAL_PRODUCT cp
+        JOIN TAXONOMY_LEVEL_3 t3 ON cp.level3_id = t3.id
+        JOIN TAXONOMY_LEVEL_2 t2 ON t3.level2_id = t2.id
+        JOIN TAXONOMY_LEVEL_1 t1 ON t2.level1_id = t1.id
+        WHERE cp.is_user_defined = 1
+        ORDER BY cp.name COLLATE NOCASE
+        """
+    )
+    fun getUserDefinedProducts(): Flow<List<CanonicalProductRow>>
+
+    /**
+     * Rinomina/sposta un prodotto SOLO se è user-defined. Il guard su
+     * `is_user_defined` impedisce di modificare il catalogo preinstallato.
+     * Ritorna il numero di righe aggiornate (0 = prodotto non trovato o default).
+     */
+    @Query(
+        "UPDATE CANONICAL_PRODUCT SET name = :name, level3_id = :level3Id " +
+            "WHERE id = :id AND is_user_defined = 1"
+    )
+    suspend fun updateUserProduct(id: Long, name: String, level3Id: Long): Int
+
+    /** Elimina un prodotto SOLO se è user-defined. */
+    @Query("DELETE FROM CANONICAL_PRODUCT WHERE id = :id AND is_user_defined = 1")
+    suspend fun deleteUserProduct(id: Long): Int
+
+    /** Rimuove i sinonimi di un prodotto (usato a rinomina/eliminazione). */
+    @Query("DELETE FROM SYNONYM WHERE product_id = :productId")
+    suspend fun deleteSynonymsForProduct(productId: Long)
+
+    /**
      * Inserisce un sinonimo (termine già normalizzato) per un prodotto.
      * Usato alla creazione di un prodotto user-defined per rendere il nome
      * accent-fold ricercabile: `SEARCH` normalizza solo la query, quindi

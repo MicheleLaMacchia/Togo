@@ -103,6 +103,43 @@ class RoomCatalogRepository(
                 ?: entity.copy(id = id).toDomain()
         }
 
+    override fun getUserProducts(): Flow<List<CanonicalProduct>> =
+        catalogDao.getUserDefinedProducts().map { rows ->
+            rows.map { it.toDomain() }
+        }
+
+    override suspend fun updateUserProduct(
+        id: Long,
+        name: String,
+        level3Id: Long,
+    ): Boolean = withContext(Dispatchers.IO) {
+        val trimmed = name.trim()
+        if (trimmed.isEmpty()) return@withContext false
+
+        val updated = catalogDao.updateUserProduct(id, trimmed, level3Id) > 0
+        if (updated) {
+            // Il sinonimo accent-fold seguiva il vecchio nome: va rigenerato,
+            // altrimenti "caffe" continuerebbe a trovare il nome precedente.
+            catalogDao.deleteSynonymsForProduct(id)
+            val folded = CatalogQueries.normalize(trimmed)
+            if (folded.isNotEmpty()) {
+                catalogDao.insertSynonym(
+                    SynonymEntity(id = 0, productId = id, term = folded)
+                )
+            }
+        }
+        updated
+    }
+
+    override suspend fun deleteUserProduct(id: Long): Boolean =
+        withContext(Dispatchers.IO) {
+            val deleted = catalogDao.deleteUserProduct(id) > 0
+            if (deleted) {
+                catalogDao.deleteSynonymsForProduct(id)
+            }
+            deleted
+        }
+
     override suspend fun getLevel3ByLevel2(level2Id: Long): List<TaxonomyLevel.Level3> =
         withContext(Dispatchers.IO) {
             catalogDao.getLevel3ByLevel2(level2Id).first().map { it.toDomain() }

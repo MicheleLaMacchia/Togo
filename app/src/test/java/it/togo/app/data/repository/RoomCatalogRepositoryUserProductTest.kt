@@ -10,7 +10,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -146,5 +148,42 @@ class RoomCatalogRepositoryUserProductTest {
             2,
             repository.getByLevel3(level3Bevande).count { it.name == "Latte di avena" },
         )
+    }
+
+    @Test
+    fun `updateUserProduct cambia nome e categoria e rigenera il sinonimo`() = runBlocking {
+        val created = repository.insertProduct("Latte di avena", level3Bevande)
+
+        val updated = repository.updateUserProduct(
+            id = created.id,
+            name = "Bevanda di avena",
+            level3Id = level3Cereali,
+        )
+
+        assertTrue(updated)
+        val loaded = repository.getById(created.id)
+        assertNotNull(loaded)
+        assertEquals("Bevanda di avena", loaded!!.name)
+        assertEquals(level3Cereali, loaded.level3Id)
+        assertTrue(repository.getByLevel3(level3Cereali).any { it.id == created.id })
+        assertTrue(
+            "Il nuovo nome deve essere ricercabile",
+            repository.search("bevanda di avena").first().any { it.id == created.id },
+        )
+        assertTrue(
+            "Il vecchio sinonimo non deve più trovare il prodotto",
+            repository.search("latte di avena").first().none { it.id == created.id },
+        )
+    }
+
+    @Test
+    fun `deleteUserProduct elimina prodotto e sinonimi`() = runBlocking {
+        val created = repository.insertProduct("Latte di avena", level3Bevande)
+
+        assertTrue(repository.deleteUserProduct(created.id))
+
+        assertNull(repository.getById(created.id))
+        assertTrue(repository.search("latte di avena").first().isEmpty())
+        assertFalse(repository.deleteUserProduct(created.id))
     }
 }

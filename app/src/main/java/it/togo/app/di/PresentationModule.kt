@@ -3,6 +3,7 @@ package it.togo.app.di
 import it.togo.app.MainViewModel
 import it.togo.app.domain.repository.ShoppingListRepository
 import it.togo.app.domain.repository.CatalogRepository
+import it.togo.app.domain.repository.UserAttributeRepository
 import it.togo.app.domain.usecase.CorrectCategoryUseCase
 import it.togo.app.domain.usecase.CreateCanonicalProductUseCase
 import it.togo.app.domain.usecase.CreateUserLevel3UseCase
@@ -13,6 +14,7 @@ import it.togo.app.presentation.additem.AddItemViewModel
 import it.togo.app.presentation.history.HistoryViewModel
 import it.togo.app.presentation.rules.LearnedRulesViewModel
 import it.togo.app.presentation.search.SearchViewModel
+import it.togo.app.presentation.settings.UserDataViewModel
 import it.togo.app.presentation.voice.VoiceBottomSheetViewModel
 import it.togo.app.presentation.voice.VoiceConfirmationViewModel
 import it.togo.app.presentation.voice.VoiceResilienceViewModel
@@ -71,6 +73,13 @@ val presentationModule: Module = module {
         createProductUseCase = get<CreateCanonicalProductUseCase>(),
         createLevel3UseCase = get<CreateUserLevel3UseCase>(),
         correctCategoryUseCase = get<CorrectCategoryUseCase>(),
+        userAttributeRepository = get<UserAttributeRepository>(),
+    ) }
+
+    // Impostazioni - "I miei dati" (prodotti, marche, varianti)
+    viewModel { UserDataViewModel(
+        catalogRepository = get<CatalogRepository>(),
+        userAttributeRepository = get<UserAttributeRepository>(),
     ) }
 
     // Future ViewModels will be added here (Epic 4, 5):

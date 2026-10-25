@@ -9,6 +9,7 @@ import it.togo.app.data.database.dao.CatalogDao
 import it.togo.app.data.database.dao.HistoryDao
 import it.togo.app.data.database.dao.LearnedRulesDao
 import it.togo.app.data.database.dao.ShoppingItemDao
+import it.togo.app.data.database.dao.UserAttributeDao
 
 val databaseModule: Module = module {
     // Room Database - single instance
@@ -19,4 +20,5 @@ val databaseModule: Module = module {
     factory { get<TogoDatabase>().catalogDao() }
     factory { get<TogoDatabase>().historyDao() }
     factory { get<TogoDatabase>().learnedRulesDao() }
+    factory { get<TogoDatabase>().userAttributeDao() }
 }
