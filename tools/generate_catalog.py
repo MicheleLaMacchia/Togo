@@ -284,6 +284,84 @@ BASES: dict[tuple[str, str], list[str]] = {
 }
 
 # ---------------------------------------------------------------------------
+# Voci generiche curate: il nome "bare" che l'utente cerca davvero
+# ("Tonno", "Pane", "Pasta", ...). Vengono accodate alle basi della coppia
+# (L1, L2) e assegnate a un Livello 3 scelto a mano, invece che a rotazione
+# come le altre basi. Non sostituiscono le varianti: "tonno" trova "Tonno"
+# oltre a "Tonno in Olio", "Tonno all'Acqua", ...
+# ---------------------------------------------------------------------------
+GENERIC_PRODUCTS: dict[tuple[str, str], list[tuple[str, str]]] = {
+    ("Panetteria", "Pane"): [
+        ("Pane", "Pane tradizionale"),
+    ],
+    ("Carne", "Carne bovina"): [
+        ("Manzo", "Tagli di manzo"),
+    ],
+    ("Carne", "Carne suina"): [
+        ("Maiale", "Tagli di maiale"),
+    ],
+    ("Carne", "Pollame"): [
+        ("Pollo", "Pollame intero"),
+    ],
+    ("Pesce", "Pesce confezionato"): [
+        ("Tonno", "Pesce in scatola"),
+    ],
+    ("Bevande", "Acqua e minerali"): [
+        ("Acqua", "Acqua naturale"),
+    ],
+    ("Bevande", "Birra"): [
+        ("Birra", "Birra chiara"),
+    ],
+    ("Bevande", "Vino"): [
+        ("Vino", "Vino rosso"),
+    ],
+    ("Banco Frigo", "Latte e yogurt"): [
+        ("Latte", "Latte fresco"),
+        ("Yogurt", "Yogurt"),
+    ],
+    ("Banco Frigo", "Burro e panna"): [
+        ("Burro", "Burro"),
+        ("Panna", "Panna"),
+    ],
+    ("Banco Frigo", "Uova"): [
+        ("Uova", "Uova fresche"),
+    ],
+    ("Dispensa", "Pasta e riso"): [
+        ("Pasta", "Pasta secca"),
+        ("Riso", "Riso e cereali"),
+    ],
+    ("Dispensa", "Oli e condimenti"): [
+        ("Olio", "Oli"),
+        ("Aceto", "Aceti"),
+        ("Sale", "Sale e spezie"),
+    ],
+    ("Dispensa", "Conserve"): [
+        ("Pelati", "Conserve di pomodoro"),
+        ("Sugo", "Conserve di pomodoro"),
+    ],
+    ("Dispensa", "Dolci e cioccolato"): [
+        ("Zucchero", "Dolci e creme"),
+        ("Miele", "Dolci e creme"),
+        ("Marmellata", "Dolci e creme"),
+        ("Cioccolato", "Cioccolato"),
+    ],
+    ("Dispensa", "Caffè e tè"): [
+        ("Caffè", "Caffè"),
+        ("Tè", "Tè e infusi"),
+    ],
+    ("Dispensa", "Legumi e farine"): [
+        ("Farina", "Farine e lieviti"),
+        ("Legumi", "Legumi secchi"),
+    ],
+    ("Non alimentare", "Igiene persona"): [
+        ("Sapone", "Cura del corpo"),
+    ],
+    ("Non alimentare", "Pulizia e lavatrice"): [
+        ("Detersivo", "Detersivi per bucato"),
+    ],
+}
+
+# ---------------------------------------------------------------------------
 # Modificatori per (L1, L2) — il primo elemento "" genera le basi nude
 # ---------------------------------------------------------------------------
 MODIFIERS: dict[tuple[str, str], list[str]] = {
@@ -457,9 +535,22 @@ EXPECTED_INDICES: dict[str, set[tuple[str, tuple[str, ...], bool]]] = {
 }
 
 
-def expand_names(l1: str, l2: str, target: int, rng: random.Random) -> list[str]:
-    """Genera esattamente `target` nomi prodotto unici per la coppia (l1, l2)."""
-    bases = list(BASES[(l1, l2)])
+def expand_names(
+    l1: str,
+    l2: str,
+    target: int,
+    rng: random.Random,
+    generic_names: list[str] | None = None,
+) -> list[str]:
+    """Genera esattamente `target` nomi prodotto unici per la coppia (l1, l2).
+
+    `generic_names` sono le voci generiche curate (es. "Pane", "Tonno").
+    Vengono accodate alle basi esistenti (non anteposte) per non cambiare
+    l'assegnazione storica ai Livelli 3 delle altre voci; la loro categoria
+    viene poi scelta a mano in `main`.
+    """
+    generics = list(generic_names or [])
+    bases = [b for b in BASES[(l1, l2)] if b not in generics] + generics
     mods = [m for m in MODIFIERS[(l1, l2)] if m]  # solo modificatori non vuoti
 
     capacity = len(bases) * (1 + len(mods))
@@ -502,6 +593,11 @@ def expand_names(l1: str, l2: str, target: int, rng: random.Random) -> list[str]
             add(f"{b} {mod}")
     if len(names) != target:
         raise RuntimeError(f"{l1}/{l2}: generati {len(names)} != {target}")
+    missing = [g for g in generics if g not in seen]
+    if missing:
+        raise RuntimeError(
+            f"{l1}/{l2}: voci generiche non inserite (target {target}): {missing}"
+        )
     return names
 
 
@@ -597,12 +693,29 @@ def main() -> int:
 
             # Ripartizione target sui L2: base + ripartizione del resto
             target = base_share + (1 if l2_idx <= remainder else 0)
-            names = expand_names(l1_name, l2_name, target, rng)
+            generic_specs = GENERIC_PRODUCTS.get((l1_name, l2_name), [])
+            names = expand_names(
+                l1_name,
+                l2_name,
+                target,
+                rng,
+                [name for name, _ in generic_specs],
+            )
             l3_ids = list(range(first_l3_id, l3_id + 1))
+            l3_id_by_name = {
+                l3_name: first_l3_id + l3_idx
+                for l3_idx, l3_name in enumerate(l3s)
+            }
+            generic_l3 = dict(generic_specs)
 
             for i, name in enumerate(names):
                 product_id += 1
-                assigned_l3 = l3_ids[i % len(l3_ids)]
+                # Le voci generiche hanno una categoria scelta a mano; le
+                # altre seguono la rotazione storica sui Livelli 3.
+                assigned_l3 = l3_id_by_name.get(
+                    generic_l3.get(name, ""),
+                    l3_ids[i % len(l3_ids)],
+                )
                 cur.execute(
                     "INSERT INTO CANONICAL_PRODUCT (id, level3_id, name, is_user_defined) VALUES (?,?,?,0)",
                     (product_id, assigned_l3, name),
