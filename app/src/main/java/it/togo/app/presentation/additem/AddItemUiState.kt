@@ -30,10 +30,14 @@ data class AddItemUiState(
     val selectedUnit: StandardUnit? = null,
     val compatibleUnits: List<StandardUnit> = emptyList(),
 
-    // Step 3: Attributi opzionali
+    // Step 3: Attributi (marca e variante sempre presenti, modificabili)
     val brand: String = "",
     val variant: String = "",
     val condition: String = "",
+    /** Marche già usate dall'utente, proposte nel campo marca. */
+    val brandSuggestions: List<String> = emptyList(),
+    /** Varianti già usate dall'utente, proposte nel campo variante. */
+    val variantSuggestions: List<String> = emptyList(),
 
     // Validazione
     val errors: Map<String, String> = emptyMap(),

@@ -53,4 +53,12 @@ interface ShoppingItemDao {
 
     @Query("SELECT * FROM SHOPPING_ITEM WHERE id IN (:ids)")
     suspend fun getByIds(ids: List<String>): List<ShoppingItemEntity>
+
+    /** Marche non vuote già usate: suggerimenti nel form "Aggiungi voce". */
+    @Query("SELECT DISTINCT brand FROM SHOPPING_ITEM WHERE brand IS NOT NULL AND TRIM(brand) <> ''")
+    fun getBrands(): Flow<List<String>>
+
+    /** Varianti non vuote già usate: suggerimenti nel form "Aggiungi voce". */
+    @Query("SELECT DISTINCT variant FROM SHOPPING_ITEM WHERE variant IS NOT NULL AND TRIM(variant) <> ''")
+    fun getVariants(): Flow<List<String>>
 }

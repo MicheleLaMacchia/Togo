@@ -100,10 +100,60 @@ class AddItemViewModel(
         searchResults.launchIn(viewModelScope)
         _searchQuery.value = ""
         loadTaxonomy()
+        observeAttributeSuggestions()
         if (isEditMode) {
             initializeEditMode()
         } else {
             _searchQuery.value = ""
+        }
+    }
+
+    /**
+     * Osserva marche/varianti già usate (lista attiva + storico): un valore
+     * digitato una volta resta disponibile come suggerimento nelle voci
+     * successive. Un errore qui non deve impedire l'uso del form.
+     */
+    private fun observeAttributeSuggestions() {
+        viewModelScope.launch {
+            try {
+                shoppingRepository.getAttributeSuggestions().collect { suggestions ->
+                    _uiState.update {
+                        it.copy(
+                            brandSuggestions = suggestions.brands,
+                            variantSuggestions = suggestions.variants,
+                        )
+                    }
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                // Suggerimenti best-effort: il form resta usabile senza.
+            }
+        }
+    }
+
+    /**
+     * Precompila marca/variante/conservazione con l'ultimo uso dello stesso
+     * prodotto, così riaggiungendo una voce già conosciuta la si ritrova.
+     */
+    private fun prefillLastAttributes(productId: Long) {
+        viewModelScope.launch {
+            try {
+                val attributes = shoppingRepository.getLastAttributes(productId)
+                    ?: return@launch
+                _uiState.update { state ->
+                    if (state.selectedProduct?.id != productId) return@update state
+                    state.copy(
+                        brand = state.brand.ifBlank { attributes.brand.orEmpty() },
+                        variant = state.variant.ifBlank { attributes.variant.orEmpty() },
+                        condition = state.condition.ifBlank { attributes.condition.orEmpty() },
+                    )
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                // Precompilazione best-effort.
+            }
         }
     }
 
@@ -230,6 +280,12 @@ class AddItemViewModel(
                 compatibleUnits = compatible,
                 selectedUnit = defaultUnit,
                 quantityText = "1",
+                // Gli attributi appartengono alla voce: non trascinarli da un
+                // prodotto selezionato in precedenza. La precompilazione con
+                // l'ultimo uso dello stesso prodotto avviene subito dopo.
+                brand = "",
+                variant = "",
+                condition = "",
                 currentStep = 2,
                 errors = emptyMap(),
                 isCategoryCorrectionVisible = false,
@@ -240,6 +296,7 @@ class AddItemViewModel(
                 correctedCategoryPath = null,
             )
         }
+        prefillLastAttributes(product.id)
     }
 
     private fun compatibleUnitsFor(product: CanonicalProduct): List<StandardUnit> {

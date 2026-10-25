@@ -31,4 +31,12 @@ interface HistoryDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertHistorical(item: HistoricalItemEntity): Long
+
+    /** Marche non vuote già acquistate: suggerimenti nel form "Aggiungi voce". */
+    @Query("SELECT DISTINCT brand FROM HISTORICAL_ITEM WHERE brand IS NOT NULL AND TRIM(brand) <> ''")
+    fun getBrands(): Flow<List<String>>
+
+    /** Varianti non vuote già acquistate: suggerimenti nel form "Aggiungi voce". */
+    @Query("SELECT DISTINCT variant FROM HISTORICAL_ITEM WHERE variant IS NOT NULL AND TRIM(variant) <> ''")
+    fun getVariants(): Flow<List<String>>
 }

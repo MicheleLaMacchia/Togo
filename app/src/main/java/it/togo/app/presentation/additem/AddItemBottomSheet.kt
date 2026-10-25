@@ -310,8 +310,10 @@ fun AddItemBottomSheet(
                                 product = product,
                                 brand = uiState.brand,
                                 onBrandChange = { viewModel.onEvent(AddItemUiEvent.BrandChanged(it)) },
+                                brandSuggestions = uiState.brandSuggestions,
                                 variant = uiState.variant,
                                 onVariantChange = { viewModel.onEvent(AddItemUiEvent.VariantChanged(it)) },
+                                variantSuggestions = uiState.variantSuggestions,
                                 condition = uiState.condition,
                                 onConditionChange = { viewModel.onEvent(AddItemUiEvent.ConditionChanged(it)) },
                             )
@@ -551,8 +553,10 @@ fun AttributeStep(
     product: CanonicalProduct,
     brand: String,
     onBrandChange: (String) -> Unit,
+    brandSuggestions: List<String>,
     variant: String,
     onVariantChange: (String) -> Unit,
+    variantSuggestions: List<String>,
     condition: String,
     onConditionChange: (String) -> Unit,
 ) {
@@ -560,8 +564,10 @@ fun AttributeStep(
         product = product,
         brand = brand,
         onBrandChange = onBrandChange,
+        brandSuggestions = brandSuggestions,
         variant = variant,
         onVariantChange = onVariantChange,
+        variantSuggestions = variantSuggestions,
         condition = condition,
         onConditionChange = onConditionChange,
     )

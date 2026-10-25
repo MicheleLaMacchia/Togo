@@ -1,9 +1,7 @@
 package it.togo.app.presentation.additem
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DropdownMenuItem
@@ -18,32 +16,32 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.ProductAttribute
-import it.togo.app.ui.theme.componentTokens
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
+import java.util.Locale
 
 /**
  * Sezione attributi contestuali per il prodotto selezionato.
  *
- * Mostra solo gli attributi pertinenti al Livello 3 del prodotto:
- * - Marca: dropdown con suggerimenti + free text
- * - Variante: campo testo libero
- * - Conservazione: dropdown con valori controllati
+ * Marca e variante sono SEMPRE presenti e modificabili per ogni prodotto (a
+ * testo libero, con i valori già usati dall'utente in cima ai suggerimenti):
+ * un valore nuovo digitato una volta resta disponibile anche in seguito.
  *
- * Se il L3 non supporta attributi, la sezione non viene renderizzata.
+ * La conservazione resta contestuale al Livello 3, perché ha senso solo per
+ * alcuni prodotti (freschi, surgelati, ...).
  */
 @Composable
 fun AttributeSection(
     product: CanonicalProduct,
     brand: String,
     onBrandChange: (String) -> Unit,
+    brandSuggestions: List<String>,
     variant: String,
     onVariantChange: (String) -> Unit,
+    variantSuggestions: List<String>,
     condition: String,
     onConditionChange: (String) -> Unit,
 ) {
@@ -53,7 +51,10 @@ fun AttributeSection(
 
     val attributeDef = ProductAttribute.forLevel3(product.level3Id, product.name)
 
-    if (!attributeDef.hasAnyAttribute) return
+    // I valori ricordati vengono prima di quelli predefiniti; il confronto è
+    // case-insensitive ("Coop"/"coop" sono la stessa marca).
+    val brands = mergeSuggestions(brandSuggestions, attributeDef.brandSuggestions)
+    val variants = mergeSuggestions(variantSuggestions)
 
     Column(
         modifier = Modifier
@@ -67,29 +68,26 @@ fun AttributeSection(
             color = colors.inkPrimary,
         )
 
-        // Marca
-        AnimatedVisibility(visible = attributeDef.hasBrand) {
-            BrandField(
-                value = brand,
-                onValueChange = onBrandChange,
-                suggestions = attributeDef.brandSuggestions,
-            )
-        }
+        // Marca: sempre presente, testo libero + suggerimenti ricordati.
+        SuggestionTextField(
+            label = "Marca",
+            placeholder = "Seleziona o digita…",
+            value = brand,
+            onValueChange = onBrandChange,
+            suggestions = brands,
+        )
 
-        // Variante
-        AnimatedVisibility(visible = attributeDef.hasVariant) {
-            OutlinedTextField(
-                value = variant,
-                onValueChange = onVariantChange,
-                label = { Text("Variante", style = typography.caption) },
-                placeholder = { Text("Es. integrale, biologico…", style = typography.itemMeta) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
+        // Variante: sempre presente, testo libero + suggerimenti ricordati.
+        SuggestionTextField(
+            label = "Variante",
+            placeholder = "Es. integrale, biologico…",
+            value = variant,
+            onValueChange = onVariantChange,
+            suggestions = variants,
+        )
 
-        // Conservazione
-        AnimatedVisibility(visible = attributeDef.hasCondition) {
+        // Conservazione: solo per i prodotti per cui è pertinente.
+        if (attributeDef.hasCondition) {
             ConditionDropdown(
                 value = condition,
                 onValueChange = onConditionChange,
@@ -99,46 +97,66 @@ fun AttributeSection(
     }
 }
 
-/** Campo marca con dropdown suggerimenti + input libero */
+/** Deduplica case-insensitive preservando l'ordine (prima i valori ricordati). */
+private fun mergeSuggestions(vararg lists: List<String>): List<String> =
+    lists.asSequence()
+        .flatten()
+        .map { it.trim() }
+        .filter { it.isNotEmpty() }
+        .distinctBy { it.lowercase(Locale.ROOT) }
+        .toList()
+
+/**
+ * Campo testo con dropdown di suggerimenti (valore libero sempre accettato).
+ * Se non ci sono suggerimenti si comporta come un normale campo di testo.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun BrandField(
+private fun SuggestionTextField(
+    label: String,
+    placeholder: String,
     value: String,
     onValueChange: (String) -> Unit,
     suggestions: List<String>,
 ) {
-    val colors = togoColors()
     val typography = togoTypography()
     var expanded by remember { mutableStateOf(false) }
+    val hasSuggestions = suggestions.isNotEmpty()
 
     ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = it },
+        expanded = expanded && hasSuggestions,
+        onExpandedChange = { if (hasSuggestions) expanded = it },
     ) {
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            label = { Text("Marca", style = typography.caption) },
-            placeholder = { Text("Seleziona o digita…", style = typography.itemMeta) },
+            label = { Text(label, style = typography.caption) },
+            placeholder = { Text(placeholder, style = typography.itemMeta) },
             singleLine = true,
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            trailingIcon = if (hasSuggestions) {
+                { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }
+            } else {
+                null
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .menuAnchor(),
         )
 
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-        ) {
-            suggestions.forEach { brand ->
-                DropdownMenuItem(
-                    text = { Text(brand, style = typography.itemMeta) },
-                    onClick = {
-                        onValueChange(brand)
-                        expanded = false
-                    },
-                )
+        if (hasSuggestions) {
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+            ) {
+                suggestions.forEach { suggestion ->
+                    DropdownMenuItem(
+                        text = { Text(suggestion, style = typography.itemMeta) },
+                        onClick = {
+                            onValueChange(suggestion)
+                            expanded = false
+                        },
+                    )
+                }
             }
         }
     }
