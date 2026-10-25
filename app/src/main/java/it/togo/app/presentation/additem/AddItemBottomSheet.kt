@@ -26,6 +26,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,6 +50,7 @@ import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.derivedStateOf
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -124,12 +126,20 @@ fun AddItemBottomSheet(
 
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    // Solo la X chiude la sheet: tap sullo sfondo, swipe verso il basso e back
+    // non devono interrompere l'inserimento. `allowHideByUser` sblocca la
+    // transizione a Hidden nel solo handler della X.
+    var allowHideByUser by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true,
+        confirmValueChange = { target ->
+            target != SheetValue.Hidden || allowHideByUser
+        },
+    )
 
     ModalBottomSheet(
         onDismissRequest = {
-            viewModel.onEvent(AddItemUiEvent.Reset)
-            onDismiss()
+            // Intenzionalmente vuoto: la chiusura avviene solo con la X.
         },
         sheetState = sheetState,
         containerColor = colors.surfaceBase,
@@ -184,9 +194,11 @@ fun AddItemBottomSheet(
 
                     // Chiudi
                     IconButton(onClick = {
-                        viewModel.onEvent(AddItemUiEvent.Reset)
-                        scope.launch { sheetState.hide() }
-                        onDismiss()
+                        // Il ViewModel viene ricreato a ogni apertura (chiave
+                        // basata su nanoTime): non serve resettarlo qui, così
+                        // il contenuto resta stabile durante l'animazione.
+                        allowHideByUser = true
+                        scope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() }
                     }) {
                         Icon(
                             imageVector = Icons.Filled.Close,
