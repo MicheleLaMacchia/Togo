@@ -44,6 +44,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.Locale
 import java.util.UUID
 
 /**
@@ -294,9 +295,13 @@ class AddItemViewModel(
     private fun initializeVoicePrefill(command: ParsedCommand) {
         val productName = command.productName.trim()
         val variant = command.variant?.trim().orEmpty()
+        // La variante arriva capitalizzata dal parser (es. "Integrale"), ma
+        // la query di ricerca e lo stato del campo sono normalizzati in
+        // minuscolo: il confronto con il catalogo resta case-insensitive.
         val fullQuery = listOf(productName, variant)
             .filter { it.isNotBlank() }
             .joinToString(" ")
+            .lowercase(Locale.ROOT)
         val quantityText = command.quantity?.let(::formatQuantityText) ?: "1"
 
         pendingVoicePrefill = VoicePrefill(
