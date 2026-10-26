@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -24,18 +23,13 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.CatalogCategoryResult
 import it.togo.app.domain.model.ShoppingItem
@@ -47,15 +41,10 @@ import it.togo.app.domain.repository.UserAttributeRepository
 import it.togo.app.domain.usecase.CorrectCategoryUseCase
 import it.togo.app.domain.usecase.CreateCanonicalProductUseCase
 import it.togo.app.domain.usecase.CreateUserLevel3UseCase
-import it.togo.app.ui.theme.SHEET_SCRIM_ALPHA
 import it.togo.app.ui.theme.componentTokens
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SheetValue
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.derivedStateOf
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
@@ -68,15 +57,14 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.platform.LocalContext
-import android.os.Vibrator
-import android.content.Context
-import android.os.VibrationEffect
-import kotlinx.coroutines.launch
 import org.koin.core.context.GlobalContext
 
 /**
- * Bottom Sheet "Aggiungi/Modifica Voce Manuale" - flusso multi-step.
+ * Modale a schermo intero "Aggiungi/Modifica Voce Manuale" - flusso multi-step.
+ *
+ * Non è una bottom sheet trascinabile: resta fissa a tutto schermo e si chiude
+ * soltanto con la X. In questo modo lo scroll interno (in particolare la lista
+ * dei risultati di ricerca) non sposta la modale.
  *
  * Step:
  * 1. Ricerca prodotto (autocomplete catalogo)
@@ -88,7 +76,6 @@ import org.koin.core.context.GlobalContext
  * - INSERT: nuova voce (parte da step 1)
  * - EDIT: modifica voce esistente (parte da step 2, pre-popolato)
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddItemBottomSheet(
     onDismiss: () -> Unit,
@@ -132,50 +119,27 @@ fun AddItemBottomSheet(
     val spacing = togoSpacing()
     val tokens = componentTokens()
 
-    val scope = rememberCoroutineScope()
-    val context = LocalContext.current
-    // Solo la X chiude la sheet: tap sullo sfondo, swipe verso il basso e back
-    // non devono interrompere l'inserimento. `allowHideByUser` sblocca la
-    // transizione a Hidden nel solo handler della X.
-    var allowHideByUser by remember { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true,
-        confirmValueChange = { target ->
-            target != SheetValue.Hidden || allowHideByUser
-        },
-    )
-
-    ModalBottomSheet(
+    // Modale a schermo intero, non trascinabile: si chiude solo con la X.
+    // Un Dialog (invece di una ModalBottomSheet) impedisce sia lo swipe di
+    // riduzione sia il conflitto tra lo scroll della lista risultati e il
+    // trascinamento della sheet.
+    Dialog(
         onDismissRequest = {
             // Intenzionalmente vuoto: la chiusura avviene solo con la X.
         },
-        sheetState = sheetState,
-        containerColor = colors.surfaceBase,
-        scrimColor = colors.scrim.copy(alpha = SHEET_SCRIM_ALPHA),
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+        properties = DialogProperties(
+            dismissOnBackPress = false,
+            dismissOnClickOutside = false,
+            usePlatformDefaultWidth = false,
+        ),
     ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxSize()
                     .padding(top = spacing.space3)
                     .background(colors.surfaceBase),
                 verticalArrangement = Arrangement.spacedBy(spacing.space2),
             ) {
-                // Handle bar
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(4.dp)
-                        .padding(horizontal = spacing.space4),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp, 4.dp)
-                            .background(colors.borderHairline, androidx.compose.foundation.shape.RoundedCornerShape(2.dp)),
-                    )
-                }
-
                 // Titolo step
                 Row(
                     modifier = Modifier
@@ -201,13 +165,7 @@ fun AddItemBottomSheet(
                     )
 
                     // Chiudi
-                    IconButton(onClick = {
-                        // Il ViewModel viene ricreato a ogni apertura (chiave
-                        // basata su nanoTime): non serve resettarlo qui, così
-                        // il contenuto resta stabile durante l'animazione.
-                        allowHideByUser = true
-                        scope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() }
-                    }) {
+                    IconButton(onClick = onDismiss) {
                         Icon(
                             imageVector = Icons.Filled.Close,
                             contentDescription = "Chiudi",
@@ -266,7 +224,7 @@ fun AddItemBottomSheet(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = spacing.space4, vertical = spacing.space2)
-                        .weight(1f, fill = false),
+                        .weight(1f),
                     verticalArrangement = Arrangement.spacedBy(spacing.space3),
                 ) {
                     when (uiState.currentStep) {
