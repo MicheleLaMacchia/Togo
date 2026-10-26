@@ -6,6 +6,7 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertDoesNotExist
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsOff
@@ -249,6 +250,97 @@ class ActiveListAccessibilityTest {
                 "Mozzarella, 2 pezzi, Categoria non assegnata, non selezionato. Doppio tocco per modificare."
             )
             .assertExists()
+    }
+
+    @Test
+    fun `level 1 header collapses and expands keeping active item count`() {
+        val item = ShoppingItem(
+            productId = 1L,
+            quantity = 2.0,
+            unit = StandardUnit.PIECE,
+        )
+        val group = CategoryGroup(
+            level1 = TaxonomyLevel.Level1(id = 1L, name = "Latticini", sortOrder = 1),
+            level2Groups = listOf(
+                Level2Group(
+                    level2 = TaxonomyLevel.Level2(
+                        id = 2L,
+                        name = "Formaggi",
+                        sortOrder = 1,
+                        level1Id = 1L,
+                    ),
+                    level3Groups = listOf(
+                        Level3Group(
+                            level3 = TaxonomyLevel.Level3(
+                                id = 3L,
+                                name = "Mozzarella",
+                                sortOrder = 1,
+                                level2Id = 2L,
+                            ),
+                            items = listOf(item),
+                        )
+                    ),
+                )
+            ),
+        )
+
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                CategorySection(
+                    group = group,
+                    productNames = mapOf(1L to "Mozzarella"),
+                    categoryLabels = mapOf(1L to "Latticini, Formaggi, Mozzarella"),
+                    onCheckOff = { _, _ -> },
+                    onEdit = {},
+                    onDelete = {},
+                    colors = togoColors(),
+                    typography = togoTypography(),
+                    spacing = togoSpacing(),
+                    tokens = componentTokens(),
+                )
+            }
+        }
+
+        val expandedDescription = "Latticini, 1 voce. Doppio tocco per collassare."
+        composeTestRule
+            .onNodeWithContentDescription(expandedDescription)
+            .assertExists()
+            .assertHasClickAction()
+            .assert(
+                SemanticsMatcher.expectValue(
+                    SemanticsProperties.StateDescription,
+                    "espansa",
+                )
+            )
+
+        composeTestRule.onNodeWithText("LATTICINI").assertExists()
+        composeTestRule.onNodeWithText("FORMAGGI").assertExists()
+        composeTestRule.onNodeWithText("Mozzarella").assertExists()
+        // Un badge per il totale Level1 e uno per il totale Level2.
+        composeTestRule.onAllNodesWithText("1").assertCountEquals(2)
+
+        composeTestRule.onNodeWithContentDescription(expandedDescription).performClick()
+
+        composeTestRule
+            .onNodeWithContentDescription("Latticini, 1 voce. Doppio tocco per espandere.")
+            .assertExists()
+            .assert(
+                SemanticsMatcher.expectValue(
+                    SemanticsProperties.StateDescription,
+                    "collassata",
+                )
+            )
+        composeTestRule.onNodeWithText("LATTICINI").assertExists()
+        composeTestRule.onNodeWithText("FORMAGGI").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Mozzarella").assertDoesNotExist()
+        // Il totale Level1 resta visibile; quello Level2 è nascosto.
+        composeTestRule.onAllNodesWithText("1").assertCountEquals(1)
+
+        composeTestRule
+            .onNodeWithContentDescription("Latticini, 1 voce. Doppio tocco per espandere.")
+            .performClick()
+        composeTestRule.onNodeWithText("FORMAGGI").assertExists()
+        composeTestRule.onNodeWithText("Mozzarella").assertExists()
     }
 
     @Test
