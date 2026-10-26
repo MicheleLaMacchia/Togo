@@ -55,7 +55,7 @@ class ShareListUseCase(
 
         level1Map.values.sortedBy { it.sortOrder }.forEach { l1 ->
             val l1Items = itemsByL1[l1] ?: return@forEach
-            sb.appendLine("=== ${l1.name} ===")
+            sb.appendLine("[${l1.name.uppercase()}]")
 
             val itemsByL2 = l1Items.groupBy { item ->
                 val product = productsById[item.id]
@@ -65,7 +65,7 @@ class ShareListUseCase(
 
             level2Map.values.filter { it.level1Id == l1.id }.sortedBy { it.sortOrder }.forEach { l2 ->
                 val l2Items = itemsByL2[l2] ?: return@forEach
-                sb.appendLine("--- ${l2.name} ---")
+                sb.appendLine("+ ${l2.name.uppercase()}")
 
                 val itemsByL3 = l2Items.groupBy { item ->
                     val product = productsById[item.id]
@@ -74,9 +74,10 @@ class ShareListUseCase(
 
                 level3Map.values.filter { it.level2Id == l2.id }.sortedBy { it.sortOrder }.forEach { l3 ->
                     val l3Items = itemsByL3[l3] ?: return@forEach
-                    sb.appendLine("${l3.name}:")
+                    sb.appendLine("- ${l3.name.uppercase()}")
                     l3Items.forEach { item ->
-                        sb.appendLine("  - ${formatItem(item)}")
+                        val product = productsById[item.id] ?: return@forEach
+                        sb.appendLine("  ${formatItem(item, product)}")
                     }
                 }
             }
@@ -86,7 +87,18 @@ class ShareListUseCase(
         return sb.toString().trim()
     }
 
-    private fun formatItem(item: ShoppingItem): String {
-        return "${item.quantity} ${item.unit.displayName}"
+    /**
+     * Riga voce: prodotto, marca e variante (quando presenti), quantità e unità.
+     * Es. "Spaghetti Barilla integrale 2 pz".
+     */
+    private fun formatItem(
+        item: ShoppingItem,
+        product: it.togo.app.domain.model.CanonicalProduct,
+    ): String {
+        val parts = mutableListOf(product.name)
+        item.brand?.takeIf { it.isNotBlank() }?.let { parts.add(it) }
+        item.variant?.takeIf { it.isNotBlank() }?.let { parts.add(it) }
+        parts.add(item.unit.format(item.quantity))
+        return parts.joinToString(" ")
     }
 }
