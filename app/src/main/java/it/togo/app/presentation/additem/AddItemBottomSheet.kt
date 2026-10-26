@@ -6,12 +6,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -120,6 +122,21 @@ fun AddItemBottomSheet(
     val spacing = togoSpacing()
     val tokens = componentTokens()
 
+    // Insets letti nella composizione dell'Activity, non in quella del Dialog.
+    // Su Android 15 il Dialog può ricevere insets a zero pur estendendosi sotto
+    // la barra di navigazione: in quel caso il pulsante "Avanti" resterebbe
+    // coperto. Garantiamo perciò almeno 56.dp di spazio in basso, equivalenti
+    // all'ingombro della barra a 3 pulsanti, sommandoli solo se l'inset reale
+    // non li fornisce già.
+    val safeDrawing = WindowInsets.safeDrawing.asPaddingValues()
+    val safeDrawingBottom = safeDrawing.calculateBottomPadding()
+    val minimumBottomInset = 56.dp
+    val bottomFallback = if (safeDrawingBottom < minimumBottomInset) {
+        minimumBottomInset - safeDrawingBottom
+    } else {
+        0.dp
+    }
+
     // Modale a schermo intero, non trascinabile: si chiude solo con la X.
     // Un Dialog (invece di una ModalBottomSheet) impedisce sia lo swipe di
     // riduzione sia il conflitto tra lo scroll della lista risultati e il
@@ -132,11 +149,11 @@ fun AddItemBottomSheet(
             dismissOnBackPress = false,
             dismissOnClickOutside = false,
             usePlatformDefaultWidth = false,
-            // Il Dialog occupa l'intera finestra (anche sotto le system bar):
-            // il contenuto viene poi riportato dentro l'area sicura con
-            // safeDrawingPadding(). Senza questo flag gli insets possono essere
-            // consumati dal decor e il pulsante "Avanti" finisce sotto la barra
-            // di navigazione a 3 pulsanti.
+            // Il Dialog occupa l'intera finestra: il contenuto viene poi
+            // riportato dentro l'area sicura con gli insets letti
+            // nell'Activity. Senza questo flag il decor può consumare gli
+            // insets e il pulsante "Avanti" finisce sotto la barra di
+            // navigazione a 3 pulsanti.
             decorFitsSystemWindows = false,
         ),
     ) {
@@ -144,9 +161,11 @@ fun AddItemBottomSheet(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(colors.surfaceBase)
-                    // Il Dialog è full-screen: senza safe drawing il pulsante
-                    // "Avanti" finisce sotto la barra di navigazione Android.
-                    .safeDrawingPadding()
+                    // Il Dialog è full-screen: applichiamo esplicitamente gli
+                    // insets dell'Activity e un fallback per la barra a 3
+                    // pulsanti, così "Avanti" resta sempre cliccabile.
+                    .padding(safeDrawing)
+                    .padding(bottom = bottomFallback)
                     .padding(top = spacing.space3),
                 verticalArrangement = Arrangement.spacedBy(spacing.space2),
             ) {
