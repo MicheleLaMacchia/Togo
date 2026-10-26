@@ -21,6 +21,7 @@ import it.togo.app.domain.usecase.CreateCanonicalProductUseCase
 import it.togo.app.domain.usecase.CreateLevel3Result
 import it.togo.app.domain.usecase.CreateProductResult
 import it.togo.app.domain.usecase.CreateUserLevel3UseCase
+import it.togo.app.domain.usecase.ResolveVoiceProductUseCase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -79,6 +80,8 @@ class AddItemViewModel(
      * prodotto (match univoco o scelta dell'utente nella ricerca).
      */
     private var pendingVoicePrefill: VoicePrefill? = null
+
+    private val resolveVoiceProduct = ResolveVoiceProductUseCase(catalogRepository)
 
     // ---- State ----
     private val _uiState = MutableStateFlow(AddItemUiState(isEditMode = editItem != null))
@@ -321,7 +324,9 @@ class AddItemViewModel(
         _searchQuery.value = fullQuery
 
         viewModelScope.launch {
-            val (query, products) = resolveVoiceProducts(productName, fullQuery)
+            val resolution = resolveVoiceProduct(command)
+            val query = resolution.query
+            val products = resolution.products
             // L'utente può aver già scelto un prodotto, filtrato una categoria
             // o cambiato la ricerca mentre la risoluzione era in corso: in
             // quel caso lo stato più recente vince.
@@ -348,73 +353,6 @@ class AddItemViewModel(
             }
         }
     }
-
-    /**
-     * Cerca la frase completa (prodotto + variante).
-     *
-     * Priorità:
-     * 1. match esatto del nome per una frase composta (es. "pane integrale"
-     *    → "Pane Integrale", anche se la LIKE restituisce anche il Bio);
-     * 2. tutti i risultati della frase completa;
-     * 3. la sola testa del prodotto (es. "pane senza glutine" → "pane").
-     *    La variante resta in attesa e viene applicata alla selezione.
-     *
-     * Una singola parola generica ("pane", "latte") non viene forzata sul
-     * prodotto con nome esatto: è più utile mostrare le alternative.
-     */
-    private suspend fun resolveVoiceProducts(
-        productName: String,
-        fullQuery: String,
-    ): Pair<String, List<CanonicalProduct>> {
-        val fullResults = searchFirst(fullQuery)
-        // Il match esatto è una scorciatoia sicura solo quando la frase è
-        // composta (prodotto + variante o prodotto multi-parola): per una
-        // singola parola generica ("pane") è meglio mostrare le alternative.
-        if (fullQuery.contains(' ')) {
-            val exactFull = exactMatch(fullResults, fullQuery)
-            if (exactFull.isNotEmpty()) return fullQuery to exactFull
-        }
-        if (fullResults.isNotEmpty()) return fullQuery to fullResults
-
-        if (productName.isNotBlank()) {
-            val baseResults = searchFirst(productName)
-            if (baseResults.isNotEmpty()) return productName to baseResults
-
-            // Fallback per nomi con preposizioni rimosse dal parser
-            // (es. "succo frutta" → "succo").
-            val head = productName.substringBefore(' ').trim()
-            if (head.length >= 2 && !head.equals(productName, ignoreCase = true)) {
-                val headResults = searchFirst(head)
-                if (headResults.isNotEmpty()) return head to headResults
-            }
-        }
-        return fullQuery to emptyList()
-    }
-
-    /**
-     * Un match esatto è "univoco" solo se il catalogo contiene una sola voce
-     * con quel nome normalizzato.
-     */
-    private fun exactMatch(
-        products: List<CanonicalProduct>,
-        query: String,
-    ): List<CanonicalProduct> {
-        val normalizedQuery = ProductNameNormalizer.normalize(query)
-        if (normalizedQuery.isEmpty()) return emptyList()
-        val matches = products.filter {
-            ProductNameNormalizer.normalize(it.name) == normalizedQuery
-        }
-        return matches.takeIf { it.size == 1 }.orEmpty()
-    }
-
-    private suspend fun searchFirst(query: String): List<CanonicalProduct> =
-        try {
-            if (query.length >= 2) catalogRepository.search(query).first() else emptyList()
-        } catch (e: CancellationException) {
-            throw e
-        } catch (_: Exception) {
-            emptyList()
-        }
 
     /**
      * Le categorie sono un extra: se il repository non le implementa (fake dei

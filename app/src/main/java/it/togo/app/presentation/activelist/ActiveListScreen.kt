@@ -108,6 +108,7 @@ fun ActiveListScreen(
 
     val voiceUiState by voiceViewModel.uiState.collectAsState()
     val voiceConfirmationUiState by voiceConfirmationViewModel.uiState.collectAsState()
+    val voicePrefillRequest by viewModel.voicePrefillRequest.collectAsState()
 
     val context = LocalContext.current
     var showAddItemSheet by remember { mutableStateOf(false) }
@@ -115,6 +116,16 @@ fun ActiveListScreen(
     // Comando vocale da precompilare nella sheet di aggiunta. Null per
     // l'aggiunta manuale o la modifica di una voce esistente.
     var voicePrefill by remember { mutableStateOf<ParsedCommand?>(null) }
+
+    // Se il comando confermato non è univoco, il ViewModel chiede di aprire la
+    // scheda di aggiunta precompilata. I comandi univoci vengono invece inseriti
+    // direttamente in lista.
+    LaunchedEffect(voicePrefillRequest) {
+        val request = voicePrefillRequest ?: return@LaunchedEffect
+        voicePrefill = request
+        showAddItemSheet = true
+        viewModel.consumeVoicePrefillRequest()
+    }
 
     // Richiesta runtime permesso RECORD_AUDIO per il riconoscimento vocale
     val audioPermissionLauncher = rememberLauncherForActivityResult(
@@ -190,10 +201,12 @@ fun ActiveListScreen(
         }
     }
 
-    DisposableEffect(voiceConfirmationViewModel) {
+    DisposableEffect(voiceConfirmationViewModel, viewModel) {
         voiceConfirmationViewModel.onCommandConfirmed = { command ->
-            voicePrefill = command
-            showAddItemSheet = true
+            // Conferma esplicita: se il comando è univoco la voce entra subito
+            // in lista, senza riaprire il form e senza chiedere una seconda
+            // conferma. In caso ambiguo il ViewModel emette voicePrefillRequest.
+            viewModel.addVoiceCommand(command)
         }
         onDispose {
             voiceConfirmationViewModel.onCommandConfirmed = null

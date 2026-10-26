@@ -34,10 +34,10 @@ import org.robolectric.annotation.Config
 /**
  * Accettazione SM-C2 (Story 6.4): zero modifiche non confermate.
  *
- * Il flusso di produzione passa da `VoiceConfirmationSheet` alla sheet di
- * aggiunta: la conferma vocale non scrive direttamente sulla lista. L'evento
- * legacy `UiEvent.VoiceCommand` resta ignorato dal ViewModel e viene verificato
- * qui per garantire zero scritture anche in quel percorso.
+ * Il flusso di produzione scrive solo dopo la conferma esplicita nel
+ * `VoiceConfirmationSheet` (tramite `ActiveListViewModel.addVoiceCommand`).
+ * L'evento legacy `UiEvent.VoiceCommand` resta ignorato dal ViewModel e viene
+ * verificato qui per garantire zero scritture anche in quel percorso.
  *
  * Robolectric è necessario perché `ActiveListViewModel.onEvent` usa
  * [it.togo.app.core.TogoLog], che a sua volta usa `android.util.Log`.

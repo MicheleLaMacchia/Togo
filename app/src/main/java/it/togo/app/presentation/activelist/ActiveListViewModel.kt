@@ -3,16 +3,23 @@ package it.togo.app.presentation.activelist
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import it.togo.app.core.TogoLog
+import it.togo.app.domain.catalog.ProductNameNormalizer
 import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.ShoppingItem
+import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.model.TaxonomyLevel
+import it.togo.app.domain.parser.ParsedCommand
+import it.togo.app.domain.product.ProductUnitResolver
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.ShoppingListRepository
+import it.togo.app.domain.usecase.ResolveVoiceProductUseCase
 import it.togo.app.domain.usecase.ShareListUseCase
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
@@ -21,6 +28,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 
 class ActiveListViewModel(
@@ -29,6 +37,14 @@ class ActiveListViewModel(
 ) : ViewModel() {
 
     private val shareListUseCase = ShareListUseCase(shoppingRepository, catalogRepository)
+    private val resolveVoiceProduct = ResolveVoiceProductUseCase(catalogRepository)
+
+    /**
+     * Comando vocale confermato che non identifica un prodotto univoco (o ha
+     * unità non compatibili): la UI apre la scheda di aggiunta già precompilata.
+     */
+    private val _voicePrefillRequest = MutableStateFlow<ParsedCommand?>(null)
+    val voicePrefillRequest = _voicePrefillRequest.asStateFlow()
 
     private val _uiState = MutableStateFlow(ActiveListUiState())
     val uiState = _uiState
@@ -209,6 +225,81 @@ class ActiveListViewModel(
             }
         )
         return intent
+    }
+
+    /**
+     * Aggiunge direttamente alla lista un comando vocale già confermato.
+     *
+     * Se prodotto, quantità e unità sono univoci e compatibili, la voce viene
+     * salvata subito: l'utente ha già dato la conferma esplicita nel riepilogo
+     * vocale. Se il comando è ambiguo, incompleto o l'unità non è compatibile,
+     * viene richiesta la scheda di aggiunta precompilata tramite
+     * [voicePrefillRequest], così l'utente può scegliere/correggere.
+     */
+    fun addVoiceCommand(command: ParsedCommand) {
+        viewModelScope.launch {
+            try {
+                val resolution = resolveVoiceProduct(command)
+                val product = resolution.products.singleOrNull()
+                val quantity = command.quantity
+                val unit = command.unit
+
+                if (product == null ||
+                    !command.isComplete ||
+                    quantity == null ||
+                    !quantity.isFinite() ||
+                    quantity <= 0.0 ||
+                    unit == null ||
+                    !supportsUnit(product, unit)
+                ) {
+                    _voicePrefillRequest.value = command
+                    return@launch
+                }
+
+                val variant = ProductNameNormalizer.capitalizeFirstWord(command.variant.orEmpty())
+                    .takeIf { it.isNotBlank() }
+                    ?.takeUnless { productNameContains(product.name, it) }
+
+                val item = ShoppingItem(
+                    id = UUID.randomUUID().toString(),
+                    productId = product.id,
+                    quantity = quantity,
+                    unit = unit,
+                    variant = variant,
+                    isChecked = false,
+                    createdAt = System.currentTimeMillis(),
+                    updatedAt = System.currentTimeMillis(),
+                )
+
+                withContext(Dispatchers.IO) {
+                    shoppingRepository.insert(item)
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "Aggiunta vocale fallita: ${e.message}",
+                )
+            }
+        }
+    }
+
+    /** La UI ha aperto la scheda precompilata: il comando è stato consumato. */
+    fun consumeVoicePrefillRequest() {
+        _voicePrefillRequest.value = null
+    }
+
+    private fun supportsUnit(product: CanonicalProduct, unit: StandardUnit): Boolean {
+        val compatible = product.compatibleUnits
+            .ifEmpty { ProductUnitResolver.forProduct(product) }
+            .ifEmpty { listOf(StandardUnit.PIECE) }
+        return compatible.any { it.isCompatibleWith(unit) }
+    }
+
+    private fun productNameContains(productName: String, value: String): Boolean {
+        val normalizedName = ProductNameNormalizer.normalize(productName)
+        val normalizedValue = ProductNameNormalizer.normalize(value)
+        return normalizedValue.isNotEmpty() && normalizedName.contains(normalizedValue)
     }
 
     private fun findItem(itemId: String): ShoppingItem? {
