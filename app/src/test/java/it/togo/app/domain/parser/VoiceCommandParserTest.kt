@@ -220,9 +220,67 @@ class VoiceCommandParserTest {
     fun `frase completa`() {
         val result = parser.parse("aggiungi 2 litri di latte intero")
 
-        assertEquals("latte intero", result.productName)
+        assertEquals("latte", result.productName)
+        assertEquals("Intero", result.variant)
         assertEquals(2.0, result.quantity!!, 0.001)
         assertEquals(StandardUnit.LITER, result.unit)
+    }
+
+    @Test
+    fun `pane integrale separa variante e mantiene categoria`() {
+        val result = parser.parse("aggiungi un chilo di pane integrale")
+
+        assertEquals("pane", result.productName)
+        assertEquals("Integrale", result.variant)
+        assertEquals("pane", result.categoryHint)
+        assertEquals(1.0, result.quantity!!, 0.001)
+        assertEquals(StandardUnit.KILOGRAM, result.unit)
+        assertEquals(1.0, result.confidence, 0.001)
+        assertFalse(result.needsClarification)
+    }
+
+    @Test
+    fun `punteggiatura finale ignorata`() {
+        val result = parser.parse("aggiungi un chilo di pane integrale.")
+
+        assertEquals("pane", result.productName)
+        assertEquals("Integrale", result.variant)
+        assertEquals(1.0, result.quantity!!, 0.001)
+        assertEquals(StandardUnit.KILOGRAM, result.unit)
+    }
+
+    @Test
+    fun `pane da solo resta prodotto e categoria`() {
+        val result = parser.parse("pane")
+
+        assertEquals("pane", result.productName)
+        assertNull(result.variant)
+        assertEquals("pane", result.categoryHint)
+    }
+
+    @Test
+    fun `variante multi parola senza lattosio`() {
+        val result = parser.parse("latte senza lattosio")
+
+        assertEquals("latte", result.productName)
+        assertEquals("Senza lattosio", result.variant)
+    }
+
+    @Test
+    fun `piu varianti restano in ordine`() {
+        val result = parser.parse("pane integrale bio")
+
+        assertEquals("pane", result.productName)
+        assertEquals("Integrale bio", result.variant)
+    }
+
+    @Test
+    fun `hint in coda non viene scambiato per prodotto`() {
+        val result = parser.parse("latte 2 litri latticini")
+
+        assertEquals("latte", result.productName)
+        assertNull(result.variant)
+        assertEquals("latticini", result.categoryHint)
     }
 
     @Test

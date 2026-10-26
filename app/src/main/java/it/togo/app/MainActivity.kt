@@ -12,6 +12,7 @@ import it.togo.app.presentation.rules.LearnedRulesViewModel
 import it.togo.app.presentation.settings.SettingsScreen
 import it.togo.app.presentation.settings.UserDataViewModel
 import it.togo.app.presentation.voice.VoiceBottomSheetViewModel
+import it.togo.app.presentation.voice.VoiceConfirmationViewModel
 import it.togo.app.ui.theme.TogoTheme
 import it.togo.app.ui.theme.isSystemDarkTheme
 import org.koin.core.component.KoinComponent
@@ -21,6 +22,7 @@ class MainActivity : ComponentActivity(), KoinComponent {
 
     private val viewModel: ActiveListViewModel by inject()
     private val voiceViewModel: VoiceBottomSheetViewModel by inject()
+    private val voiceConfirmationViewModel: VoiceConfirmationViewModel by inject()
     private val learnedRulesViewModel: LearnedRulesViewModel by inject()
     private val historyViewModel: HistoryViewModel by inject()
     private val userDataViewModel: UserDataViewModel by inject()
@@ -35,6 +37,7 @@ class MainActivity : ComponentActivity(), KoinComponent {
                         ActiveListScreen(
                             viewModel = viewModel,
                             voiceViewModel = voiceViewModel,
+                            voiceConfirmationViewModel = voiceConfirmationViewModel,
                             onEvent = onEvent,
                         )
                     },

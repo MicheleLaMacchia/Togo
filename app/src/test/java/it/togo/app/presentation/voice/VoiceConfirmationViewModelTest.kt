@@ -61,6 +61,7 @@ class VoiceConfirmationViewModelTest {
         assertEquals("latte", (state as VoiceConfirmationUiState.Ready).parsedCommand.productName)
         assertEquals(2.0, state.parsedCommand.quantity!!, 0.001)
         assertEquals(StandardUnit.LITER, state.parsedCommand.unit)
+        assertEquals("2 litri di latte", state.sourceText)
     }
 
     @Test
@@ -101,9 +102,11 @@ class VoiceConfirmationViewModelTest {
         val state = vm.uiState.value
         assertTrue(state is VoiceConfirmationUiState.Ready)
         // Verifica che displayCommand contenga la scomposizione corretta
-        assertEquals("latte intero", (state as VoiceConfirmationUiState.Ready).displayCommand.productName)
+        assertEquals("latte", (state as VoiceConfirmationUiState.Ready).displayCommand.productName)
+        assertEquals("Intero", state.displayCommand.variant)
         assertEquals(2.0, state.displayCommand.quantity!!, 0.001)
         assertEquals(StandardUnit.LITER, state.displayCommand.unit)
+        assertEquals("2 litri di latte intero", state.sourceText)
     }
 
     @Test

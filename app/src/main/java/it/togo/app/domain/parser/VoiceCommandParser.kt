@@ -1,6 +1,7 @@
 package it.togo.app.domain.parser
 
 import it.togo.app.domain.model.StandardUnit
+import java.util.Locale
 
 /**
  * Servizio puro per il parsing di comandi vocali in italiano.
@@ -9,11 +10,18 @@ import it.togo.app.domain.model.StandardUnit
  * - Nome prodotto (testo rimanente)
  * - Quantità (numeri + parole come "mezzo", "un", "due")
  * - Unità (kg, g, l, ml, pezzi, conf, barattolo, vasetto)
+ * - Variante (integrale, biologico, intero, senza lattosio, ...)
  * - Categoria hint (parole chiave come "latticini", "bevande")
  *
  * Puro dominio: nessuna dipendenza Android, testabile su JVM.
  */
 class VoiceCommandParser {
+
+    private data class ProductPhrase(
+        val productName: String,
+        val variant: String?,
+        val categoryHint: String?,
+    )
 
     companion object {
         private val ITALIAN_NUMBERS = mapOf(
@@ -55,6 +63,44 @@ class VoiceCommandParser {
 
         // Pattern per rimozione parole numeriche (con word boundary)
         private val ITALIAN_NUMBER_WORDS_REGEX = Regex("\\b(un|uno|una|due|tre|quattro|cinque|sei|sette|otto|nove|dieci|mezzo|mezza)\\b", RegexOption.IGNORE_CASE)
+
+        /**
+         * Qualificatori che l'app tratta come variante della voce.
+         *
+         * Le frasi più lunghe vanno prima nell'alternanza, così "senza
+         * lattosio" non viene spezzata e "biologico" non viene confuso con
+         * "bio". Il match usa i confini di parola.
+         */
+        private val VARIANT_PHRASES = listOf(
+            "parzialmente scremato",
+            "parzialmente scremata",
+            "senza lattosio",
+            "senza glutine",
+            "senza zucchero",
+            "senza zuccheri",
+            "senza sale",
+            "biologico",
+            "biologica",
+            "integrale",
+            "integrali",
+            "scremato",
+            "scremata",
+            "vegetale",
+            "vegetali",
+            "intero",
+            "intera",
+            "classico",
+            "classica",
+            "light",
+            "bio",
+        )
+
+        private val VARIANT_REGEX = Regex(
+            "\\b(" + VARIANT_PHRASES.joinToString("|") { it.replace(" ", "\\s+") } + ")\\b",
+            RegexOption.IGNORE_CASE,
+        )
+
+        private val WHITESPACE_REGEX = Regex("\\s+")
     }
 
     /**
@@ -78,25 +124,28 @@ class VoiceCommandParser {
 
         val quantity = extractQuantity(singleProductText)
         val unit = extractUnit(singleProductText)
-        val categoryHint = extractCategoryHint(singleProductText)
-        val productName = extractProductName(singleProductText, quantity, unit, categoryHint)
+        val phrase = extractProductPhrase(singleProductText, quantity, unit)
 
-        val confidence = computeConfidence(productName, quantity, unit, categoryHint)
+        val confidence = computeConfidence(phrase.productName, quantity, unit, phrase.categoryHint)
         val needsClarification = quantity != null && unit == null
 
         return ParsedCommand(
-            productName = productName,
+            productName = phrase.productName,
             quantity = quantity,
             unit = unit,
-            categoryHint = categoryHint,
+            variant = phrase.variant,
+            categoryHint = phrase.categoryHint,
             confidence = confidence,
             needsClarification = needsClarification
         )
     }
 
-    /** Normalizzazione: lowercase + trim, preserva accenti (no NFKD accent-folding) */
+    /**
+     * Normalizzazione: lowercase, trim e rimozione della punteggiatura finale.
+     * Preserva gli accenti (no NFKD accent-folding).
+     */
     private fun normalize(text: String): String =
-        text.lowercase().trim()
+        text.lowercase().trim().trimEnd('.', ',', ';', ':', '!', '?')
 
     /** Estrae quantità (numeri decimali o parole italiane con word boundary) */
     private fun extractQuantity(text: String): Double? {
@@ -129,36 +178,32 @@ class VoiceCommandParser {
         return null
     }
 
-    /** Estrae hint categoria (parole chiave) */
-    private fun extractCategoryHint(text: String): String? {
-        for (keyword in CATEGORY_KEYWORDS) {
-            if (text.contains(keyword, ignoreCase = true)) {
-                return keyword
-            }
-        }
-        return null
-    }
-
-    /** Estrae nome prodotto (testo rimanente dopo rimozione quantità/unità/categoria) */
-    private fun extractProductName(
+    /**
+     * Estrae nome prodotto, variante e categoria hint dal testo ripulito.
+     *
+     * L'hint categoria viene rimosso solo quando è l'ultima parola della
+     * frase (es. "latte 2 litri latticini"): se invece è la testa del prodotto
+     * (es. "pane integrale", "1,5 kg di riso") resta nel nome. La variante
+     * viene riconosciuta dentro la frase e rimossa dal nome prodotto.
+     */
+    private fun extractProductPhrase(
         text: String,
         quantity: Double?,
         unit: StandardUnit?,
-        categoryHint: String?
-    ): String {
+    ): ProductPhrase {
         var remaining = text
 
         // Rimuovi unità
         if (unit != null) {
             for ((regex, _) in UNIT_PATTERNS) {
-                remaining = regex.replace(remaining, "")
+                remaining = regex.replace(remaining, " ")
             }
         }
 
         // Rimuovi quantità (numeri o parole italiane con word boundary)
         if (quantity != null) {
-            remaining = remaining.replace(Regex("\\d+[.,]?\\d*"), "")
-            remaining = ITALIAN_NUMBER_WORDS_REGEX.replace(remaining, "")
+            remaining = remaining.replace(Regex("\\d+[.,]?\\d*"), " ")
+            remaining = ITALIAN_NUMBER_WORDS_REGEX.replace(remaining, " ")
         }
 
         // Rimuovi preposizioni articolate (con word boundary completo)
@@ -166,19 +211,72 @@ class VoiceCommandParser {
 
         // Rimuovi verbi d'azione
         remaining = ACTION_VERBS_REGEX.replace(remaining, " ")
+        remaining = collapseSpaces(remaining)
 
-        // Rimuovi hint categoria solo se resta un nome prodotto.
-        // Es. "1,5 kg di riso": "riso" è anche categoria, ma è l'unico testo
-        // rimasto → va mantenuto come nome prodotto.
-        if (categoryHint != null) {
-            val withoutHint = remaining.replace(categoryHint, "", ignoreCase = true)
-            if (withoutHint.isNotBlank()) remaining = withoutHint
+        val tokens = remaining.split(' ').filter { it.isNotBlank() }
+        val categoryHint: String?
+        if (tokens.size > 1 && tokens.last().lowercase(Locale.ROOT) in CATEGORY_KEYWORDS) {
+            // Hint esplicito in coda: "latte latticini" → prodotto "latte".
+            categoryHint = tokens.last().lowercase(Locale.ROOT)
+            remaining = tokens.dropLast(1).joinToString(" ")
+        } else {
+            // Parola categoria che fa parte del prodotto: non rimuoverla.
+            // "pane integrale" → prodotto "pane", hint "pane".
+            categoryHint = CATEGORY_KEYWORDS.firstOrNull { keyword ->
+                Regex("\\b${Regex.escape(keyword)}\\b", RegexOption.IGNORE_CASE)
+                    .containsMatchIn(remaining)
+            }
         }
 
-        // Normalizza spazi
-        remaining = remaining.replace(Regex("\\s+"), " ").trim()
+        val (productName, variant) = extractVariant(remaining)
+        return ProductPhrase(
+            productName = productName,
+            variant = variant,
+            categoryHint = categoryHint,
+        )
+    }
 
-        return remaining
+    /**
+     * Riconosce i qualificatori di variante nella frase e li rimuove dal nome.
+     *
+     * Se la frase contiene solo qualificatori (es. "integrale"), non viene
+     * svuotata: in quel caso resta tutto nel nome prodotto.
+     */
+    private fun extractVariant(text: String): Pair<String, String?> {
+        val matches = VARIANT_REGEX.findAll(text).toList()
+        if (matches.isEmpty()) return text to null
+
+        val withoutVariant = buildString {
+            var last = 0
+            for (match in matches) {
+                append(text, last, match.range.first)
+                last = match.range.last + 1
+            }
+            append(text, last, text.length)
+        }.let(::collapseSpaces)
+
+        if (withoutVariant.isBlank()) return text to null
+
+        val variant = matches
+            .map { it.value.lowercase(Locale.ROOT) }
+            .distinct()
+            .joinToString(" ")
+            .let(::capitalizeFirstWord)
+
+        return withoutVariant to variant
+    }
+
+    private fun collapseSpaces(text: String): String =
+        WHITESPACE_REGEX.replace(text, " ").trim()
+
+    private fun capitalizeFirstWord(text: String): String {
+        val collapsed = collapseSpaces(text)
+        if (collapsed.isEmpty()) return ""
+        val firstLetter = collapsed.indexOfFirst { it.isLetter() }
+        if (firstLetter < 0) return collapsed
+        return collapsed.substring(0, firstLetter) +
+            collapsed[firstLetter].uppercaseChar() +
+            collapsed.substring(firstLetter + 1)
     }
 
     /**

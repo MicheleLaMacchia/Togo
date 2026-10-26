@@ -31,13 +31,16 @@ import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.model.TaxonomyLevel
+import it.togo.app.domain.parser.VoiceCommandParser
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.ShoppingListRepository
+import it.togo.app.domain.usecase.ParseVoiceCommandUseCase
 import it.togo.app.domain.voice.ErrorCode
 import it.togo.app.domain.voice.VoiceRecognitionGateway
 import it.togo.app.domain.voice.VoiceRecognitionState
 import it.togo.app.presentation.settings.SettingsScreen
 import it.togo.app.presentation.voice.VoiceBottomSheetViewModel
+import it.togo.app.presentation.voice.VoiceConfirmationViewModel
 import it.togo.app.ui.theme.TogoTheme
 import it.togo.app.ui.theme.componentTokens
 import it.togo.app.ui.theme.togoColors
@@ -83,6 +86,10 @@ class ActiveListAccessibilityTest {
         quantity = 2.0,
         unit = StandardUnit.PIECE,
         isChecked = true,
+    )
+
+    private val voiceConfirmationViewModel = VoiceConfirmationViewModel(
+        ParseVoiceCommandUseCase(VoiceCommandParser())
     )
 
     @Test
@@ -374,6 +381,7 @@ class ActiveListAccessibilityTest {
                 ActiveListScreen(
                     viewModel = viewModel,
                     voiceViewModel = voiceViewModel,
+                    voiceConfirmationViewModel = voiceConfirmationViewModel,
                     voiceGateway = AndroidVoiceRecognitionGateway(),
                     onEvent = {},
                 )
@@ -409,6 +417,7 @@ class ActiveListAccessibilityTest {
                 ActiveListScreen(
                     viewModel = viewModel,
                     voiceViewModel = voiceViewModel,
+                    voiceConfirmationViewModel = voiceConfirmationViewModel,
                     voiceGateway = AndroidVoiceRecognitionGateway(),
                     onEvent = {},
                 )
@@ -490,6 +499,7 @@ class ActiveListAccessibilityTest {
                         ActiveListScreen(
                             viewModel = viewModel,
                             voiceViewModel = voiceViewModel,
+                            voiceConfirmationViewModel = voiceConfirmationViewModel,
                             voiceGateway = AndroidVoiceRecognitionGateway(),
                             onEvent = onEvent,
                         )
@@ -546,6 +556,7 @@ class ActiveListAccessibilityTest {
                     ActiveListScreen(
                         viewModel = viewModel,
                         voiceViewModel = voiceViewModel,
+                        voiceConfirmationViewModel = voiceConfirmationViewModel,
                         voiceGateway = gateway,
                         onEvent = {},
                     )
@@ -574,6 +585,7 @@ class ActiveListAccessibilityTest {
                 ActiveListScreen(
                     viewModel = viewModel,
                     voiceViewModel = voiceViewModel,
+                    voiceConfirmationViewModel = voiceConfirmationViewModel,
                     voiceGateway = AndroidVoiceRecognitionGateway(),
                     onEvent = viewModel::onEvent,
                 )
@@ -628,6 +640,7 @@ class ActiveListAccessibilityTest {
                 ActiveListScreen(
                     viewModel = viewModel,
                     voiceViewModel = voiceViewModel,
+                    voiceConfirmationViewModel = voiceConfirmationViewModel,
                     voiceGateway = AndroidVoiceRecognitionGateway(),
                     onEvent = {},
                 )
@@ -681,6 +694,7 @@ class ActiveListAccessibilityTest {
                 ActiveListScreen(
                     viewModel = viewModel,
                     voiceViewModel = voiceViewModel,
+                    voiceConfirmationViewModel = voiceConfirmationViewModel,
                     voiceGateway = AndroidVoiceRecognitionGateway(),
                     onEvent = {},
                 )
@@ -726,6 +740,7 @@ class ActiveListAccessibilityTest {
                 ActiveListScreen(
                     viewModel = viewModel,
                     voiceViewModel = voiceViewModel,
+                    voiceConfirmationViewModel = voiceConfirmationViewModel,
                     voiceGateway = AndroidVoiceRecognitionGateway(),
                     onEvent = {},
                 )

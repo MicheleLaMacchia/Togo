@@ -13,7 +13,9 @@ sealed interface VoiceConfirmationUiState {
     /** Mostra comando interpretato, in attesa di conferma */
     data class Ready(
         val parsedCommand: ParsedCommand,
-        val isEditing: Boolean = false
+        val isEditing: Boolean = false,
+        /** Testo grezzo riconosciuto, usato come base per la modifica. */
+        val sourceText: String = "",
     ) : VoiceConfirmationUiState {
         /** Comando da visualizzare (già re-parseato se editText è stato chiamato) */
         val displayCommand: ParsedCommand get() = parsedCommand

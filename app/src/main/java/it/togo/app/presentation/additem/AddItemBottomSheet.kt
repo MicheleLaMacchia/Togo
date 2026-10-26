@@ -40,8 +40,10 @@ import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.CatalogCategoryResult
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.StandardUnit
+import it.togo.app.domain.parser.ParsedCommand
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.ShoppingListRepository
+import it.togo.app.domain.repository.UserAttributeRepository
 import it.togo.app.domain.usecase.CorrectCategoryUseCase
 import it.togo.app.domain.usecase.CreateCanonicalProductUseCase
 import it.togo.app.domain.usecase.CreateUserLevel3UseCase
@@ -91,13 +93,16 @@ import org.koin.core.context.GlobalContext
 fun AddItemBottomSheet(
     onDismiss: () -> Unit,
     editItem: ShoppingItem? = null,
+    initialVoiceCommand: ParsedCommand? = null,
 ) {
     // La factory esplicita permette di passare l'item in modifica; per
     // l'inserimento editItem è null e il ViewModel parte dallo step 1.
     // La chiave cambia a ogni apertura della sheet: evitando di riusare un
-    // ViewModel con il vecchio editItem, la riapertura mostra i dati aggiornati.
-    val viewModelKey = remember(editItem) {
-        "add-item-${editItem?.id ?: "new"}-${System.nanoTime()}"
+    // ViewModel con il vecchio editItem o il vecchio comando vocale, la
+    // riapertura mostra i dati aggiornati.
+    val viewModelKey = remember(editItem, initialVoiceCommand) {
+        "add-item-${editItem?.id ?: "new"}-" +
+            "${initialVoiceCommand?.hashCode() ?: "manual"}-${System.nanoTime()}"
     }
     val viewModel: AddItemViewModel = viewModel(
         key = viewModelKey,
@@ -109,7 +114,9 @@ fun AddItemBottomSheet(
                     createProductUseCase = GlobalContext.get().get<CreateCanonicalProductUseCase>(),
                     createLevel3UseCase = GlobalContext.get().get<CreateUserLevel3UseCase>(),
                     correctCategoryUseCase = GlobalContext.get().get<CorrectCategoryUseCase>(),
+                    userAttributeRepository = GlobalContext.get().get<UserAttributeRepository>(),
                     editItem = editItem,
+                    initialVoiceCommand = initialVoiceCommand,
                 )
             }
         },

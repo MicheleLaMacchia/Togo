@@ -179,7 +179,8 @@ class ActiveListViewModel(
         TogoLog.d("ActiveList.onEvent: $event")
         when (event) {
             is UiEvent.CheckOff -> handleCheckOff(event.itemId, event.isChecked)
-            // Gestito dal VoiceBottomSheetViewModel (sheet vocale).
+            // Legacy: il testo vocale confermato passa da VoiceConfirmationSheet
+            // alla sheet di aggiunta; qui non si scrive nulla.
             is UiEvent.VoiceCommand -> { }
             is UiEvent.DeleteItem -> handleDeleteItem(event.itemId)
             // Apre il foglio vocale: gestito direttamente dalla UI.

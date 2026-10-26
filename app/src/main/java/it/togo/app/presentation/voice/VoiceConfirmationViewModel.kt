@@ -38,7 +38,10 @@ class VoiceConfirmationViewModel(
      */
     fun showForRecognition(rawText: String) {
         val parsed = parseUseCase(rawText)
-        _uiState.value = VoiceConfirmationUiState.Ready(parsedCommand = parsed)
+        _uiState.value = VoiceConfirmationUiState.Ready(
+            parsedCommand = parsed,
+            sourceText = rawText,
+        )
     }
 
     /**
@@ -64,7 +67,10 @@ class VoiceConfirmationViewModel(
      */
     fun editText(newText: String) {
         val reparsed = parseUseCase(newText)
-        _uiState.value = VoiceConfirmationUiState.Ready(parsedCommand = reparsed)
+        _uiState.value = VoiceConfirmationUiState.Ready(
+            parsedCommand = reparsed,
+            sourceText = newText,
+        )
     }
 
     /**

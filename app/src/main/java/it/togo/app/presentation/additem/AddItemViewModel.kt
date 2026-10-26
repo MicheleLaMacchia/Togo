@@ -11,6 +11,7 @@ import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.model.UserAttributeType
+import it.togo.app.domain.parser.ParsedCommand
 import it.togo.app.domain.product.ProductUnitResolver
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.ShoppingListRepository
@@ -66,10 +67,17 @@ class AddItemViewModel(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val correctCategoryUseCase: CorrectCategoryUseCase? = null,
     private val userAttributeRepository: UserAttributeRepository? = null,
+    private val initialVoiceCommand: ParsedCommand? = null,
 ) : ViewModel() {
 
     // Flag per modalità edit - ora parte dello UI state
     val isEditMode: Boolean = editItem != null
+
+    /**
+     * Valori del comando vocale da applicare quando viene selezionato il
+     * prodotto (match univoco o scelta dell'utente nella ricerca).
+     */
+    private var pendingVoicePrefill: VoicePrefill? = null
 
     // ---- State ----
     private val _uiState = MutableStateFlow(AddItemUiState(isEditMode = editItem != null))
@@ -146,6 +154,8 @@ class AddItemViewModel(
         observeAttributeSuggestions()
         if (isEditMode) {
             initializeEditMode()
+        } else if (initialVoiceCommand != null) {
+            initializeVoicePrefill(initialVoiceCommand)
         } else {
             _searchQuery.value = ""
         }
@@ -182,17 +192,30 @@ class AddItemViewModel(
     /**
      * Precompila marca/variante/conservazione con l'ultimo uso dello stesso
      * prodotto, così riaggiungendo una voce già conosciuta la si ritrova.
+     *
+     * Una variante già contenuta nel nome del prodotto (es. "Integrale" per
+     * "Pane Integrale") non viene riproposta: sarebbe una duplicazione. Se il
+     * comando vocale ha già espresso una variante, non se ne propone una
+     * storica diversa: sarebbe in contraddizione con la richiesta dell'utente.
      */
-    private fun prefillLastAttributes(productId: Long) {
+    private fun prefillLastAttributes(
+        product: CanonicalProduct,
+        allowVariantHistory: Boolean = true,
+    ) {
         viewModelScope.launch {
             try {
-                val attributes = shoppingRepository.getLastAttributes(productId)
+                val attributes = shoppingRepository.getLastAttributes(product.id)
                     ?: return@launch
+                val lastVariant = attributes.variant.orEmpty()
+                    .takeIf { it.isNotBlank() }
+                    ?.takeIf { allowVariantHistory }
+                    ?.takeIf { !productNameContains(product.name, it) }
+                    .orEmpty()
                 _uiState.update { state ->
-                    if (state.selectedProduct?.id != productId) return@update state
+                    if (state.selectedProduct?.id != product.id) return@update state
                     state.copy(
                         brand = state.brand.ifBlank { attributes.brand.orEmpty() },
-                        variant = state.variant.ifBlank { attributes.variant.orEmpty() },
+                        variant = state.variant.ifBlank { lastVariant },
                         condition = state.condition.ifBlank { attributes.condition.orEmpty() },
                     )
                 }
@@ -258,6 +281,135 @@ class AddItemViewModel(
             }
         }
     }
+
+    /**
+     * Apre il form già compilato da un comando vocale confermato.
+     *
+     * Se la frase (prodotto + variante) identifica un solo prodotto, lo
+     * seleziona e porta direttamente a quantità/unità. Se è ambigua o non
+     * trova nulla, resta sulla ricerca testuale: l'utente sceglie o crea il
+     * prodotto. La variante viene applicata alla selezione e non duplicata se
+     * è già parte del nome del prodotto (es. "Pane Integrale").
+     */
+    private fun initializeVoicePrefill(command: ParsedCommand) {
+        val productName = command.productName.trim()
+        val variant = command.variant?.trim().orEmpty()
+        val fullQuery = listOf(productName, variant)
+            .filter { it.isNotBlank() }
+            .joinToString(" ")
+        val quantityText = command.quantity?.let(::formatQuantityText) ?: "1"
+
+        pendingVoicePrefill = VoicePrefill(
+            quantityText = quantityText,
+            unit = command.unit,
+            variant = variant,
+        )
+
+        _uiState.update {
+            it.copy(
+                searchQuery = fullQuery,
+                quantityText = quantityText,
+                variant = variant,
+                isLoading = true,
+            )
+        }
+        _searchQuery.value = fullQuery
+
+        viewModelScope.launch {
+            val (query, products) = resolveVoiceProducts(productName, fullQuery)
+            // L'utente può aver già scelto un prodotto, filtrato una categoria
+            // o cambiato la ricerca mentre la risoluzione era in corso: in
+            // quel caso lo stato più recente vince.
+            val current = _uiState.value
+            if (current.selectedProduct != null ||
+                current.activeCategory != null ||
+                current.searchQuery != fullQuery
+            ) {
+                return@launch
+            }
+            if (products.size == 1) {
+                handleProductSelected(products.first())
+            } else {
+                _uiState.update {
+                    it.copy(
+                        searchQuery = query,
+                        searchResults = products,
+                        categoryResults = emptyList(),
+                        activeCategory = null,
+                        isLoading = false,
+                    )
+                }
+                _searchQuery.value = query
+            }
+        }
+    }
+
+    /**
+     * Cerca la frase completa (prodotto + variante).
+     *
+     * Priorità:
+     * 1. match esatto del nome per una frase composta (es. "pane integrale"
+     *    → "Pane Integrale", anche se la LIKE restituisce anche il Bio);
+     * 2. tutti i risultati della frase completa;
+     * 3. la sola testa del prodotto (es. "pane senza glutine" → "pane").
+     *    La variante resta in attesa e viene applicata alla selezione.
+     *
+     * Una singola parola generica ("pane", "latte") non viene forzata sul
+     * prodotto con nome esatto: è più utile mostrare le alternative.
+     */
+    private suspend fun resolveVoiceProducts(
+        productName: String,
+        fullQuery: String,
+    ): Pair<String, List<CanonicalProduct>> {
+        val fullResults = searchFirst(fullQuery)
+        // Il match esatto è una scorciatoia sicura solo quando la frase è
+        // composta (prodotto + variante o prodotto multi-parola): per una
+        // singola parola generica ("pane") è meglio mostrare le alternative.
+        if (fullQuery.contains(' ')) {
+            val exactFull = exactMatch(fullResults, fullQuery)
+            if (exactFull.isNotEmpty()) return fullQuery to exactFull
+        }
+        if (fullResults.isNotEmpty()) return fullQuery to fullResults
+
+        if (productName.isNotBlank()) {
+            val baseResults = searchFirst(productName)
+            if (baseResults.isNotEmpty()) return productName to baseResults
+
+            // Fallback per nomi con preposizioni rimosse dal parser
+            // (es. "succo frutta" → "succo").
+            val head = productName.substringBefore(' ').trim()
+            if (head.length >= 2 && !head.equals(productName, ignoreCase = true)) {
+                val headResults = searchFirst(head)
+                if (headResults.isNotEmpty()) return head to headResults
+            }
+        }
+        return fullQuery to emptyList()
+    }
+
+    /**
+     * Un match esatto è "univoco" solo se il catalogo contiene una sola voce
+     * con quel nome normalizzato.
+     */
+    private fun exactMatch(
+        products: List<CanonicalProduct>,
+        query: String,
+    ): List<CanonicalProduct> {
+        val normalizedQuery = ProductNameNormalizer.normalize(query)
+        if (normalizedQuery.isEmpty()) return emptyList()
+        val matches = products.filter {
+            ProductNameNormalizer.normalize(it.name) == normalizedQuery
+        }
+        return matches.takeIf { it.size == 1 }.orEmpty()
+    }
+
+    private suspend fun searchFirst(query: String): List<CanonicalProduct> =
+        try {
+            if (query.length >= 2) catalogRepository.search(query).first() else emptyList()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            emptyList()
+        }
 
     /**
      * Le categorie sono un extra: se il repository non le implementa (fake dei
@@ -407,6 +559,18 @@ class AddItemViewModel(
         // merceologico (kg per pasta/carne, L per bevande, pz per le uova).
         val defaultUnit = compatible.first()
 
+        // Precompilazione vocale: si applica una sola volta, alla prima
+        // selezione del prodotto (match univoco o tap dell'utente).
+        val voice = pendingVoicePrefill
+        pendingVoicePrefill = null
+        val selectedUnit = voice?.unit?.takeIf { it in compatible } ?: defaultUnit
+        val quantityText = voice?.quantityText ?: "1"
+        val voiceVariant = voice?.variant?.trim().orEmpty()
+        val variant = voiceVariant
+            .takeIf { it.isNotBlank() }
+            ?.takeIf { !productNameContains(product.name, it) }
+            .orEmpty()
+
         _uiState.update {
             it.copy(
                 selectedProduct = product,
@@ -415,15 +579,16 @@ class AddItemViewModel(
                 activeCategory = null,
                 searchQuery = product.name,
                 compatibleUnits = compatible,
-                selectedUnit = defaultUnit,
-                quantityText = "1",
+                selectedUnit = selectedUnit,
+                quantityText = quantityText,
                 // Gli attributi appartengono alla voce: non trascinarli da un
                 // prodotto selezionato in precedenza. La precompilazione con
                 // l'ultimo uso dello stesso prodotto avviene subito dopo.
                 brand = "",
-                variant = "",
+                variant = variant,
                 condition = "",
                 currentStep = 2,
+                isLoading = false,
                 errors = emptyMap(),
                 isCategoryCorrectionVisible = false,
                 categoryCorrectionError = null,
@@ -433,7 +598,17 @@ class AddItemViewModel(
                 correctedCategoryPath = null,
             )
         }
-        prefillLastAttributes(product.id)
+        prefillLastAttributes(
+            product = product,
+            allowVariantHistory = voiceVariant.isBlank(),
+        )
+    }
+
+    /** True se [productName] contiene già [value] (es. variante nel nome). */
+    private fun productNameContains(productName: String, value: String): Boolean {
+        val normalizedName = ProductNameNormalizer.normalize(productName)
+        val normalizedValue = ProductNameNormalizer.normalize(value)
+        return normalizedValue.isNotEmpty() && normalizedName.contains(normalizedValue)
     }
 
     private fun compatibleUnitsFor(product: CanonicalProduct): List<StandardUnit> {
@@ -1273,3 +1448,16 @@ class AddItemViewModel(
         )
     }
 }
+
+/**
+ * Valori del comando vocale applicati alla prima selezione del prodotto.
+ *
+ * @property quantityText quantità già formattata per il campo testo
+ * @property unit unità richiesta, se compatibile con il prodotto
+ * @property variant variante da precompilare (già capitalizzata dal parser)
+ */
+private data class VoicePrefill(
+    val quantityText: String,
+    val unit: StandardUnit?,
+    val variant: String,
+)

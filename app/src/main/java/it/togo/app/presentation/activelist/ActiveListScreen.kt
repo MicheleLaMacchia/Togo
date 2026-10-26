@@ -44,7 +44,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,9 +57,12 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import it.togo.app.core.TogoLog
 import it.togo.app.domain.model.ShoppingItem
+import it.togo.app.domain.parser.ParsedCommand
 import it.togo.app.presentation.additem.AddItemBottomSheet
 import it.togo.app.presentation.voice.VoiceBottomSheet
 import it.togo.app.presentation.voice.VoiceBottomSheetViewModel
+import it.togo.app.presentation.voice.VoiceConfirmationSheet
+import it.togo.app.presentation.voice.VoiceConfirmationViewModel
 import it.togo.app.ui.theme.componentTokens
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
@@ -72,6 +74,7 @@ import kotlinx.coroutines.launch
 fun ActiveListScreen(
     viewModel: ActiveListViewModel,
     voiceViewModel: VoiceBottomSheetViewModel,
+    voiceConfirmationViewModel: VoiceConfirmationViewModel,
     onEvent: (UiEvent) -> Unit,
     // Iniettabile nei test; in produzione risolto da Koin.
     voiceGateway: it.togo.app.data.voice.AndroidVoiceRecognitionGateway =
@@ -104,10 +107,14 @@ fun ActiveListScreen(
     val tokens = componentTokens()
 
     val voiceUiState by voiceViewModel.uiState.collectAsState()
+    val voiceConfirmationUiState by voiceConfirmationViewModel.uiState.collectAsState()
 
     val context = LocalContext.current
     var showAddItemSheet by remember { mutableStateOf(false) }
     var editingItem by remember { mutableStateOf<ShoppingItem?>(null) }
+    // Comando vocale da precompilare nella sheet di aggiunta. Null per
+    // l'aggiunta manuale o la modifica di una voce esistente.
+    var voicePrefill by remember { mutableStateOf<ParsedCommand?>(null) }
 
     // Richiesta runtime permesso RECORD_AUDIO per il riconoscimento vocale
     val audioPermissionLauncher = rememberLauncherForActivityResult(
@@ -164,18 +171,32 @@ fun ActiveListScreen(
             onDismiss = {
                 showAddItemSheet = false
                 editingItem = null
+                voicePrefill = null
             },
             editItem = editingItem,
+            initialVoiceCommand = voicePrefill,
         )
     }
 
-    val currentOnEvent by rememberUpdatedState(onEvent)
-    DisposableEffect(voiceViewModel) {
+    DisposableEffect(voiceViewModel, voiceConfirmationViewModel) {
         voiceViewModel.onTextConfirmed = { text ->
-            currentOnEvent(UiEvent.VoiceCommand(text))
+            // La conferma del testo grezzo apre il riepilogo strutturato:
+            // l'utente vede prodotto, variante e quantità prima di toccare
+            // la lista.
+            voiceConfirmationViewModel.showForRecognition(text)
         }
         onDispose {
             voiceViewModel.onTextConfirmed = null
+        }
+    }
+
+    DisposableEffect(voiceConfirmationViewModel) {
+        voiceConfirmationViewModel.onCommandConfirmed = { command ->
+            voicePrefill = command
+            showAddItemSheet = true
+        }
+        onDispose {
+            voiceConfirmationViewModel.onCommandConfirmed = null
         }
     }
 
@@ -186,6 +207,14 @@ fun ActiveListScreen(
         onRetry = { voiceViewModel.retry() },
         onCancel = { voiceViewModel.cancel() },
         onDismiss = { voiceViewModel.cancel() },
+    )
+
+    VoiceConfirmationSheet(
+        uiState = voiceConfirmationUiState,
+        onConfirm = { voiceConfirmationViewModel.confirm() },
+        onEdit = { newText -> voiceConfirmationViewModel.editText(newText) },
+        onCancel = { voiceConfirmationViewModel.cancel() },
+        onDismiss = { voiceConfirmationViewModel.cancel() },
     )
 
     Scaffold(
@@ -277,7 +306,10 @@ fun ActiveListScreen(
                         )
 
                         FloatingActionButton(
-                            onClick = { showAddItemSheet = true },
+                            onClick = {
+                                voicePrefill = null
+                                showAddItemSheet = true
+                            },
                             containerColor = colors.accentAction,
                             contentColor = colors.inkInverse,
                             shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
@@ -346,6 +378,7 @@ fun ActiveListScreen(
                     } else if (uiState.activeGroups.isEmpty() && !uiState.hasCheckedItems) {
                         EmptyState(
                             onAddManual = {
+                                voicePrefill = null
                                 showAddItemSheet = true
                             },
                             onVoice = startVoiceWithPermission,
@@ -364,7 +397,10 @@ fun ActiveListScreen(
                                     productNames = uiState.productNames,
                                     categoryLabels = uiState.categoryLabels,
                                     onCheckOff = { itemId, checked -> onEvent(UiEvent.CheckOff(itemId, checked)) },
-                                    onEdit = { item -> editingItem = item },
+                                    onEdit = { item ->
+                                        voicePrefill = null
+                                        editingItem = item
+                                    },
                                     onDelete = { itemId -> onEvent(UiEvent.DeleteItem(itemId)) },
                                     colors = colors,
                                     typography = typography,

@@ -106,8 +106,12 @@ private fun ReadyContent(
     onEdit: (String) -> Unit,
     onCancel: () -> Unit,
 ) {
-    // Stato locale per input testo (evita re-parsing su ogni tasto)
-    var editText by remember(state.parsedCommand) { mutableStateOf(state.parsedCommand.productName) }
+    // Stato locale per input testo (evita re-parsing su ogni tasto).
+    // Si parte dal testo grezzo riconosciuto, non dal solo nome prodotto:
+    // così la modifica conserva quantità, unità e variante.
+    var editText by remember(state.sourceText, state.parsedCommand) {
+        mutableStateOf(state.sourceText.ifBlank { state.parsedCommand.productName })
+    }
     var isEditing by remember(state.isEditing) { mutableStateOf(state.isEditing) }
 
     Column(
@@ -157,7 +161,7 @@ private fun ReadyContent(
             OutlinedTextField(
                 value = editText,
                 onValueChange = { editText = it },
-                label = { Text("Modifica prodotto", style = typography.caption) },
+                label = { Text("Modifica comando", style = typography.caption) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -256,8 +260,21 @@ private fun CommandDisplay(
             )
 
             if (command.quantity != null) {
+                val quantityLabel = command.unit
+                    ?.format(command.quantity)
+                    ?: java.math.BigDecimal.valueOf(command.quantity)
+                        .stripTrailingZeros()
+                        .toPlainString()
                 Text(
-                    text = "Quantità: ${command.quantity} ${command.unit?.displayName ?: ""}",
+                    text = "Quantità: $quantityLabel",
+                    style = typography.itemMeta,
+                    color = colors.inkSecondary,
+                )
+            }
+
+            if (!command.variant.isNullOrBlank()) {
+                Text(
+                    text = "Variante: ${command.variant}",
                     style = typography.itemMeta,
                     color = colors.inkSecondary,
                 )
