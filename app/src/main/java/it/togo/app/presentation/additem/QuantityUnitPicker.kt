@@ -7,38 +7,28 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import it.togo.app.domain.model.StandardUnit
-import it.togo.app.ui.theme.componentTokens
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
 
 /**
- * Selettore quantità (stepper) + dropdown unità compatibili.
+ * Campo quantità modificabile con tastiera + selettore delle unità compatibili.
  *
- * - Stepper quantità: - / valore / + (step 0.1 per unità continue, 1 per discrete)
- * - Dropdown unità: solo unità compatibili con il prodotto
+ * - La quantità viene inserita direttamente dall'utente nel campo di testo.
+ * - Le unità mostrate sono solo quelle compatibili con il prodotto.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -51,10 +41,8 @@ fun QuantityUnitPicker(
     errorQuantity: String?,
     errorUnit: String?,
 ) {
-    val colors = togoColors()
     val typography = togoTypography()
     val spacing = togoSpacing()
-    val quantity = parseQuantityText(quantityText) ?: 0.0
 
     Column(
         modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.space2),
@@ -67,88 +55,47 @@ fun QuantityUnitPicker(
         ) {
             Text("Quantità", style = typography.sectionHeader, color = togoColors().inkPrimary)
 
-            // Stepper
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(spacing.space2),
-            ) {
-                // Pulsante meno
-                Button(
-                    onClick = {
-                        onQuantityChange(
-                            formatQuantityText(maxOf(0.1, quantity - getStep(quantity)))
-                        )
-                    },
-                    modifier = Modifier.size(48.dp),
-                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                        containerColor = togoColors().surfaceSubtle,
-                        contentColor = togoColors().inkPrimary,
-                    ),
-                    shape = RoundedCornerShape(8.dp),
-                ) {
-                    Text("−", style = typography.titleScreen, color = togoColors().inkPrimary)
-                }
-
-                // Valore quantità (modificabile)
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = spacing.space3)
-                        .background(
-                            color = togoColors().surfaceCard,
-                            shape = RoundedCornerShape(8.dp),
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = if (errorQuantity != null) togoColors().accentWarning else togoColors().borderHairline,
-                            shape = RoundedCornerShape(8.dp),
-                        ),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    androidx.compose.material3.TextField(
-                        value = quantityText,
-                        onValueChange = onQuantityChange,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
-                        singleLine = true,
-                        textStyle = togoTypography().itemName,
-                        colors = androidx.compose.material3.TextFieldDefaults.colors(
-                            focusedTextColor = togoColors().inkPrimary,
-                            unfocusedTextColor = togoColors().inkPrimary,
-                            cursorColor = togoColors().accentHighlight,
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            disabledIndicatorColor = Color.Transparent,
-                            errorIndicatorColor = togoColors().accentWarning,
-                            errorContainerColor = Color.Transparent,
-                        ),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal,
-                            imeAction = androidx.compose.ui.text.input.ImeAction.Next,
-                        ),
-                        label = { Text("Quantità", style = togoTypography().caption, color = togoColors().inkSecondary) },
+            // Campo quantità modificabile direttamente con la tastiera.
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        color = togoColors().surfaceCard,
+                        shape = RoundedCornerShape(8.dp),
                     )
-                }
-
-                // Pulsante più
-                Button(
-                    onClick = {
-                        onQuantityChange(
-                            formatQuantityText(minOf(9999.0, quantity + getStep(quantity)))
-                        )
-                    },
-                    modifier = Modifier.size(48.dp),
-                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                        containerColor = togoColors().surfaceSubtle,
-                        contentColor = togoColors().inkPrimary,
+                    .border(
+                        width = 1.dp,
+                        color = if (errorQuantity != null) togoColors().accentWarning else togoColors().borderHairline,
+                        shape = RoundedCornerShape(8.dp),
                     ),
-                    shape = RoundedCornerShape(8.dp),
-                ) {
-                    Text("+", style = typography.titleScreen, color = togoColors().inkPrimary)
-                }
+                contentAlignment = Alignment.Center,
+            ) {
+                androidx.compose.material3.TextField(
+                    value = quantityText,
+                    onValueChange = onQuantityChange,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    singleLine = true,
+                    textStyle = togoTypography().itemName,
+                    colors = androidx.compose.material3.TextFieldDefaults.colors(
+                        focusedTextColor = togoColors().inkPrimary,
+                        unfocusedTextColor = togoColors().inkPrimary,
+                        cursorColor = togoColors().accentHighlight,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                        errorIndicatorColor = togoColors().accentWarning,
+                        errorContainerColor = Color.Transparent,
+                    ),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal,
+                        imeAction = androidx.compose.ui.text.input.ImeAction.Next,
+                    ),
+                    label = { Text("Quantità", style = togoTypography().caption, color = togoColors().inkSecondary) },
+                )
             }
 
             if (errorQuantity != null) {
@@ -247,9 +194,4 @@ private fun UnitChip(
             style = typography.itemMeta.copy(color = if (selected) colors.inkInverse else colors.inkPrimary),
         )
     }
-}
-
-/** Determina step per unità */
-private fun getStep(quantity: Double): Double {
-    return if (quantity < 10) 0.1 else 1.0
 }
