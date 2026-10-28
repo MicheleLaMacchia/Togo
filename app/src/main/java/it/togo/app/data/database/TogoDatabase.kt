@@ -31,7 +31,7 @@ import it.togo.app.data.database.entity.UserAttributeEntity
         UserAttributeEntity::class
     ],
     version = 5,
-    exportSchema = false
+    exportSchema = true
 )
 abstract class TogoDatabase : RoomDatabase() {
 

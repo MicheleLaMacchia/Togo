@@ -49,11 +49,27 @@ android {
             isIncludeAndroidResources = true
         }
     }
+    sourceSets {
+        // Story 8.1: `MigrationTestHelper` legge gli schemi dagli asset
+        // dell'app sotto test. Nei unit test Robolectric la variante usata è
+        // `debug`: il solo source set `test` non viene merged negli asset
+        // letti da Robolectric, quindi gli schemi vanno aggiunti qui.
+        // Restano esclusi dalla release.
+        getByName("debug").assets.srcDir("$projectDir/schemas")
+        getByName("test").assets.srcDir("$projectDir/schemas")
+    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+}
+
+// Story 8.1: esporta lo schema Room della versione corrente in `app/schemas`.
+// La versione del database resta 5; il file `5.json` è la baseline per la
+// futura migrazione 5→6 (Story 8.4).
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 // Robolectric scarica gli jar android-all con un fetcher Maven interno che in
@@ -114,6 +130,7 @@ dependencies {
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.sqlite.jdbc)
+    testImplementation(libs.room.testing)
     testImplementation(libs.androidx.ui.test.junit4)
     testImplementation(libs.robolectric)
     androidTestImplementation(libs.junit)
