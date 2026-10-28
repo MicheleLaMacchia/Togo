@@ -34,6 +34,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // Story 8.2: java.time (LocalDate/ZoneId) deve funzionare anche su API 24-25.
+        isCoreLibraryDesugaringEnabled = true
     }
     kotlin {
         compilerOptions {
@@ -75,8 +77,8 @@ ksp {
 // Robolectric scarica gli jar android-all con un fetcher Maven interno che in
 // Docker può fallire (SHA-512/rete) e non usa la cache Gradle. Facciamo
 // risolvere gli stessi artifact a Gradle e li passiamo a Robolectric offline.
-// Due configurazioni separate: nella stessa configurazione Gradle terrebbe una
-// sola versione dello stesso artifact, mentre servono sia SDK 34 sia SDK 35.
+// Configurazioni separate: nella stessa configurazione Gradle terrebbe una sola
+// versione dello stesso artifact, mentre servono SDK 24, 34 e 35.
 val robolectricSdk34 = configurations.create("robolectricSdk34") {
     isCanBeConsumed = false
     isCanBeResolved = true
@@ -85,9 +87,15 @@ val robolectricSdk35 = configurations.create("robolectricSdk35") {
     isCanBeConsumed = false
     isCanBeResolved = true
 }
+// Story 8.2: la matrice include API 24 per verificare java.time/desugaring.
+val robolectricSdk24 = configurations.create("robolectricSdk24") {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+}
 val prepareRobolectricDependencies = tasks.register<Copy>("prepareRobolectricDependencies") {
     from(robolectricSdk34)
     from(robolectricSdk35)
+    from(robolectricSdk24)
     into(layout.buildDirectory.dir("robolectric-dependencies"))
 }
 
@@ -101,6 +109,8 @@ tasks.withType<Test>().configureEach {
 }
 
 dependencies {
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
@@ -137,7 +147,11 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-    // SDK 34 e 35 sono gli unici usati dai test Robolectric (@Config).
+    // SDK 24, 34 e 35 sono usati dai test Robolectric (@Config).
+    add(
+        robolectricSdk24.name,
+        "org.robolectric:android-all-instrumented:7.0.0_r1-robolectric-r1-i7",
+    )
     add(
         robolectricSdk34.name,
         "org.robolectric:android-all-instrumented:14-robolectric-10818077-i7",

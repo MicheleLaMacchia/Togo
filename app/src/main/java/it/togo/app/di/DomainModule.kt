@@ -1,9 +1,13 @@
 package it.togo.app.di
 
+import it.togo.app.data.time.SystemClock
+import it.togo.app.data.time.SystemZoneIdProvider
 import it.togo.app.data.voice.AndroidVoiceRecognitionGateway
 import it.togo.app.domain.category.CategoryAssigner
 import it.togo.app.domain.category.CategoryCorrector
 import it.togo.app.domain.parser.VoiceCommandParser
+import it.togo.app.domain.time.Clock
+import it.togo.app.domain.time.ZoneIdProvider
 import it.togo.app.domain.usecase.AssignCanonicalCategoryUseCase
 import it.togo.app.domain.usecase.CorrectCategoryUseCase
 import it.togo.app.domain.usecase.CreateCanonicalProductUseCase
@@ -17,6 +21,10 @@ import org.koin.dsl.bind
 import org.koin.dsl.module
 
 val domainModule: Module = module {
+    // Time (Story 8.2) - sorgente unica per completamenti, scadenze e "Scaduto"
+    single { SystemClock() } bind Clock::class
+    single { SystemZoneIdProvider() } bind ZoneIdProvider::class
+
     // Domain UseCases - Epic 3 (Catalogo & Risoluzione)
     single { CategoryAssigner(get(), get()) }
     single { CategoryCorrector(get()) }
