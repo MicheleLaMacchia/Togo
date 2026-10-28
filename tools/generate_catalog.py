@@ -1,424 +1,73 @@
 #!/usr/bin/env python3
 """
-Generatore deterministico di app/src/main/assets/catalog.db per Story 1.4.
+Genera il catalogo Togo applicando il mapping di migrazione v2.
 
-Crea un database SQLite il cui schema coincide esattamente con le entity Room
-di TogoDatabase (tabelle, colonne, tipi, indici, user_version=1), così che
-Room possa aprirlo con createFromAsset() senza errori di validazione.
+Fonti:
+  - tools/togo_catalog_migration_mapping_v2.csv
+    (1.470 righe prodotto -> 748 prodotti canonici; le righe
+    MERGE_ID_REFERENCE_REVIEW vengono fuse nel relativo survivor)
 
-AC Story 1.4:
-  - >= 1000 prodotti canonici alimentari
-  - >= 400 prodotti canonici non alimentari
-  - ogni prodotto: level3_id NOT NULL, name non vuoto, is_user_defined = 0
-  - ordine tassonomia: Ortofrutta -> Panetteria -> Carne -> ... -> Banco Frigo
-    -> Dispensa -> Non alimentare (ancoraggio Story 2.1)
-  - deterministico (seed fisso) -> rigenerazione produce lo stesso contenuto
+Output:
+  - app/src/main/assets/catalog.db
+      asset Room con tassonomia, prodotti canonici e sinonimi.
+  - app/src/main/assets/catalog_migration_v2.sql
+      script idempotente usato dalla migrazione Room 4->5 per rimappare
+      i riferimenti utente e sostituire il catalogo sui database esistenti.
+  - catalogo.md
+      report leggibile con tutte le categorie L1/L2/L3 e tutti i prodotti.
 
-Uso: python tools/generate_catalog.py
+Uso:
+  python tools/generate_catalog.py
 """
 from __future__ import annotations
 
-import random
+import csv
 import sqlite3
 import sys
 import unicodedata
+from collections import OrderedDict
+from datetime import date
 from pathlib import Path
 
-SEED = 42
-ASSET_PATH = Path(__file__).resolve().parent.parent / "app" / "src" / "main" / "assets" / "catalog.db"
+ROOT = Path(__file__).resolve().parent.parent
+MAPPING_PATH = ROOT / "tools" / "togo_catalog_migration_mapping_v2.csv"
+ASSET_PATH = ROOT / "app" / "src" / "main" / "assets" / "catalog.db"
+MIGRATION_SQL_PATH = ROOT / "app" / "src" / "main" / "assets" / "catalog_migration_v2.sql"
+CATALOG_MD_PATH = ROOT / "catalogo.md"
 
-MIN_FOOD = 1000
-MIN_NON_FOOD = 400
-NON_FOOD_L1 = "Non alimentare"
-
-# ---------------------------------------------------------------------------
-# Tassonomia: L1 (ordine corsie) -> L2 -> L3
-# ---------------------------------------------------------------------------
-TAXONOMY: list[tuple[str, list[tuple[str, list[str]]]]] = [
-    ("Ortofrutta", [
-        ("Frutta", ["Frutta fresca", "Frutta tropicale", "Frutta secca"]),
-        ("Verdura", ["Ortaggi freschi", "Verdura confezionata", "Ortaggi da cucina"]),
-        ("Erbe e contorni", ["Erbe aromatiche", "Insalate e mix"]),
-    ]),
-    ("Panetteria", [
-        ("Pane", ["Pane tradizionale", "Pane speciale", "Pane senza glutine"]),
-        ("Panificati", ["Panificati al burro", "Panificati salati"]),
-        ("Dolci da forno", ["Dolci da forno tradizionali", "Merendine da forno"]),
-    ]),
-    ("Carne", [
-        ("Carne bovina", ["Tagli di manzo", "Carne bovina macinata", "Preparati bovini"]),
-        ("Carne suina", ["Tagli di maiale", "Preparati suini"]),
-        ("Pollame", ["Tagli di pollo", "Pollame intero", "Carni alternative"]),
-        ("Salumi freschi", ["Salsicce fresche", "Salumi cotti freschi"]),
-    ]),
-    ("Pesce", [
-        ("Pesce fresco", ["Pesce bianco fresco", "Pesce rosso fresco", "Pesce pregiato"]),
-        ("Pesce confezionato", ["Pesce in scatola", "Pesce affumicato"]),
-        ("Crostacei e molluschi", ["Molluschi", "Crostacei"]),
-    ]),
-    ("Bevande", [
-        ("Acqua e minerali", ["Acqua naturale", "Acqua frizzante"]),
-        ("Succhi e nettari", ["Succhi di frutta", "Nettari e spremute"]),
-        ("Bibite", ["Bibite gassate", "Bibite analcoliche", "Tè freddo"]),
-        ("Birra", ["Birra chiara", "Birra speciale", "Birra analcolica"]),
-        ("Vino", ["Vino rosso", "Vino bianco", "Vino spumante"]),
-    ]),
-    ("Banco Frigo", [
-        ("Latte e yogurt", ["Latte fresco", "Alternative vegetali", "Yogurt", "Yogurt speciali"]),
-        ("Formaggi", ["Formaggi freschi", "Formaggi stagionati", "Formaggi a pasta morbida", "Formaggi particolari"]),
-        ("Burro e panna", ["Burro", "Panna"]),
-        ("Surgelati", ["Ortaggi surgelati", "Preparati surgelati", "Gelati"]),
-        ("Uova", ["Uova fresche"]),
-    ]),
-    ("Dispensa", [
-        ("Pasta e riso", ["Pasta secca", "Pasta fresca", "Riso e cereali", "Couscous e polenta"]),
-        ("Oli e condimenti", ["Oli", "Aceti", "Sale e spezie"]),
-        ("Conserve", ["Conserve di pomodoro", "Legumi in scatola", "Sott'oli e sottaceti"]),
-        ("Snack e cracker", ["Salati", "Dolci", "Frutta secca"]),
-        ("Dolci e cioccolato", ["Cioccolato", "Biscotti", "Dolci e creme"]),
-        ("Caffè e tè", ["Caffè", "Tè e infusi"]),
-        ("Legumi e farine", ["Farine e lieviti", "Legumi secchi"]),
-        ("Salse e pesti", ["Salse pronte", "Condimenti pronti"]),
-    ]),
-    ("Non alimentare", [
-        ("Igiene persona", ["Igiene dentale", "Cura del corpo", "Cura dei capelli", "Rasatura e depilazione"]),
-        ("Pulizia e lavatrice", ["Detersivi per bucato", "Detersivi per piatti", "Pulizia generale"]),
-        ("Cura della casa", ["Cucina monouso", "Illuminazione e batterie", "Piccola ferramenta"]),
-        ("Cartoleria", ["Scrittura", "Cancelleria", "Materiali scolastici"]),
-        ("Articoli per animali", ["Alimentazione animali", "Cura e giochi animali"]),
-        ("Bambini e neonati", ["Pannolini e salviette", "Cura bambini"]),
-    ]),
+EXPECTED_HEADERS = [
+    "original_id",
+    "original_name",
+    "proposed_canonical_name",
+    "proposed_survivor_id",
+    "action",
+    "old_l1",
+    "old_l2",
+    "old_l3",
+    "category_conflict_in_group",
 ]
+KEEP = "KEEP"
+MERGE = "MERGE_ID_REFERENCE_REVIEW"
+EXPECTED_L1_ORDER = [
+    "Ortofrutta",
+    "Panetteria",
+    "Carne",
+    "Pesce",
+    "Bevande",
+    "Banco Frigo",
+    "Dispensa",
+    "Non alimentare",
+]
+NON_FOOD_L1 = "Non alimentare"
+EXPECTED_L1 = 8
+EXPECTED_L2 = 37
+EXPECTED_L3 = 98
+EXPECTED_PRODUCTS = 748
+EXPECTED_FOOD = 608
+EXPECTED_NON_FOOD = 140
 
-# ---------------------------------------------------------------------------
-# Basi prodotto per (L1, L2)
-# ---------------------------------------------------------------------------
-BASES: dict[tuple[str, str], list[str]] = {
-    ("Ortofrutta", "Frutta"): [
-        "Mela Golden", "Mela Renetta", "Mela Fuji", "Pera Williams", "Pera Conference",
-        "Banana", "Arancia", "Mandarina", "Limone", "Kiwi",
-        "Fragola", "Lampone", "Mirtillo", "Anguria", "Melone Cantalupo",
-        "Melone Retato", "Albicocca", "Pesca", "Pesca Nettarina", "Prugna",
-        "Ciliegia", "Uva Bianca", "Uva Nera", "Ananas", "Mango",
-        "Melagrana", "Fico", "Castagna", "Nocciola", "Cocco",
-    ],
-    ("Ortofrutta", "Verdura"): [
-        "Pomodoro Rametto", "Pomodoro Datterino", "Pomodoro Cuore di Bue", "Lattuga", "Rucola",
-        "Iceberg", "Radicchio", "Carota", "Patata", "Patata Dolce",
-        "Cipolla Rossa", "Cipolla Bianca", "Aglio", "Zucchina", "Melanzana",
-        "Peperone Rosso", "Peperone Verde", "Peperoncino", "Sedano", "Finocchio",
-        "Broccoli", "Cavolfiore", "Cavolo Nero", "Cicoria", "Barbabietola",
-        "Rapa", "Porro", "Spinaci", "Cetriolo", "Zucca",
-    ],
-    ("Ortofrutta", "Erbe e contorni"): [
-        "Basilico", "Prezzemolo", "Rosmarino", "Salvia", "Origano",
-        "Menta", "Coriandolo", "Insalata Mista", "Mix per Wok", "Olive Verdi",
-    ],
-    ("Panetteria", "Pane"): [
-        "Pane Casereccio", "Pane Toscano", "Pane Pugliese", "Pane di Segale", "Pane Integrale",
-        "Pane Francese", "Focaccia Genovese", "Focaccia Rossa", "Ciabatta", "Panino Integrale",
-        "Grissini", "Grissini Integrali", "Pane Azzimo", "Pane ai Cereali", "Panino al Sesamo",
-    ],
-    ("Panetteria", "Panificati"): [
-        "Croissant", "Cornetto", "Pane al Latte", "Brioche", "Krapfen",
-        "Muffin", "Saccottino", "Treccia", "Fagottino", "Panzerotto",
-        "Sfogliatina", "Bombolone",
-    ],
-    ("Panetteria", "Dolci da forno"): [
-        "Tortina", "Merenda Dolce", "Frolla", "Ciambella", "Pan di Spagna",
-        "Torta allo Yogurt", "Crostatina", "Eclair", "Tartufo Dolce", "Brioche Farcita",
-        "Frollino", "Camoscio",
-    ],
-    ("Carne", "Carne bovina"): [
-        "Tagliata di Manzo", "Filetto di Manzo", "Carpaccio", "Hamburger di Manzo", "Polpettone",
-        "Costine di Manzo", "Stufato di Manzo", "Brasato", "Roastbeef", "Trancio di Manzo",
-        "Sottofiletto", "Involtino di Manzo", "Straccetti di Manzo", "Goulash", "Bistecca",
-    ],
-    ("Carne", "Carne suina"): [
-        "Costine di Maiale", "Pancetta", "Guanciale", "Lonza di Maiale", "Lombo di Maiale",
-        "Salsiccia", "Salsiccia di Caccia", "Porchetta", "Pancetta Arrotolata", "Filetto di Maiale",
-        "Straccetti di Maiale", "Tagliatelle di Maiale",
-    ],
-    ("Carne", "Pollame"): [
-        "Petto di Pollo", "Cosce di Pollo", "Sovracosce", "Ali di Pollo", "Tacchino a Fette",
-        "Faraona", "Coniglio", "Salsiccia di Pollo", "Hamburger di Pollo", "Straccetti di Pollo",
-        "Coscia di Tacchino", "Petto di Tacchino",
-    ],
-    ("Carne", "Salumi freschi"): [
-        "Salsiccia Fresca", "Cotechino", "Zampone", "Luganiga", "Salsiccia di Suino",
-        "Bolognese Fresco", "Polpa di Suino", "Coppa di Suino", "Porchetta Aromatica", "Salsiccia Piccante",
-        "Salsiccia Dolce", "Wurstel Fresco",
-    ],
-    ("Pesce", "Pesce fresco"): [
-        "Salmone Fresco", "Tonno Fresco", "Branzino", "Orata", "Spigola",
-        "Merluzzo", "Acciughe", "Sardine", "Triglia", "Cefalo",
-        "Pesce Spada", "Ricciola", "Branzino di Allevamento", "Trota", "Sgombro",
-    ],
-    ("Pesce", "Pesce confezionato"): [
-        "Tonno in Olio", "Tonno al Naturale", "Salmone Affumicato", "Sgombro in Olio", "Sardine in Olio",
-        "Merluzzo in Olio", "Tonno all'Acqua", "Surimi", "Polpa di Granchio", "Codero Affumicato",
-    ],
-    ("Pesce", "Crostacei e molluschi"): [
-        "Gamberi Rossi", "Gamberi Tigre", "Scampi", "Astici", "Mazzancolle",
-        "Cozze", "Vongole Veraci", "Seppie", "Calamari", "Polpo",
-    ],
-    ("Bevande", "Acqua e minerali"): [
-        "Acqua Naturale", "Acqua Frizzante", "Acqua Leggermente Frizzante", "Acqua Termale", "Acqua Leggera",
-        "Acqua con Ginseng", "Acqua Medium", "Acqua Plateale", "Acqua Pétillante", "Acqua Alpina",
-    ],
-    ("Bevande", "Succhi e nettari"): [
-        "Succo di Arancia", "Succo di Mela", "Succo di Pera", "Succo di Ananas", "Succo di Carota",
-        "Spremuta d'Arancia", "Succo di Melagrana", "Succo di Kiwi", "Succo di Fragola", "Nettaro di Pesca",
-        "Succo di Pompelmo", "Succo Multifrutta",
-    ],
-    ("Bevande", "Bibite"): [
-        "Cola", "Cola Zero", "Cola Light", "Limonata", "Aranciata",
-        "Chinotto", "Tè Freddo Pesca", "Energy Drink", "Ginger Ale", "Soda",
-        "Tè Freddo Limone", "Bibita al Malto",
-    ],
-    ("Bevande", "Birra"): [
-        "Birra Chiara", "Birra Bionda", "Birra Rossa", "Birra IPA", "Birra Weizen",
-        "Birra Zero", "Birra Senza Alcol", "Birra Ambrata", "Birra Artigianale", "Birra Lager",
-    ],
-    ("Bevande", "Vino"): [
-        "Vino Rosso", "Vino Bianco", "Vino Rosé", "Prosecco", "Chianti",
-        "Merlot", "Cabernet", "Pinot Grigio", "Montepulciano", "Lambrusco",
-    ],
-    ("Banco Frigo", "Latte e yogurt"): [
-        "Latte Intero", "Latte Parz. Scremato", "Latte Scremato", "Latte di Soia", "Latte di Avena",
-        "Latte di Mandorla", "Latte di Cocco", "Yogurt Bianco", "Yogurt Greco", "Yogurt alla Frutta",
-        "Kefir", "Yogurt da Bere", "Yogurt alla Vaniglia", "Yogurt ai Frutti Rossi", "Fiordilatte Fresco",
-        "Latte UHT Intero", "Latte Fresco", "Yogurt Skyr", "Crema di Yogurt", "Formaggio Spalmabile",
-    ],
-    ("Banco Frigo", "Formaggi"): [
-        "Mozzarella", "Fiordilatte", "Grana Padano", "Parmigiano Reggiano", "Pecorino Romano",
-        "Gorgonzola", "Taleggio", "Robiola", "Brie", "Camembert",
-        "Emmental", "Edamer", "Fontina", "Provolone", "Ricotta",
-        "Stracchino", "Mascarpone", "Caprino", "Casatella", "Toma",
-    ],
-    ("Banco Frigo", "Burro e panna"): [
-        "Burro Dolce", "Burro Intero", "Burro di Centrifuga", "Burro Affumicato", "Burro Salato",
-        "Panna da Cucina", "Panna Montabile", "Panna Addensante", "Panna da Montare", "Crema di Burro",
-    ],
-    ("Banco Frigo", "Surgelati"): [
-        "Verdure Miste Surgelate", "Piselli Surgelati", "Mais Surgelato", "Patatine Fritte Surgelate", "Pizza Surgelata",
-        "Lasagne Surgelate", "Ghiaccioli", "Sorbetto al Limone", "Tortellini Surgelati", "Hamburger Surgelato",
-        "Filetti di Pesce Surgelati", "Frutti di Bosco Surgelati", "Polenta Surgelata", "Croccantini Surgelati", "Insalata Surgelata",
-    ],
-    ("Banco Frigo", "Uova"): [
-        "Uova Fresche", "Uova Biologiche", "Uova da Galline all'Aperto", "Uova di Codornice", "Tuorlo d'Uovo",
-    ],
-    ("Dispensa", "Pasta e riso"): [
-        "Spaghetti", "Penne", "Fusilli", "Rigatoni", "Farfalle",
-        "Orecchiette", "Tagliatelle", "Pappardelle", "Lasagne", "Gnocchi",
-        "Riso Carnaroli", "Riso Basmati", "Riso Arborio", "Riso Integrale", "Quinoa",
-        "Couscous", "Polenta", "Spaghettini", "Mezze Penne", "Stelline",
-    ],
-    ("Dispensa", "Oli e condimenti"): [
-        "Olio Extra Vergine di Oliva", "Olio di Semi", "Olio di Colza", "Aceto Balsamico", "Aceto di Vino",
-        "Aceto di Mele", "Sale Marino", "Sale Iodato", "Pepe Nero", "Paprika",
-        "Curcuma", "Zenzero in Polvere",
-    ],
-    ("Dispensa", "Conserve"): [
-        "Pomodori Pelati", "Passata di Pomodoro", "Salsa di Pomodoro", "Mais in Lattina", "Fagioli in Lattina",
-        "Ceci in Lattina", "Olive in Vaso", "Cetriolini", "Peperoni Arrostiti", "Melanzane Sott'olio",
-        "Fagioli Borlotti", "Lenticchie in Conserve", "Funghi in Vaso", "Sugo Pronto", "Cruda di Pomodoro",
-    ],
-    ("Dispensa", "Snack e cracker"): [
-        "Cracker", "Gallette", "Patatine", "Chips di Patate", "Popcorn",
-        "Barretta ai Cereali", "Noccioline", "Mandorle da Snack", "Frutta Secca Mista", "Taralli",
-        "Stuzzichini", "Cracker Integrali",
-    ],
-    ("Dispensa", "Dolci e cioccolato"): [
-        "Cioccolato Fondente", "Cioccolato al Latte", "Cioccolato Bianco", "Tavoletta al Cereale", "Biscotti",
-        "Merendine", "Wafer", "Tortina al Cioccolato", "Frollini", "Crema da Spalmare",
-        "Caramelle", "Marshmallow",
-    ],
-    ("Dispensa", "Caffè e tè"): [
-        "Caffè in Grani", "Caffè Macinato", "Caffè Decaffeinato", "Caffè in Cialde", "Caffè in Capsule",
-        "Tè Nero", "Tè Verde", "Tè alla Menta", "Camomilla", "Infuso Rilassante",
-        "Matcha", "Cacao in Polvere",
-    ],
-    ("Dispensa", "Legumi e farine"): [
-        "Farina 00", "Farina Integrale", "Farina di Grano Tenero", "Lievito", "Fagioli Cannellini",
-        "Lenticchie Secche", "Cicerchie", "Farro", "Orzo Perlato", "Ceci Secchi",
-        "Amido di Mais", "Semola Rimacinata",
-    ],
-    ("Dispensa", "Salse e pesti"): [
-        "Pesto Genovese", "Salsa di Soia", "Salsa Barbecue", "Salsa Piccante", "Ketchup",
-        "Maionese", "Senape", "Hummus", "Guacamole", "Salsa Piccante Messicana",
-        "Salsa Alfredo", "Tahina",
-    ],
-    ("Non alimentare", "Igiene persona"): [
-        "Sapone da Mani", "Gel Doccia", "Shampoo", "Balsamo", "Dentifricio",
-        "Spazzolino da Denti", "Filo Interdentale", "Deodorante", "Rasoi", "Schiuma da Barba",
-        "Crema Idratante", "Crema Solare", "Cotone Idrofilo", "Bagnoschiuma", "Liquido Lavapanni",
-        "Collutorio", "Balsamo Labbra", "Maschera Viso", "Soluzione Contatti", "Spazzolino Interdentale",
-    ],
-    ("Non alimentare", "Pulizia e lavatrice"): [
-        "Detersivo Piatti", "Detersivo Biancheria", "Ammorbidente", "Disinfettante", "Sgrassatore",
-        "Pulitore Multiuso", "Sacchi della Spazzatura", "Guanti Monouso", "Candeggina", "Deodorante per Ambienti",
-        "Detersivo Pavimenti", "Detersivo in Polvere", "Liquido Lavastoviglie", "Tablet Lavastoviglie", "Sapone di Marsiglia",
-        "Panetto per Lavatrice", "Spray Anticalcare", "Acqua Ossigenata", "Detersivo Delicato", "Sgrassatore Eco",
-    ],
-    ("Non alimentare", "Cura della casa"): [
-        "Candele", "Fiammiferi", "Batterie", "Lampadine", "Pellicola Trasparente",
-        "Carta Alluminio", "Carta Forno", "Carta Accappatoio", "Spago da Cucina", "Stoviglie Monouso",
-        "Fornetto Monouso", "Filo da Stendere", "Spazzola da Bucato", "Ganci da Stendere", "Fazzoletti da Tavolo",
-    ],
-    ("Non alimentare", "Cartoleria"): [
-        "Penna Blu", "Penna Nera", "Matita", "Gomma", "Righello",
-        "Quaderno", "Blocco Note", "Colla", "Forbici", "Segnalibri",
-        "Cartelline", "Penne da Evidenziatore", "Agenda", "Calcolatrice", "Collo",
-    ],
-    ("Non alimentare", "Articoli per animali"): [
-        "Croccantini Cane", "Croccantini Gatto", "Sabbietta Gatto", "Giochi per Cane", "Collare",
-        "Guinzaglio", "Ciotola", "Lettiera", "Snack per Cane", "Shampoo per Animali",
-        "Spazzola per Animali", "Bocconcini in Conserve",
-    ],
-    ("Non alimentare", "Bambini e neonati"): [
-        "Pannolini", "Salviette Bimbo", "Schiuma Bagno Bimbo", "Shampoo Bimbo", "Crema Emolliente Bimbo",
-        "Latte in Polvere", "Biberon", "Ciuccio", "Poppatoio", "Asciugamano Bimbo",
-        "Detersivo Bimbo", "Mascherina Bimbo",
-    ],
-}
-
-# ---------------------------------------------------------------------------
-# Voci generiche curate: il nome "bare" che l'utente cerca davvero
-# ("Tonno", "Pane", "Pasta", ...). Vengono accodate alle basi della coppia
-# (L1, L2) e assegnate a un Livello 3 scelto a mano, invece che a rotazione
-# come le altre basi. Non sostituiscono le varianti: "tonno" trova "Tonno"
-# oltre a "Tonno in Olio", "Tonno all'Acqua", ...
-# ---------------------------------------------------------------------------
-GENERIC_PRODUCTS: dict[tuple[str, str], list[tuple[str, str]]] = {
-    ("Panetteria", "Pane"): [
-        ("Pane", "Pane tradizionale"),
-    ],
-    ("Carne", "Carne bovina"): [
-        ("Manzo", "Tagli di manzo"),
-    ],
-    ("Carne", "Carne suina"): [
-        ("Maiale", "Tagli di maiale"),
-    ],
-    ("Carne", "Pollame"): [
-        ("Pollo", "Pollame intero"),
-    ],
-    ("Pesce", "Pesce confezionato"): [
-        ("Tonno", "Pesce in scatola"),
-    ],
-    ("Bevande", "Acqua e minerali"): [
-        ("Acqua", "Acqua naturale"),
-    ],
-    ("Bevande", "Birra"): [
-        ("Birra", "Birra chiara"),
-    ],
-    ("Bevande", "Vino"): [
-        ("Vino", "Vino rosso"),
-    ],
-    ("Banco Frigo", "Latte e yogurt"): [
-        ("Latte", "Latte fresco"),
-        ("Yogurt", "Yogurt"),
-    ],
-    ("Banco Frigo", "Burro e panna"): [
-        ("Burro", "Burro"),
-        ("Panna", "Panna"),
-    ],
-    ("Banco Frigo", "Uova"): [
-        ("Uova", "Uova fresche"),
-    ],
-    ("Dispensa", "Pasta e riso"): [
-        ("Pasta", "Pasta secca"),
-        ("Riso", "Riso e cereali"),
-    ],
-    ("Dispensa", "Oli e condimenti"): [
-        ("Olio", "Oli"),
-        ("Aceto", "Aceti"),
-        ("Sale", "Sale e spezie"),
-    ],
-    ("Dispensa", "Conserve"): [
-        ("Pelati", "Conserve di pomodoro"),
-        ("Sugo", "Conserve di pomodoro"),
-    ],
-    ("Dispensa", "Dolci e cioccolato"): [
-        ("Zucchero", "Dolci e creme"),
-        ("Miele", "Dolci e creme"),
-        ("Marmellata", "Dolci e creme"),
-        ("Cioccolato", "Cioccolato"),
-    ],
-    ("Dispensa", "Caffè e tè"): [
-        ("Caffè", "Caffè"),
-        ("Tè", "Tè e infusi"),
-    ],
-    ("Dispensa", "Legumi e farine"): [
-        ("Farina", "Farine e lieviti"),
-        ("Legumi", "Legumi secchi"),
-    ],
-    ("Non alimentare", "Igiene persona"): [
-        ("Sapone", "Cura del corpo"),
-    ],
-    ("Non alimentare", "Pulizia e lavatrice"): [
-        ("Detersivo", "Detersivi per bucato"),
-    ],
-}
-
-# ---------------------------------------------------------------------------
-# Modificatori per (L1, L2) — il primo elemento "" genera le basi nude
-# ---------------------------------------------------------------------------
-MODIFIERS: dict[tuple[str, str], list[str]] = {
-    ("Ortofrutta", "Frutta"): ["", "Bio", "in confezione da 500 g", "in confezione da 1 kg", "Selezione", "Mini"],
-    ("Ortofrutta", "Verdura"): ["", "Bio", "in confezione da 500 g", "in confezione da 1 kg", "Selezione", "Baby"],
-    ("Ortofrutta", "Erbe e contorni"): ["", "Bio", "in vaso", "in bustina", "Selezione", "Misto"],
-    ("Panetteria", "Pane"): ["", "Bio", "in confezione da 2", "in confezione da 4", "Senza Glutine", "Integrale"],
-    ("Panetteria", "Panificati"): ["", "Bio", "in confezione da 4", "in confezione da 6", "Farcito", "Classico"],
-    ("Panetteria", "Dolci da forno"): ["", "Bio", "in confezione da 4", "in confezione da 8", "Senza Glutine", "Classico"],
-    ("Carne", "Carne bovina"): ["", "Bio", "in confezione da 400 g", "in confezione da 1 kg", "in Meno Grasso", "Selezione"],
-    ("Carne", "Carne suina"): ["", "Bio", "in confezione da 400 g", "in confezione da 1 kg", "Affumicato", "Piccante"],
-    ("Carne", "Pollame"): ["", "Bio", "in confezione da 400 g", "in confezione da 1 kg", "alla Griglia", "in Meno Grasso"],
-    ("Carne", "Salumi freschi"): ["", "in confezione da 400 g", "in confezione da 1 kg", "Piccante", "Classico", "Senza Glutine"],
-    ("Pesce", "Pesce fresco"): ["", "in confezione da 300 g", "in confezione da 500 g", "Surgelato", "in Filetti", "in Tranci"],
-    ("Pesce", "Pesce confezionato"): ["", "in lattina da 160 g", "in lattina da 250 g", "Bio", "in Olio EVO", "al Naturale"],
-    ("Pesce", "Crostacei e molluschi"): ["", "Surgelato", "in confezione da 300 g", "in Salamoia", "Classico", "Surgelati IQF"],
-    ("Bevande", "Acqua e minerali"): ["", "da 500 ml", "da 1 L", "da 1,5 L", "Pack da 6", "Pack da 12"],
-    ("Bevande", "Succhi e nettari"): ["", "da 1 L", "da 200 ml", "Pack da 6", "Senza Zucchero", "Bio"],
-    ("Bevande", "Bibite"): ["", "da 1 L", "da 330 ml", "Pack da 6", "Pack da 12", "Zero Zuccheri"],
-    ("Bevande", "Birra"): ["", "da 330 ml", "Pack da 6", "Pack da 12", "da 660 ml", "Artigianale"],
-    ("Bevande", "Vino"): ["", "da 1 L", "da 750 ml", "Riserva", "Doc", "Bio"],
-    ("Banco Frigo", "Latte e yogurt"): ["", "in confezione da 6", "in confezione da 12", "Bio", "da 500 g", "Senza Lattosio"],
-    ("Banco Frigo", "Formaggi"): ["", "in confezione da 200 g", "in confezione da 400 g", "Bio", "a Pasta Dura", "Stagionato"],
-    ("Banco Frigo", "Burro e panna"): ["", "in confezione da 250 g", "in confezione da 500 g", "Bio", "in Porzioni", "da 1 kg"],
-    ("Banco Frigo", "Surgelati"): ["", "in confezione da 400 g", "in confezione da 1 kg", "Bio", "in Porzioni", "Family Pack"],
-    ("Banco Frigo", "Uova"): ["", "con 6 uova", "con 10 uova", "con 15 uova", "con 20 uova", "con 30 uova", "Bio", "in Confezione da 15"],
-    ("Dispensa", "Pasta e riso"): ["", "in confezione da 500 g", "in confezione da 1 kg", "Bio", "Integrale", "Senza Glutine"],
-    ("Dispensa", "Oli e condimenti"): ["", "da 500 ml", "da 1 L", "Bio", "in Confezione da 2", "Extra"],
-    ("Dispensa", "Conserve"): ["", "in lattina da 400 g", "in barattolo da 500 g", "Bio", "in Confezione da 2", "in Vaso"],
-    ("Dispensa", "Snack e cracker"): ["", "in confezione da 200 g", "in confezione da 400 g", "Bio", "in Porzioni", "Senza Glutine"],
-    ("Dispensa", "Dolci e cioccolato"): ["", "in confezione da 100 g", "in confezione da 200 g", "Bio", "Senza Zucchero", "in Porzioni"],
-    ("Dispensa", "Caffè e tè"): ["", "in confezione da 250 g", "in confezione da 500 g", "Bio", "Decaffeinato", "in Bustine"],
-    ("Dispensa", "Legumi e farine"): ["", "in confezione da 1 kg", "in confezione da 500 g", "Bio", "in Lattina", "in Sacchetto"],
-    ("Dispensa", "Salse e pesti"): ["", "in barattolo da 200 g", "in confezione da 500 ml", "Bio", "in Porzioni", "Piccante"],
-    ("Non alimentare", "Igiene persona"): ["", "da 500 ml", "da 250 ml", "Pack da 3", "Extra", "Eco"],
-    ("Non alimentare", "Pulizia e lavatrice"): ["", "da 1 L", "da 2,5 L", "da 5 L", "Concentrato", "Eco", "in Polvere"],
-    ("Non alimentare", "Cura della casa"): ["", "Pack da 3", "Pack da 6", "da 10 pezzi", "Ricaricabile", "Eco", "da 20 pezzi"],
-    ("Non alimentare", "Cartoleria"): ["", "Pack da 3", "Pack da 10", "da 12 pezzi", "Extra", "Scolastico", "Pack da 5"],
-    ("Non alimentare", "Articoli per animali"): ["", "in confezione da 1 kg", "in confezione da 3 kg", "Pack da 2", "Eco", "in confezione da 500 g", "Family Pack"],
-    ("Non alimentare", "Bambini e neonati"): ["", "Pack da 2", "Pack da 4", "in confezione da 1 L", "Extra Delicato", "Pack da 6", "Eco"],
-}
-
-# Conteggio prodotti target per L1 (alimentari >= 1000, non alimentari >= 400)
-L1_TARGET: dict[str, int] = {
-    "Ortofrutta": 120,
-    "Panetteria": 90,
-    "Carne": 120,
-    "Pesce": 70,
-    "Bevande": 130,
-    "Banco Frigo": 200,
-    "Dispensa": 320,
-    "Non alimentare": 420,
-}
-
-# ---------------------------------------------------------------------------
-# DDL identica allo schema Room atteso
-# ---------------------------------------------------------------------------
+# Schema identico all'asset Room di partenza (user_version = 1).
+# Le migrazioni Room 1->2, 2->3, 3->4 e 4->5 portano il DB alla versione 5.
 DDL = [
     "CREATE TABLE TAXONOMY_LEVEL_1 (id INTEGER NOT NULL, name TEXT NOT NULL, sortOrder INTEGER NOT NULL, PRIMARY KEY(id))",
     "CREATE INDEX idx_taxonomy_l1_sort ON TAXONOMY_LEVEL_1(sortOrder)",
@@ -449,426 +98,702 @@ DDL = [
 ]
 
 EXPECTED_TABLES = {
-    "TAXONOMY_LEVEL_1", "TAXONOMY_LEVEL_2", "TAXONOMY_LEVEL_3",
-    "CANONICAL_PRODUCT", "SYNONYM",
-    "SHOPPING_ITEM", "HISTORICAL_ITEM", "LEARNED_RULE",
+    "TAXONOMY_LEVEL_1",
+    "TAXONOMY_LEVEL_2",
+    "TAXONOMY_LEVEL_3",
+    "CANONICAL_PRODUCT",
+    "SYNONYM",
+    "SHOPPING_ITEM",
+    "HISTORICAL_ITEM",
+    "LEARNED_RULE",
 }
 
-# Schema atteso come generato da Room (nome colonna, tipo, in NOT NULL, PK).
-# PK "primal rowid alias" (SYNONYM.id) e' nullable per SQLite ma Room la tratta
-# come NOT NULL: la verifica tiene conto solo di (nome, tipo) per le righe PK.
-EXPECTED_COLUMNS: dict[str, list[tuple[str, str, bool, bool]]] = {
-    "TAXONOMY_LEVEL_1": [
-        ("id", "INTEGER", False, True), ("name", "TEXT", True, False),
-        ("sortOrder", "INTEGER", True, False),
-    ],
-    "TAXONOMY_LEVEL_2": [
-        ("id", "INTEGER", False, True), ("level1_id", "INTEGER", True, False),
-        ("name", "TEXT", True, False), ("sortOrder", "INTEGER", True, False),
-    ],
-    "TAXONOMY_LEVEL_3": [
-        ("id", "INTEGER", False, True), ("level2_id", "INTEGER", True, False),
-        ("name", "TEXT", True, False), ("sortOrder", "INTEGER", True, False),
-        ("is_user_defined", "INTEGER", True, False),
-    ],
-    "CANONICAL_PRODUCT": [
-        ("id", "INTEGER", False, True), ("level3_id", "INTEGER", True, False),
-        ("name", "TEXT", True, False), ("is_user_defined", "INTEGER", True, False),
-    ],
-    "SYNONYM": [
-        ("id", "INTEGER", True, True), ("product_id", "INTEGER", True, False),
-        ("term", "TEXT", True, False),
-    ],
-    "SHOPPING_ITEM": [
-        ("id", "TEXT", False, True), ("productId", "INTEGER", True, False),
-        ("quantity", "REAL", True, False), ("unit", "TEXT", True, False),
-        ("brand", "TEXT", False, False), ("variant", "TEXT", False, False),
-        ("condition", "TEXT", False, False), ("isChecked", "INTEGER", True, False),
-        ("createdAt", "INTEGER", True, False), ("updatedAt", "INTEGER", True, False),
-    ],
-    "HISTORICAL_ITEM": [
-        ("id", "TEXT", False, True), ("productId", "INTEGER", True, False),
-        ("lastQuantity", "REAL", True, False), ("lastUnit", "TEXT", True, False),
-        ("purchasedAt", "INTEGER", True, False), ("purchaseCount", "INTEGER", True, False),
-    ],
-    "LEARNED_RULE": [
-        ("id", "TEXT", False, True), ("userExpression", "TEXT", True, False),
-        ("productId", "INTEGER", True, False), ("level3Id", "INTEGER", True, False),
-        ("lastAppliedAt", "INTEGER", True, False), ("isActive", "INTEGER", True, False),
-    ],
+EXPECTED_INDICES = {
+    "idx_taxonomy_l1_sort",
+    "idx_taxonomy_l2_l1",
+    "idx_taxonomy_l2_sort",
+    "idx_taxonomy_l3_l2",
+    "idx_taxonomy_l3_sort",
+    "idx_taxonomy_l3_user_defined",
+    "idx_canonical_product_l3",
+    "idx_canonical_product_name",
+    "idx_canonical_product_user_defined",
+    "idx_synonym_product_id",
+    "idx_synonym_term",
+    "idx_shopping_item_product_id",
+    "idx_shopping_item_checked",
+    "idx_historical_item_product_id",
+    "idx_historical_item_purchased_at",
+    "idx_learned_rule_expression",
+    "idx_learned_rule_product_id",
+    "idx_learned_rule_active",
 }
 
-# (indice, colonne, unique)
-EXPECTED_INDICES: dict[str, set[tuple[str, tuple[str, ...], bool]]] = {
-    "TAXONOMY_LEVEL_1": {("idx_taxonomy_l1_sort", ("sortOrder",), False)},
-    "TAXONOMY_LEVEL_2": {
-        ("idx_taxonomy_l2_l1", ("level1_id",), False),
-        ("idx_taxonomy_l2_sort", ("sortOrder",), False),
-    },
-    "TAXONOMY_LEVEL_3": {
-        ("idx_taxonomy_l3_l2", ("level2_id",), False),
-        ("idx_taxonomy_l3_sort", ("sortOrder",), False),
-        ("idx_taxonomy_l3_user_defined", ("is_user_defined",), False),
-    },
-    "CANONICAL_PRODUCT": {
-        ("idx_canonical_product_l3", ("level3_id",), False),
-        ("idx_canonical_product_name", ("name",), False),
-        ("idx_canonical_product_user_defined", ("is_user_defined",), False),
-    },
-    "SYNONYM": {
-        ("idx_synonym_product_id", ("product_id",), False),
-        ("idx_synonym_term", ("term",), False),
-    },
-    "SHOPPING_ITEM": {
-        ("idx_shopping_item_product_id", ("productId",), False),
-        ("idx_shopping_item_checked", ("isChecked",), False),
-    },
-    "HISTORICAL_ITEM": {
-        ("idx_historical_item_product_id", ("productId",), False),
-        ("idx_historical_item_purchased_at", ("purchasedAt",), False),
-    },
-    "LEARNED_RULE": {
-        ("idx_learned_rule_expression", ("userExpression",), True),
-        ("idx_learned_rule_product_id", ("productId",), False),
-        ("idx_learned_rule_active", ("isActive",), False),
-    },
-}
+MONTHS_IT = [
+    "gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno",
+    "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre",
+]
 
 
-def expand_names(
-    l1: str,
-    l2: str,
-    target: int,
-    rng: random.Random,
-    generic_names: list[str] | None = None,
-) -> list[str]:
-    """Genera esattamente `target` nomi prodotto unici per la coppia (l1, l2).
-
-    `generic_names` sono le voci generiche curate (es. "Pane", "Tonno").
-    Vengono accodate alle basi esistenti (non anteposte) per non cambiare
-    l'assegnazione storica ai Livelli 3 delle altre voci; la loro categoria
-    viene poi scelta a mano in `main`.
-    """
-    generics = list(generic_names or [])
-    bases = [b for b in BASES[(l1, l2)] if b not in generics] + generics
-    mods = [m for m in MODIFIERS[(l1, l2)] if m]  # solo modificatori non vuoti
-
-    capacity = len(bases) * (1 + len(mods))
-    eff_pool = {*bases} | {f"{b} {m}" for b in bases for m in mods}
-    if len(eff_pool) < target:
-        raise RuntimeError(
-            f"Capacita' effettiva {len(eff_pool)} (basi x modificatori con collissioni)"
-            f" insufficiente per {l1}/{l2}: {target} richiesti"
-        )
-    if capacity < target:
-        raise RuntimeError(
-            f"Capacita' insufficiente per {l1}/{l2}: {capacity} < {target}"
-        )
-
-    names: list[str] = []
-    seen: set[str] = set()
-
-    def add(name: str) -> None:
-        if name not in seen and len(names) < target:
-            seen.add(name)
-            names.append(name)
-
-    # Prima passata: basi nude
-    for b in bases:
-        add(b)
-    # Seconda passata: basi x modificatori in ordine deterministico
-    order = list(bases)
-    rng.shuffle(order)
-    mi = 0
-    guard = 0
-    while len(names) < target:
-        guard += 1
-        if guard > (target + len(mods) + 2):
-            raise RuntimeError(f"{l1}/{l2}: loop non converge")
-        mod = mods[mi % len(mods)]
-        mi += 1
-        for b in order:
-            if len(names) >= target:
-                break
-            add(f"{b} {mod}")
-    if len(names) != target:
-        raise RuntimeError(f"{l1}/{l2}: generati {len(names)} != {target}")
-    missing = [g for g in generics if g not in seen]
-    if missing:
-        raise RuntimeError(
-            f"{l1}/{l2}: voci generiche non inserite (target {target}): {missing}"
-        )
-    return names
+def fail(message: str) -> None:
+    raise SystemExit(f"ERRORE: {message}")
 
 
-def verify_schema(conn: sqlite3.Connection) -> list[str]:
-    """Verifica struttura (colonne + indici) contro lo schema atteso Room."""
-    errors: list[str] = []
+def parse_int(value: str, field: str, line_no: int) -> int:
+    try:
+        return int(value)
+    except ValueError:
+        fail(f"riga {line_no}: {field} non intero: {value!r}")
 
-    for table, expected_cols in EXPECTED_COLUMNS.items():
-        cur = conn.execute(f"PRAGMA table_info({table})")
-        actual = cur.fetchall()  # (cid, name, type, notnull, dflt, pk)
-        if not actual:
-            errors.append(f"tabella assente: {table}")
-            continue
-        by_name = {r[1]: r for r in actual}
-        for name, typ, not_null, is_pk in expected_cols:
-            row = by_name.get(name)
-            if row is None:
-                errors.append(f"{table}: colonna mancante {name}")
-                continue
-            if row[2].upper() != typ:
-                errors.append(f"{table}.{name}: tipo {row[2]} != {typ}")
-            # row: (cid, name, type, notnull, dflt_value, pk)
-            if not_null and row[3] == 0:
-                errors.append(f"{table}.{name}: NOT NULL mancante")
-            if is_pk and row[5] != 1:
-                errors.append(f"{table}.{name}: PK posizione attesa 1, trovata {row[5]}")
 
-    for table, expected_idx in EXPECTED_INDICES.items():
-        cur = conn.execute(f"PRAGMA index_list({table})")
-        actual_idx = {
-            r[1]: {"unique": bool(r[2]), "cols": [], "origin": r[3]}
-            for r in cur.fetchall()
-        }
-        for name, cols, unique in expected_idx:
-            if name not in actual_idx:
-                errors.append(f"{table}: indice mancante {name}")
-                continue
-            info = actual_idx[name]
-            if info["unique"] != unique:
-                errors.append(f"{table}: indice {name} unique={info['unique']} atteso {unique}")
-            if info["origin"] == "pk":
-                continue  # auto-indice su PK rowid: non fa parte delle entity Room
-            cols_cur = conn.execute(f"PRAGMA index_info({name})")
-            col_names = [r[2] for r in cols_cur.fetchall()]
-            if tuple(col_names) != cols:
-                errors.append(
-                    f"{table}: indice {name} colonne {col_names} != {list(cols)}"
+def normalize_term(text: str) -> str:
+    """Minuscolo + accent-fold, la stessa normalizzazione usata da Kotlin."""
+    decomposed = unicodedata.normalize("NFKD", text.strip().lower())
+    return "".join(ch for ch in decomposed if not unicodedata.combining(ch))
+
+
+def sql_quote(text: str) -> str:
+    if "\n" in text or "\r" in text:
+        fail(f"valore SQL con newline non supportato: {text!r}")
+    return "'" + text.replace("'", "''") + "'"
+
+
+def read_mapping() -> list[dict[str, object]]:
+    if not MAPPING_PATH.exists():
+        fail(f"mapping non trovato: {MAPPING_PATH}")
+
+    with MAPPING_PATH.open(encoding="utf-8-sig", newline="") as f:
+        reader = csv.DictReader(f)
+        if reader.fieldnames != EXPECTED_HEADERS:
+            fail(f"intestazioni inattese: {reader.fieldnames}")
+
+        rows: list[dict[str, object]] = []
+        seen_ids: set[int] = set()
+        for line_no, raw in enumerate(reader, start=2):
+            row = {key: (raw.get(key) or "").strip() for key in EXPECTED_HEADERS}
+            original_id = parse_int(str(row["original_id"]), "original_id", line_no)
+            survivor_id = parse_int(
+                str(row["proposed_survivor_id"]), "proposed_survivor_id", line_no
+            )
+            if original_id in seen_ids:
+                fail(f"riga {line_no}: original_id duplicato {original_id}")
+            seen_ids.add(original_id)
+
+            action = str(row["action"])
+            if action not in (KEEP, MERGE):
+                fail(f"riga {line_no}: action inattesa {action!r}")
+            if action == KEEP and survivor_id != original_id:
+                fail(f"riga {line_no}: KEEP con survivor diverso da original_id")
+            if action == KEEP and row["original_name"] != row["proposed_canonical_name"]:
+                fail(f"riga {line_no}: KEEP con nome canonico diverso dal nome originale")
+            if action == MERGE and survivor_id == original_id:
+                fail(f"riga {line_no}: MERGE con survivor uguale a original_id")
+
+            for field in ("original_name", "proposed_canonical_name", "old_l1", "old_l2", "old_l3"):
+                if not row[field]:
+                    fail(f"riga {line_no}: {field} vuoto")
+            if row["category_conflict_in_group"] not in ("YES", "NO", ""):
+                fail(
+                    f"riga {line_no}: category_conflict_in_group inatteso "
+                    f"{row['category_conflict_in_group']!r}"
                 )
 
-    return errors
+            row["original_id"] = original_id
+            row["proposed_survivor_id"] = survivor_id
+            rows.append(row)
+
+    if not rows:
+        fail("mapping vuoto")
+
+    # Ogni survivor deve essere una riga KEEP e ogni MERGE deve puntare a un KEEP.
+    survivors = {int(r["original_id"]): r for r in rows if r["action"] == KEEP}
+    for row in rows:
+        survivor_id = int(row["proposed_survivor_id"])
+        survivor = survivors.get(survivor_id)
+        if survivor is None:
+            fail(f"survivor {survivor_id} non trovato per original_id {row['original_id']}")
+        if row["proposed_canonical_name"] != survivor["proposed_canonical_name"]:
+            fail(
+                f"proposed_canonical_name incoerente per original_id {row['original_id']}: "
+                f"{row['proposed_canonical_name']!r} != {survivor['proposed_canonical_name']!r}"
+            )
+
+    # I nomi canonici devono essere univoci anche dopo accent-fold.
+    normalized_names: dict[str, int] = {}
+    for survivor in survivors.values():
+        name = str(survivor["proposed_canonical_name"])
+        normalized = normalize_term(name)
+        if normalized in normalized_names:
+            fail(
+                f"nome canonico duplicato dopo normalizzazione: {name!r} "
+                f"(id {survivor['original_id']} e {normalized_names[normalized]})"
+            )
+        normalized_names[normalized] = int(survivor["original_id"])
+
+    return rows
 
 
-def main() -> int:
-    rng = random.Random(SEED)
+def build_taxonomy(rows: list[dict[str, object]]) -> dict[str, object]:
+    l1_names: list[str] = []
+    l2_keys: list[tuple[str, str]] = []
+    l3_keys: list[tuple[str, str, str]] = []
 
+    for row in rows:
+        l1 = str(row["old_l1"])
+        l2 = str(row["old_l2"])
+        l3 = str(row["old_l3"])
+        if l1 not in l1_names:
+            l1_names.append(l1)
+        if (l1, l2) not in l2_keys:
+            l2_keys.append((l1, l2))
+        if (l1, l2, l3) not in l3_keys:
+            l3_keys.append((l1, l2, l3))
+
+    if l1_names != EXPECTED_L1_ORDER:
+        fail(f"ordine L1 inatteso: {l1_names}")
+    if len(l1_names) != EXPECTED_L1:
+        fail(f"L1 attesi {EXPECTED_L1}, trovati {len(l1_names)}")
+    if len(l2_keys) != EXPECTED_L2:
+        fail(f"L2 attesi {EXPECTED_L2}, trovati {len(l2_keys)}")
+    if len(l3_keys) != EXPECTED_L3:
+        fail(f"L3 attesi {EXPECTED_L3}, trovati {len(l3_keys)}")
+
+    l1_ids = {name: index + 1 for index, name in enumerate(l1_names)}
+    l2_ids = {key: index + 1 for index, key in enumerate(l2_keys)}
+    l3_ids = {key: index + 1 for index, key in enumerate(l3_keys)}
+
+    l2_sort: dict[tuple[str, str], int] = {}
+    l2_counter: dict[str, int] = {}
+    for l1, l2 in l2_keys:
+        l2_counter[l1] = l2_counter.get(l1, 0) + 1
+        l2_sort[(l1, l2)] = l2_counter[l1]
+
+    l3_sort: dict[tuple[str, str, str], int] = {}
+    l3_counter: dict[tuple[str, str], int] = {}
+    for l1, l2, l3 in l3_keys:
+        parent = (l1, l2)
+        l3_counter[parent] = l3_counter.get(parent, 0) + 1
+        l3_sort[(l1, l2, l3)] = l3_counter[parent]
+
+    return {
+        "l1_names": l1_names,
+        "l1_ids": l1_ids,
+        "l1_rows": [(l1_ids[name], name, index + 1) for index, name in enumerate(l1_names)],
+        "l2_rows": [
+            (l2_ids[(l1, l2)], l1_ids[l1], l2, l2_sort[(l1, l2)])
+            for l1, l2 in l2_keys
+        ],
+        "l3_rows": [
+            (l3_ids[(l1, l2, l3)], l2_ids[(l1, l2)], l3, l3_sort[(l1, l2, l3)])
+            for l1, l2, l3 in l3_keys
+        ],
+        "l2_ids": l2_ids,
+        "l3_ids": l3_ids,
+    }
+
+
+def build_products(
+    rows: list[dict[str, object]], taxonomy: dict[str, object]
+) -> list[dict[str, object]]:
+    l3_ids: dict[tuple[str, str, str], int] = taxonomy["l3_ids"]  # type: ignore[assignment]
+    survivors = sorted(
+        (r for r in rows if r["action"] == KEEP),
+        key=lambda r: int(r["proposed_survivor_id"]),
+    )
+    products: list[dict[str, object]] = []
+    by_survivor: dict[int, dict[str, object]] = {}
+    for row in survivors:
+        path = (
+            str(row["old_l1"]),
+            str(row["old_l2"]),
+            str(row["old_l3"]),
+        )
+        product = {
+            "id": int(row["proposed_survivor_id"]),
+            "name": str(row["proposed_canonical_name"]),
+            "level3_id": l3_ids[path],
+            "path": path,
+            "aliases": [],
+        }
+        products.append(product)
+        by_survivor[int(row["proposed_survivor_id"])] = product
+
+    if len(products) != EXPECTED_PRODUCTS:
+        fail(f"prodotti attesi {EXPECTED_PRODUCTS}, trovati {len(products)}")
+
+    for row in sorted(rows, key=lambda r: int(r["original_id"])):
+        if row["action"] == KEEP:
+            continue
+        survivor_id = int(row["proposed_survivor_id"])
+        by_survivor[survivor_id]["aliases"].append(str(row["original_name"]))  # type: ignore[union-attr]
+
+    return products
+
+
+def build_synonyms(products: list[dict[str, object]]) -> dict[str, int]:
+    """Termine normalizzato -> product_id.
+
+    I nomi canonici completi vengono inseriti per primi, così nessun alias può
+    sottrarre un nome canonico a un altro prodotto. Poi vengono aggiunte le
+    basi (prime due parole) e infine i nomi originali delle righe fuse.
+    """
+    terms: dict[str, int] = {}
+
+    def add(term: str, product_id: int) -> None:
+        normalized = normalize_term(term)
+        if normalized and normalized not in terms:
+            terms[normalized] = product_id
+
+    for product in products:
+        add(str(product["name"]), int(product["id"]))
+
+    for product in products:
+        parts = str(product["name"]).split()
+        if len(parts) > 2:
+            add(" ".join(parts[:2]), int(product["id"]))
+
+    for product in products:
+        for alias in product["aliases"]:  # type: ignore[union-attr]
+            add(str(alias), int(product["id"]))
+
+    products_with_terms = {pid for pid in terms.values()}
+    missing = {int(p["id"]) for p in products} - products_with_terms
+    if missing:
+        fail(f"prodotti senza sinonimo: {sorted(missing)}")
+    return terms
+
+
+def create_database(
+    taxonomy: dict[str, object],
+    products: list[dict[str, object]],
+    synonyms: dict[str, int],
+) -> None:
     ASSET_PATH.parent.mkdir(parents=True, exist_ok=True)
     if ASSET_PATH.exists():
         ASSET_PATH.unlink()
 
     conn = sqlite3.connect(str(ASSET_PATH))
-    cur = conn.cursor()
-    for stmt in DDL:
-        cur.execute(stmt)
+    try:
+        for statement in DDL:
+            conn.execute(statement)
 
-    # --- Tassonomia + prodotti ---
-    l1_rows: list[tuple[int, str, int]] = []
-    l2_id = 0
-    l3_id = 0
-    product_id = 0
-    # (level3_id, name, l1_id) in ordine di inserimento
-    products: list[tuple[int, str, int]] = []
+        conn.executemany(
+            "INSERT INTO TAXONOMY_LEVEL_1 (id, name, sortOrder) VALUES (?,?,?)",
+            taxonomy["l1_rows"],
+        )
+        conn.executemany(
+            "INSERT INTO TAXONOMY_LEVEL_2 (id, level1_id, name, sortOrder) VALUES (?,?,?,?)",
+            taxonomy["l2_rows"],
+        )
+        conn.executemany(
+            "INSERT INTO TAXONOMY_LEVEL_3 (id, level2_id, name, sortOrder, is_user_defined) VALUES (?,?,?,?,0)",
+            taxonomy["l3_rows"],
+        )
+        conn.executemany(
+            "INSERT INTO CANONICAL_PRODUCT (id, level3_id, name, is_user_defined) VALUES (?,?,?,0)",
+            [(int(p["id"]), int(p["level3_id"]), str(p["name"])) for p in products],
+        )
+        conn.executemany(
+            "INSERT INTO SYNONYM (product_id, term) VALUES (?,?)",
+            sorted(((pid, term) for term, pid in synonyms.items()), key=lambda kv: (kv[0], kv[1])),
+        )
+        conn.execute("PRAGMA user_version = 1")
+        conn.commit()
+        conn.execute("VACUUM")
+    finally:
+        conn.close()
 
-    for l1_idx, (l1_name, l2s) in enumerate(TAXONOMY, start=1):
-        l1_rows.append((l1_idx, l1_name, l1_idx))
-        target_l1 = L1_TARGET[l1_name]
-        n_l2 = len(l2s)
-        base_share = target_l1 // n_l2
-        remainder = target_l1 - base_share * n_l2
 
-        for l2_idx, (l2_name, l3s) in enumerate(l2s, start=1):
-            l2_id += 1
-            cur.execute(
-                "INSERT INTO TAXONOMY_LEVEL_2 (id, level1_id, name, sortOrder) VALUES (?,?,?,?)",
-                (l2_id, l1_idx, l2_name, l2_idx),
+def write_migration_sql(
+    rows: list[dict[str, object]],
+    taxonomy: dict[str, object],
+    products: list[dict[str, object]],
+    synonyms: dict[str, int],
+) -> None:
+    """Scrive lo script SQL eseguito dalla migrazione Room 4->5.
+
+    Lo script è idempotente sul catalogo: elimina solo i prodotti predefiniti
+    (is_user_defined = 0), rimappa i riferimenti utente tramite una tabella
+    temporanea e reinserisce il nuovo catalogo. I prodotti creati dall'utente
+    restano intatti.
+    """
+    lines: list[str] = []
+    lines.append("DROP TABLE IF EXISTS CATALOG_REMAP_V2")
+    lines.append(
+        "CREATE TEMP TABLE CATALOG_REMAP_V2 "
+        "(old_id INTEGER PRIMARY KEY, new_id INTEGER NOT NULL)"
+    )
+
+    for row in sorted(rows, key=lambda r: int(r["original_id"])):
+        lines.append(
+            "INSERT INTO CATALOG_REMAP_V2 (old_id, new_id) VALUES "
+            f"({int(row['original_id'])}, {int(row['proposed_survivor_id'])})"
+        )
+
+    lines.extend(
+        [
+            "UPDATE SHOPPING_ITEM SET productId = "
+            "(SELECT new_id FROM CATALOG_REMAP_V2 WHERE old_id = SHOPPING_ITEM.productId) "
+            "WHERE productId IN (SELECT old_id FROM CATALOG_REMAP_V2) "
+            "AND productId IN (SELECT id FROM CANONICAL_PRODUCT WHERE is_user_defined = 0)",
+            "UPDATE HISTORICAL_ITEM SET productId = "
+            "(SELECT new_id FROM CATALOG_REMAP_V2 WHERE old_id = HISTORICAL_ITEM.productId) "
+            "WHERE productId IN (SELECT old_id FROM CATALOG_REMAP_V2) "
+            "AND productId IN (SELECT id FROM CANONICAL_PRODUCT WHERE is_user_defined = 0)",
+            "UPDATE LEARNED_RULE SET productId = "
+            "(SELECT new_id FROM CATALOG_REMAP_V2 WHERE old_id = LEARNED_RULE.productId) "
+            "WHERE productId IN (SELECT old_id FROM CATALOG_REMAP_V2) "
+            "AND productId IN (SELECT id FROM CANONICAL_PRODUCT WHERE is_user_defined = 0)",
+            "DELETE FROM SYNONYM WHERE product_id IN "
+            "(SELECT id FROM CANONICAL_PRODUCT WHERE is_user_defined = 0)",
+            "DELETE FROM CANONICAL_PRODUCT WHERE is_user_defined = 0",
+        ]
+    )
+
+    # Ripristina la tassonomia anche su un DB dev che non aveva il catalogo.
+    # INSERT OR IGNORE lascia intatte le righe già presenti e le categorie
+    # create dall'utente (che hanno ID successivi a quelli predefiniti).
+    for row in taxonomy["l1_rows"]:  # type: ignore[union-attr]
+        taxonomy_id, name, sort_order = row
+        lines.append(
+            "INSERT OR IGNORE INTO TAXONOMY_LEVEL_1 (id, name, sortOrder) VALUES "
+            f"({taxonomy_id}, {sql_quote(str(name))}, {sort_order})"
+        )
+    for row in taxonomy["l2_rows"]:  # type: ignore[union-attr]
+        taxonomy_id, level1_id, name, sort_order = row
+        lines.append(
+            "INSERT OR IGNORE INTO TAXONOMY_LEVEL_2 (id, level1_id, name, sortOrder) VALUES "
+            f"({taxonomy_id}, {level1_id}, {sql_quote(str(name))}, {sort_order})"
+        )
+    for row in taxonomy["l3_rows"]:  # type: ignore[union-attr]
+        taxonomy_id, level2_id, name, sort_order = row
+        lines.append(
+            "INSERT OR IGNORE INTO TAXONOMY_LEVEL_3 "
+            "(id, level2_id, name, sortOrder, is_user_defined) VALUES "
+            f"({taxonomy_id}, {level2_id}, {sql_quote(str(name))}, {sort_order}, 0)"
+        )
+
+    for product in products:
+        lines.append(
+            "INSERT INTO CANONICAL_PRODUCT (id, level3_id, name, is_user_defined) VALUES "
+            f"({int(product['id'])}, {int(product['level3_id'])}, "
+            f"{sql_quote(str(product['name']))}, 0)"
+        )
+
+    for term, product_id in sorted(synonyms.items(), key=lambda kv: (kv[1], kv[0])):
+        lines.append(
+            "INSERT INTO SYNONYM (product_id, term) VALUES "
+            f"({product_id}, {sql_quote(term)})"
+        )
+
+    lines.append("DROP TABLE CATALOG_REMAP_V2")
+    for line in lines:
+        if "\n" in line or "\r" in line:
+            fail("statement SQL con newline inatteso")
+    MIGRATION_SQL_PATH.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def format_int(value: int) -> str:
+    return f"{value:,}".replace(",", ".")
+
+
+def read_catalog(conn: sqlite3.Connection) -> list[dict[str, object]]:
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute(
+        """
+        SELECT t1.id AS l1_id, t1.name AS l1_name, t1.sortOrder AS l1_sort,
+               t2.id AS l2_id, t2.name AS l2_name, t2.sortOrder AS l2_sort,
+               t3.id AS l3_id, t3.name AS l3_name, t3.sortOrder AS l3_sort,
+               cp.id AS product_id, cp.name AS product_name
+        FROM TAXONOMY_LEVEL_1 t1
+        JOIN TAXONOMY_LEVEL_2 t2 ON t2.level1_id = t1.id
+        JOIN TAXONOMY_LEVEL_3 t3 ON t3.level2_id = t2.id
+        LEFT JOIN CANONICAL_PRODUCT cp ON cp.level3_id = t3.id
+        WHERE t3.is_user_defined = 0
+        ORDER BY t1.sortOrder, t2.sortOrder, t3.sortOrder, cp.name COLLATE NOCASE, cp.id
+        """
+    ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def write_catalog_md(source_rows: int, merged_rows: int) -> None:
+    conn = sqlite3.connect(str(ASSET_PATH))
+    try:
+        rows = read_catalog(conn)
+        total_products = conn.execute("SELECT COUNT(*) FROM CANONICAL_PRODUCT").fetchone()[0]
+        n_l1 = conn.execute("SELECT COUNT(*) FROM TAXONOMY_LEVEL_1").fetchone()[0]
+        n_l2 = conn.execute("SELECT COUNT(*) FROM TAXONOMY_LEVEL_2").fetchone()[0]
+        n_l3 = conn.execute(
+            "SELECT COUNT(*) FROM TAXONOMY_LEVEL_3 WHERE is_user_defined = 0"
+        ).fetchone()[0]
+    finally:
+        conn.close()
+
+    l1s: "OrderedDict[str, dict[str, object]]" = OrderedDict()
+    for row in rows:
+        l1_name = str(row["l1_name"])
+        l2_name = str(row["l2_name"])
+        l3_name = str(row["l3_name"])
+        l1 = l1s.setdefault(l1_name, {"l2": OrderedDict(), "products": 0})
+        l2 = l1["l2"].setdefault(l2_name, {"l3": OrderedDict(), "products": 0})  # type: ignore[index]
+        l3 = l2["l3"].setdefault(l3_name, {"products": []})  # type: ignore[index]
+        if row["product_id"] is not None:
+            l3["products"].append((int(row["product_id"]), str(row["product_name"])))  # type: ignore[index]
+            l2["products"] += 1  # type: ignore[index]
+            l1["products"] += 1  # type: ignore[index]
+
+    today = date.today()
+    date_text = f"{today.day} {MONTHS_IT[today.month - 1]} {today.year}"
+
+    lines: list[str] = [
+        "# Catalogo prodotti Togo",
+        "",
+        "> Documento generato automaticamente dal database `app/src/main/assets/catalog.db`.",
+        "> Fonte: `tools/togo_catalog_migration_mapping_v2.csv`.",
+        f"> Data di generazione: **{date_text}**.",
+        "",
+        "## Riepilogo",
+        "",
+        "| Livello | Categorie |",
+        "|---|---:|",
+        f"| Livello 1 | {format_int(n_l1)} |",
+        f"| Livello 2 | {format_int(n_l2)} |",
+        f"| Livello 3 | {format_int(n_l3)} |",
+        f"| **Totale categorie** | **{format_int(n_l1 + n_l2 + n_l3)}** |",
+        f"| **Prodotti censiti** | **{format_int(total_products)}** |",
+        "",
+        f"> Il mapping di origine contiene {format_int(source_rows)} nomi prodotto; "
+        f"{format_int(merged_rows)} confezioni/varianti sono state fuse nei "
+        f"{format_int(total_products)} prodotti canonici e restano ricercabili come sinonimi.",
+        "",
+        "I prodotti sono elencati in ordine alfabetico all'interno di ogni categoria di livello 3. "
+        "Gli ID corrispondono a `CANONICAL_PRODUCT.id`.",
+        "",
+        "## Indice generale",
+        "",
+    ]
+
+    for index, (l1_name, l1) in enumerate(l1s.items(), start=1):
+        n_l2_l1 = len(l1["l2"])  # type: ignore[arg-type]
+        n_l3_l1 = sum(len(l2["l3"]) for l2 in l1["l2"].values())  # type: ignore[union-attr]
+        lines.append(
+            f"{index}. **{l1_name}** — {format_int(n_l2_l1)} categorie L2, "
+            f"{format_int(n_l3_l1)} categorie L3, {format_int(int(l1['products']))} prodotti"
+        )
+    lines.extend(["", "---", ""])
+
+    for l1_index, (l1_name, l1) in enumerate(l1s.items(), start=1):
+        n_l2_l1 = len(l1["l2"])  # type: ignore[arg-type]
+        n_l3_l1 = sum(len(l2["l3"]) for l2 in l1["l2"].values())  # type: ignore[union-attr]
+        lines.extend(
+            [
+                f"## {l1_index}. {l1_name}",
+                "",
+                f"**{format_int(n_l2_l1)} categorie L2 — {format_int(n_l3_l1)} categorie L3 — "
+                f"{format_int(int(l1['products']))} prodotti**",
+                "",
+            ]
+        )
+        for l2_index, (l2_name, l2) in enumerate(l1["l2"].items(), start=1):  # type: ignore[union-attr]
+            n_l3_l2 = len(l2["l3"])  # type: ignore[index]
+            lines.extend(
+                [
+                    f"### {l1_index}.{l2_index}. {l2_name}",
+                    "",
+                    f"**{format_int(n_l3_l2)} categorie L3 — {format_int(int(l2['products']))} prodotti**",
+                    "",
+                ]
             )
-            first_l3_id = l3_id + 1
-            for l3_idx, l3_name in enumerate(l3s, start=1):
-                l3_id += 1
-                cur.execute(
-                    "INSERT INTO TAXONOMY_LEVEL_3 (id, level2_id, name, sortOrder, is_user_defined) VALUES (?,?,?,?,0)",
-                    (l3_id, l2_id, l3_name, l3_idx),
+            for l3_index, (l3_name, l3) in enumerate(l2["l3"].items(), start=1):  # type: ignore[index]
+                products = sorted(l3["products"], key=lambda item: (item[1].casefold(), item[0]))  # type: ignore[index]
+                lines.extend(
+                    [
+                        f"#### {l1_index}.{l2_index}.{l3_index}. {l3_name} "
+                        f"({format_int(len(products))} prodotti)",
+                        "",
+                        "| ID | Prodotto |",
+                        "|---:|---|",
+                    ]
                 )
+                for product_id, product_name in products:
+                    safe_name = product_name.replace("|", "\\|")
+                    lines.append(f"| {product_id} | {safe_name} |")
+                lines.append("")
+        lines.extend(["---", ""])
+    CATALOG_MD_PATH.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
 
-            # Ripartizione target sui L2: base + ripartizione del resto
-            target = base_share + (1 if l2_idx <= remainder else 0)
-            generic_specs = GENERIC_PRODUCTS.get((l1_name, l2_name), [])
-            names = expand_names(
-                l1_name,
-                l2_name,
-                target,
-                rng,
-                [name for name, _ in generic_specs],
+
+def verify_database(
+    taxonomy: dict[str, object],
+    products: list[dict[str, object]],
+    synonyms: dict[str, int],
+) -> None:
+    conn = sqlite3.connect(str(ASSET_PATH))
+    try:
+        conn.row_factory = sqlite3.Row
+        tables = {
+            row[0]
+            for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        }
+        missing_tables = EXPECTED_TABLES - tables
+        if missing_tables:
+            fail(f"tabelle mancanti: {sorted(missing_tables)}")
+
+        indices = {
+            row[0]
+            for row in conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='index' AND name NOT LIKE 'sqlite_%'"
             )
-            l3_ids = list(range(first_l3_id, l3_id + 1))
-            l3_id_by_name = {
-                l3_name: first_l3_id + l3_idx
-                for l3_idx, l3_name in enumerate(l3s)
-            }
-            generic_l3 = dict(generic_specs)
+        }
+        missing_indices = EXPECTED_INDICES - indices
+        if missing_indices:
+            fail(f"indici mancanti: {sorted(missing_indices)}")
 
-            for i, name in enumerate(names):
-                product_id += 1
-                # Le voci generiche hanno una categoria scelta a mano; le
-                # altre seguono la rotazione storica sui Livelli 3.
-                assigned_l3 = l3_id_by_name.get(
-                    generic_l3.get(name, ""),
-                    l3_ids[i % len(l3_ids)],
-                )
-                cur.execute(
-                    "INSERT INTO CANONICAL_PRODUCT (id, level3_id, name, is_user_defined) VALUES (?,?,?,0)",
-                    (product_id, assigned_l3, name),
-                )
-                products.append((assigned_l3, name, l1_idx))
+        user_version = conn.execute("PRAGMA user_version").fetchone()[0]
+        if user_version != 1:
+            fail(f"user_version atteso 1, trovato {user_version}")
 
-    cur.executemany(
-        "INSERT INTO TAXONOMY_LEVEL_1 (id, name, sortOrder) VALUES (?,?,?)", l1_rows
+        counts = {
+            "L1": conn.execute("SELECT COUNT(*) FROM TAXONOMY_LEVEL_1").fetchone()[0],
+            "L2": conn.execute("SELECT COUNT(*) FROM TAXONOMY_LEVEL_2").fetchone()[0],
+            "L3": conn.execute("SELECT COUNT(*) FROM TAXONOMY_LEVEL_3").fetchone()[0],
+            "products": conn.execute("SELECT COUNT(*) FROM CANONICAL_PRODUCT").fetchone()[0],
+            "synonyms": conn.execute("SELECT COUNT(*) FROM SYNONYM").fetchone()[0],
+        }
+        expected_counts = {
+            "L1": EXPECTED_L1,
+            "L2": EXPECTED_L2,
+            "L3": EXPECTED_L3,
+            "products": EXPECTED_PRODUCTS,
+        }
+        for key, expected in expected_counts.items():
+            if counts[key] != expected:
+                fail(f"{key} attesi {expected}, trovati {counts[key]}")
+
+        food = conn.execute(
+            """
+            SELECT COUNT(*) FROM CANONICAL_PRODUCT cp
+            JOIN TAXONOMY_LEVEL_3 t3 ON t3.id = cp.level3_id
+            JOIN TAXONOMY_LEVEL_2 t2 ON t2.id = t3.level2_id
+            JOIN TAXONOMY_LEVEL_1 t1 ON t1.id = t2.level1_id
+            WHERE t1.name != ?
+            """,
+            (NON_FOOD_L1,),
+        ).fetchone()[0]
+        non_food = conn.execute(
+            """
+            SELECT COUNT(*) FROM CANONICAL_PRODUCT cp
+            JOIN TAXONOMY_LEVEL_3 t3 ON t3.id = cp.level3_id
+            JOIN TAXONOMY_LEVEL_2 t2 ON t2.id = t3.level2_id
+            JOIN TAXONOMY_LEVEL_1 t1 ON t1.id = t2.level1_id
+            WHERE t1.name = ?
+            """,
+            (NON_FOOD_L1,),
+        ).fetchone()[0]
+        if (food, non_food) != (EXPECTED_FOOD, EXPECTED_NON_FOOD):
+            fail(
+                f"alimentari/non alimentari attesi "
+                f"{EXPECTED_FOOD}/{EXPECTED_NON_FOOD}, trovati {food}/{non_food}"
+            )
+
+        invalid = conn.execute(
+            """
+            SELECT COUNT(*) FROM CANONICAL_PRODUCT
+            WHERE level3_id IS NULL OR TRIM(name) = '' OR is_user_defined != 0
+            """
+        ).fetchone()[0]
+        if invalid:
+            fail(f"prodotti seed invalidi: {invalid}")
+
+        duplicates = conn.execute(
+            "SELECT COUNT(*) FROM (SELECT name FROM CANONICAL_PRODUCT "
+            "GROUP BY name HAVING COUNT(*) > 1)"
+        ).fetchone()[0]
+        if duplicates:
+            fail(f"nomi prodotto duplicati: {duplicates}")
+
+        orphan_synonyms = conn.execute(
+            """
+            SELECT COUNT(*) FROM SYNONYM s
+            LEFT JOIN CANONICAL_PRODUCT p ON p.id = s.product_id
+            WHERE p.id IS NULL
+            """
+        ).fetchone()[0]
+        if orphan_synonyms:
+            fail(f"sinonimi orfani: {orphan_synonyms}")
+
+        duplicate_terms = conn.execute(
+            "SELECT COUNT(*) FROM (SELECT term FROM SYNONYM "
+            "GROUP BY term HAVING COUNT(*) > 1)"
+        ).fetchone()[0]
+        if duplicate_terms:
+            fail(f"termini sinonimo duplicati: {duplicate_terms}")
+
+        no_synonyms = conn.execute(
+            """
+            SELECT COUNT(*) FROM CANONICAL_PRODUCT p
+            WHERE NOT EXISTS (SELECT 1 FROM SYNONYM s WHERE s.product_id = p.id)
+            """
+        ).fetchone()[0]
+        if no_synonyms:
+            fail(f"prodotti senza sinonimo: {no_synonyms}")
+
+        empty_l3 = conn.execute(
+            """
+            SELECT COUNT(*) FROM TAXONOMY_LEVEL_3 t3
+            WHERE t3.is_user_defined = 0
+              AND NOT EXISTS (SELECT 1 FROM CANONICAL_PRODUCT cp WHERE cp.level3_id = t3.id)
+            """
+        ).fetchone()[0]
+        if empty_l3:
+            fail(f"categorie L3 senza prodotti: {empty_l3}")
+
+        integrity = conn.execute("PRAGMA integrity_check").fetchone()[0]
+        if integrity != "ok":
+            fail(f"integrity_check: {integrity}")
+
+        # Verifica puntuale del mapping: ID, nome e categoria di ogni survivor.
+        l3_ids: dict[tuple[str, str, str], int] = taxonomy["l3_ids"]  # type: ignore[assignment]
+        product_by_id = {
+            int(p["id"]): p for p in products
+        }
+        for row in conn.execute(
+            "SELECT id, level3_id, name FROM CANONICAL_PRODUCT ORDER BY id"
+        ):
+            product = product_by_id[int(row["id"])]
+            if row["name"] != product["name"]:
+                fail(f"nome prodotto {row['id']} diverso dal mapping")
+            if int(row["level3_id"]) != l3_ids[product["path"]]:  # type: ignore[index]
+                fail(f"categoria prodotto {row['id']} diversa dal mapping")
+
+        print(f"DB: {ASSET_PATH} ({ASSET_PATH.stat().st_size / 1024:.1f} KB)")
+        print(
+            f"  tassonomia: {counts['L1']} L1, {counts['L2']} L2, {counts['L3']} L3"
+        )
+        print(f"  prodotti: {counts['products']} ({food} alimentari, {non_food} non alimentari)")
+        print(f"  sinonimi: {counts['synonyms']}")
+        print("  schema/indici: OK")
+        print(f"  user_version: {user_version}")
+    finally:
+        conn.close()
+
+
+def main() -> int:
+    rows = read_mapping()
+    taxonomy = build_taxonomy(rows)
+    products = build_products(rows, taxonomy)
+    synonyms = build_synonyms(products)
+
+    create_database(taxonomy, products, synonyms)
+    write_migration_sql(rows, taxonomy, products, synonyms)
+    write_catalog_md(
+        source_rows=len(rows),
+        merged_rows=sum(1 for row in rows if row["action"] == MERGE),
     )
+    verify_database(taxonomy, products, synonyms)
 
-    # --- Sinonimi (dedup per termine, primo product_id wins) ---
-    # Ogni prodotto ottiene 1-4 termini: lowercase, forma accent-folded
-    # (es. "caffe" per "Caffè"), base senza modificatore (lowercase e folded).
-    def fold(text: str) -> str:
-        nfkd = unicodedata.normalize("NFKD", text)
-        return "".join(c for c in nfkd if not unicodedata.combining(c))
-
-    term_to_pid: dict[str, int] = {}
-    pid = 0
-    for _, name, _ in products:
-        pid += 1
-        lower = name.lower()
-        folded = fold(lower)
-        terms = [lower] if folded == lower else [lower, folded]
-        parts = name.split(" ")
-        if len(parts) > 2:
-            base_term = " ".join(parts[:2]).lower()
-            base_folded = fold(base_term)
-            if base_term != lower and base_term not in terms:
-                terms.append(base_term)
-            if base_folded not in terms:
-                terms.append(base_folded)
-        for t in terms:
-            if t not in term_to_pid:
-                term_to_pid[t] = pid
-    cur.executemany(
-        "INSERT INTO SYNONYM (product_id, term) VALUES (?,?)",
-        sorted(
-            ((pid, term) for term, pid in term_to_pid.items()),
-            key=lambda kv: (kv[0], kv[1]),
-        ),
-    )
-
-    cur.execute("PRAGMA user_version = 1")
-    conn.commit()
-
-    # --- Verifica AC ---
-    cur.execute(
-        """SELECT COUNT(*) FROM CANONICAL_PRODUCT cp
-           JOIN TAXONOMY_LEVEL_3 t3 ON cp.level3_id = t3.id
-           JOIN TAXONOMY_LEVEL_2 t2 ON t3.level2_id = t2.id
-           JOIN TAXONOMY_LEVEL_1 t1 ON t2.level1_id = t1.id
-           WHERE t1.name != ?""",
-        (NON_FOOD_L1,),
-    )
-    food = cur.fetchone()[0]
-
-    cur.execute(
-        """SELECT COUNT(*) FROM CANONICAL_PRODUCT cp
-           JOIN TAXONOMY_LEVEL_3 t3 ON cp.level3_id = t3.id
-           JOIN TAXONOMY_LEVEL_2 t2 ON t3.level2_id = t2.id
-           JOIN TAXONOMY_LEVEL_1 t1 ON t2.level1_id = t1.id
-           WHERE t1.name = ?""",
-        (NON_FOOD_L1,),
-    )
-    non_food = cur.fetchone()[0]
-
-    cur.execute(
-        """SELECT COUNT(*) FROM CANONICAL_PRODUCT
-           WHERE level3_id IS NULL OR TRIM(name) = '' OR is_user_defined != 0"""
-    )
-    invalid = cur.fetchone()[0]
-
-    cur.execute(
-        """SELECT name, COUNT(*) FROM CANONICAL_PRODUCT
-           GROUP BY name HAVING COUNT(*) > 1"""
-    )
-    duplicates = cur.fetchall()
-
-    cur.execute(
-        """SELECT COUNT(*) FROM SYNONYM s
-           LEFT JOIN CANONICAL_PRODUCT p ON p.id = s.product_id
-           WHERE p.id IS NULL"""
-    )
-    orphan_synonyms = cur.fetchone()[0]
-
-    cur.execute(
-        """SELECT COUNT(*) FROM CANONICAL_PRODUCT p
-           WHERE NOT EXISTS (SELECT 1 FROM SYNONYM s WHERE s.product_id = p.id)"""
-    )
-    no_synonyms = cur.fetchone()[0]
-
-    cur.execute("SELECT COUNT(*) FROM CANONICAL_PRODUCT")
-    total = cur.fetchone()[0]
-    cur.execute("SELECT COUNT(*) FROM SYNONYM")
-    synonyms = cur.fetchone()[0]
-    cur.execute("SELECT COUNT(*) FROM TAXONOMY_LEVEL_1")
-    n_l1 = cur.fetchone()[0]
-    cur.execute("SELECT COUNT(*) FROM TAXONOMY_LEVEL_3")
-    n_l3 = cur.fetchone()[0]
-    cur.execute("PRAGMA user_version")
-    uv = cur.fetchone()[0]
-    cur.execute("SELECT name FROM sqlite_master WHERE type='table'")
-    tables = {r[0] for r in cur.fetchall()}
-    missing_tables = EXPECTED_TABLES - tables
-
-    schema_errors = verify_schema(conn)
-
-    # Ordine L1 come da AC Story 2.1
-    cur.execute("SELECT name FROM TAXONOMY_LEVEL_1 ORDER BY sortOrder")
-    l1_order = [r[0] for r in cur.fetchall()]
-    expected_order = [name for name, _ in TAXONOMY]
-    order_ok = l1_order == expected_order
-
-    conn.close()
-
-    size_kb = ASSET_PATH.stat().st_size / 1024
-    print(f"DB: {ASSET_PATH} ({size_kb:.1f} KB)")
-    print(f"  tassonomia      : {n_l1} L1, {l2_id} L2, {n_l3} L3")
-    print(f"  prodotti totali : {total}")
-    print(f"  alimentari      : {food} (min {MIN_FOOD})")
-    print(f"  non alimentari  : {non_food} (min {MIN_NON_FOOD})")
-    print(f"  sinonimi        : {synonyms}")
-    print(f"  righe invalide  : {invalid} (atteso 0)")
-    print(f"  nomi duplicati  : {len(duplicates)} (atteso 0)")
-    print(f"  sinonimi orfani : {orphan_synonyms} (atteso 0)")
-    print(f"  prodotti senza sinonimo: {no_synonyms} (atteso 0)")
-    print(f"  user_version    : {uv} (atteso 1)")
-    print(f"  ordine L1       : {'OK' if order_ok else 'ERRATO'} -> {l1_order}")
-    print(f"  tabelle mancanti: {sorted(missing_tables) if missing_tables else 'nessuna'}")
-    if schema_errors:
-        print("  ERRORI SCHEMA   :")
-        for err in schema_errors:
-            print(f"    - {err}")
-    else:
-        print("  schema colonne/indici: OK (match Room)")
-
-    ok = (
-        food >= MIN_FOOD
-        and non_food >= MIN_NON_FOOD
-        and invalid == 0
-        and not duplicates
-        and orphan_synonyms == 0
-        and no_synonyms == 0
-        and uv == 1
-        and not missing_tables
-        and order_ok
-        and not schema_errors
-    )
-    if not ok:
-        print("FALLITO: soglie AC non raggiunte.")
-        return 1
-    print("OK: tutti i vincoli AC soddisfatti.")
+    print(f"SQL migrazione: {MIGRATION_SQL_PATH} ({MIGRATION_SQL_PATH.stat().st_size / 1024:.1f} KB)")
+    print(f"Report: {CATALOG_MD_PATH} ({CATALOG_MD_PATH.stat().st_size / 1024:.1f} KB)")
     return 0
 
 

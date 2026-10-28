@@ -30,7 +30,7 @@ import it.togo.app.data.database.entity.UserAttributeEntity
         it.togo.app.data.database.entity.SynonymEntity::class,
         UserAttributeEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class TogoDatabase : RoomDatabase() {
@@ -53,11 +53,12 @@ abstract class TogoDatabase : RoomDatabase() {
                     "togo.db"
                 )
                     // Story 1.4: catalogo precompilato copiato dagli asset al primo avvio (AD-3).
-                    // Nota (pre-release): l'asset viene copiato solo alla CREAZIONE del DB;
-                    // un DB "togo.db" già esistente (es. da build di sviluppo della Story 1.3,
-                    // version = 1 senza catalogo) NON riceve l'asset (createFromAsset non
-                    // riesegue e fallbackToDestructiveMigration scatta solo al cambio di
-                    // versione). Per i soli ambienti dev: disinstallare o cancellare i dati.
+                    // La migrazione 4→5 applica il mapping
+                    // `tools/togo_catalog_migration_mapping_v2.csv` ai DB già
+                    // esistenti: rimappa i riferimenti utente, sostituisce i soli
+                    // prodotti predefiniti e lascia intatti quelli creati dall'utente.
+                    // Un DB dev senza catalogo (es. Story 1.3) viene popolato dalla
+                    // stessa migrazione perché il conteggio canonico non è 748.
                     //
                     // Story 7.1 (2026-10-22): `CanonicalProductEntity.id` usa
                     // `autoGenerate`, quindi l'identity hash dello schema Room cambia
@@ -65,11 +66,15 @@ abstract class TogoDatabase : RoomDatabase() {
                     // precedente fallisce il check di identità all'avvio.
                     // Story 7.2 (2026-10-22): anche `TaxonomyLevel3Entity.id` usa
                     // `autoGenerate`; l'identity hash cambia di nuovo.
-                    // Opzione accettata: in ambiente dev azzerare i dati prima del
-                    // primo avvio (disinstallare l'app o `adb shell pm clear it.togo.app`).
-                    // Un solo reset copre 7.1 e 7.2.
+                    // Opzione accettata per quei DB pre-v4: azzerare i dati una volta
+                    // (disinstallare l'app o `adb shell pm clear it.togo.app`).
                     .createFromAsset("catalog.db")
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                    .addMigrations(
+                        MIGRATION_1_2,
+                        MIGRATION_2_3,
+                        MIGRATION_3_4,
+                        migration4To5(context.applicationContext)
+                    )
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

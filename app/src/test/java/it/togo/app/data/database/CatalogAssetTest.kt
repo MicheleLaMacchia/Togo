@@ -12,17 +12,21 @@ import java.sql.DriverManager
  *
  * Apre il file SQLite generato da `tools/generate_catalog.py` con sqlite-jdbc
  * (nessuna dipendenza da Room/Android, quindi eseguibile come unit test JVM)
- * e controlla gli AC di seed:
- *  - >= 1000 prodotti alimentari, >= 400 non alimentari (totale >= 1400)
+ * e controlla gli AC di seed applicando il mapping v2:
+ *  - 748 prodotti canonici (608 alimentari, 140 non alimentari)
+ *  - 8 L1, 37 L2, 98 L3, nessuna L3 vuota
  *  - ogni prodotto: level3_id NOT NULL, name non vuoto, is_user_defined = 0
  *  - nomi duplicati globali == 0
  *  - sinonimi: nessun orfano, ogni prodotto ne ha almeno uno
  *  - schema: 8 tabelle presenti, user_version = 1
  *  - ordine tassonomia L1: Ortofrutta -> ... -> Banco Frigo -> Dispensa -> Non alimentare
  *  - ricerca (SQL condiviso [CatalogQueries.SEARCH]): match accent-fold su sinonimo
+ *  - i nomi delle confezioni fuse restano ricercabili come alias
  *
  * Il DB di asset è l'unica parte che NON viene verificata da un build KSP/Room su
  * questa macchina (SDK assente); Room validerebbe lo schema al primo open su device.
+ * L'asset resta `user_version = 1`: Room applica le migrazioni 1→2→3→4→5 al primo
+ * avvio, mentre sui DB esistenti la 4→5 applica il mapping del catalogo.
  */
 class CatalogAssetTest {
 
@@ -63,13 +67,43 @@ class CatalogAssetTest {
     }
 
     @Test
-    fun `asset catalog has at least 1000 food and 400 non-food products`() {
+    fun `asset catalog contains the 748 canonical products from mapping v2`() {
         withDb { conn ->
             val food = countByAisle(conn, isNonFood = false)
             val nonFood = countByAisle(conn, isNonFood = true)
-            assertTrue("food=$food deve essere >= 1000", food >= 1000)
-            assertTrue("nonFood=$nonFood deve essere >= 400", nonFood >= 400)
-            assertTrue("totale ${food + nonFood} deve essere >= 1400", food + nonFood >= 1400)
+            assertEquals("prodotti alimentari", 608, food)
+            assertEquals("prodotti non alimentari", 140, nonFood)
+            assertEquals("totale prodotti canonici", 748, food + nonFood)
+        }
+    }
+
+    @Test
+    fun `taxonomy contains every mapping category and no empty level 3`() {
+        withDb { conn ->
+            fun count(table: String): Int = conn.createStatement().use { st ->
+                st.executeQuery("SELECT COUNT(*) FROM $table").use { rs ->
+                    rs.next()
+                    rs.getInt(1)
+                }
+            }
+            assertEquals("categorie L1", 8, count("TAXONOMY_LEVEL_1"))
+            assertEquals("categorie L2", 37, count("TAXONOMY_LEVEL_2"))
+            assertEquals("categorie L3", 98, count("TAXONOMY_LEVEL_3"))
+
+            conn.createStatement().use { st ->
+                st.executeQuery(
+                    """
+                    SELECT COUNT(*) FROM TAXONOMY_LEVEL_3 t3
+                    WHERE t3.is_user_defined = 0
+                      AND NOT EXISTS (
+                          SELECT 1 FROM CANONICAL_PRODUCT cp WHERE cp.level3_id = t3.id
+                      )
+                    """.trimIndent()
+                ).use { rs ->
+                    rs.next()
+                    assertEquals("nessuna categoria L3 vuota", 0, rs.getInt(1))
+                }
+            }
         }
     }
 
@@ -199,13 +233,25 @@ class CatalogAssetTest {
     @Test
     fun `search matches a synonym-only accent-folded term`() {
         withDb { conn ->
-            // "caffe in grani" NON è un nome prodotto (che è "Caffè in Grani"):
-            // deve essere trovato solo tramite sinonimo accent-fold (minuscolo, senza accento).
+            // Il nome è "Caffè in Grani": la query accent-fold "caffe in grani"
+            // deve trovarlo tramite il sinonimo normalizzato (minuscolo, senza accento).
             val names = runSearch(conn, "Caffè in Grani")
             assertTrue("probe accentato 'Caffè in Grani' deve restituire risultati", names.isNotEmpty())
             assertTrue(
                 "deve esistere un prodotto 'Caffè in Grani': $names",
                 names.any { it == "Caffè in Grani" }
+            )
+        }
+    }
+
+    @Test
+    fun `merged package names remain searchable as aliases`() {
+        withDb { conn ->
+            val names = runSearch(conn, "Lasagne in confezione da 500 g")
+            assertTrue("l'alias della confezione deve restituire risultati: $names", names.isNotEmpty())
+            assertTrue(
+                "la confezione 'Lasagne in confezione da 500 g' deve portare a 'Lasagne': $names",
+                names.any { it == "Lasagne" }
             )
         }
     }

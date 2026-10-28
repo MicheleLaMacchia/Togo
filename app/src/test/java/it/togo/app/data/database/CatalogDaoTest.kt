@@ -72,8 +72,8 @@ class CatalogDaoTest {
     @Test
     fun `search matches a synonym-only accent-folded term`() {
         withDb { conn ->
-            // "caffe in grani" NON è un nome prodotto (che è "Caffè in Grani"):
-            // deve essere trovato solo tramite sinonimo accent-fold (minuscolo, senza accento).
+            // Il nome è "Caffè in Grani": la query accent-fold "caffe in grani"
+            // deve trovarlo tramite il sinonimo normalizzato (minuscolo, senza accento).
             val names = runSearch(conn, "Caffè in Grani")
             assertTrue("probe accentato 'Caffè in Grani' deve restituire risultati", names.isNotEmpty())
             assertTrue(
@@ -86,8 +86,8 @@ class CatalogDaoTest {
     @Test
     fun `search matches only via synonym accent-fold`() {
         withDb { conn ->
-            // "caffe in grani" NON è un nome prodotto (che è "Caffè in Grani"):
-            // deve essere trovato solo tramite sinonimo accent-fold (minuscolo, senza accento).
+            // Il nome è "Caffè in Grani": la query accent-fold "caffe in grani"
+            // deve trovarlo tramite il sinonimo normalizzato (minuscolo, senza accento).
             val names = runSearch(conn, "caffe in grani")
             assertTrue("probe accent-fold 'caffe in grani' deve restituire risultati", names.isNotEmpty())
             assertTrue(
@@ -126,15 +126,19 @@ class CatalogDaoTest {
     @Test
     fun `search results ordered by taxonomy`() {
         withDb { conn ->
-            val names = runSearch(conn, "latte")
-            // i risultati devono essere ordinati per tassonomia L1/L2/L3/nome
-            // "Latte intero" (Latte e yogurt) deve venire prima di "Latte di soia" (Bevande)
-            val latteInteroIndex = names.indexOfFirst { it == "Latte intero" }
-            val latteDiSoiaIndex = names.indexOfFirst { it == "Latte di soia" }
-            if (latteInteroIndex >= 0 && latteDiSoiaIndex >= 0) {
-                assertTrue("ordinamento tassonomia: Latte intero prima di Latte di soia",
-                    latteInteroIndex < latteDiSoiaIndex)
-            }
+            val names = runSearch(conn, "olive")
+            // i risultati devono essere ordinati per tassonomia L1/L2/L3/nome:
+            // "Olive Verdi" (Ortofrutta) deve venire prima di "Olive in Vaso" (Dispensa).
+            val oliveVerdiIndex = names.indexOfFirst { it == "Olive Verdi" }
+            val oliveInVasoIndex = names.indexOfFirst { it == "Olive in Vaso" }
+            assertTrue(
+                "prodotti attesi nella ricerca 'olive': $names",
+                oliveVerdiIndex >= 0 && oliveInVasoIndex >= 0,
+            )
+            assertTrue(
+                "ordinamento tassonomia: Olive Verdi prima di Olive in Vaso",
+                oliveVerdiIndex < oliveInVasoIndex,
+            )
         }
     }
 }

@@ -1,0 +1,1471 @@
+﻿original_id,original_name,proposed_canonical_name,proposed_survivor_id,action,old_l1,old_l2,old_l3,category_conflict_in_group
+1,Mela Golden,Mela Golden,1,KEEP,Ortofrutta,Frutta,Frutta fresca,NO
+2,Mela Renetta,Mela Renetta,2,KEEP,Ortofrutta,Frutta,Frutta tropicale,NO
+3,Mela Fuji,Mela Fuji,3,KEEP,Ortofrutta,Frutta,Frutta secca,NO
+4,Pera Williams,Pera Williams,4,KEEP,Ortofrutta,Frutta,Frutta fresca,NO
+5,Pera Conference,Pera Conference,5,KEEP,Ortofrutta,Frutta,Frutta tropicale,NO
+6,Banana,Banana,6,KEEP,Ortofrutta,Frutta,Frutta secca,NO
+7,Arancia,Arancia,7,KEEP,Ortofrutta,Frutta,Frutta fresca,NO
+8,Mandarina,Mandarina,8,KEEP,Ortofrutta,Frutta,Frutta tropicale,NO
+9,Limone,Limone,9,KEEP,Ortofrutta,Frutta,Frutta secca,NO
+10,Kiwi,Kiwi,10,KEEP,Ortofrutta,Frutta,Frutta fresca,NO
+11,Fragola,Fragola,11,KEEP,Ortofrutta,Frutta,Frutta tropicale,NO
+12,Lampone,Lampone,12,KEEP,Ortofrutta,Frutta,Frutta secca,NO
+13,Mirtillo,Mirtillo,13,KEEP,Ortofrutta,Frutta,Frutta fresca,NO
+14,Anguria,Anguria,14,KEEP,Ortofrutta,Frutta,Frutta tropicale,NO
+15,Melone Cantalupo,Melone Cantalupo,15,KEEP,Ortofrutta,Frutta,Frutta secca,NO
+16,Melone Retato,Melone Retato,16,KEEP,Ortofrutta,Frutta,Frutta fresca,NO
+17,Albicocca,Albicocca,17,KEEP,Ortofrutta,Frutta,Frutta tropicale,NO
+18,Pesca,Pesca,18,KEEP,Ortofrutta,Frutta,Frutta secca,NO
+19,Pesca Nettarina,Pesca Nettarina,19,KEEP,Ortofrutta,Frutta,Frutta fresca,NO
+20,Prugna,Prugna,20,KEEP,Ortofrutta,Frutta,Frutta tropicale,NO
+21,Ciliegia,Ciliegia,21,KEEP,Ortofrutta,Frutta,Frutta secca,NO
+22,Uva Bianca,Uva Bianca,22,KEEP,Ortofrutta,Frutta,Frutta fresca,NO
+23,Uva Nera,Uva Nera,23,KEEP,Ortofrutta,Frutta,Frutta tropicale,NO
+24,Ananas,Ananas,24,KEEP,Ortofrutta,Frutta,Frutta secca,NO
+25,Mango,Mango,25,KEEP,Ortofrutta,Frutta,Frutta fresca,NO
+26,Melagrana,Melagrana,26,KEEP,Ortofrutta,Frutta,Frutta tropicale,NO
+27,Fico,Fico,27,KEEP,Ortofrutta,Frutta,Frutta secca,NO
+28,Castagna,Castagna,28,KEEP,Ortofrutta,Frutta,Frutta fresca,NO
+29,Nocciola,Nocciola,29,KEEP,Ortofrutta,Frutta,Frutta tropicale,NO
+30,Cocco,Cocco,30,KEEP,Ortofrutta,Frutta,Frutta secca,NO
+31,Prugna Bio,Prugna Bio,31,KEEP,Ortofrutta,Frutta,Frutta fresca,NO
+32,Melone Cantalupo Bio,Melone Cantalupo Bio,32,KEEP,Ortofrutta,Frutta,Frutta tropicale,NO
+33,Fragola Bio,Fragola Bio,33,KEEP,Ortofrutta,Frutta,Frutta secca,NO
+34,Fico Bio,Fico Bio,34,KEEP,Ortofrutta,Frutta,Frutta fresca,NO
+35,Uva Nera Bio,Uva Nera Bio,35,KEEP,Ortofrutta,Frutta,Frutta tropicale,NO
+36,Arancia Bio,Arancia Bio,36,KEEP,Ortofrutta,Frutta,Frutta secca,NO
+37,Banana Bio,Banana Bio,37,KEEP,Ortofrutta,Frutta,Frutta fresca,NO
+38,Mirtillo Bio,Mirtillo Bio,38,KEEP,Ortofrutta,Frutta,Frutta tropicale,NO
+39,Lampone Bio,Lampone Bio,39,KEEP,Ortofrutta,Frutta,Frutta secca,NO
+40,Melone Retato Bio,Melone Retato Bio,40,KEEP,Ortofrutta,Frutta,Frutta fresca,NO
+41,Pomodoro Rametto,Pomodoro Rametto,41,KEEP,Ortofrutta,Verdura,Ortaggi freschi,NO
+42,Pomodoro Datterino,Pomodoro Datterino,42,KEEP,Ortofrutta,Verdura,Verdura confezionata,NO
+43,Pomodoro Cuore di Bue,Pomodoro Cuore di Bue,43,KEEP,Ortofrutta,Verdura,Ortaggi da cucina,NO
+44,Lattuga,Lattuga,44,KEEP,Ortofrutta,Verdura,Ortaggi freschi,NO
+45,Rucola,Rucola,45,KEEP,Ortofrutta,Verdura,Verdura confezionata,NO
+46,Iceberg,Iceberg,46,KEEP,Ortofrutta,Verdura,Ortaggi da cucina,NO
+47,Radicchio,Radicchio,47,KEEP,Ortofrutta,Verdura,Ortaggi freschi,NO
+48,Carota,Carota,48,KEEP,Ortofrutta,Verdura,Verdura confezionata,NO
+49,Patata,Patata,49,KEEP,Ortofrutta,Verdura,Ortaggi da cucina,NO
+50,Patata Dolce,Patata Dolce,50,KEEP,Ortofrutta,Verdura,Ortaggi freschi,NO
+51,Cipolla Rossa,Cipolla Rossa,51,KEEP,Ortofrutta,Verdura,Verdura confezionata,NO
+52,Cipolla Bianca,Cipolla Bianca,52,KEEP,Ortofrutta,Verdura,Ortaggi da cucina,NO
+53,Aglio,Aglio,53,KEEP,Ortofrutta,Verdura,Ortaggi freschi,NO
+54,Zucchina,Zucchina,54,KEEP,Ortofrutta,Verdura,Verdura confezionata,NO
+55,Melanzana,Melanzana,55,KEEP,Ortofrutta,Verdura,Ortaggi da cucina,NO
+56,Peperone Rosso,Peperone Rosso,56,KEEP,Ortofrutta,Verdura,Ortaggi freschi,NO
+57,Peperone Verde,Peperone Verde,57,KEEP,Ortofrutta,Verdura,Verdura confezionata,NO
+58,Peperoncino,Peperoncino,58,KEEP,Ortofrutta,Verdura,Ortaggi da cucina,NO
+59,Sedano,Sedano,59,KEEP,Ortofrutta,Verdura,Ortaggi freschi,NO
+60,Finocchio,Finocchio,60,KEEP,Ortofrutta,Verdura,Verdura confezionata,NO
+61,Broccoli,Broccoli,61,KEEP,Ortofrutta,Verdura,Ortaggi da cucina,NO
+62,Cavolfiore,Cavolfiore,62,KEEP,Ortofrutta,Verdura,Ortaggi freschi,NO
+63,Cavolo Nero,Cavolo Nero,63,KEEP,Ortofrutta,Verdura,Verdura confezionata,NO
+64,Cicoria,Cicoria,64,KEEP,Ortofrutta,Verdura,Ortaggi da cucina,NO
+65,Barbabietola,Barbabietola,65,KEEP,Ortofrutta,Verdura,Ortaggi freschi,NO
+66,Rapa,Rapa,66,KEEP,Ortofrutta,Verdura,Verdura confezionata,NO
+67,Porro,Porro,67,KEEP,Ortofrutta,Verdura,Ortaggi da cucina,NO
+68,Spinaci,Spinaci,68,KEEP,Ortofrutta,Verdura,Ortaggi freschi,NO
+69,Cetriolo,Cetriolo,69,KEEP,Ortofrutta,Verdura,Verdura confezionata,NO
+70,Zucca,Zucca,70,KEEP,Ortofrutta,Verdura,Ortaggi da cucina,NO
+71,Melanzana Bio,Melanzana Bio,71,KEEP,Ortofrutta,Verdura,Ortaggi freschi,NO
+72,Cicoria Bio,Cicoria Bio,72,KEEP,Ortofrutta,Verdura,Verdura confezionata,NO
+73,Peperone Rosso Bio,Peperone Rosso Bio,73,KEEP,Ortofrutta,Verdura,Ortaggi da cucina,NO
+74,Cipolla Bianca Bio,Cipolla Bianca Bio,74,KEEP,Ortofrutta,Verdura,Ortaggi freschi,NO
+75,Peperone Verde Bio,Peperone Verde Bio,75,KEEP,Ortofrutta,Verdura,Verdura confezionata,NO
+76,Broccoli Bio,Broccoli Bio,76,KEEP,Ortofrutta,Verdura,Ortaggi da cucina,NO
+77,Peperoncino Bio,Peperoncino Bio,77,KEEP,Ortofrutta,Verdura,Ortaggi freschi,NO
+78,Carota Bio,Carota Bio,78,KEEP,Ortofrutta,Verdura,Verdura confezionata,NO
+79,Porro Bio,Porro Bio,79,KEEP,Ortofrutta,Verdura,Ortaggi da cucina,NO
+80,Finocchio Bio,Finocchio Bio,80,KEEP,Ortofrutta,Verdura,Ortaggi freschi,NO
+81,Basilico,Basilico,81,KEEP,Ortofrutta,Erbe e contorni,Erbe aromatiche,NO
+82,Prezzemolo,Prezzemolo,82,KEEP,Ortofrutta,Erbe e contorni,Insalate e mix,NO
+83,Rosmarino,Rosmarino,83,KEEP,Ortofrutta,Erbe e contorni,Erbe aromatiche,NO
+84,Salvia,Salvia,84,KEEP,Ortofrutta,Erbe e contorni,Insalate e mix,NO
+85,Origano,Origano,85,KEEP,Ortofrutta,Erbe e contorni,Erbe aromatiche,NO
+86,Menta,Menta,86,KEEP,Ortofrutta,Erbe e contorni,Insalate e mix,NO
+87,Coriandolo,Coriandolo,87,KEEP,Ortofrutta,Erbe e contorni,Erbe aromatiche,NO
+88,Insalata Mista,Insalata Mista,88,KEEP,Ortofrutta,Erbe e contorni,Insalate e mix,NO
+89,Mix per Wok,Mix per Wok,89,KEEP,Ortofrutta,Erbe e contorni,Erbe aromatiche,NO
+90,Olive Verdi,Olive Verdi,90,KEEP,Ortofrutta,Erbe e contorni,Insalate e mix,NO
+91,Rosmarino Bio,Rosmarino Bio,91,KEEP,Ortofrutta,Erbe e contorni,Erbe aromatiche,NO
+92,Origano Bio,Origano Bio,92,KEEP,Ortofrutta,Erbe e contorni,Insalate e mix,NO
+93,Insalata Mista Bio,Insalata Mista Bio,93,KEEP,Ortofrutta,Erbe e contorni,Erbe aromatiche,NO
+94,Prezzemolo Bio,Prezzemolo Bio,94,KEEP,Ortofrutta,Erbe e contorni,Insalate e mix,NO
+95,Coriandolo Bio,Coriandolo Bio,95,KEEP,Ortofrutta,Erbe e contorni,Erbe aromatiche,NO
+96,Basilico Bio,Basilico Bio,96,KEEP,Ortofrutta,Erbe e contorni,Insalate e mix,NO
+97,Mix per Wok Bio,Mix per Wok Bio,97,KEEP,Ortofrutta,Erbe e contorni,Erbe aromatiche,NO
+98,Salvia Bio,Salvia Bio,98,KEEP,Ortofrutta,Erbe e contorni,Insalate e mix,NO
+99,Menta Bio,Menta Bio,99,KEEP,Ortofrutta,Erbe e contorni,Erbe aromatiche,NO
+100,Olive Verdi Bio,Olive Verdi Bio,100,KEEP,Ortofrutta,Erbe e contorni,Insalate e mix,NO
+101,Rosmarino in vaso,Rosmarino in vaso,101,KEEP,Ortofrutta,Erbe e contorni,Erbe aromatiche,NO
+102,Origano in vaso,Origano in vaso,102,KEEP,Ortofrutta,Erbe e contorni,Insalate e mix,NO
+103,Insalata Mista in vaso,Insalata Mista in vaso,103,KEEP,Ortofrutta,Erbe e contorni,Erbe aromatiche,NO
+104,Prezzemolo in vaso,Prezzemolo in vaso,104,KEEP,Ortofrutta,Erbe e contorni,Insalate e mix,NO
+105,Coriandolo in vaso,Coriandolo in vaso,105,KEEP,Ortofrutta,Erbe e contorni,Erbe aromatiche,NO
+106,Basilico in vaso,Basilico in vaso,106,KEEP,Ortofrutta,Erbe e contorni,Insalate e mix,NO
+107,Mix per Wok in vaso,Mix per Wok in vaso,107,KEEP,Ortofrutta,Erbe e contorni,Erbe aromatiche,NO
+108,Salvia in vaso,Salvia in vaso,108,KEEP,Ortofrutta,Erbe e contorni,Insalate e mix,NO
+109,Menta in vaso,Menta in vaso,109,KEEP,Ortofrutta,Erbe e contorni,Erbe aromatiche,NO
+110,Olive Verdi in vaso,Olive Verdi in vaso,110,KEEP,Ortofrutta,Erbe e contorni,Insalate e mix,NO
+111,Rosmarino in bustina,Rosmarino in bustina,111,KEEP,Ortofrutta,Erbe e contorni,Erbe aromatiche,NO
+112,Origano in bustina,Origano in bustina,112,KEEP,Ortofrutta,Erbe e contorni,Insalate e mix,NO
+113,Insalata Mista in bustina,Insalata Mista in bustina,113,KEEP,Ortofrutta,Erbe e contorni,Erbe aromatiche,NO
+114,Prezzemolo in bustina,Prezzemolo in bustina,114,KEEP,Ortofrutta,Erbe e contorni,Insalate e mix,NO
+115,Coriandolo in bustina,Coriandolo in bustina,115,KEEP,Ortofrutta,Erbe e contorni,Erbe aromatiche,NO
+116,Basilico in bustina,Basilico in bustina,116,KEEP,Ortofrutta,Erbe e contorni,Insalate e mix,NO
+117,Mix per Wok in bustina,Mix per Wok in bustina,117,KEEP,Ortofrutta,Erbe e contorni,Erbe aromatiche,NO
+118,Salvia in bustina,Salvia in bustina,118,KEEP,Ortofrutta,Erbe e contorni,Insalate e mix,NO
+119,Menta in bustina,Menta in bustina,119,KEEP,Ortofrutta,Erbe e contorni,Erbe aromatiche,NO
+120,Olive Verdi in bustina,Olive Verdi in bustina,120,KEEP,Ortofrutta,Erbe e contorni,Insalate e mix,NO
+121,Pane Casereccio,Pane Casereccio,121,KEEP,Panetteria,Pane,Pane tradizionale,NO
+122,Pane Toscano,Pane Toscano,122,KEEP,Panetteria,Pane,Pane speciale,NO
+123,Pane Pugliese,Pane Pugliese,123,KEEP,Panetteria,Pane,Pane senza glutine,NO
+124,Pane di Segale,Pane di Segale,124,KEEP,Panetteria,Pane,Pane tradizionale,NO
+125,Pane Integrale,Pane Integrale,125,KEEP,Panetteria,Pane,Pane speciale,NO
+126,Pane Francese,Pane Francese,126,KEEP,Panetteria,Pane,Pane senza glutine,NO
+127,Focaccia Genovese,Focaccia Genovese,127,KEEP,Panetteria,Pane,Pane tradizionale,NO
+128,Focaccia Rossa,Focaccia Rossa,128,KEEP,Panetteria,Pane,Pane speciale,NO
+129,Ciabatta,Ciabatta,129,KEEP,Panetteria,Pane,Pane senza glutine,NO
+130,Panino Integrale,Panino Integrale,130,KEEP,Panetteria,Pane,Pane tradizionale,NO
+131,Grissini,Grissini,131,KEEP,Panetteria,Pane,Pane speciale,NO
+132,Grissini Integrali,Grissini Integrali,132,KEEP,Panetteria,Pane,Pane senza glutine,NO
+133,Pane Azzimo,Pane Azzimo,133,KEEP,Panetteria,Pane,Pane tradizionale,NO
+134,Pane ai Cereali,Pane ai Cereali,134,KEEP,Panetteria,Pane,Pane speciale,NO
+135,Panino al Sesamo,Panino al Sesamo,135,KEEP,Panetteria,Pane,Pane senza glutine,NO
+136,Pane,Pane,136,KEEP,Panetteria,Pane,Pane tradizionale,NO
+137,Grissini Bio,Grissini Bio,137,KEEP,Panetteria,Pane,Pane speciale,NO
+138,Pane di Segale Bio,Pane di Segale Bio,138,KEEP,Panetteria,Pane,Pane senza glutine,NO
+139,Grissini Integrali Bio,Grissini Integrali Bio,139,KEEP,Panetteria,Pane,Pane tradizionale,NO
+140,Pane Casereccio Bio,Pane Casereccio Bio,140,KEEP,Panetteria,Pane,Pane speciale,NO
+141,Pane Azzimo Bio,Pane Azzimo Bio,141,KEEP,Panetteria,Pane,Pane senza glutine,NO
+142,Panino al Sesamo Bio,Panino al Sesamo Bio,142,KEEP,Panetteria,Pane,Pane tradizionale,NO
+143,Ciabatta Bio,Ciabatta Bio,143,KEEP,Panetteria,Pane,Pane speciale,NO
+144,Panino Integrale Bio,Panino Integrale Bio,144,KEEP,Panetteria,Pane,Pane senza glutine,NO
+145,Pane Pugliese Bio,Pane Pugliese Bio,145,KEEP,Panetteria,Pane,Pane tradizionale,NO
+146,Pane Francese Bio,Pane Francese Bio,146,KEEP,Panetteria,Pane,Pane speciale,NO
+147,Pane Bio,Pane Bio,147,KEEP,Panetteria,Pane,Pane senza glutine,NO
+148,Pane Integrale Bio,Pane Integrale Bio,148,KEEP,Panetteria,Pane,Pane tradizionale,NO
+149,Focaccia Genovese Bio,Focaccia Genovese Bio,149,KEEP,Panetteria,Pane,Pane speciale,NO
+150,Pane Toscano Bio,Pane Toscano Bio,150,KEEP,Panetteria,Pane,Pane senza glutine,NO
+151,Croissant,Croissant,151,KEEP,Panetteria,Panificati,Panificati al burro,NO
+152,Cornetto,Cornetto,152,KEEP,Panetteria,Panificati,Panificati salati,NO
+153,Pane al Latte,Pane al Latte,153,KEEP,Panetteria,Panificati,Panificati al burro,NO
+154,Brioche,Brioche,154,KEEP,Panetteria,Panificati,Panificati salati,NO
+155,Krapfen,Krapfen,155,KEEP,Panetteria,Panificati,Panificati al burro,NO
+156,Muffin,Muffin,156,KEEP,Panetteria,Panificati,Panificati salati,NO
+157,Saccottino,Saccottino,157,KEEP,Panetteria,Panificati,Panificati al burro,NO
+158,Treccia,Treccia,158,KEEP,Panetteria,Panificati,Panificati salati,NO
+159,Fagottino,Fagottino,159,KEEP,Panetteria,Panificati,Panificati al burro,NO
+160,Panzerotto,Panzerotto,160,KEEP,Panetteria,Panificati,Panificati salati,NO
+161,Sfogliatina,Sfogliatina,161,KEEP,Panetteria,Panificati,Panificati al burro,YES
+162,Bombolone,Bombolone,162,KEEP,Panetteria,Panificati,Panificati salati,YES
+163,Croissant Bio,Croissant Bio,163,KEEP,Panetteria,Panificati,Panificati al burro,NO
+164,Sfogliatina Bio,Sfogliatina Bio,164,KEEP,Panetteria,Panificati,Panificati salati,NO
+165,Bombolone Bio,Bombolone Bio,165,KEEP,Panetteria,Panificati,Panificati al burro,NO
+166,Cornetto Bio,Cornetto Bio,166,KEEP,Panetteria,Panificati,Panificati salati,NO
+167,Krapfen Bio,Krapfen Bio,167,KEEP,Panetteria,Panificati,Panificati al burro,NO
+168,Muffin Bio,Muffin Bio,168,KEEP,Panetteria,Panificati,Panificati salati,NO
+169,Panzerotto Bio,Panzerotto Bio,169,KEEP,Panetteria,Panificati,Panificati al burro,NO
+170,Saccottino Bio,Saccottino Bio,170,KEEP,Panetteria,Panificati,Panificati salati,NO
+171,Treccia Bio,Treccia Bio,171,KEEP,Panetteria,Panificati,Panificati al burro,NO
+172,Pane al Latte Bio,Pane al Latte Bio,172,KEEP,Panetteria,Panificati,Panificati salati,NO
+173,Brioche Bio,Brioche Bio,173,KEEP,Panetteria,Panificati,Panificati al burro,NO
+174,Fagottino Bio,Fagottino Bio,174,KEEP,Panetteria,Panificati,Panificati salati,NO
+175,Croissant in confezione da 4,Croissant,151,MERGE_ID_REFERENCE_REVIEW,Panetteria,Panificati,Panificati al burro,NO
+176,Sfogliatina in confezione da 4,Sfogliatina,161,MERGE_ID_REFERENCE_REVIEW,Panetteria,Panificati,Panificati salati,YES
+177,Bombolone in confezione da 4,Bombolone,162,MERGE_ID_REFERENCE_REVIEW,Panetteria,Panificati,Panificati al burro,YES
+178,Cornetto in confezione da 4,Cornetto,152,MERGE_ID_REFERENCE_REVIEW,Panetteria,Panificati,Panificati salati,NO
+179,Krapfen in confezione da 4,Krapfen,155,MERGE_ID_REFERENCE_REVIEW,Panetteria,Panificati,Panificati al burro,NO
+180,Muffin in confezione da 4,Muffin,156,MERGE_ID_REFERENCE_REVIEW,Panetteria,Panificati,Panificati salati,NO
+181,Tortina,Tortina,181,KEEP,Panetteria,Dolci da forno,Dolci da forno tradizionali,NO
+182,Merenda Dolce,Merenda Dolce,182,KEEP,Panetteria,Dolci da forno,Merendine da forno,YES
+183,Frolla,Frolla,183,KEEP,Panetteria,Dolci da forno,Dolci da forno tradizionali,NO
+184,Ciambella,Ciambella,184,KEEP,Panetteria,Dolci da forno,Merendine da forno,NO
+185,Pan di Spagna,Pan di Spagna,185,KEEP,Panetteria,Dolci da forno,Dolci da forno tradizionali,YES
+186,Torta allo Yogurt,Torta allo Yogurt,186,KEEP,Panetteria,Dolci da forno,Merendine da forno,NO
+187,Crostatina,Crostatina,187,KEEP,Panetteria,Dolci da forno,Dolci da forno tradizionali,NO
+188,Eclair,Eclair,188,KEEP,Panetteria,Dolci da forno,Merendine da forno,NO
+189,Tartufo Dolce,Tartufo Dolce,189,KEEP,Panetteria,Dolci da forno,Dolci da forno tradizionali,NO
+190,Brioche Farcita,Brioche Farcita,190,KEEP,Panetteria,Dolci da forno,Merendine da forno,NO
+191,Frollino,Frollino,191,KEEP,Panetteria,Dolci da forno,Dolci da forno tradizionali,NO
+192,Camoscio,Camoscio,192,KEEP,Panetteria,Dolci da forno,Merendine da forno,NO
+193,Frollino Bio,Frollino Bio,193,KEEP,Panetteria,Dolci da forno,Dolci da forno tradizionali,NO
+194,Pan di Spagna Bio,Pan di Spagna Bio,194,KEEP,Panetteria,Dolci da forno,Merendine da forno,NO
+195,Tartufo Dolce Bio,Tartufo Dolce Bio,195,KEEP,Panetteria,Dolci da forno,Dolci da forno tradizionali,NO
+196,Eclair Bio,Eclair Bio,196,KEEP,Panetteria,Dolci da forno,Merendine da forno,NO
+197,Merenda Dolce Bio,Merenda Dolce Bio,197,KEEP,Panetteria,Dolci da forno,Dolci da forno tradizionali,NO
+198,Brioche Farcita Bio,Brioche Farcita Bio,198,KEEP,Panetteria,Dolci da forno,Merendine da forno,NO
+199,Frolla Bio,Frolla Bio,199,KEEP,Panetteria,Dolci da forno,Dolci da forno tradizionali,NO
+200,Crostatina Bio,Crostatina Bio,200,KEEP,Panetteria,Dolci da forno,Merendine da forno,NO
+201,Torta allo Yogurt Bio,Torta allo Yogurt Bio,201,KEEP,Panetteria,Dolci da forno,Dolci da forno tradizionali,NO
+202,Camoscio Bio,Camoscio Bio,202,KEEP,Panetteria,Dolci da forno,Merendine da forno,NO
+203,Ciambella Bio,Ciambella Bio,203,KEEP,Panetteria,Dolci da forno,Dolci da forno tradizionali,NO
+204,Tortina Bio,Tortina Bio,204,KEEP,Panetteria,Dolci da forno,Merendine da forno,NO
+205,Frollino in confezione da 4,Frollino,191,MERGE_ID_REFERENCE_REVIEW,Panetteria,Dolci da forno,Dolci da forno tradizionali,NO
+206,Pan di Spagna in confezione da 4,Pan di Spagna,185,MERGE_ID_REFERENCE_REVIEW,Panetteria,Dolci da forno,Merendine da forno,YES
+207,Tartufo Dolce in confezione da 4,Tartufo Dolce,189,MERGE_ID_REFERENCE_REVIEW,Panetteria,Dolci da forno,Dolci da forno tradizionali,NO
+208,Eclair in confezione da 4,Eclair,188,MERGE_ID_REFERENCE_REVIEW,Panetteria,Dolci da forno,Merendine da forno,NO
+209,Merenda Dolce in confezione da 4,Merenda Dolce,182,MERGE_ID_REFERENCE_REVIEW,Panetteria,Dolci da forno,Dolci da forno tradizionali,YES
+210,Brioche Farcita in confezione da 4,Brioche Farcita,190,MERGE_ID_REFERENCE_REVIEW,Panetteria,Dolci da forno,Merendine da forno,NO
+211,Tagliata di Manzo,Tagliata di Manzo,211,KEEP,Carne,Carne bovina,Tagli di manzo,NO
+212,Filetto di Manzo,Filetto di Manzo,212,KEEP,Carne,Carne bovina,Carne bovina macinata,NO
+213,Carpaccio,Carpaccio,213,KEEP,Carne,Carne bovina,Preparati bovini,NO
+214,Hamburger di Manzo,Hamburger di Manzo,214,KEEP,Carne,Carne bovina,Tagli di manzo,NO
+215,Polpettone,Polpettone,215,KEEP,Carne,Carne bovina,Carne bovina macinata,NO
+216,Costine di Manzo,Costine di Manzo,216,KEEP,Carne,Carne bovina,Preparati bovini,NO
+217,Stufato di Manzo,Stufato di Manzo,217,KEEP,Carne,Carne bovina,Tagli di manzo,NO
+218,Brasato,Brasato,218,KEEP,Carne,Carne bovina,Carne bovina macinata,NO
+219,Roastbeef,Roastbeef,219,KEEP,Carne,Carne bovina,Preparati bovini,NO
+220,Trancio di Manzo,Trancio di Manzo,220,KEEP,Carne,Carne bovina,Tagli di manzo,NO
+221,Sottofiletto,Sottofiletto,221,KEEP,Carne,Carne bovina,Carne bovina macinata,NO
+222,Involtino di Manzo,Involtino di Manzo,222,KEEP,Carne,Carne bovina,Preparati bovini,NO
+223,Straccetti di Manzo,Straccetti di Manzo,223,KEEP,Carne,Carne bovina,Tagli di manzo,NO
+224,Goulash,Goulash,224,KEEP,Carne,Carne bovina,Carne bovina macinata,NO
+225,Bistecca,Bistecca,225,KEEP,Carne,Carne bovina,Preparati bovini,NO
+226,Manzo,Manzo,226,KEEP,Carne,Carne bovina,Tagli di manzo,NO
+227,Trancio di Manzo Bio,Trancio di Manzo Bio,227,KEEP,Carne,Carne bovina,Carne bovina macinata,NO
+228,Tagliata di Manzo Bio,Tagliata di Manzo Bio,228,KEEP,Carne,Carne bovina,Preparati bovini,NO
+229,Filetto di Manzo Bio,Filetto di Manzo Bio,229,KEEP,Carne,Carne bovina,Tagli di manzo,NO
+230,Stufato di Manzo Bio,Stufato di Manzo Bio,230,KEEP,Carne,Carne bovina,Carne bovina macinata,NO
+231,Roastbeef Bio,Roastbeef Bio,231,KEEP,Carne,Carne bovina,Preparati bovini,NO
+232,Manzo Bio,Manzo Bio,232,KEEP,Carne,Carne bovina,Tagli di manzo,NO
+233,Costine di Manzo Bio,Costine di Manzo Bio,233,KEEP,Carne,Carne bovina,Carne bovina macinata,NO
+234,Goulash Bio,Goulash Bio,234,KEEP,Carne,Carne bovina,Preparati bovini,NO
+235,Hamburger di Manzo Bio,Hamburger di Manzo Bio,235,KEEP,Carne,Carne bovina,Tagli di manzo,NO
+236,Involtino di Manzo Bio,Involtino di Manzo Bio,236,KEEP,Carne,Carne bovina,Carne bovina macinata,NO
+237,Polpettone Bio,Polpettone Bio,237,KEEP,Carne,Carne bovina,Preparati bovini,NO
+238,Carpaccio Bio,Carpaccio Bio,238,KEEP,Carne,Carne bovina,Tagli di manzo,NO
+239,Brasato Bio,Brasato Bio,239,KEEP,Carne,Carne bovina,Carne bovina macinata,NO
+240,Sottofiletto Bio,Sottofiletto Bio,240,KEEP,Carne,Carne bovina,Preparati bovini,NO
+241,Costine di Maiale,Costine di Maiale,241,KEEP,Carne,Carne suina,Tagli di maiale,NO
+242,Pancetta,Pancetta,242,KEEP,Carne,Carne suina,Preparati suini,NO
+243,Guanciale,Guanciale,243,KEEP,Carne,Carne suina,Tagli di maiale,NO
+244,Lonza di Maiale,Lonza di Maiale,244,KEEP,Carne,Carne suina,Preparati suini,NO
+245,Lombo di Maiale,Lombo di Maiale,245,KEEP,Carne,Carne suina,Tagli di maiale,NO
+246,Salsiccia,Salsiccia,246,KEEP,Carne,Carne suina,Preparati suini,NO
+247,Salsiccia di Caccia,Salsiccia di Caccia,247,KEEP,Carne,Carne suina,Tagli di maiale,NO
+248,Porchetta,Porchetta,248,KEEP,Carne,Carne suina,Preparati suini,NO
+249,Pancetta Arrotolata,Pancetta Arrotolata,249,KEEP,Carne,Carne suina,Tagli di maiale,NO
+250,Filetto di Maiale,Filetto di Maiale,250,KEEP,Carne,Carne suina,Preparati suini,NO
+251,Straccetti di Maiale,Straccetti di Maiale,251,KEEP,Carne,Carne suina,Tagli di maiale,NO
+252,Tagliatelle di Maiale,Tagliatelle di Maiale,252,KEEP,Carne,Carne suina,Preparati suini,NO
+253,Maiale,Maiale,253,KEEP,Carne,Carne suina,Tagli di maiale,NO
+254,Lombo di Maiale Bio,Lombo di Maiale Bio,254,KEEP,Carne,Carne suina,Preparati suini,NO
+255,Tagliatelle di Maiale Bio,Tagliatelle di Maiale Bio,255,KEEP,Carne,Carne suina,Tagli di maiale,NO
+256,Maiale Bio,Maiale Bio,256,KEEP,Carne,Carne suina,Preparati suini,NO
+257,Lonza di Maiale Bio,Lonza di Maiale Bio,257,KEEP,Carne,Carne suina,Tagli di maiale,NO
+258,Salsiccia di Caccia Bio,Salsiccia di Caccia Bio,258,KEEP,Carne,Carne suina,Preparati suini,NO
+259,Salsiccia Bio,Salsiccia Bio,259,KEEP,Carne,Carne suina,Tagli di maiale,NO
+260,Straccetti di Maiale Bio,Straccetti di Maiale Bio,260,KEEP,Carne,Carne suina,Preparati suini,NO
+261,Filetto di Maiale Bio,Filetto di Maiale Bio,261,KEEP,Carne,Carne suina,Tagli di maiale,NO
+262,Costine di Maiale Bio,Costine di Maiale Bio,262,KEEP,Carne,Carne suina,Preparati suini,NO
+263,Pancetta Bio,Pancetta Bio,263,KEEP,Carne,Carne suina,Tagli di maiale,NO
+264,Porchetta Bio,Porchetta Bio,264,KEEP,Carne,Carne suina,Preparati suini,NO
+265,Pancetta Arrotolata Bio,Pancetta Arrotolata Bio,265,KEEP,Carne,Carne suina,Tagli di maiale,NO
+266,Guanciale Bio,Guanciale Bio,266,KEEP,Carne,Carne suina,Preparati suini,NO
+267,Lombo di Maiale in confezione da 400 g,Lombo di Maiale,245,MERGE_ID_REFERENCE_REVIEW,Carne,Carne suina,Tagli di maiale,NO
+268,Tagliatelle di Maiale in confezione da 400 g,Tagliatelle di Maiale,252,MERGE_ID_REFERENCE_REVIEW,Carne,Carne suina,Preparati suini,NO
+269,Maiale in confezione da 400 g,Maiale,253,MERGE_ID_REFERENCE_REVIEW,Carne,Carne suina,Tagli di maiale,NO
+270,Lonza di Maiale in confezione da 400 g,Lonza di Maiale,244,MERGE_ID_REFERENCE_REVIEW,Carne,Carne suina,Preparati suini,NO
+271,Petto di Pollo,Petto di Pollo,271,KEEP,Carne,Pollame,Tagli di pollo,NO
+272,Cosce di Pollo,Cosce di Pollo,272,KEEP,Carne,Pollame,Pollame intero,YES
+273,Sovracosce,Sovracosce,273,KEEP,Carne,Pollame,Carni alternative,NO
+274,Ali di Pollo,Ali di Pollo,274,KEEP,Carne,Pollame,Tagli di pollo,YES
+275,Tacchino a Fette,Tacchino a Fette,275,KEEP,Carne,Pollame,Pollame intero,NO
+276,Faraona,Faraona,276,KEEP,Carne,Pollame,Carni alternative,NO
+277,Coniglio,Coniglio,277,KEEP,Carne,Pollame,Tagli di pollo,NO
+278,Salsiccia di Pollo,Salsiccia di Pollo,278,KEEP,Carne,Pollame,Pollame intero,NO
+279,Hamburger di Pollo,Hamburger di Pollo,279,KEEP,Carne,Pollame,Carni alternative,NO
+280,Straccetti di Pollo,Straccetti di Pollo,280,KEEP,Carne,Pollame,Tagli di pollo,NO
+281,Coscia di Tacchino,Coscia di Tacchino,281,KEEP,Carne,Pollame,Pollame intero,NO
+282,Petto di Tacchino,Petto di Tacchino,282,KEEP,Carne,Pollame,Carni alternative,NO
+283,Pollo,Pollo,283,KEEP,Carne,Pollame,Pollame intero,NO
+284,Petto di Tacchino Bio,Petto di Tacchino Bio,284,KEEP,Carne,Pollame,Pollame intero,NO
+285,Cosce di Pollo Bio,Cosce di Pollo Bio,285,KEEP,Carne,Pollame,Carni alternative,NO
+286,Ali di Pollo Bio,Ali di Pollo Bio,286,KEEP,Carne,Pollame,Tagli di pollo,NO
+287,Sovracosce Bio,Sovracosce Bio,287,KEEP,Carne,Pollame,Pollame intero,NO
+288,Faraona Bio,Faraona Bio,288,KEEP,Carne,Pollame,Carni alternative,NO
+289,Petto di Pollo Bio,Petto di Pollo Bio,289,KEEP,Carne,Pollame,Tagli di pollo,NO
+290,Coscia di Tacchino Bio,Coscia di Tacchino Bio,290,KEEP,Carne,Pollame,Pollame intero,NO
+291,Tacchino a Fette Bio,Tacchino a Fette Bio,291,KEEP,Carne,Pollame,Carni alternative,NO
+292,Hamburger di Pollo Bio,Hamburger di Pollo Bio,292,KEEP,Carne,Pollame,Tagli di pollo,NO
+293,Salsiccia di Pollo Bio,Salsiccia di Pollo Bio,293,KEEP,Carne,Pollame,Pollame intero,NO
+294,Straccetti di Pollo Bio,Straccetti di Pollo Bio,294,KEEP,Carne,Pollame,Carni alternative,NO
+295,Pollo Bio,Pollo Bio,295,KEEP,Carne,Pollame,Tagli di pollo,NO
+296,Coniglio Bio,Coniglio Bio,296,KEEP,Carne,Pollame,Pollame intero,NO
+297,Petto di Tacchino in confezione da 400 g,Petto di Tacchino,282,MERGE_ID_REFERENCE_REVIEW,Carne,Pollame,Carni alternative,NO
+298,Cosce di Pollo in confezione da 400 g,Cosce di Pollo,272,MERGE_ID_REFERENCE_REVIEW,Carne,Pollame,Tagli di pollo,YES
+299,Ali di Pollo in confezione da 400 g,Ali di Pollo,274,MERGE_ID_REFERENCE_REVIEW,Carne,Pollame,Pollame intero,YES
+300,Sovracosce in confezione da 400 g,Sovracosce,273,MERGE_ID_REFERENCE_REVIEW,Carne,Pollame,Carni alternative,NO
+301,Salsiccia Fresca,Salsiccia Fresca,301,KEEP,Carne,Salumi freschi,Salsicce fresche,NO
+302,Cotechino,Cotechino,302,KEEP,Carne,Salumi freschi,Salumi cotti freschi,NO
+303,Zampone,Zampone,303,KEEP,Carne,Salumi freschi,Salsicce fresche,NO
+304,Luganiga,Luganiga,304,KEEP,Carne,Salumi freschi,Salumi cotti freschi,YES
+305,Salsiccia di Suino,Salsiccia di Suino,305,KEEP,Carne,Salumi freschi,Salsicce fresche,NO
+306,Bolognese Fresco,Bolognese Fresco,306,KEEP,Carne,Salumi freschi,Salumi cotti freschi,NO
+307,Polpa di Suino,Polpa di Suino,307,KEEP,Carne,Salumi freschi,Salsicce fresche,YES
+308,Coppa di Suino,Coppa di Suino,308,KEEP,Carne,Salumi freschi,Salumi cotti freschi,NO
+309,Porchetta Aromatica,Porchetta Aromatica,309,KEEP,Carne,Salumi freschi,Salsicce fresche,NO
+310,Salsiccia Piccante,Salsiccia Piccante,310,KEEP,Carne,Salumi freschi,Salumi cotti freschi,NO
+311,Salsiccia Dolce,Salsiccia Dolce,311,KEEP,Carne,Salumi freschi,Salsicce fresche,NO
+312,Wurstel Fresco,Wurstel Fresco,312,KEEP,Carne,Salumi freschi,Salumi cotti freschi,NO
+313,Luganiga in confezione da 400 g,Luganiga,304,MERGE_ID_REFERENCE_REVIEW,Carne,Salumi freschi,Salsicce fresche,YES
+314,Salsiccia Piccante in confezione da 400 g,Salsiccia Piccante,310,MERGE_ID_REFERENCE_REVIEW,Carne,Salumi freschi,Salumi cotti freschi,NO
+315,Salsiccia Dolce in confezione da 400 g,Salsiccia Dolce,311,MERGE_ID_REFERENCE_REVIEW,Carne,Salumi freschi,Salsicce fresche,NO
+316,Wurstel Fresco in confezione da 400 g,Wurstel Fresco,312,MERGE_ID_REFERENCE_REVIEW,Carne,Salumi freschi,Salumi cotti freschi,NO
+317,Porchetta Aromatica in confezione da 400 g,Porchetta Aromatica,309,MERGE_ID_REFERENCE_REVIEW,Carne,Salumi freschi,Salsicce fresche,NO
+318,Bolognese Fresco in confezione da 400 g,Bolognese Fresco,306,MERGE_ID_REFERENCE_REVIEW,Carne,Salumi freschi,Salumi cotti freschi,NO
+319,Salsiccia Fresca in confezione da 400 g,Salsiccia Fresca,301,MERGE_ID_REFERENCE_REVIEW,Carne,Salumi freschi,Salsicce fresche,NO
+320,Coppa di Suino in confezione da 400 g,Coppa di Suino,308,MERGE_ID_REFERENCE_REVIEW,Carne,Salumi freschi,Salumi cotti freschi,NO
+321,Zampone in confezione da 400 g,Zampone,303,MERGE_ID_REFERENCE_REVIEW,Carne,Salumi freschi,Salsicce fresche,NO
+322,Polpa di Suino in confezione da 400 g,Polpa di Suino,307,MERGE_ID_REFERENCE_REVIEW,Carne,Salumi freschi,Salumi cotti freschi,YES
+323,Salsiccia di Suino in confezione da 400 g,Salsiccia di Suino,305,MERGE_ID_REFERENCE_REVIEW,Carne,Salumi freschi,Salsicce fresche,NO
+324,Cotechino in confezione da 400 g,Cotechino,302,MERGE_ID_REFERENCE_REVIEW,Carne,Salumi freschi,Salumi cotti freschi,NO
+325,Luganiga in confezione da 1 kg,Luganiga,304,MERGE_ID_REFERENCE_REVIEW,Carne,Salumi freschi,Salsicce fresche,YES
+326,Salsiccia Piccante in confezione da 1 kg,Salsiccia Piccante,310,MERGE_ID_REFERENCE_REVIEW,Carne,Salumi freschi,Salumi cotti freschi,NO
+327,Salsiccia Dolce in confezione da 1 kg,Salsiccia Dolce,311,MERGE_ID_REFERENCE_REVIEW,Carne,Salumi freschi,Salsicce fresche,NO
+328,Wurstel Fresco in confezione da 1 kg,Wurstel Fresco,312,MERGE_ID_REFERENCE_REVIEW,Carne,Salumi freschi,Salumi cotti freschi,NO
+329,Porchetta Aromatica in confezione da 1 kg,Porchetta Aromatica,309,MERGE_ID_REFERENCE_REVIEW,Carne,Salumi freschi,Salsicce fresche,NO
+330,Bolognese Fresco in confezione da 1 kg,Bolognese Fresco,306,MERGE_ID_REFERENCE_REVIEW,Carne,Salumi freschi,Salumi cotti freschi,NO
+331,Salmone Fresco,Salmone Fresco,331,KEEP,Pesce,Pesce fresco,Pesce bianco fresco,NO
+332,Tonno Fresco,Tonno Fresco,332,KEEP,Pesce,Pesce fresco,Pesce rosso fresco,YES
+333,Branzino,Branzino,333,KEEP,Pesce,Pesce fresco,Pesce pregiato,YES
+334,Orata,Orata,334,KEEP,Pesce,Pesce fresco,Pesce bianco fresco,YES
+335,Spigola,Spigola,335,KEEP,Pesce,Pesce fresco,Pesce rosso fresco,NO
+336,Merluzzo,Merluzzo,336,KEEP,Pesce,Pesce fresco,Pesce pregiato,YES
+337,Acciughe,Acciughe,337,KEEP,Pesce,Pesce fresco,Pesce bianco fresco,YES
+338,Sardine,Sardine,338,KEEP,Pesce,Pesce fresco,Pesce rosso fresco,YES
+339,Triglia,Triglia,339,KEEP,Pesce,Pesce fresco,Pesce pregiato,NO
+340,Cefalo,Cefalo,340,KEEP,Pesce,Pesce fresco,Pesce bianco fresco,NO
+341,Pesce Spada,Pesce Spada,341,KEEP,Pesce,Pesce fresco,Pesce rosso fresco,NO
+342,Ricciola,Ricciola,342,KEEP,Pesce,Pesce fresco,Pesce pregiato,YES
+343,Branzino di Allevamento,Branzino di Allevamento,343,KEEP,Pesce,Pesce fresco,Pesce bianco fresco,YES
+344,Trota,Trota,344,KEEP,Pesce,Pesce fresco,Pesce rosso fresco,NO
+345,Sgombro,Sgombro,345,KEEP,Pesce,Pesce fresco,Pesce pregiato,NO
+346,Ricciola in confezione da 300 g,Ricciola,342,MERGE_ID_REFERENCE_REVIEW,Pesce,Pesce fresco,Pesce bianco fresco,YES
+347,Merluzzo in confezione da 300 g,Merluzzo,336,MERGE_ID_REFERENCE_REVIEW,Pesce,Pesce fresco,Pesce rosso fresco,YES
+348,Acciughe in confezione da 300 g,Acciughe,337,MERGE_ID_REFERENCE_REVIEW,Pesce,Pesce fresco,Pesce pregiato,YES
+349,Salmone Fresco in confezione da 300 g,Salmone Fresco,331,MERGE_ID_REFERENCE_REVIEW,Pesce,Pesce fresco,Pesce bianco fresco,NO
+350,Branzino di Allevamento in confezione da 300 g,Branzino di Allevamento,343,MERGE_ID_REFERENCE_REVIEW,Pesce,Pesce fresco,Pesce rosso fresco,YES
+351,Tonno Fresco in confezione da 300 g,Tonno Fresco,332,MERGE_ID_REFERENCE_REVIEW,Pesce,Pesce fresco,Pesce pregiato,YES
+352,Sardine in confezione da 300 g,Sardine,338,MERGE_ID_REFERENCE_REVIEW,Pesce,Pesce fresco,Pesce bianco fresco,YES
+353,Branzino in confezione da 300 g,Branzino,333,MERGE_ID_REFERENCE_REVIEW,Pesce,Pesce fresco,Pesce rosso fresco,YES
+354,Orata in confezione da 300 g,Orata,334,MERGE_ID_REFERENCE_REVIEW,Pesce,Pesce fresco,Pesce pregiato,YES
+355,Tonno in Olio,Tonno in Olio,355,KEEP,Pesce,Pesce confezionato,Pesce in scatola,NO
+356,Tonno al Naturale,Tonno al Naturale,356,KEEP,Pesce,Pesce confezionato,Pesce affumicato,NO
+357,Salmone Affumicato,Salmone Affumicato,357,KEEP,Pesce,Pesce confezionato,Pesce in scatola,NO
+358,Sgombro in Olio,Sgombro in Olio,358,KEEP,Pesce,Pesce confezionato,Pesce affumicato,NO
+359,Sardine in Olio,Sardine in Olio,359,KEEP,Pesce,Pesce confezionato,Pesce in scatola,YES
+360,Merluzzo in Olio,Merluzzo in Olio,360,KEEP,Pesce,Pesce confezionato,Pesce affumicato,YES
+361,Tonno all'Acqua,Tonno all'Acqua,361,KEEP,Pesce,Pesce confezionato,Pesce in scatola,YES
+362,Surimi,Surimi,362,KEEP,Pesce,Pesce confezionato,Pesce affumicato,NO
+363,Polpa di Granchio,Polpa di Granchio,363,KEEP,Pesce,Pesce confezionato,Pesce in scatola,YES
+364,Codero Affumicato,Codero Affumicato,364,KEEP,Pesce,Pesce confezionato,Pesce affumicato,YES
+365,Tonno,Tonno,365,KEEP,Pesce,Pesce confezionato,Pesce in scatola,NO
+366,Sardine in Olio in lattina da 160 g,Sardine in Olio,359,MERGE_ID_REFERENCE_REVIEW,Pesce,Pesce confezionato,Pesce affumicato,YES
+367,Tonno in lattina da 160 g,Tonno,365,MERGE_ID_REFERENCE_REVIEW,Pesce,Pesce confezionato,Pesce in scatola,NO
+368,Sgombro in Olio in lattina da 160 g,Sgombro in Olio,358,MERGE_ID_REFERENCE_REVIEW,Pesce,Pesce confezionato,Pesce affumicato,NO
+369,Codero Affumicato in lattina da 160 g,Codero Affumicato,364,MERGE_ID_REFERENCE_REVIEW,Pesce,Pesce confezionato,Pesce in scatola,YES
+370,Polpa di Granchio in lattina da 160 g,Polpa di Granchio,363,MERGE_ID_REFERENCE_REVIEW,Pesce,Pesce confezionato,Pesce affumicato,YES
+371,Salmone Affumicato in lattina da 160 g,Salmone Affumicato,357,MERGE_ID_REFERENCE_REVIEW,Pesce,Pesce confezionato,Pesce in scatola,NO
+372,Tonno all'Acqua in lattina da 160 g,Tonno all'Acqua,361,MERGE_ID_REFERENCE_REVIEW,Pesce,Pesce confezionato,Pesce affumicato,YES
+373,Merluzzo in Olio in lattina da 160 g,Merluzzo in Olio,360,MERGE_ID_REFERENCE_REVIEW,Pesce,Pesce confezionato,Pesce in scatola,YES
+374,Tonno al Naturale in lattina da 160 g,Tonno al Naturale,356,MERGE_ID_REFERENCE_REVIEW,Pesce,Pesce confezionato,Pesce affumicato,NO
+375,Tonno in Olio in lattina da 160 g,Tonno in Olio,355,MERGE_ID_REFERENCE_REVIEW,Pesce,Pesce confezionato,Pesce in scatola,NO
+376,Surimi in lattina da 160 g,Surimi,362,MERGE_ID_REFERENCE_REVIEW,Pesce,Pesce confezionato,Pesce affumicato,NO
+377,Sardine in Olio in lattina da 250 g,Sardine in Olio,359,MERGE_ID_REFERENCE_REVIEW,Pesce,Pesce confezionato,Pesce in scatola,YES
+378,Gamberi Rossi,Gamberi Rossi,378,KEEP,Pesce,Crostacei e molluschi,Molluschi,NO
+379,Gamberi Tigre,Gamberi Tigre,379,KEEP,Pesce,Crostacei e molluschi,Crostacei,NO
+380,Scampi,Scampi,380,KEEP,Pesce,Crostacei e molluschi,Molluschi,NO
+381,Astici,Astici,381,KEEP,Pesce,Crostacei e molluschi,Crostacei,NO
+382,Mazzancolle,Mazzancolle,382,KEEP,Pesce,Crostacei e molluschi,Molluschi,NO
+383,Cozze,Cozze,383,KEEP,Pesce,Crostacei e molluschi,Crostacei,NO
+384,Vongole Veraci,Vongole Veraci,384,KEEP,Pesce,Crostacei e molluschi,Molluschi,NO
+385,Seppie,Seppie,385,KEEP,Pesce,Crostacei e molluschi,Crostacei,NO
+386,Calamari,Calamari,386,KEEP,Pesce,Crostacei e molluschi,Molluschi,NO
+387,Polpo,Polpo,387,KEEP,Pesce,Crostacei e molluschi,Crostacei,NO
+388,Gamberi Rossi Surgelato,Gamberi Rossi Surgelato,388,KEEP,Pesce,Crostacei e molluschi,Molluschi,NO
+389,Astici Surgelato,Astici Surgelato,389,KEEP,Pesce,Crostacei e molluschi,Crostacei,NO
+390,Scampi Surgelato,Scampi Surgelato,390,KEEP,Pesce,Crostacei e molluschi,Molluschi,NO
+391,Cozze Surgelato,Cozze Surgelato,391,KEEP,Pesce,Crostacei e molluschi,Crostacei,NO
+392,Calamari Surgelato,Calamari Surgelato,392,KEEP,Pesce,Crostacei e molluschi,Molluschi,NO
+393,Mazzancolle Surgelato,Mazzancolle Surgelato,393,KEEP,Pesce,Crostacei e molluschi,Crostacei,NO
+394,Vongole Veraci Surgelato,Vongole Veraci Surgelato,394,KEEP,Pesce,Crostacei e molluschi,Molluschi,NO
+395,Polpo Surgelato,Polpo Surgelato,395,KEEP,Pesce,Crostacei e molluschi,Crostacei,NO
+396,Seppie Surgelato,Seppie Surgelato,396,KEEP,Pesce,Crostacei e molluschi,Molluschi,NO
+397,Gamberi Tigre Surgelato,Gamberi Tigre Surgelato,397,KEEP,Pesce,Crostacei e molluschi,Crostacei,NO
+398,Gamberi Rossi in confezione da 300 g,Gamberi Rossi,378,MERGE_ID_REFERENCE_REVIEW,Pesce,Crostacei e molluschi,Molluschi,NO
+399,Astici in confezione da 300 g,Astici,381,MERGE_ID_REFERENCE_REVIEW,Pesce,Crostacei e molluschi,Crostacei,NO
+400,Scampi in confezione da 300 g,Scampi,380,MERGE_ID_REFERENCE_REVIEW,Pesce,Crostacei e molluschi,Molluschi,NO
+401,Acqua Naturale,Acqua Naturale,401,KEEP,Bevande,Acqua e minerali,Acqua naturale,YES
+402,Acqua Frizzante,Acqua Frizzante,402,KEEP,Bevande,Acqua e minerali,Acqua frizzante,NO
+403,Acqua Leggermente Frizzante,Acqua Leggermente Frizzante,403,KEEP,Bevande,Acqua e minerali,Acqua naturale,NO
+404,Acqua Termale,Acqua Termale,404,KEEP,Bevande,Acqua e minerali,Acqua frizzante,YES
+405,Acqua Leggera,Acqua Leggera,405,KEEP,Bevande,Acqua e minerali,Acqua naturale,YES
+406,Acqua con Ginseng,Acqua con Ginseng,406,KEEP,Bevande,Acqua e minerali,Acqua frizzante,YES
+407,Acqua Medium,Acqua Medium,407,KEEP,Bevande,Acqua e minerali,Acqua naturale,NO
+408,Acqua Plateale,Acqua Plateale,408,KEEP,Bevande,Acqua e minerali,Acqua frizzante,NO
+409,Acqua Pétillante,Acqua Pétillante,409,KEEP,Bevande,Acqua e minerali,Acqua naturale,YES
+410,Acqua Alpina,Acqua Alpina,410,KEEP,Bevande,Acqua e minerali,Acqua frizzante,YES
+411,Acqua,Acqua,411,KEEP,Bevande,Acqua e minerali,Acqua naturale,NO
+412,Acqua Naturale da 500 ml,Acqua Naturale,401,MERGE_ID_REFERENCE_REVIEW,Bevande,Acqua e minerali,Acqua frizzante,YES
+413,Acqua Termale da 500 ml,Acqua Termale,404,MERGE_ID_REFERENCE_REVIEW,Bevande,Acqua e minerali,Acqua naturale,YES
+414,Acqua con Ginseng da 500 ml,Acqua con Ginseng,406,MERGE_ID_REFERENCE_REVIEW,Bevande,Acqua e minerali,Acqua frizzante,YES
+415,Acqua Alpina da 500 ml,Acqua Alpina,410,MERGE_ID_REFERENCE_REVIEW,Bevande,Acqua e minerali,Acqua naturale,YES
+416,Acqua Plateale da 500 ml,Acqua Plateale,408,MERGE_ID_REFERENCE_REVIEW,Bevande,Acqua e minerali,Acqua frizzante,NO
+417,Acqua da 500 ml,Acqua,411,MERGE_ID_REFERENCE_REVIEW,Bevande,Acqua e minerali,Acqua naturale,NO
+418,Acqua Frizzante da 500 ml,Acqua Frizzante,402,MERGE_ID_REFERENCE_REVIEW,Bevande,Acqua e minerali,Acqua frizzante,NO
+419,Acqua Medium da 500 ml,Acqua Medium,407,MERGE_ID_REFERENCE_REVIEW,Bevande,Acqua e minerali,Acqua naturale,NO
+420,Acqua Leggera da 500 ml,Acqua Leggera,405,MERGE_ID_REFERENCE_REVIEW,Bevande,Acqua e minerali,Acqua frizzante,YES
+421,Acqua Leggermente Frizzante da 500 ml,Acqua Leggermente Frizzante,403,MERGE_ID_REFERENCE_REVIEW,Bevande,Acqua e minerali,Acqua naturale,NO
+422,Acqua Pétillante da 500 ml,Acqua Pétillante,409,MERGE_ID_REFERENCE_REVIEW,Bevande,Acqua e minerali,Acqua frizzante,YES
+423,Acqua Naturale da 1 L,Acqua Naturale,401,MERGE_ID_REFERENCE_REVIEW,Bevande,Acqua e minerali,Acqua naturale,YES
+424,Acqua Termale da 1 L,Acqua Termale,404,MERGE_ID_REFERENCE_REVIEW,Bevande,Acqua e minerali,Acqua frizzante,YES
+425,Acqua con Ginseng da 1 L,Acqua con Ginseng,406,MERGE_ID_REFERENCE_REVIEW,Bevande,Acqua e minerali,Acqua naturale,YES
+426,Acqua Alpina da 1 L,Acqua Alpina,410,MERGE_ID_REFERENCE_REVIEW,Bevande,Acqua e minerali,Acqua frizzante,YES
+427,Succo di Arancia,Succo di Arancia,427,KEEP,Bevande,Succhi e nettari,Succhi di frutta,YES
+428,Succo di Mela,Succo di Mela,428,KEEP,Bevande,Succhi e nettari,Nettari e spremute,YES
+429,Succo di Pera,Succo di Pera,429,KEEP,Bevande,Succhi e nettari,Succhi di frutta,NO
+430,Succo di Ananas,Succo di Ananas,430,KEEP,Bevande,Succhi e nettari,Nettari e spremute,NO
+431,Succo di Carota,Succo di Carota,431,KEEP,Bevande,Succhi e nettari,Succhi di frutta,NO
+432,Spremuta d'Arancia,Spremuta d'Arancia,432,KEEP,Bevande,Succhi e nettari,Nettari e spremute,NO
+433,Succo di Melagrana,Succo di Melagrana,433,KEEP,Bevande,Succhi e nettari,Succhi di frutta,NO
+434,Succo di Kiwi,Succo di Kiwi,434,KEEP,Bevande,Succhi e nettari,Nettari e spremute,NO
+435,Succo di Fragola,Succo di Fragola,435,KEEP,Bevande,Succhi e nettari,Succhi di frutta,NO
+436,Nettaro di Pesca,Nettaro di Pesca,436,KEEP,Bevande,Succhi e nettari,Nettari e spremute,NO
+437,Succo di Pompelmo,Succo di Pompelmo,437,KEEP,Bevande,Succhi e nettari,Succhi di frutta,NO
+438,Succo Multifrutta,Succo Multifrutta,438,KEEP,Bevande,Succhi e nettari,Nettari e spremute,NO
+439,Succo di Melagrana da 1 L,Succo di Melagrana,433,MERGE_ID_REFERENCE_REVIEW,Bevande,Succhi e nettari,Succhi di frutta,NO
+440,Nettaro di Pesca da 1 L,Nettaro di Pesca,436,MERGE_ID_REFERENCE_REVIEW,Bevande,Succhi e nettari,Nettari e spremute,NO
+441,Succo di Carota da 1 L,Succo di Carota,431,MERGE_ID_REFERENCE_REVIEW,Bevande,Succhi e nettari,Succhi di frutta,NO
+442,Spremuta d'Arancia da 1 L,Spremuta d'Arancia,432,MERGE_ID_REFERENCE_REVIEW,Bevande,Succhi e nettari,Nettari e spremute,NO
+443,Succo di Pera da 1 L,Succo di Pera,429,MERGE_ID_REFERENCE_REVIEW,Bevande,Succhi e nettari,Succhi di frutta,NO
+444,Succo di Arancia da 1 L,Succo di Arancia,427,MERGE_ID_REFERENCE_REVIEW,Bevande,Succhi e nettari,Nettari e spremute,YES
+445,Succo di Pompelmo da 1 L,Succo di Pompelmo,437,MERGE_ID_REFERENCE_REVIEW,Bevande,Succhi e nettari,Succhi di frutta,NO
+446,Succo di Ananas da 1 L,Succo di Ananas,430,MERGE_ID_REFERENCE_REVIEW,Bevande,Succhi e nettari,Nettari e spremute,NO
+447,Succo di Mela da 1 L,Succo di Mela,428,MERGE_ID_REFERENCE_REVIEW,Bevande,Succhi e nettari,Succhi di frutta,YES
+448,Succo Multifrutta da 1 L,Succo Multifrutta,438,MERGE_ID_REFERENCE_REVIEW,Bevande,Succhi e nettari,Nettari e spremute,NO
+449,Succo di Fragola da 1 L,Succo di Fragola,435,MERGE_ID_REFERENCE_REVIEW,Bevande,Succhi e nettari,Succhi di frutta,NO
+450,Succo di Kiwi da 1 L,Succo di Kiwi,434,MERGE_ID_REFERENCE_REVIEW,Bevande,Succhi e nettari,Nettari e spremute,NO
+451,Succo di Melagrana da 200 ml,Succo di Melagrana,433,MERGE_ID_REFERENCE_REVIEW,Bevande,Succhi e nettari,Succhi di frutta,NO
+452,Nettaro di Pesca da 200 ml,Nettaro di Pesca,436,MERGE_ID_REFERENCE_REVIEW,Bevande,Succhi e nettari,Nettari e spremute,NO
+453,Cola,Cola,453,KEEP,Bevande,Bibite,Bibite gassate,NO
+454,Cola Zero,Cola Zero,454,KEEP,Bevande,Bibite,Bibite analcoliche,YES
+455,Cola Light,Cola Light,455,KEEP,Bevande,Bibite,Tè freddo,YES
+456,Limonata,Limonata,456,KEEP,Bevande,Bibite,Bibite gassate,YES
+457,Aranciata,Aranciata,457,KEEP,Bevande,Bibite,Bibite analcoliche,YES
+458,Chinotto,Chinotto,458,KEEP,Bevande,Bibite,Tè freddo,YES
+459,Tè Freddo Pesca,Tè Freddo Pesca,459,KEEP,Bevande,Bibite,Bibite gassate,NO
+460,Energy Drink,Energy Drink,460,KEEP,Bevande,Bibite,Bibite analcoliche,YES
+461,Ginger Ale,Ginger Ale,461,KEEP,Bevande,Bibite,Tè freddo,YES
+462,Soda,Soda,462,KEEP,Bevande,Bibite,Bibite gassate,YES
+463,Tè Freddo Limone,Tè Freddo Limone,463,KEEP,Bevande,Bibite,Bibite analcoliche,NO
+464,Bibita al Malto,Bibita al Malto,464,KEEP,Bevande,Bibite,Tè freddo,YES
+465,Tè Freddo Pesca da 1 L,Tè Freddo Pesca,459,MERGE_ID_REFERENCE_REVIEW,Bevande,Bibite,Bibite gassate,NO
+466,Tè Freddo Limone da 1 L,Tè Freddo Limone,463,MERGE_ID_REFERENCE_REVIEW,Bevande,Bibite,Bibite analcoliche,NO
+467,Aranciata da 1 L,Aranciata,457,MERGE_ID_REFERENCE_REVIEW,Bevande,Bibite,Tè freddo,YES
+468,Cola Light da 1 L,Cola Light,455,MERGE_ID_REFERENCE_REVIEW,Bevande,Bibite,Bibite gassate,YES
+469,Chinotto da 1 L,Chinotto,458,MERGE_ID_REFERENCE_REVIEW,Bevande,Bibite,Bibite analcoliche,YES
+470,Energy Drink da 1 L,Energy Drink,460,MERGE_ID_REFERENCE_REVIEW,Bevande,Bibite,Tè freddo,YES
+471,Ginger Ale da 1 L,Ginger Ale,461,MERGE_ID_REFERENCE_REVIEW,Bevande,Bibite,Bibite gassate,YES
+472,Bibita al Malto da 1 L,Bibita al Malto,464,MERGE_ID_REFERENCE_REVIEW,Bevande,Bibite,Bibite analcoliche,YES
+473,Cola Zero da 1 L,Cola Zero,454,MERGE_ID_REFERENCE_REVIEW,Bevande,Bibite,Tè freddo,YES
+474,Cola da 1 L,Cola,453,MERGE_ID_REFERENCE_REVIEW,Bevande,Bibite,Bibite gassate,NO
+475,Limonata da 1 L,Limonata,456,MERGE_ID_REFERENCE_REVIEW,Bevande,Bibite,Bibite analcoliche,YES
+476,Soda da 1 L,Soda,462,MERGE_ID_REFERENCE_REVIEW,Bevande,Bibite,Tè freddo,YES
+477,Tè Freddo Pesca da 330 ml,Tè Freddo Pesca,459,MERGE_ID_REFERENCE_REVIEW,Bevande,Bibite,Bibite gassate,NO
+478,Tè Freddo Limone da 330 ml,Tè Freddo Limone,463,MERGE_ID_REFERENCE_REVIEW,Bevande,Bibite,Bibite analcoliche,NO
+479,Birra Chiara,Birra Chiara,479,KEEP,Bevande,Birra,Birra chiara,YES
+480,Birra Bionda,Birra Bionda,480,KEEP,Bevande,Birra,Birra speciale,YES
+481,Birra Rossa,Birra Rossa,481,KEEP,Bevande,Birra,Birra analcolica,YES
+482,Birra IPA,Birra IPA,482,KEEP,Bevande,Birra,Birra chiara,YES
+483,Birra Weizen,Birra Weizen,483,KEEP,Bevande,Birra,Birra speciale,YES
+484,Birra Zero,Birra Zero,484,KEEP,Bevande,Birra,Birra analcolica,NO
+485,Birra Senza Alcol,Birra Senza Alcol,485,KEEP,Bevande,Birra,Birra chiara,NO
+486,Birra Ambrata,Birra Ambrata,486,KEEP,Bevande,Birra,Birra speciale,YES
+487,Birra Artigianale,Birra Artigianale,487,KEEP,Bevande,Birra,Birra analcolica,YES
+488,Birra Lager,Birra Lager,488,KEEP,Bevande,Birra,Birra chiara,YES
+489,Birra,Birra,489,KEEP,Bevande,Birra,Birra chiara,YES
+490,Birra Lager da 330 ml,Birra Lager,488,MERGE_ID_REFERENCE_REVIEW,Bevande,Birra,Birra analcolica,YES
+491,Birra Bionda da 330 ml,Birra Bionda,480,MERGE_ID_REFERENCE_REVIEW,Bevande,Birra,Birra chiara,YES
+492,Birra Chiara da 330 ml,Birra Chiara,479,MERGE_ID_REFERENCE_REVIEW,Bevande,Birra,Birra speciale,YES
+493,Birra Artigianale da 330 ml,Birra Artigianale,487,MERGE_ID_REFERENCE_REVIEW,Bevande,Birra,Birra analcolica,YES
+494,Birra Senza Alcol da 330 ml,Birra Senza Alcol,485,MERGE_ID_REFERENCE_REVIEW,Bevande,Birra,Birra chiara,NO
+495,Birra da 330 ml,Birra,489,MERGE_ID_REFERENCE_REVIEW,Bevande,Birra,Birra speciale,YES
+496,Birra Zero da 330 ml,Birra Zero,484,MERGE_ID_REFERENCE_REVIEW,Bevande,Birra,Birra analcolica,NO
+497,Birra Rossa da 330 ml,Birra Rossa,481,MERGE_ID_REFERENCE_REVIEW,Bevande,Birra,Birra chiara,YES
+498,Birra IPA da 330 ml,Birra IPA,482,MERGE_ID_REFERENCE_REVIEW,Bevande,Birra,Birra speciale,YES
+499,Birra Ambrata da 330 ml,Birra Ambrata,486,MERGE_ID_REFERENCE_REVIEW,Bevande,Birra,Birra analcolica,YES
+500,Birra Weizen da 330 ml,Birra Weizen,483,MERGE_ID_REFERENCE_REVIEW,Bevande,Birra,Birra chiara,YES
+501,Birra Lager Pack da 6,Birra Lager,488,MERGE_ID_REFERENCE_REVIEW,Bevande,Birra,Birra speciale,YES
+502,Birra Bionda Pack da 6,Birra Bionda,480,MERGE_ID_REFERENCE_REVIEW,Bevande,Birra,Birra analcolica,YES
+503,Birra Chiara Pack da 6,Birra Chiara,479,MERGE_ID_REFERENCE_REVIEW,Bevande,Birra,Birra chiara,YES
+504,Birra Artigianale Pack da 6,Birra Artigianale,487,MERGE_ID_REFERENCE_REVIEW,Bevande,Birra,Birra speciale,YES
+505,Vino Rosso,Vino Rosso,505,KEEP,Bevande,Vino,Vino rosso,YES
+506,Vino Bianco,Vino Bianco,506,KEEP,Bevande,Vino,Vino bianco,NO
+507,Vino Rosé,Vino Rosé,507,KEEP,Bevande,Vino,Vino spumante,YES
+508,Prosecco,Prosecco,508,KEEP,Bevande,Vino,Vino rosso,YES
+509,Chianti,Chianti,509,KEEP,Bevande,Vino,Vino bianco,YES
+510,Merlot,Merlot,510,KEEP,Bevande,Vino,Vino spumante,NO
+511,Cabernet,Cabernet,511,KEEP,Bevande,Vino,Vino rosso,NO
+512,Pinot Grigio,Pinot Grigio,512,KEEP,Bevande,Vino,Vino bianco,YES
+513,Montepulciano,Montepulciano,513,KEEP,Bevande,Vino,Vino spumante,YES
+514,Lambrusco,Lambrusco,514,KEEP,Bevande,Vino,Vino rosso,YES
+515,Vino,Vino,515,KEEP,Bevande,Vino,Vino rosso,YES
+516,Vino Rosso da 1 L,Vino Rosso,505,MERGE_ID_REFERENCE_REVIEW,Bevande,Vino,Vino spumante,YES
+517,Chianti da 1 L,Chianti,509,MERGE_ID_REFERENCE_REVIEW,Bevande,Vino,Vino rosso,YES
+518,Pinot Grigio da 1 L,Pinot Grigio,512,MERGE_ID_REFERENCE_REVIEW,Bevande,Vino,Vino bianco,YES
+519,Vino da 1 L,Vino,515,MERGE_ID_REFERENCE_REVIEW,Bevande,Vino,Vino spumante,YES
+520,Vino Rosé da 1 L,Vino Rosé,507,MERGE_ID_REFERENCE_REVIEW,Bevande,Vino,Vino rosso,YES
+521,Lambrusco da 1 L,Lambrusco,514,MERGE_ID_REFERENCE_REVIEW,Bevande,Vino,Vino bianco,YES
+522,Merlot da 1 L,Merlot,510,MERGE_ID_REFERENCE_REVIEW,Bevande,Vino,Vino spumante,NO
+523,Montepulciano da 1 L,Montepulciano,513,MERGE_ID_REFERENCE_REVIEW,Bevande,Vino,Vino rosso,YES
+524,Vino Bianco da 1 L,Vino Bianco,506,MERGE_ID_REFERENCE_REVIEW,Bevande,Vino,Vino bianco,NO
+525,Prosecco da 1 L,Prosecco,508,MERGE_ID_REFERENCE_REVIEW,Bevande,Vino,Vino spumante,YES
+526,Cabernet da 1 L,Cabernet,511,MERGE_ID_REFERENCE_REVIEW,Bevande,Vino,Vino rosso,NO
+527,Vino Rosso da 750 ml,Vino Rosso,505,MERGE_ID_REFERENCE_REVIEW,Bevande,Vino,Vino bianco,YES
+528,Chianti da 750 ml,Chianti,509,MERGE_ID_REFERENCE_REVIEW,Bevande,Vino,Vino spumante,YES
+529,Pinot Grigio da 750 ml,Pinot Grigio,512,MERGE_ID_REFERENCE_REVIEW,Bevande,Vino,Vino rosso,YES
+530,Vino da 750 ml,Vino,515,MERGE_ID_REFERENCE_REVIEW,Bevande,Vino,Vino bianco,YES
+531,Latte Intero,Latte Intero,531,KEEP,Banco Frigo,Latte e yogurt,Latte fresco,YES
+532,Latte Parz. Scremato,Latte Parz. Scremato,532,KEEP,Banco Frigo,Latte e yogurt,Alternative vegetali,NO
+533,Latte Scremato,Latte Scremato,533,KEEP,Banco Frigo,Latte e yogurt,Yogurt,YES
+534,Latte di Soia,Latte di Soia,534,KEEP,Banco Frigo,Latte e yogurt,Yogurt speciali,NO
+535,Latte di Avena,Latte di Avena,535,KEEP,Banco Frigo,Latte e yogurt,Latte fresco,NO
+536,Latte di Mandorla,Latte di Mandorla,536,KEEP,Banco Frigo,Latte e yogurt,Alternative vegetali,YES
+537,Latte di Cocco,Latte di Cocco,537,KEEP,Banco Frigo,Latte e yogurt,Yogurt,NO
+538,Yogurt Bianco,Yogurt Bianco,538,KEEP,Banco Frigo,Latte e yogurt,Yogurt speciali,YES
+539,Yogurt Greco,Yogurt Greco,539,KEEP,Banco Frigo,Latte e yogurt,Latte fresco,YES
+540,Yogurt alla Frutta,Yogurt alla Frutta,540,KEEP,Banco Frigo,Latte e yogurt,Alternative vegetali,NO
+541,Kefir,Kefir,541,KEEP,Banco Frigo,Latte e yogurt,Yogurt,NO
+542,Yogurt da Bere,Yogurt da Bere,542,KEEP,Banco Frigo,Latte e yogurt,Yogurt speciali,YES
+543,Yogurt alla Vaniglia,Yogurt alla Vaniglia,543,KEEP,Banco Frigo,Latte e yogurt,Latte fresco,YES
+544,Yogurt ai Frutti Rossi,Yogurt ai Frutti Rossi,544,KEEP,Banco Frigo,Latte e yogurt,Alternative vegetali,YES
+545,Fiordilatte Fresco,Fiordilatte Fresco,545,KEEP,Banco Frigo,Latte e yogurt,Yogurt,YES
+546,Latte UHT Intero,Latte UHT Intero,546,KEEP,Banco Frigo,Latte e yogurt,Yogurt speciali,YES
+547,Latte Fresco,Latte Fresco,547,KEEP,Banco Frigo,Latte e yogurt,Latte fresco,NO
+548,Yogurt Skyr,Yogurt Skyr,548,KEEP,Banco Frigo,Latte e yogurt,Alternative vegetali,YES
+549,Crema di Yogurt,Crema di Yogurt,549,KEEP,Banco Frigo,Latte e yogurt,Yogurt,NO
+550,Formaggio Spalmabile,Formaggio Spalmabile,550,KEEP,Banco Frigo,Latte e yogurt,Yogurt speciali,YES
+551,Latte,Latte,551,KEEP,Banco Frigo,Latte e yogurt,Latte fresco,NO
+552,Yogurt,Yogurt,552,KEEP,Banco Frigo,Latte e yogurt,Yogurt,NO
+553,Yogurt da Bere in confezione da 6,Yogurt da Bere,542,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Latte e yogurt,Yogurt,YES
+554,Latte di Mandorla in confezione da 6,Latte di Mandorla,536,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Latte e yogurt,Yogurt speciali,YES
+555,Latte di Avena in confezione da 6,Latte di Avena,535,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Latte e yogurt,Latte fresco,NO
+556,Latte Intero in confezione da 6,Latte Intero,531,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Latte e yogurt,Alternative vegetali,YES
+557,Crema di Yogurt in confezione da 6,Crema di Yogurt,549,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Latte e yogurt,Yogurt,NO
+558,Yogurt Skyr in confezione da 6,Yogurt Skyr,548,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Latte e yogurt,Yogurt speciali,YES
+559,Latte Fresco in confezione da 6,Latte Fresco,547,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Latte e yogurt,Latte fresco,NO
+560,Yogurt alla Frutta in confezione da 6,Yogurt alla Frutta,540,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Latte e yogurt,Alternative vegetali,NO
+561,Latte di Cocco in confezione da 6,Latte di Cocco,537,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Latte e yogurt,Yogurt,NO
+562,Latte Scremato in confezione da 6,Latte Scremato,533,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Latte e yogurt,Yogurt speciali,YES
+563,Yogurt Bianco in confezione da 6,Yogurt Bianco,538,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Latte e yogurt,Latte fresco,YES
+564,Yogurt Greco in confezione da 6,Yogurt Greco,539,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Latte e yogurt,Alternative vegetali,YES
+565,Yogurt ai Frutti Rossi in confezione da 6,Yogurt ai Frutti Rossi,544,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Latte e yogurt,Yogurt,YES
+566,Fiordilatte Fresco in confezione da 6,Fiordilatte Fresco,545,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Latte e yogurt,Yogurt speciali,YES
+567,Latte UHT Intero in confezione da 6,Latte UHT Intero,546,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Latte e yogurt,Latte fresco,YES
+568,Formaggio Spalmabile in confezione da 6,Formaggio Spalmabile,550,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Latte e yogurt,Alternative vegetali,YES
+569,Kefir in confezione da 6,Kefir,541,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Latte e yogurt,Yogurt,NO
+570,Yogurt alla Vaniglia in confezione da 6,Yogurt alla Vaniglia,543,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Latte e yogurt,Yogurt speciali,YES
+571,Mozzarella,Mozzarella,571,KEEP,Banco Frigo,Formaggi,Formaggi freschi,YES
+572,Fiordilatte,Fiordilatte,572,KEEP,Banco Frigo,Formaggi,Formaggi stagionati,YES
+573,Grana Padano,Grana Padano,573,KEEP,Banco Frigo,Formaggi,Formaggi a pasta morbida,YES
+574,Parmigiano Reggiano,Parmigiano Reggiano,574,KEEP,Banco Frigo,Formaggi,Formaggi particolari,YES
+575,Pecorino Romano,Pecorino Romano,575,KEEP,Banco Frigo,Formaggi,Formaggi freschi,YES
+576,Gorgonzola,Gorgonzola,576,KEEP,Banco Frigo,Formaggi,Formaggi stagionati,YES
+577,Taleggio,Taleggio,577,KEEP,Banco Frigo,Formaggi,Formaggi a pasta morbida,YES
+578,Robiola,Robiola,578,KEEP,Banco Frigo,Formaggi,Formaggi particolari,NO
+579,Brie,Brie,579,KEEP,Banco Frigo,Formaggi,Formaggi freschi,YES
+580,Camembert,Camembert,580,KEEP,Banco Frigo,Formaggi,Formaggi stagionati,YES
+581,Emmental,Emmental,581,KEEP,Banco Frigo,Formaggi,Formaggi a pasta morbida,NO
+582,Edamer,Edamer,582,KEEP,Banco Frigo,Formaggi,Formaggi particolari,NO
+583,Fontina,Fontina,583,KEEP,Banco Frigo,Formaggi,Formaggi freschi,YES
+584,Provolone,Provolone,584,KEEP,Banco Frigo,Formaggi,Formaggi stagionati,NO
+585,Ricotta,Ricotta,585,KEEP,Banco Frigo,Formaggi,Formaggi a pasta morbida,YES
+586,Stracchino,Stracchino,586,KEEP,Banco Frigo,Formaggi,Formaggi particolari,YES
+587,Mascarpone,Mascarpone,587,KEEP,Banco Frigo,Formaggi,Formaggi freschi,YES
+588,Caprino,Caprino,588,KEEP,Banco Frigo,Formaggi,Formaggi stagionati,YES
+589,Casatella,Casatella,589,KEEP,Banco Frigo,Formaggi,Formaggi a pasta morbida,YES
+590,Toma,Toma,590,KEEP,Banco Frigo,Formaggi,Formaggi particolari,YES
+591,Gorgonzola in confezione da 200 g,Gorgonzola,576,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Formaggi,Formaggi freschi,YES
+592,Pecorino Romano in confezione da 200 g,Pecorino Romano,575,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Formaggi,Formaggi stagionati,YES
+593,Toma in confezione da 200 g,Toma,590,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Formaggi,Formaggi a pasta morbida,YES
+594,Edamer in confezione da 200 g,Edamer,582,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Formaggi,Formaggi particolari,NO
+595,Camembert in confezione da 200 g,Camembert,580,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Formaggi,Formaggi freschi,YES
+596,Brie in confezione da 200 g,Brie,579,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Formaggi,Formaggi stagionati,YES
+597,Emmental in confezione da 200 g,Emmental,581,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Formaggi,Formaggi a pasta morbida,NO
+598,Ricotta in confezione da 200 g,Ricotta,585,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Formaggi,Formaggi particolari,YES
+599,Casatella in confezione da 200 g,Casatella,589,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Formaggi,Formaggi freschi,YES
+600,Provolone in confezione da 200 g,Provolone,584,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Formaggi,Formaggi stagionati,NO
+601,Parmigiano Reggiano in confezione da 200 g,Parmigiano Reggiano,574,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Formaggi,Formaggi a pasta morbida,YES
+602,Fontina in confezione da 200 g,Fontina,583,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Formaggi,Formaggi particolari,YES
+603,Stracchino in confezione da 200 g,Stracchino,586,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Formaggi,Formaggi freschi,YES
+604,Taleggio in confezione da 200 g,Taleggio,577,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Formaggi,Formaggi stagionati,YES
+605,Mascarpone in confezione da 200 g,Mascarpone,587,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Formaggi,Formaggi a pasta morbida,YES
+606,Robiola in confezione da 200 g,Robiola,578,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Formaggi,Formaggi particolari,NO
+607,Grana Padano in confezione da 200 g,Grana Padano,573,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Formaggi,Formaggi freschi,YES
+608,Mozzarella in confezione da 200 g,Mozzarella,571,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Formaggi,Formaggi stagionati,YES
+609,Caprino in confezione da 200 g,Caprino,588,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Formaggi,Formaggi a pasta morbida,YES
+610,Fiordilatte in confezione da 200 g,Fiordilatte,572,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Formaggi,Formaggi particolari,YES
+611,Burro Dolce,Burro Dolce,611,KEEP,Banco Frigo,Burro e panna,Burro,NO
+612,Burro Intero,Burro Intero,612,KEEP,Banco Frigo,Burro e panna,Panna,NO
+613,Burro di Centrifuga,Burro di Centrifuga,613,KEEP,Banco Frigo,Burro e panna,Burro,NO
+614,Burro Affumicato,Burro Affumicato,614,KEEP,Banco Frigo,Burro e panna,Panna,NO
+615,Burro Salato,Burro Salato,615,KEEP,Banco Frigo,Burro e panna,Burro,YES
+616,Panna da Cucina,Panna da Cucina,616,KEEP,Banco Frigo,Burro e panna,Panna,NO
+617,Panna Montabile,Panna Montabile,617,KEEP,Banco Frigo,Burro e panna,Burro,YES
+618,Panna Addensante,Panna Addensante,618,KEEP,Banco Frigo,Burro e panna,Panna,NO
+619,Panna da Montare,Panna da Montare,619,KEEP,Banco Frigo,Burro e panna,Burro,NO
+620,Crema di Burro,Crema di Burro,620,KEEP,Banco Frigo,Burro e panna,Panna,YES
+621,Burro,Burro,621,KEEP,Banco Frigo,Burro e panna,Burro,NO
+622,Panna,Panna,622,KEEP,Banco Frigo,Burro e panna,Panna,YES
+623,Crema di Burro in confezione da 250 g,Crema di Burro,620,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Burro e panna,Burro,YES
+624,Panna da Cucina in confezione da 250 g,Panna da Cucina,616,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Burro e panna,Panna,NO
+625,Panna in confezione da 250 g,Panna,622,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Burro e panna,Burro,YES
+626,Burro Salato in confezione da 250 g,Burro Salato,615,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Burro e panna,Panna,YES
+627,Burro Dolce in confezione da 250 g,Burro Dolce,611,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Burro e panna,Burro,NO
+628,Burro Intero in confezione da 250 g,Burro Intero,612,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Burro e panna,Panna,NO
+629,Burro in confezione da 250 g,Burro,621,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Burro e panna,Burro,NO
+630,Burro Affumicato in confezione da 250 g,Burro Affumicato,614,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Burro e panna,Panna,NO
+631,Burro di Centrifuga in confezione da 250 g,Burro di Centrifuga,613,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Burro e panna,Burro,NO
+632,Panna Addensante in confezione da 250 g,Panna Addensante,618,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Burro e panna,Panna,NO
+633,Panna da Montare in confezione da 250 g,Panna da Montare,619,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Burro e panna,Burro,NO
+634,Panna Montabile in confezione da 250 g,Panna Montabile,617,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Burro e panna,Panna,YES
+635,Crema di Burro in confezione da 500 g,Crema di Burro,620,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Burro e panna,Burro,YES
+636,Panna da Cucina in confezione da 500 g,Panna da Cucina,616,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Burro e panna,Panna,NO
+637,Panna in confezione da 500 g,Panna,622,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Burro e panna,Burro,YES
+638,Burro Salato in confezione da 500 g,Burro Salato,615,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Burro e panna,Panna,YES
+639,Burro Dolce in confezione da 500 g,Burro Dolce,611,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Burro e panna,Burro,NO
+640,Burro Intero in confezione da 500 g,Burro Intero,612,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Burro e panna,Panna,NO
+641,Burro in confezione da 500 g,Burro,621,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Burro e panna,Burro,NO
+642,Burro Affumicato in confezione da 500 g,Burro Affumicato,614,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Burro e panna,Panna,NO
+643,Burro di Centrifuga in confezione da 500 g,Burro di Centrifuga,613,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Burro e panna,Burro,NO
+644,Panna Addensante in confezione da 500 g,Panna Addensante,618,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Burro e panna,Panna,NO
+645,Panna da Montare in confezione da 500 g,Panna da Montare,619,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Burro e panna,Burro,NO
+646,Panna Montabile in confezione da 500 g,Panna Montabile,617,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Burro e panna,Panna,YES
+647,Crema di Burro Bio,Crema di Burro Bio,647,KEEP,Banco Frigo,Burro e panna,Burro,NO
+648,Panna da Cucina Bio,Panna da Cucina Bio,648,KEEP,Banco Frigo,Burro e panna,Panna,NO
+649,Panna Bio,Panna Bio,649,KEEP,Banco Frigo,Burro e panna,Burro,NO
+650,Burro Salato Bio,Burro Salato Bio,650,KEEP,Banco Frigo,Burro e panna,Panna,NO
+651,Verdure Miste Surgelate,Verdure Miste Surgelate,651,KEEP,Banco Frigo,Surgelati,Ortaggi surgelati,YES
+652,Piselli Surgelati,Piselli Surgelati,652,KEEP,Banco Frigo,Surgelati,Preparati surgelati,NO
+653,Mais Surgelato,Mais Surgelato,653,KEEP,Banco Frigo,Surgelati,Gelati,NO
+654,Patatine Fritte Surgelate,Patatine Fritte Surgelate,654,KEEP,Banco Frigo,Surgelati,Ortaggi surgelati,YES
+655,Pizza Surgelata,Pizza Surgelata,655,KEEP,Banco Frigo,Surgelati,Preparati surgelati,YES
+656,Lasagne Surgelate,Lasagne Surgelate,656,KEEP,Banco Frigo,Surgelati,Gelati,YES
+657,Ghiaccioli,Ghiaccioli,657,KEEP,Banco Frigo,Surgelati,Ortaggi surgelati,NO
+658,Sorbetto al Limone,Sorbetto al Limone,658,KEEP,Banco Frigo,Surgelati,Preparati surgelati,YES
+659,Tortellini Surgelati,Tortellini Surgelati,659,KEEP,Banco Frigo,Surgelati,Gelati,YES
+660,Hamburger Surgelato,Hamburger Surgelato,660,KEEP,Banco Frigo,Surgelati,Ortaggi surgelati,NO
+661,Filetti di Pesce Surgelati,Filetti di Pesce Surgelati,661,KEEP,Banco Frigo,Surgelati,Preparati surgelati,YES
+662,Frutti di Bosco Surgelati,Frutti di Bosco Surgelati,662,KEEP,Banco Frigo,Surgelati,Gelati,NO
+663,Polenta Surgelata,Polenta Surgelata,663,KEEP,Banco Frigo,Surgelati,Ortaggi surgelati,YES
+664,Croccantini Surgelati,Croccantini Surgelati,664,KEEP,Banco Frigo,Surgelati,Preparati surgelati,NO
+665,Insalata Surgelata,Insalata Surgelata,665,KEEP,Banco Frigo,Surgelati,Gelati,YES
+666,Ghiaccioli in confezione da 400 g,Ghiaccioli,657,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Surgelati,Ortaggi surgelati,NO
+667,Patatine Fritte Surgelate in confezione da 400 g,Patatine Fritte Surgelate,654,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Surgelati,Preparati surgelati,YES
+668,Polenta Surgelata in confezione da 400 g,Polenta Surgelata,663,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Surgelati,Gelati,YES
+669,Lasagne Surgelate in confezione da 400 g,Lasagne Surgelate,656,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Surgelati,Ortaggi surgelati,YES
+670,Piselli Surgelati in confezione da 400 g,Piselli Surgelati,652,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Surgelati,Preparati surgelati,NO
+671,Frutti di Bosco Surgelati in confezione da 400 g,Frutti di Bosco Surgelati,662,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Surgelati,Gelati,NO
+672,Pizza Surgelata in confezione da 400 g,Pizza Surgelata,655,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Surgelati,Ortaggi surgelati,YES
+673,Croccantini Surgelati in confezione da 400 g,Croccantini Surgelati,664,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Surgelati,Preparati surgelati,NO
+674,Mais Surgelato in confezione da 400 g,Mais Surgelato,653,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Surgelati,Gelati,NO
+675,Filetti di Pesce Surgelati in confezione da 400 g,Filetti di Pesce Surgelati,661,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Surgelati,Ortaggi surgelati,YES
+676,Tortellini Surgelati in confezione da 400 g,Tortellini Surgelati,659,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Surgelati,Preparati surgelati,YES
+677,Sorbetto al Limone in confezione da 400 g,Sorbetto al Limone,658,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Surgelati,Gelati,YES
+678,Hamburger Surgelato in confezione da 400 g,Hamburger Surgelato,660,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Surgelati,Ortaggi surgelati,NO
+679,Insalata Surgelata in confezione da 400 g,Insalata Surgelata,665,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Surgelati,Preparati surgelati,YES
+680,Verdure Miste Surgelate in confezione da 400 g,Verdure Miste Surgelate,651,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Surgelati,Gelati,YES
+681,Ghiaccioli in confezione da 1 kg,Ghiaccioli,657,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Surgelati,Ortaggi surgelati,NO
+682,Patatine Fritte Surgelate in confezione da 1 kg,Patatine Fritte Surgelate,654,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Surgelati,Preparati surgelati,YES
+683,Polenta Surgelata in confezione da 1 kg,Polenta Surgelata,663,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Surgelati,Gelati,YES
+684,Lasagne Surgelate in confezione da 1 kg,Lasagne Surgelate,656,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Surgelati,Ortaggi surgelati,YES
+685,Piselli Surgelati in confezione da 1 kg,Piselli Surgelati,652,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Surgelati,Preparati surgelati,NO
+686,Frutti di Bosco Surgelati in confezione da 1 kg,Frutti di Bosco Surgelati,662,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Surgelati,Gelati,NO
+687,Pizza Surgelata in confezione da 1 kg,Pizza Surgelata,655,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Surgelati,Ortaggi surgelati,YES
+688,Croccantini Surgelati in confezione da 1 kg,Croccantini Surgelati,664,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Surgelati,Preparati surgelati,NO
+689,Mais Surgelato in confezione da 1 kg,Mais Surgelato,653,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Surgelati,Gelati,NO
+690,Filetti di Pesce Surgelati in confezione da 1 kg,Filetti di Pesce Surgelati,661,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Surgelati,Ortaggi surgelati,YES
+691,Uova Fresche,Uova Fresche,691,KEEP,Banco Frigo,Uova,Uova fresche,NO
+692,Uova Biologiche,Uova Biologiche,692,KEEP,Banco Frigo,Uova,Uova fresche,NO
+693,Uova da Galline all'Aperto,Uova da Galline all'Aperto,693,KEEP,Banco Frigo,Uova,Uova fresche,NO
+694,Uova di Codornice,Uova di Codornice,694,KEEP,Banco Frigo,Uova,Uova fresche,NO
+695,Tuorlo d'Uovo,Tuorlo d'Uovo,695,KEEP,Banco Frigo,Uova,Uova fresche,NO
+696,Uova,Uova,696,KEEP,Banco Frigo,Uova,Uova fresche,NO
+697,Tuorlo d'Uovo con 6 uova,Tuorlo d'Uovo,695,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+698,Uova da Galline all'Aperto con 6 uova,Uova da Galline all'Aperto,693,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+699,Uova Fresche con 6 uova,Uova Fresche,691,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+700,Uova di Codornice con 6 uova,Uova di Codornice,694,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+701,Uova Biologiche con 6 uova,Uova Biologiche,692,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+702,Uova con 6 uova,Uova,696,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+703,Tuorlo d'Uovo con 10 uova,Tuorlo d'Uovo,695,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+704,Uova da Galline all'Aperto con 10 uova,Uova da Galline all'Aperto,693,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+705,Uova Fresche con 10 uova,Uova Fresche,691,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+706,Uova di Codornice con 10 uova,Uova di Codornice,694,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+707,Uova Biologiche con 10 uova,Uova Biologiche,692,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+708,Uova con 10 uova,Uova,696,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+709,Tuorlo d'Uovo con 15 uova,Tuorlo d'Uovo,695,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+710,Uova da Galline all'Aperto con 15 uova,Uova da Galline all'Aperto,693,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+711,Uova Fresche con 15 uova,Uova Fresche,691,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+712,Uova di Codornice con 15 uova,Uova di Codornice,694,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+713,Uova Biologiche con 15 uova,Uova Biologiche,692,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+714,Uova con 15 uova,Uova,696,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+715,Tuorlo d'Uovo con 20 uova,Tuorlo d'Uovo,695,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+716,Uova da Galline all'Aperto con 20 uova,Uova da Galline all'Aperto,693,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+717,Uova Fresche con 20 uova,Uova Fresche,691,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+718,Uova di Codornice con 20 uova,Uova di Codornice,694,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+719,Uova Biologiche con 20 uova,Uova Biologiche,692,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+720,Uova con 20 uova,Uova,696,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+721,Tuorlo d'Uovo con 30 uova,Tuorlo d'Uovo,695,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+722,Uova da Galline all'Aperto con 30 uova,Uova da Galline all'Aperto,693,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+723,Uova Fresche con 30 uova,Uova Fresche,691,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+724,Uova di Codornice con 30 uova,Uova di Codornice,694,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+725,Uova Biologiche con 30 uova,Uova Biologiche,692,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+726,Uova con 30 uova,Uova,696,MERGE_ID_REFERENCE_REVIEW,Banco Frigo,Uova,Uova fresche,NO
+727,Tuorlo d'Uovo Bio,Tuorlo d'Uovo Bio,727,KEEP,Banco Frigo,Uova,Uova fresche,NO
+728,Uova da Galline all'Aperto Bio,Uova da Galline all'Aperto Bio,728,KEEP,Banco Frigo,Uova,Uova fresche,NO
+729,Uova Fresche Bio,Uova Fresche Bio,729,KEEP,Banco Frigo,Uova,Uova fresche,NO
+730,Uova di Codornice Bio,Uova di Codornice Bio,730,KEEP,Banco Frigo,Uova,Uova fresche,NO
+731,Spaghetti,Spaghetti,731,KEEP,Dispensa,Pasta e riso,Pasta secca,YES
+732,Penne,Penne,732,KEEP,Dispensa,Pasta e riso,Pasta fresca,NO
+733,Fusilli,Fusilli,733,KEEP,Dispensa,Pasta e riso,Riso e cereali,NO
+734,Rigatoni,Rigatoni,734,KEEP,Dispensa,Pasta e riso,Couscous e polenta,YES
+735,Farfalle,Farfalle,735,KEEP,Dispensa,Pasta e riso,Pasta secca,YES
+736,Orecchiette,Orecchiette,736,KEEP,Dispensa,Pasta e riso,Pasta fresca,YES
+737,Tagliatelle,Tagliatelle,737,KEEP,Dispensa,Pasta e riso,Riso e cereali,YES
+738,Pappardelle,Pappardelle,738,KEEP,Dispensa,Pasta e riso,Couscous e polenta,YES
+739,Lasagne,Lasagne,739,KEEP,Dispensa,Pasta e riso,Pasta secca,YES
+740,Gnocchi,Gnocchi,740,KEEP,Dispensa,Pasta e riso,Pasta fresca,NO
+741,Riso Carnaroli,Riso Carnaroli,741,KEEP,Dispensa,Pasta e riso,Riso e cereali,YES
+742,Riso Basmati,Riso Basmati,742,KEEP,Dispensa,Pasta e riso,Couscous e polenta,NO
+743,Riso Arborio,Riso Arborio,743,KEEP,Dispensa,Pasta e riso,Pasta secca,YES
+744,Riso Integrale,Riso Integrale,744,KEEP,Dispensa,Pasta e riso,Pasta fresca,YES
+745,Quinoa,Quinoa,745,KEEP,Dispensa,Pasta e riso,Riso e cereali,YES
+746,Couscous,Couscous,746,KEEP,Dispensa,Pasta e riso,Couscous e polenta,YES
+747,Polenta,Polenta,747,KEEP,Dispensa,Pasta e riso,Pasta secca,YES
+748,Spaghettini,Spaghettini,748,KEEP,Dispensa,Pasta e riso,Pasta fresca,YES
+749,Mezze Penne,Mezze Penne,749,KEEP,Dispensa,Pasta e riso,Riso e cereali,NO
+750,Stelline,Stelline,750,KEEP,Dispensa,Pasta e riso,Couscous e polenta,NO
+751,Pasta,Pasta,751,KEEP,Dispensa,Pasta e riso,Pasta secca,NO
+752,Riso,Riso,752,KEEP,Dispensa,Pasta e riso,Riso e cereali,NO
+753,Lasagne in confezione da 500 g,Lasagne,739,MERGE_ID_REFERENCE_REVIEW,Dispensa,Pasta e riso,Riso e cereali,YES
+754,Spaghetti in confezione da 500 g,Spaghetti,731,MERGE_ID_REFERENCE_REVIEW,Dispensa,Pasta e riso,Couscous e polenta,YES
+755,Pappardelle in confezione da 500 g,Pappardelle,738,MERGE_ID_REFERENCE_REVIEW,Dispensa,Pasta e riso,Pasta secca,YES
+756,Gnocchi in confezione da 500 g,Gnocchi,740,MERGE_ID_REFERENCE_REVIEW,Dispensa,Pasta e riso,Pasta fresca,NO
+757,Riso in confezione da 500 g,Riso,752,MERGE_ID_REFERENCE_REVIEW,Dispensa,Pasta e riso,Riso e cereali,NO
+758,Riso Basmati in confezione da 500 g,Riso Basmati,742,MERGE_ID_REFERENCE_REVIEW,Dispensa,Pasta e riso,Couscous e polenta,NO
+759,Pasta in confezione da 500 g,Pasta,751,MERGE_ID_REFERENCE_REVIEW,Dispensa,Pasta e riso,Pasta secca,NO
+760,Tagliatelle in confezione da 500 g,Tagliatelle,737,MERGE_ID_REFERENCE_REVIEW,Dispensa,Pasta e riso,Pasta fresca,YES
+761,Spaghettini in confezione da 500 g,Spaghettini,748,MERGE_ID_REFERENCE_REVIEW,Dispensa,Pasta e riso,Riso e cereali,YES
+762,Riso Arborio in confezione da 500 g,Riso Arborio,743,MERGE_ID_REFERENCE_REVIEW,Dispensa,Pasta e riso,Couscous e polenta,YES
+763,Orecchiette in confezione da 500 g,Orecchiette,736,MERGE_ID_REFERENCE_REVIEW,Dispensa,Pasta e riso,Pasta secca,YES
+764,Couscous in confezione da 500 g,Couscous,746,MERGE_ID_REFERENCE_REVIEW,Dispensa,Pasta e riso,Pasta fresca,YES
+765,Rigatoni in confezione da 500 g,Rigatoni,734,MERGE_ID_REFERENCE_REVIEW,Dispensa,Pasta e riso,Riso e cereali,YES
+766,Farfalle in confezione da 500 g,Farfalle,735,MERGE_ID_REFERENCE_REVIEW,Dispensa,Pasta e riso,Couscous e polenta,YES
+767,Quinoa in confezione da 500 g,Quinoa,745,MERGE_ID_REFERENCE_REVIEW,Dispensa,Pasta e riso,Pasta secca,YES
+768,Riso Carnaroli in confezione da 500 g,Riso Carnaroli,741,MERGE_ID_REFERENCE_REVIEW,Dispensa,Pasta e riso,Pasta fresca,YES
+769,Polenta in confezione da 500 g,Polenta,747,MERGE_ID_REFERENCE_REVIEW,Dispensa,Pasta e riso,Riso e cereali,YES
+770,Riso Integrale in confezione da 500 g,Riso Integrale,744,MERGE_ID_REFERENCE_REVIEW,Dispensa,Pasta e riso,Couscous e polenta,YES
+771,Olio Extra Vergine di Oliva,Olio Extra Vergine di Oliva,771,KEEP,Dispensa,Oli e condimenti,Oli,YES
+772,Olio di Semi,Olio di Semi,772,KEEP,Dispensa,Oli e condimenti,Aceti,NO
+773,Olio di Colza,Olio di Colza,773,KEEP,Dispensa,Oli e condimenti,Sale e spezie,NO
+774,Aceto Balsamico,Aceto Balsamico,774,KEEP,Dispensa,Oli e condimenti,Oli,YES
+775,Aceto di Vino,Aceto di Vino,775,KEEP,Dispensa,Oli e condimenti,Aceti,YES
+776,Aceto di Mele,Aceto di Mele,776,KEEP,Dispensa,Oli e condimenti,Sale e spezie,YES
+777,Sale Marino,Sale Marino,777,KEEP,Dispensa,Oli e condimenti,Oli,NO
+778,Sale Iodato,Sale Iodato,778,KEEP,Dispensa,Oli e condimenti,Aceti,NO
+779,Pepe Nero,Pepe Nero,779,KEEP,Dispensa,Oli e condimenti,Sale e spezie,NO
+780,Paprika,Paprika,780,KEEP,Dispensa,Oli e condimenti,Oli,NO
+781,Curcuma,Curcuma,781,KEEP,Dispensa,Oli e condimenti,Aceti,YES
+782,Zenzero in Polvere,Zenzero in Polvere,782,KEEP,Dispensa,Oli e condimenti,Sale e spezie,YES
+783,Olio,Olio,783,KEEP,Dispensa,Oli e condimenti,Oli,YES
+784,Aceto,Aceto,784,KEEP,Dispensa,Oli e condimenti,Aceti,NO
+785,Sale,Sale,785,KEEP,Dispensa,Oli e condimenti,Sale e spezie,NO
+786,Sale Marino da 500 ml,Sale Marino,777,MERGE_ID_REFERENCE_REVIEW,Dispensa,Oli e condimenti,Oli,NO
+787,Aceto da 500 ml,Aceto,784,MERGE_ID_REFERENCE_REVIEW,Dispensa,Oli e condimenti,Aceti,NO
+788,Sale da 500 ml,Sale,785,MERGE_ID_REFERENCE_REVIEW,Dispensa,Oli e condimenti,Sale e spezie,NO
+789,Aceto di Mele da 500 ml,Aceto di Mele,776,MERGE_ID_REFERENCE_REVIEW,Dispensa,Oli e condimenti,Oli,YES
+790,Zenzero in Polvere da 500 ml,Zenzero in Polvere,782,MERGE_ID_REFERENCE_REVIEW,Dispensa,Oli e condimenti,Aceti,YES
+791,Olio di Colza da 500 ml,Olio di Colza,773,MERGE_ID_REFERENCE_REVIEW,Dispensa,Oli e condimenti,Sale e spezie,NO
+792,Aceto di Vino da 500 ml,Aceto di Vino,775,MERGE_ID_REFERENCE_REVIEW,Dispensa,Oli e condimenti,Oli,YES
+793,Aceto Balsamico da 500 ml,Aceto Balsamico,774,MERGE_ID_REFERENCE_REVIEW,Dispensa,Oli e condimenti,Aceti,YES
+794,Pepe Nero da 500 ml,Pepe Nero,779,MERGE_ID_REFERENCE_REVIEW,Dispensa,Oli e condimenti,Sale e spezie,NO
+795,Curcuma da 500 ml,Curcuma,781,MERGE_ID_REFERENCE_REVIEW,Dispensa,Oli e condimenti,Oli,YES
+796,Olio di Semi da 500 ml,Olio di Semi,772,MERGE_ID_REFERENCE_REVIEW,Dispensa,Oli e condimenti,Aceti,NO
+797,Olio da 500 ml,Olio,783,MERGE_ID_REFERENCE_REVIEW,Dispensa,Oli e condimenti,Sale e spezie,YES
+798,Paprika da 500 ml,Paprika,780,MERGE_ID_REFERENCE_REVIEW,Dispensa,Oli e condimenti,Oli,NO
+799,Sale Iodato da 500 ml,Sale Iodato,778,MERGE_ID_REFERENCE_REVIEW,Dispensa,Oli e condimenti,Aceti,NO
+800,Olio Extra Vergine di Oliva da 500 ml,Olio Extra Vergine di Oliva,771,MERGE_ID_REFERENCE_REVIEW,Dispensa,Oli e condimenti,Sale e spezie,YES
+801,Sale Marino da 1 L,Sale Marino,777,MERGE_ID_REFERENCE_REVIEW,Dispensa,Oli e condimenti,Oli,NO
+802,Aceto da 1 L,Aceto,784,MERGE_ID_REFERENCE_REVIEW,Dispensa,Oli e condimenti,Aceti,NO
+803,Sale da 1 L,Sale,785,MERGE_ID_REFERENCE_REVIEW,Dispensa,Oli e condimenti,Sale e spezie,NO
+804,Aceto di Mele da 1 L,Aceto di Mele,776,MERGE_ID_REFERENCE_REVIEW,Dispensa,Oli e condimenti,Oli,YES
+805,Zenzero in Polvere da 1 L,Zenzero in Polvere,782,MERGE_ID_REFERENCE_REVIEW,Dispensa,Oli e condimenti,Aceti,YES
+806,Olio di Colza da 1 L,Olio di Colza,773,MERGE_ID_REFERENCE_REVIEW,Dispensa,Oli e condimenti,Sale e spezie,NO
+807,Aceto di Vino da 1 L,Aceto di Vino,775,MERGE_ID_REFERENCE_REVIEW,Dispensa,Oli e condimenti,Oli,YES
+808,Aceto Balsamico da 1 L,Aceto Balsamico,774,MERGE_ID_REFERENCE_REVIEW,Dispensa,Oli e condimenti,Aceti,YES
+809,Pepe Nero da 1 L,Pepe Nero,779,MERGE_ID_REFERENCE_REVIEW,Dispensa,Oli e condimenti,Sale e spezie,NO
+810,Curcuma da 1 L,Curcuma,781,MERGE_ID_REFERENCE_REVIEW,Dispensa,Oli e condimenti,Oli,YES
+811,Pomodori Pelati,Pomodori Pelati,811,KEEP,Dispensa,Conserve,Conserve di pomodoro,NO
+812,Passata di Pomodoro,Passata di Pomodoro,812,KEEP,Dispensa,Conserve,Legumi in scatola,YES
+813,Salsa di Pomodoro,Salsa di Pomodoro,813,KEEP,Dispensa,Conserve,Sott'oli e sottaceti,YES
+814,Mais in Lattina,Mais in Lattina,814,KEEP,Dispensa,Conserve,Conserve di pomodoro,YES
+815,Fagioli in Lattina,Fagioli in Lattina,815,KEEP,Dispensa,Conserve,Legumi in scatola,YES
+816,Ceci in Lattina,Ceci in Lattina,816,KEEP,Dispensa,Conserve,Sott'oli e sottaceti,NO
+817,Olive in Vaso,Olive in Vaso,817,KEEP,Dispensa,Conserve,Conserve di pomodoro,YES
+818,Cetriolini,Cetriolini,818,KEEP,Dispensa,Conserve,Legumi in scatola,YES
+819,Peperoni Arrostiti,Peperoni Arrostiti,819,KEEP,Dispensa,Conserve,Sott'oli e sottaceti,NO
+820,Melanzane Sott'olio,Melanzane Sott'olio,820,KEEP,Dispensa,Conserve,Conserve di pomodoro,YES
+821,Fagioli Borlotti,Fagioli Borlotti,821,KEEP,Dispensa,Conserve,Legumi in scatola,YES
+822,Lenticchie in Conserve,Lenticchie in Conserve,822,KEEP,Dispensa,Conserve,Sott'oli e sottaceti,YES
+823,Funghi in Vaso,Funghi in Vaso,823,KEEP,Dispensa,Conserve,Conserve di pomodoro,YES
+824,Sugo Pronto,Sugo Pronto,824,KEEP,Dispensa,Conserve,Legumi in scatola,YES
+825,Cruda di Pomodoro,Cruda di Pomodoro,825,KEEP,Dispensa,Conserve,Sott'oli e sottaceti,YES
+826,Pelati,Pelati,826,KEEP,Dispensa,Conserve,Conserve di pomodoro,YES
+827,Sugo,Sugo,827,KEEP,Dispensa,Conserve,Conserve di pomodoro,YES
+828,Olive in Vaso in lattina da 400 g,Olive in Vaso,817,MERGE_ID_REFERENCE_REVIEW,Dispensa,Conserve,Sott'oli e sottaceti,YES
+829,Passata di Pomodoro in lattina da 400 g,Passata di Pomodoro,812,MERGE_ID_REFERENCE_REVIEW,Dispensa,Conserve,Conserve di pomodoro,YES
+830,Mais in Lattina in lattina da 400 g,Mais in Lattina,814,MERGE_ID_REFERENCE_REVIEW,Dispensa,Conserve,Legumi in scatola,YES
+831,Sugo Pronto in lattina da 400 g,Sugo Pronto,824,MERGE_ID_REFERENCE_REVIEW,Dispensa,Conserve,Sott'oli e sottaceti,YES
+832,Cruda di Pomodoro in lattina da 400 g,Cruda di Pomodoro,825,MERGE_ID_REFERENCE_REVIEW,Dispensa,Conserve,Conserve di pomodoro,YES
+833,Fagioli Borlotti in lattina da 400 g,Fagioli Borlotti,821,MERGE_ID_REFERENCE_REVIEW,Dispensa,Conserve,Legumi in scatola,YES
+834,Ceci in Lattina in lattina da 400 g,Ceci in Lattina,816,MERGE_ID_REFERENCE_REVIEW,Dispensa,Conserve,Sott'oli e sottaceti,NO
+835,Pomodori Pelati in lattina da 400 g,Pomodori Pelati,811,MERGE_ID_REFERENCE_REVIEW,Dispensa,Conserve,Conserve di pomodoro,NO
+836,Funghi in Vaso in lattina da 400 g,Funghi in Vaso,823,MERGE_ID_REFERENCE_REVIEW,Dispensa,Conserve,Legumi in scatola,YES
+837,Pelati in lattina da 400 g,Pelati,826,MERGE_ID_REFERENCE_REVIEW,Dispensa,Conserve,Sott'oli e sottaceti,YES
+838,Fagioli in Lattina in lattina da 400 g,Fagioli in Lattina,815,MERGE_ID_REFERENCE_REVIEW,Dispensa,Conserve,Conserve di pomodoro,YES
+839,Sugo in lattina da 400 g,Sugo,827,MERGE_ID_REFERENCE_REVIEW,Dispensa,Conserve,Legumi in scatola,YES
+840,Peperoni Arrostiti in lattina da 400 g,Peperoni Arrostiti,819,MERGE_ID_REFERENCE_REVIEW,Dispensa,Conserve,Sott'oli e sottaceti,NO
+841,Cetriolini in lattina da 400 g,Cetriolini,818,MERGE_ID_REFERENCE_REVIEW,Dispensa,Conserve,Conserve di pomodoro,YES
+842,Salsa di Pomodoro in lattina da 400 g,Salsa di Pomodoro,813,MERGE_ID_REFERENCE_REVIEW,Dispensa,Conserve,Legumi in scatola,YES
+843,Melanzane Sott'olio in lattina da 400 g,Melanzane Sott'olio,820,MERGE_ID_REFERENCE_REVIEW,Dispensa,Conserve,Sott'oli e sottaceti,YES
+844,Lenticchie in Conserve in lattina da 400 g,Lenticchie in Conserve,822,MERGE_ID_REFERENCE_REVIEW,Dispensa,Conserve,Conserve di pomodoro,YES
+845,Olive in Vaso in barattolo da 500 g,Olive in Vaso,817,MERGE_ID_REFERENCE_REVIEW,Dispensa,Conserve,Legumi in scatola,YES
+846,Passata di Pomodoro in barattolo da 500 g,Passata di Pomodoro,812,MERGE_ID_REFERENCE_REVIEW,Dispensa,Conserve,Sott'oli e sottaceti,YES
+847,Mais in Lattina in barattolo da 500 g,Mais in Lattina,814,MERGE_ID_REFERENCE_REVIEW,Dispensa,Conserve,Conserve di pomodoro,YES
+848,Sugo Pronto in barattolo da 500 g,Sugo Pronto,824,MERGE_ID_REFERENCE_REVIEW,Dispensa,Conserve,Legumi in scatola,YES
+849,Cruda di Pomodoro in barattolo da 500 g,Cruda di Pomodoro,825,MERGE_ID_REFERENCE_REVIEW,Dispensa,Conserve,Sott'oli e sottaceti,YES
+850,Fagioli Borlotti in barattolo da 500 g,Fagioli Borlotti,821,MERGE_ID_REFERENCE_REVIEW,Dispensa,Conserve,Conserve di pomodoro,YES
+851,Cracker,Cracker,851,KEEP,Dispensa,Snack e cracker,Salati,YES
+852,Gallette,Gallette,852,KEEP,Dispensa,Snack e cracker,Dolci,YES
+853,Patatine,Patatine,853,KEEP,Dispensa,Snack e cracker,Frutta secca,NO
+854,Chips di Patate,Chips di Patate,854,KEEP,Dispensa,Snack e cracker,Salati,NO
+855,Popcorn,Popcorn,855,KEEP,Dispensa,Snack e cracker,Dolci,NO
+856,Barretta ai Cereali,Barretta ai Cereali,856,KEEP,Dispensa,Snack e cracker,Frutta secca,YES
+857,Noccioline,Noccioline,857,KEEP,Dispensa,Snack e cracker,Salati,NO
+858,Mandorle da Snack,Mandorle da Snack,858,KEEP,Dispensa,Snack e cracker,Dolci,YES
+859,Frutta Secca Mista,Frutta Secca Mista,859,KEEP,Dispensa,Snack e cracker,Frutta secca,YES
+860,Taralli,Taralli,860,KEEP,Dispensa,Snack e cracker,Salati,NO
+861,Stuzzichini,Stuzzichini,861,KEEP,Dispensa,Snack e cracker,Dolci,NO
+862,Cracker Integrali,Cracker Integrali,862,KEEP,Dispensa,Snack e cracker,Frutta secca,YES
+863,Chips di Patate in confezione da 200 g,Chips di Patate,854,MERGE_ID_REFERENCE_REVIEW,Dispensa,Snack e cracker,Salati,NO
+864,Barretta ai Cereali in confezione da 200 g,Barretta ai Cereali,856,MERGE_ID_REFERENCE_REVIEW,Dispensa,Snack e cracker,Dolci,YES
+865,Cracker in confezione da 200 g,Cracker,851,MERGE_ID_REFERENCE_REVIEW,Dispensa,Snack e cracker,Frutta secca,YES
+866,Noccioline in confezione da 200 g,Noccioline,857,MERGE_ID_REFERENCE_REVIEW,Dispensa,Snack e cracker,Salati,NO
+867,Stuzzichini in confezione da 200 g,Stuzzichini,861,MERGE_ID_REFERENCE_REVIEW,Dispensa,Snack e cracker,Dolci,NO
+868,Mandorle da Snack in confezione da 200 g,Mandorle da Snack,858,MERGE_ID_REFERENCE_REVIEW,Dispensa,Snack e cracker,Frutta secca,YES
+869,Taralli in confezione da 200 g,Taralli,860,MERGE_ID_REFERENCE_REVIEW,Dispensa,Snack e cracker,Salati,NO
+870,Popcorn in confezione da 200 g,Popcorn,855,MERGE_ID_REFERENCE_REVIEW,Dispensa,Snack e cracker,Dolci,NO
+871,Patatine in confezione da 200 g,Patatine,853,MERGE_ID_REFERENCE_REVIEW,Dispensa,Snack e cracker,Frutta secca,NO
+872,Frutta Secca Mista in confezione da 200 g,Frutta Secca Mista,859,MERGE_ID_REFERENCE_REVIEW,Dispensa,Snack e cracker,Salati,YES
+873,Cracker Integrali in confezione da 200 g,Cracker Integrali,862,MERGE_ID_REFERENCE_REVIEW,Dispensa,Snack e cracker,Dolci,YES
+874,Gallette in confezione da 200 g,Gallette,852,MERGE_ID_REFERENCE_REVIEW,Dispensa,Snack e cracker,Frutta secca,YES
+875,Chips di Patate in confezione da 400 g,Chips di Patate,854,MERGE_ID_REFERENCE_REVIEW,Dispensa,Snack e cracker,Salati,NO
+876,Barretta ai Cereali in confezione da 400 g,Barretta ai Cereali,856,MERGE_ID_REFERENCE_REVIEW,Dispensa,Snack e cracker,Dolci,YES
+877,Cracker in confezione da 400 g,Cracker,851,MERGE_ID_REFERENCE_REVIEW,Dispensa,Snack e cracker,Frutta secca,YES
+878,Noccioline in confezione da 400 g,Noccioline,857,MERGE_ID_REFERENCE_REVIEW,Dispensa,Snack e cracker,Salati,NO
+879,Stuzzichini in confezione da 400 g,Stuzzichini,861,MERGE_ID_REFERENCE_REVIEW,Dispensa,Snack e cracker,Dolci,NO
+880,Mandorle da Snack in confezione da 400 g,Mandorle da Snack,858,MERGE_ID_REFERENCE_REVIEW,Dispensa,Snack e cracker,Frutta secca,YES
+881,Taralli in confezione da 400 g,Taralli,860,MERGE_ID_REFERENCE_REVIEW,Dispensa,Snack e cracker,Salati,NO
+882,Popcorn in confezione da 400 g,Popcorn,855,MERGE_ID_REFERENCE_REVIEW,Dispensa,Snack e cracker,Dolci,NO
+883,Patatine in confezione da 400 g,Patatine,853,MERGE_ID_REFERENCE_REVIEW,Dispensa,Snack e cracker,Frutta secca,NO
+884,Frutta Secca Mista in confezione da 400 g,Frutta Secca Mista,859,MERGE_ID_REFERENCE_REVIEW,Dispensa,Snack e cracker,Salati,YES
+885,Cracker Integrali in confezione da 400 g,Cracker Integrali,862,MERGE_ID_REFERENCE_REVIEW,Dispensa,Snack e cracker,Dolci,YES
+886,Gallette in confezione da 400 g,Gallette,852,MERGE_ID_REFERENCE_REVIEW,Dispensa,Snack e cracker,Frutta secca,YES
+887,Chips di Patate Bio,Chips di Patate Bio,887,KEEP,Dispensa,Snack e cracker,Salati,NO
+888,Barretta ai Cereali Bio,Barretta ai Cereali Bio,888,KEEP,Dispensa,Snack e cracker,Dolci,NO
+889,Cracker Bio,Cracker Bio,889,KEEP,Dispensa,Snack e cracker,Frutta secca,NO
+890,Noccioline Bio,Noccioline Bio,890,KEEP,Dispensa,Snack e cracker,Salati,NO
+891,Cioccolato Fondente,Cioccolato Fondente,891,KEEP,Dispensa,Dolci e cioccolato,Cioccolato,YES
+892,Cioccolato al Latte,Cioccolato al Latte,892,KEEP,Dispensa,Dolci e cioccolato,Biscotti,YES
+893,Cioccolato Bianco,Cioccolato Bianco,893,KEEP,Dispensa,Dolci e cioccolato,Dolci e creme,YES
+894,Tavoletta al Cereale,Tavoletta al Cereale,894,KEEP,Dispensa,Dolci e cioccolato,Cioccolato,YES
+895,Biscotti,Biscotti,895,KEEP,Dispensa,Dolci e cioccolato,Biscotti,YES
+896,Merendine,Merendine,896,KEEP,Dispensa,Dolci e cioccolato,Dolci e creme,YES
+897,Wafer,Wafer,897,KEEP,Dispensa,Dolci e cioccolato,Cioccolato,YES
+898,Tortina al Cioccolato,Tortina al Cioccolato,898,KEEP,Dispensa,Dolci e cioccolato,Biscotti,YES
+899,Frollini,Frollini,899,KEEP,Dispensa,Dolci e cioccolato,Dolci e creme,YES
+900,Crema da Spalmare,Crema da Spalmare,900,KEEP,Dispensa,Dolci e cioccolato,Cioccolato,YES
+901,Caramelle,Caramelle,901,KEEP,Dispensa,Dolci e cioccolato,Biscotti,YES
+902,Marshmallow,Marshmallow,902,KEEP,Dispensa,Dolci e cioccolato,Dolci e creme,YES
+903,Zucchero,Zucchero,903,KEEP,Dispensa,Dolci e cioccolato,Dolci e creme,YES
+904,Miele,Miele,904,KEEP,Dispensa,Dolci e cioccolato,Dolci e creme,NO
+905,Marmellata,Marmellata,905,KEEP,Dispensa,Dolci e cioccolato,Dolci e creme,YES
+906,Cioccolato,Cioccolato,906,KEEP,Dispensa,Dolci e cioccolato,Cioccolato,YES
+907,Tavoletta al Cereale in confezione da 100 g,Tavoletta al Cereale,894,MERGE_ID_REFERENCE_REVIEW,Dispensa,Dolci e cioccolato,Biscotti,YES
+908,Frollini in confezione da 100 g,Frollini,899,MERGE_ID_REFERENCE_REVIEW,Dispensa,Dolci e cioccolato,Dolci e creme,YES
+909,Crema da Spalmare in confezione da 100 g,Crema da Spalmare,900,MERGE_ID_REFERENCE_REVIEW,Dispensa,Dolci e cioccolato,Cioccolato,YES
+910,Merendine in confezione da 100 g,Merendine,896,MERGE_ID_REFERENCE_REVIEW,Dispensa,Dolci e cioccolato,Biscotti,YES
+911,Marshmallow in confezione da 100 g,Marshmallow,902,MERGE_ID_REFERENCE_REVIEW,Dispensa,Dolci e cioccolato,Dolci e creme,YES
+912,Cioccolato Bianco in confezione da 100 g,Cioccolato Bianco,893,MERGE_ID_REFERENCE_REVIEW,Dispensa,Dolci e cioccolato,Cioccolato,YES
+913,Tortina al Cioccolato in confezione da 100 g,Tortina al Cioccolato,898,MERGE_ID_REFERENCE_REVIEW,Dispensa,Dolci e cioccolato,Biscotti,YES
+914,Zucchero in confezione da 100 g,Zucchero,903,MERGE_ID_REFERENCE_REVIEW,Dispensa,Dolci e cioccolato,Dolci e creme,YES
+915,Marmellata in confezione da 100 g,Marmellata,905,MERGE_ID_REFERENCE_REVIEW,Dispensa,Dolci e cioccolato,Cioccolato,YES
+916,Wafer in confezione da 100 g,Wafer,897,MERGE_ID_REFERENCE_REVIEW,Dispensa,Dolci e cioccolato,Biscotti,YES
+917,Caramelle in confezione da 100 g,Caramelle,901,MERGE_ID_REFERENCE_REVIEW,Dispensa,Dolci e cioccolato,Dolci e creme,YES
+918,Cioccolato al Latte in confezione da 100 g,Cioccolato al Latte,892,MERGE_ID_REFERENCE_REVIEW,Dispensa,Dolci e cioccolato,Cioccolato,YES
+919,Cioccolato Fondente in confezione da 100 g,Cioccolato Fondente,891,MERGE_ID_REFERENCE_REVIEW,Dispensa,Dolci e cioccolato,Biscotti,YES
+920,Miele in confezione da 100 g,Miele,904,MERGE_ID_REFERENCE_REVIEW,Dispensa,Dolci e cioccolato,Dolci e creme,NO
+921,Biscotti in confezione da 100 g,Biscotti,895,MERGE_ID_REFERENCE_REVIEW,Dispensa,Dolci e cioccolato,Cioccolato,YES
+922,Cioccolato in confezione da 100 g,Cioccolato,906,MERGE_ID_REFERENCE_REVIEW,Dispensa,Dolci e cioccolato,Biscotti,YES
+923,Tavoletta al Cereale in confezione da 200 g,Tavoletta al Cereale,894,MERGE_ID_REFERENCE_REVIEW,Dispensa,Dolci e cioccolato,Dolci e creme,YES
+924,Frollini in confezione da 200 g,Frollini,899,MERGE_ID_REFERENCE_REVIEW,Dispensa,Dolci e cioccolato,Cioccolato,YES
+925,Crema da Spalmare in confezione da 200 g,Crema da Spalmare,900,MERGE_ID_REFERENCE_REVIEW,Dispensa,Dolci e cioccolato,Biscotti,YES
+926,Merendine in confezione da 200 g,Merendine,896,MERGE_ID_REFERENCE_REVIEW,Dispensa,Dolci e cioccolato,Dolci e creme,YES
+927,Marshmallow in confezione da 200 g,Marshmallow,902,MERGE_ID_REFERENCE_REVIEW,Dispensa,Dolci e cioccolato,Cioccolato,YES
+928,Cioccolato Bianco in confezione da 200 g,Cioccolato Bianco,893,MERGE_ID_REFERENCE_REVIEW,Dispensa,Dolci e cioccolato,Biscotti,YES
+929,Tortina al Cioccolato in confezione da 200 g,Tortina al Cioccolato,898,MERGE_ID_REFERENCE_REVIEW,Dispensa,Dolci e cioccolato,Dolci e creme,YES
+930,Zucchero in confezione da 200 g,Zucchero,903,MERGE_ID_REFERENCE_REVIEW,Dispensa,Dolci e cioccolato,Cioccolato,YES
+931,Caffè in Grani,Caffè in Grani,931,KEEP,Dispensa,Caffè e tè,Caffè,YES
+932,Caffè Macinato,Caffè Macinato,932,KEEP,Dispensa,Caffè e tè,Tè e infusi,YES
+933,Caffè Decaffeinato,Caffè Decaffeinato,933,KEEP,Dispensa,Caffè e tè,Caffè,NO
+934,Caffè in Cialde,Caffè in Cialde,934,KEEP,Dispensa,Caffè e tè,Tè e infusi,NO
+935,Caffè in Capsule,Caffè in Capsule,935,KEEP,Dispensa,Caffè e tè,Caffè,NO
+936,Tè Nero,Tè Nero,936,KEEP,Dispensa,Caffè e tè,Tè e infusi,YES
+937,Tè Verde,Tè Verde,937,KEEP,Dispensa,Caffè e tè,Caffè,YES
+938,Tè alla Menta,Tè alla Menta,938,KEEP,Dispensa,Caffè e tè,Tè e infusi,NO
+939,Camomilla,Camomilla,939,KEEP,Dispensa,Caffè e tè,Caffè,YES
+940,Infuso Rilassante,Infuso Rilassante,940,KEEP,Dispensa,Caffè e tè,Tè e infusi,NO
+941,Matcha,Matcha,941,KEEP,Dispensa,Caffè e tè,Caffè,YES
+942,Cacao in Polvere,Cacao in Polvere,942,KEEP,Dispensa,Caffè e tè,Tè e infusi,YES
+943,Caffè,Caffè,943,KEEP,Dispensa,Caffè e tè,Caffè,NO
+944,Tè,Tè,944,KEEP,Dispensa,Caffè e tè,Tè e infusi,YES
+945,Caffè Decaffeinato in confezione da 250 g,Caffè Decaffeinato,933,MERGE_ID_REFERENCE_REVIEW,Dispensa,Caffè e tè,Caffè,NO
+946,Caffè in Cialde in confezione da 250 g,Caffè in Cialde,934,MERGE_ID_REFERENCE_REVIEW,Dispensa,Caffè e tè,Tè e infusi,NO
+947,Caffè in confezione da 250 g,Caffè,943,MERGE_ID_REFERENCE_REVIEW,Dispensa,Caffè e tè,Caffè,NO
+948,Infuso Rilassante in confezione da 250 g,Infuso Rilassante,940,MERGE_ID_REFERENCE_REVIEW,Dispensa,Caffè e tè,Tè e infusi,NO
+949,Caffè in Capsule in confezione da 250 g,Caffè in Capsule,935,MERGE_ID_REFERENCE_REVIEW,Dispensa,Caffè e tè,Caffè,NO
+950,Tè alla Menta in confezione da 250 g,Tè alla Menta,938,MERGE_ID_REFERENCE_REVIEW,Dispensa,Caffè e tè,Tè e infusi,NO
+951,Tè Nero in confezione da 250 g,Tè Nero,936,MERGE_ID_REFERENCE_REVIEW,Dispensa,Caffè e tè,Caffè,YES
+952,Matcha in confezione da 250 g,Matcha,941,MERGE_ID_REFERENCE_REVIEW,Dispensa,Caffè e tè,Tè e infusi,YES
+953,Caffè Macinato in confezione da 250 g,Caffè Macinato,932,MERGE_ID_REFERENCE_REVIEW,Dispensa,Caffè e tè,Caffè,YES
+954,Caffè in Grani in confezione da 250 g,Caffè in Grani,931,MERGE_ID_REFERENCE_REVIEW,Dispensa,Caffè e tè,Tè e infusi,YES
+955,Tè in confezione da 250 g,Tè,944,MERGE_ID_REFERENCE_REVIEW,Dispensa,Caffè e tè,Caffè,YES
+956,Tè Verde in confezione da 250 g,Tè Verde,937,MERGE_ID_REFERENCE_REVIEW,Dispensa,Caffè e tè,Tè e infusi,YES
+957,Cacao in Polvere in confezione da 250 g,Cacao in Polvere,942,MERGE_ID_REFERENCE_REVIEW,Dispensa,Caffè e tè,Caffè,YES
+958,Camomilla in confezione da 250 g,Camomilla,939,MERGE_ID_REFERENCE_REVIEW,Dispensa,Caffè e tè,Tè e infusi,YES
+959,Caffè Decaffeinato in confezione da 500 g,Caffè Decaffeinato,933,MERGE_ID_REFERENCE_REVIEW,Dispensa,Caffè e tè,Caffè,NO
+960,Caffè in Cialde in confezione da 500 g,Caffè in Cialde,934,MERGE_ID_REFERENCE_REVIEW,Dispensa,Caffè e tè,Tè e infusi,NO
+961,Caffè in confezione da 500 g,Caffè,943,MERGE_ID_REFERENCE_REVIEW,Dispensa,Caffè e tè,Caffè,NO
+962,Infuso Rilassante in confezione da 500 g,Infuso Rilassante,940,MERGE_ID_REFERENCE_REVIEW,Dispensa,Caffè e tè,Tè e infusi,NO
+963,Caffè in Capsule in confezione da 500 g,Caffè in Capsule,935,MERGE_ID_REFERENCE_REVIEW,Dispensa,Caffè e tè,Caffè,NO
+964,Tè alla Menta in confezione da 500 g,Tè alla Menta,938,MERGE_ID_REFERENCE_REVIEW,Dispensa,Caffè e tè,Tè e infusi,NO
+965,Tè Nero in confezione da 500 g,Tè Nero,936,MERGE_ID_REFERENCE_REVIEW,Dispensa,Caffè e tè,Caffè,YES
+966,Matcha in confezione da 500 g,Matcha,941,MERGE_ID_REFERENCE_REVIEW,Dispensa,Caffè e tè,Tè e infusi,YES
+967,Caffè Macinato in confezione da 500 g,Caffè Macinato,932,MERGE_ID_REFERENCE_REVIEW,Dispensa,Caffè e tè,Caffè,YES
+968,Caffè in Grani in confezione da 500 g,Caffè in Grani,931,MERGE_ID_REFERENCE_REVIEW,Dispensa,Caffè e tè,Tè e infusi,YES
+969,Tè in confezione da 500 g,Tè,944,MERGE_ID_REFERENCE_REVIEW,Dispensa,Caffè e tè,Caffè,YES
+970,Tè Verde in confezione da 500 g,Tè Verde,937,MERGE_ID_REFERENCE_REVIEW,Dispensa,Caffè e tè,Tè e infusi,YES
+971,Farina 00,Farina 00,971,KEEP,Dispensa,Legumi e farine,Farine e lieviti,YES
+972,Farina Integrale,Farina Integrale,972,KEEP,Dispensa,Legumi e farine,Legumi secchi,YES
+973,Farina di Grano Tenero,Farina di Grano Tenero,973,KEEP,Dispensa,Legumi e farine,Farine e lieviti,NO
+974,Lievito,Lievito,974,KEEP,Dispensa,Legumi e farine,Legumi secchi,YES
+975,Fagioli Cannellini,Fagioli Cannellini,975,KEEP,Dispensa,Legumi e farine,Farine e lieviti,NO
+976,Lenticchie Secche,Lenticchie Secche,976,KEEP,Dispensa,Legumi e farine,Legumi secchi,NO
+977,Cicerchie,Cicerchie,977,KEEP,Dispensa,Legumi e farine,Farine e lieviti,YES
+978,Farro,Farro,978,KEEP,Dispensa,Legumi e farine,Legumi secchi,NO
+979,Orzo Perlato,Orzo Perlato,979,KEEP,Dispensa,Legumi e farine,Farine e lieviti,YES
+980,Ceci Secchi,Ceci Secchi,980,KEEP,Dispensa,Legumi e farine,Legumi secchi,NO
+981,Amido di Mais,Amido di Mais,981,KEEP,Dispensa,Legumi e farine,Farine e lieviti,NO
+982,Semola Rimacinata,Semola Rimacinata,982,KEEP,Dispensa,Legumi e farine,Legumi secchi,YES
+983,Farina,Farina,983,KEEP,Dispensa,Legumi e farine,Farine e lieviti,YES
+984,Legumi,Legumi,984,KEEP,Dispensa,Legumi e farine,Legumi secchi,YES
+985,Lievito in confezione da 1 kg,Lievito,974,MERGE_ID_REFERENCE_REVIEW,Dispensa,Legumi e farine,Farine e lieviti,YES
+986,Farina in confezione da 1 kg,Farina,983,MERGE_ID_REFERENCE_REVIEW,Dispensa,Legumi e farine,Legumi secchi,YES
+987,Amido di Mais in confezione da 1 kg,Amido di Mais,981,MERGE_ID_REFERENCE_REVIEW,Dispensa,Legumi e farine,Farine e lieviti,NO
+988,Orzo Perlato in confezione da 1 kg,Orzo Perlato,979,MERGE_ID_REFERENCE_REVIEW,Dispensa,Legumi e farine,Legumi secchi,YES
+989,Legumi in confezione da 1 kg,Legumi,984,MERGE_ID_REFERENCE_REVIEW,Dispensa,Legumi e farine,Farine e lieviti,YES
+990,Farro in confezione da 1 kg,Farro,978,MERGE_ID_REFERENCE_REVIEW,Dispensa,Legumi e farine,Legumi secchi,NO
+991,Farina Integrale in confezione da 1 kg,Farina Integrale,972,MERGE_ID_REFERENCE_REVIEW,Dispensa,Legumi e farine,Farine e lieviti,YES
+992,Ceci Secchi in confezione da 1 kg,Ceci Secchi,980,MERGE_ID_REFERENCE_REVIEW,Dispensa,Legumi e farine,Legumi secchi,NO
+993,Semola Rimacinata in confezione da 1 kg,Semola Rimacinata,982,MERGE_ID_REFERENCE_REVIEW,Dispensa,Legumi e farine,Farine e lieviti,YES
+994,Lenticchie Secche in confezione da 1 kg,Lenticchie Secche,976,MERGE_ID_REFERENCE_REVIEW,Dispensa,Legumi e farine,Legumi secchi,NO
+995,Fagioli Cannellini in confezione da 1 kg,Fagioli Cannellini,975,MERGE_ID_REFERENCE_REVIEW,Dispensa,Legumi e farine,Farine e lieviti,NO
+996,Farina 00 in confezione da 1 kg,Farina 00,971,MERGE_ID_REFERENCE_REVIEW,Dispensa,Legumi e farine,Legumi secchi,YES
+997,Farina di Grano Tenero in confezione da 1 kg,Farina di Grano Tenero,973,MERGE_ID_REFERENCE_REVIEW,Dispensa,Legumi e farine,Farine e lieviti,NO
+998,Cicerchie in confezione da 1 kg,Cicerchie,977,MERGE_ID_REFERENCE_REVIEW,Dispensa,Legumi e farine,Legumi secchi,YES
+999,Lievito in confezione da 500 g,Lievito,974,MERGE_ID_REFERENCE_REVIEW,Dispensa,Legumi e farine,Farine e lieviti,YES
+1000,Farina in confezione da 500 g,Farina,983,MERGE_ID_REFERENCE_REVIEW,Dispensa,Legumi e farine,Legumi secchi,YES
+1001,Amido di Mais in confezione da 500 g,Amido di Mais,981,MERGE_ID_REFERENCE_REVIEW,Dispensa,Legumi e farine,Farine e lieviti,NO
+1002,Orzo Perlato in confezione da 500 g,Orzo Perlato,979,MERGE_ID_REFERENCE_REVIEW,Dispensa,Legumi e farine,Legumi secchi,YES
+1003,Legumi in confezione da 500 g,Legumi,984,MERGE_ID_REFERENCE_REVIEW,Dispensa,Legumi e farine,Farine e lieviti,YES
+1004,Farro in confezione da 500 g,Farro,978,MERGE_ID_REFERENCE_REVIEW,Dispensa,Legumi e farine,Legumi secchi,NO
+1005,Farina Integrale in confezione da 500 g,Farina Integrale,972,MERGE_ID_REFERENCE_REVIEW,Dispensa,Legumi e farine,Farine e lieviti,YES
+1006,Ceci Secchi in confezione da 500 g,Ceci Secchi,980,MERGE_ID_REFERENCE_REVIEW,Dispensa,Legumi e farine,Legumi secchi,NO
+1007,Semola Rimacinata in confezione da 500 g,Semola Rimacinata,982,MERGE_ID_REFERENCE_REVIEW,Dispensa,Legumi e farine,Farine e lieviti,YES
+1008,Lenticchie Secche in confezione da 500 g,Lenticchie Secche,976,MERGE_ID_REFERENCE_REVIEW,Dispensa,Legumi e farine,Legumi secchi,NO
+1009,Fagioli Cannellini in confezione da 500 g,Fagioli Cannellini,975,MERGE_ID_REFERENCE_REVIEW,Dispensa,Legumi e farine,Farine e lieviti,NO
+1010,Farina 00 in confezione da 500 g,Farina 00,971,MERGE_ID_REFERENCE_REVIEW,Dispensa,Legumi e farine,Legumi secchi,YES
+1011,Pesto Genovese,Pesto Genovese,1011,KEEP,Dispensa,Salse e pesti,Salse pronte,YES
+1012,Salsa di Soia,Salsa di Soia,1012,KEEP,Dispensa,Salse e pesti,Condimenti pronti,YES
+1013,Salsa Barbecue,Salsa Barbecue,1013,KEEP,Dispensa,Salse e pesti,Salse pronte,NO
+1014,Salsa Piccante,Salsa Piccante,1014,KEEP,Dispensa,Salse e pesti,Condimenti pronti,NO
+1015,Ketchup,Ketchup,1015,KEEP,Dispensa,Salse e pesti,Salse pronte,NO
+1016,Maionese,Maionese,1016,KEEP,Dispensa,Salse e pesti,Condimenti pronti,NO
+1017,Senape,Senape,1017,KEEP,Dispensa,Salse e pesti,Salse pronte,NO
+1018,Hummus,Hummus,1018,KEEP,Dispensa,Salse e pesti,Condimenti pronti,NO
+1019,Guacamole,Guacamole,1019,KEEP,Dispensa,Salse e pesti,Salse pronte,YES
+1020,Salsa Piccante Messicana,Salsa Piccante Messicana,1020,KEEP,Dispensa,Salse e pesti,Condimenti pronti,NO
+1021,Salsa Alfredo,Salsa Alfredo,1021,KEEP,Dispensa,Salse e pesti,Salse pronte,NO
+1022,Tahina,Tahina,1022,KEEP,Dispensa,Salse e pesti,Condimenti pronti,YES
+1023,Senape in barattolo da 200 g,Senape,1017,MERGE_ID_REFERENCE_REVIEW,Dispensa,Salse e pesti,Salse pronte,NO
+1024,Maionese in barattolo da 200 g,Maionese,1016,MERGE_ID_REFERENCE_REVIEW,Dispensa,Salse e pesti,Condimenti pronti,NO
+1025,Ketchup in barattolo da 200 g,Ketchup,1015,MERGE_ID_REFERENCE_REVIEW,Dispensa,Salse e pesti,Salse pronte,NO
+1026,Hummus in barattolo da 200 g,Hummus,1018,MERGE_ID_REFERENCE_REVIEW,Dispensa,Salse e pesti,Condimenti pronti,NO
+1027,Salsa di Soia in barattolo da 200 g,Salsa di Soia,1012,MERGE_ID_REFERENCE_REVIEW,Dispensa,Salse e pesti,Salse pronte,YES
+1028,Pesto Genovese in barattolo da 200 g,Pesto Genovese,1011,MERGE_ID_REFERENCE_REVIEW,Dispensa,Salse e pesti,Condimenti pronti,YES
+1029,Tahina in barattolo da 200 g,Tahina,1022,MERGE_ID_REFERENCE_REVIEW,Dispensa,Salse e pesti,Salse pronte,YES
+1030,Guacamole in barattolo da 200 g,Guacamole,1019,MERGE_ID_REFERENCE_REVIEW,Dispensa,Salse e pesti,Condimenti pronti,YES
+1031,Salsa Alfredo in barattolo da 200 g,Salsa Alfredo,1021,MERGE_ID_REFERENCE_REVIEW,Dispensa,Salse e pesti,Salse pronte,NO
+1032,Salsa Piccante in barattolo da 200 g,Salsa Piccante,1014,MERGE_ID_REFERENCE_REVIEW,Dispensa,Salse e pesti,Condimenti pronti,NO
+1033,Salsa Barbecue in barattolo da 200 g,Salsa Barbecue,1013,MERGE_ID_REFERENCE_REVIEW,Dispensa,Salse e pesti,Salse pronte,NO
+1034,Salsa Piccante Messicana in barattolo da 200 g,Salsa Piccante Messicana,1020,MERGE_ID_REFERENCE_REVIEW,Dispensa,Salse e pesti,Condimenti pronti,NO
+1035,Senape in confezione da 500 ml,Senape,1017,MERGE_ID_REFERENCE_REVIEW,Dispensa,Salse e pesti,Salse pronte,NO
+1036,Maionese in confezione da 500 ml,Maionese,1016,MERGE_ID_REFERENCE_REVIEW,Dispensa,Salse e pesti,Condimenti pronti,NO
+1037,Ketchup in confezione da 500 ml,Ketchup,1015,MERGE_ID_REFERENCE_REVIEW,Dispensa,Salse e pesti,Salse pronte,NO
+1038,Hummus in confezione da 500 ml,Hummus,1018,MERGE_ID_REFERENCE_REVIEW,Dispensa,Salse e pesti,Condimenti pronti,NO
+1039,Salsa di Soia in confezione da 500 ml,Salsa di Soia,1012,MERGE_ID_REFERENCE_REVIEW,Dispensa,Salse e pesti,Salse pronte,YES
+1040,Pesto Genovese in confezione da 500 ml,Pesto Genovese,1011,MERGE_ID_REFERENCE_REVIEW,Dispensa,Salse e pesti,Condimenti pronti,YES
+1041,Tahina in confezione da 500 ml,Tahina,1022,MERGE_ID_REFERENCE_REVIEW,Dispensa,Salse e pesti,Salse pronte,YES
+1042,Guacamole in confezione da 500 ml,Guacamole,1019,MERGE_ID_REFERENCE_REVIEW,Dispensa,Salse e pesti,Condimenti pronti,YES
+1043,Salsa Alfredo in confezione da 500 ml,Salsa Alfredo,1021,MERGE_ID_REFERENCE_REVIEW,Dispensa,Salse e pesti,Salse pronte,NO
+1044,Salsa Piccante in confezione da 500 ml,Salsa Piccante,1014,MERGE_ID_REFERENCE_REVIEW,Dispensa,Salse e pesti,Condimenti pronti,NO
+1045,Salsa Barbecue in confezione da 500 ml,Salsa Barbecue,1013,MERGE_ID_REFERENCE_REVIEW,Dispensa,Salse e pesti,Salse pronte,NO
+1046,Salsa Piccante Messicana in confezione da 500 ml,Salsa Piccante Messicana,1020,MERGE_ID_REFERENCE_REVIEW,Dispensa,Salse e pesti,Condimenti pronti,NO
+1047,Senape Bio,Senape Bio,1047,KEEP,Dispensa,Salse e pesti,Salse pronte,NO
+1048,Maionese Bio,Maionese Bio,1048,KEEP,Dispensa,Salse e pesti,Condimenti pronti,NO
+1049,Ketchup Bio,Ketchup Bio,1049,KEEP,Dispensa,Salse e pesti,Salse pronte,NO
+1050,Hummus Bio,Hummus Bio,1050,KEEP,Dispensa,Salse e pesti,Condimenti pronti,NO
+1051,Sapone da Mani,Sapone da Mani,1051,KEEP,Non alimentare,Igiene persona,Igiene dentale,YES
+1052,Gel Doccia,Gel Doccia,1052,KEEP,Non alimentare,Igiene persona,Cura del corpo,YES
+1053,Shampoo,Shampoo,1053,KEEP,Non alimentare,Igiene persona,Cura dei capelli,YES
+1054,Balsamo,Balsamo,1054,KEEP,Non alimentare,Igiene persona,Rasatura e depilazione,YES
+1055,Dentifricio,Dentifricio,1055,KEEP,Non alimentare,Igiene persona,Igiene dentale,YES
+1056,Spazzolino da Denti,Spazzolino da Denti,1056,KEEP,Non alimentare,Igiene persona,Cura del corpo,YES
+1057,Filo Interdentale,Filo Interdentale,1057,KEEP,Non alimentare,Igiene persona,Cura dei capelli,YES
+1058,Deodorante,Deodorante,1058,KEEP,Non alimentare,Igiene persona,Rasatura e depilazione,YES
+1059,Rasoi,Rasoi,1059,KEEP,Non alimentare,Igiene persona,Igiene dentale,YES
+1060,Schiuma da Barba,Schiuma da Barba,1060,KEEP,Non alimentare,Igiene persona,Cura del corpo,YES
+1061,Crema Idratante,Crema Idratante,1061,KEEP,Non alimentare,Igiene persona,Cura dei capelli,YES
+1062,Crema Solare,Crema Solare,1062,KEEP,Non alimentare,Igiene persona,Rasatura e depilazione,YES
+1063,Cotone Idrofilo,Cotone Idrofilo,1063,KEEP,Non alimentare,Igiene persona,Igiene dentale,YES
+1064,Bagnoschiuma,Bagnoschiuma,1064,KEEP,Non alimentare,Igiene persona,Cura del corpo,YES
+1065,Liquido Lavapanni,Liquido Lavapanni,1065,KEEP,Non alimentare,Igiene persona,Cura dei capelli,YES
+1066,Collutorio,Collutorio,1066,KEEP,Non alimentare,Igiene persona,Rasatura e depilazione,YES
+1067,Balsamo Labbra,Balsamo Labbra,1067,KEEP,Non alimentare,Igiene persona,Igiene dentale,YES
+1068,Maschera Viso,Maschera Viso,1068,KEEP,Non alimentare,Igiene persona,Cura del corpo,YES
+1069,Soluzione Contatti,Soluzione Contatti,1069,KEEP,Non alimentare,Igiene persona,Cura dei capelli,YES
+1070,Spazzolino Interdentale,Spazzolino Interdentale,1070,KEEP,Non alimentare,Igiene persona,Rasatura e depilazione,YES
+1071,Sapone,Sapone,1071,KEEP,Non alimentare,Igiene persona,Cura del corpo,YES
+1072,Crema Idratante da 500 ml,Crema Idratante,1061,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Cura del corpo,YES
+1073,Maschera Viso da 500 ml,Maschera Viso,1068,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Cura dei capelli,YES
+1074,Filo Interdentale da 500 ml,Filo Interdentale,1057,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Rasatura e depilazione,YES
+1075,Shampoo da 500 ml,Shampoo,1053,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Igiene dentale,YES
+1076,Sapone da 500 ml,Sapone,1071,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Cura del corpo,YES
+1077,Balsamo Labbra da 500 ml,Balsamo Labbra,1067,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Cura dei capelli,YES
+1078,Crema Solare da 500 ml,Crema Solare,1062,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Rasatura e depilazione,YES
+1079,Sapone da Mani da 500 ml,Sapone da Mani,1051,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Igiene dentale,YES
+1080,Schiuma da Barba da 500 ml,Schiuma da Barba,1060,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Cura del corpo,YES
+1081,Bagnoschiuma da 500 ml,Bagnoschiuma,1064,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Cura dei capelli,YES
+1082,Dentifricio da 500 ml,Dentifricio,1055,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Rasatura e depilazione,YES
+1083,Spazzolino Interdentale da 500 ml,Spazzolino Interdentale,1070,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Igiene dentale,YES
+1084,Deodorante da 500 ml,Deodorante,1058,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Cura del corpo,YES
+1085,Liquido Lavapanni da 500 ml,Liquido Lavapanni,1065,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Cura dei capelli,YES
+1086,Soluzione Contatti da 500 ml,Soluzione Contatti,1069,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Rasatura e depilazione,YES
+1087,Collutorio da 500 ml,Collutorio,1066,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Igiene dentale,YES
+1088,Gel Doccia da 500 ml,Gel Doccia,1052,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Cura del corpo,YES
+1089,Cotone Idrofilo da 500 ml,Cotone Idrofilo,1063,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Cura dei capelli,YES
+1090,Balsamo da 500 ml,Balsamo,1054,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Rasatura e depilazione,YES
+1091,Spazzolino da Denti da 500 ml,Spazzolino da Denti,1056,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Igiene dentale,YES
+1092,Rasoi da 500 ml,Rasoi,1059,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Cura del corpo,YES
+1093,Crema Idratante da 250 ml,Crema Idratante,1061,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Cura dei capelli,YES
+1094,Maschera Viso da 250 ml,Maschera Viso,1068,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Rasatura e depilazione,YES
+1095,Filo Interdentale da 250 ml,Filo Interdentale,1057,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Igiene dentale,YES
+1096,Shampoo da 250 ml,Shampoo,1053,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Cura del corpo,YES
+1097,Sapone da 250 ml,Sapone,1071,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Cura dei capelli,YES
+1098,Balsamo Labbra da 250 ml,Balsamo Labbra,1067,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Rasatura e depilazione,YES
+1099,Crema Solare da 250 ml,Crema Solare,1062,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Igiene dentale,YES
+1100,Sapone da Mani da 250 ml,Sapone da Mani,1051,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Cura del corpo,YES
+1101,Schiuma da Barba da 250 ml,Schiuma da Barba,1060,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Cura dei capelli,YES
+1102,Bagnoschiuma da 250 ml,Bagnoschiuma,1064,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Rasatura e depilazione,YES
+1103,Dentifricio da 250 ml,Dentifricio,1055,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Igiene dentale,YES
+1104,Spazzolino Interdentale da 250 ml,Spazzolino Interdentale,1070,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Cura del corpo,YES
+1105,Deodorante da 250 ml,Deodorante,1058,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Cura dei capelli,YES
+1106,Liquido Lavapanni da 250 ml,Liquido Lavapanni,1065,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Rasatura e depilazione,YES
+1107,Soluzione Contatti da 250 ml,Soluzione Contatti,1069,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Igiene dentale,YES
+1108,Collutorio da 250 ml,Collutorio,1066,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Cura del corpo,YES
+1109,Gel Doccia da 250 ml,Gel Doccia,1052,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Cura dei capelli,YES
+1110,Cotone Idrofilo da 250 ml,Cotone Idrofilo,1063,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Rasatura e depilazione,YES
+1111,Balsamo da 250 ml,Balsamo,1054,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Igiene dentale,YES
+1112,Spazzolino da Denti da 250 ml,Spazzolino da Denti,1056,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Cura del corpo,YES
+1113,Rasoi da 250 ml,Rasoi,1059,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Cura dei capelli,YES
+1114,Crema Idratante Pack da 3,Crema Idratante,1061,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Rasatura e depilazione,YES
+1115,Maschera Viso Pack da 3,Maschera Viso,1068,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Igiene dentale,YES
+1116,Filo Interdentale Pack da 3,Filo Interdentale,1057,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Cura del corpo,YES
+1117,Shampoo Pack da 3,Shampoo,1053,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Cura dei capelli,YES
+1118,Sapone Pack da 3,Sapone,1071,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Rasatura e depilazione,YES
+1119,Balsamo Labbra Pack da 3,Balsamo Labbra,1067,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Igiene dentale,YES
+1120,Crema Solare Pack da 3,Crema Solare,1062,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Igiene persona,Cura del corpo,YES
+1121,Detersivo Piatti,Detersivo Piatti,1121,KEEP,Non alimentare,Pulizia e lavatrice,Detersivi per bucato,NO
+1122,Detersivo Biancheria,Detersivo Biancheria,1122,KEEP,Non alimentare,Pulizia e lavatrice,Detersivi per piatti,YES
+1123,Ammorbidente,Ammorbidente,1123,KEEP,Non alimentare,Pulizia e lavatrice,Pulizia generale,YES
+1124,Disinfettante,Disinfettante,1124,KEEP,Non alimentare,Pulizia e lavatrice,Detersivi per bucato,NO
+1125,Sgrassatore,Sgrassatore,1125,KEEP,Non alimentare,Pulizia e lavatrice,Detersivi per piatti,NO
+1126,Pulitore Multiuso,Pulitore Multiuso,1126,KEEP,Non alimentare,Pulizia e lavatrice,Pulizia generale,NO
+1127,Sacchi della Spazzatura,Sacchi della Spazzatura,1127,KEEP,Non alimentare,Pulizia e lavatrice,Detersivi per bucato,YES
+1128,Guanti Monouso,Guanti Monouso,1128,KEEP,Non alimentare,Pulizia e lavatrice,Detersivi per piatti,NO
+1129,Candeggina,Candeggina,1129,KEEP,Non alimentare,Pulizia e lavatrice,Pulizia generale,NO
+1130,Deodorante per Ambienti,Deodorante per Ambienti,1130,KEEP,Non alimentare,Pulizia e lavatrice,Detersivi per bucato,YES
+1131,Detersivo Pavimenti,Detersivo Pavimenti,1131,KEEP,Non alimentare,Pulizia e lavatrice,Detersivi per piatti,NO
+1132,Detersivo in Polvere,Detersivo in Polvere,1132,KEEP,Non alimentare,Pulizia e lavatrice,Pulizia generale,YES
+1133,Liquido Lavastoviglie,Liquido Lavastoviglie,1133,KEEP,Non alimentare,Pulizia e lavatrice,Detersivi per bucato,YES
+1134,Tablet Lavastoviglie,Tablet Lavastoviglie,1134,KEEP,Non alimentare,Pulizia e lavatrice,Detersivi per piatti,NO
+1135,Sapone di Marsiglia,Sapone di Marsiglia,1135,KEEP,Non alimentare,Pulizia e lavatrice,Pulizia generale,NO
+1136,Panetto per Lavatrice,Panetto per Lavatrice,1136,KEEP,Non alimentare,Pulizia e lavatrice,Detersivi per bucato,NO
+1137,Spray Anticalcare,Spray Anticalcare,1137,KEEP,Non alimentare,Pulizia e lavatrice,Detersivi per piatti,YES
+1138,Acqua Ossigenata,Acqua Ossigenata,1138,KEEP,Non alimentare,Pulizia e lavatrice,Pulizia generale,YES
+1139,Detersivo Delicato,Detersivo Delicato,1139,KEEP,Non alimentare,Pulizia e lavatrice,Detersivi per bucato,YES
+1140,Sgrassatore Eco,Sgrassatore Eco,1140,KEEP,Non alimentare,Pulizia e lavatrice,Detersivi per piatti,NO
+1141,Detersivo,Detersivo,1141,KEEP,Non alimentare,Pulizia e lavatrice,Detersivi per bucato,NO
+1142,Detersivo da 1 L,Detersivo,1141,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per bucato,NO
+1143,Sgrassatore Eco da 1 L,Sgrassatore Eco,1140,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per piatti,NO
+1144,Detersivo Delicato da 1 L,Detersivo Delicato,1139,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Pulizia generale,YES
+1145,Disinfettante da 1 L,Disinfettante,1124,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per bucato,NO
+1146,Guanti Monouso da 1 L,Guanti Monouso,1128,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per piatti,NO
+1147,Pulitore Multiuso da 1 L,Pulitore Multiuso,1126,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Pulizia generale,NO
+1148,Acqua Ossigenata da 1 L,Acqua Ossigenata,1138,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per bucato,YES
+1149,Sacchi della Spazzatura da 1 L,Sacchi della Spazzatura,1127,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per piatti,YES
+1150,Sapone di Marsiglia da 1 L,Sapone di Marsiglia,1135,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Pulizia generale,NO
+1151,Panetto per Lavatrice da 1 L,Panetto per Lavatrice,1136,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per bucato,NO
+1152,Tablet Lavastoviglie da 1 L,Tablet Lavastoviglie,1134,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per piatti,NO
+1153,Deodorante per Ambienti da 1 L,Deodorante per Ambienti,1130,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Pulizia generale,YES
+1154,Ammorbidente da 1 L,Ammorbidente,1123,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per bucato,YES
+1155,Sgrassatore da 1 L,Sgrassatore,1125,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per piatti,NO
+1156,Detersivo Biancheria da 1 L,Detersivo Biancheria,1122,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Pulizia generale,YES
+1157,Detersivo Piatti da 1 L,Detersivo Piatti,1121,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per bucato,NO
+1158,Detersivo Pavimenti da 1 L,Detersivo Pavimenti,1131,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per piatti,NO
+1159,Liquido Lavastoviglie da 1 L,Liquido Lavastoviglie,1133,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Pulizia generale,YES
+1160,Spray Anticalcare da 1 L,Spray Anticalcare,1137,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per bucato,YES
+1161,Detersivo in Polvere da 1 L,Detersivo in Polvere,1132,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per piatti,YES
+1162,Candeggina da 1 L,Candeggina,1129,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Pulizia generale,NO
+1163,"Detersivo da 2,5 L",Detersivo,1141,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per bucato,NO
+1164,"Sgrassatore Eco da 2,5 L",Sgrassatore Eco,1140,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per piatti,NO
+1165,"Detersivo Delicato da 2,5 L",Detersivo Delicato,1139,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Pulizia generale,YES
+1166,"Disinfettante da 2,5 L",Disinfettante,1124,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per bucato,NO
+1167,"Guanti Monouso da 2,5 L",Guanti Monouso,1128,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per piatti,NO
+1168,"Pulitore Multiuso da 2,5 L",Pulitore Multiuso,1126,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Pulizia generale,NO
+1169,"Acqua Ossigenata da 2,5 L",Acqua Ossigenata,1138,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per bucato,YES
+1170,"Sacchi della Spazzatura da 2,5 L",Sacchi della Spazzatura,1127,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per piatti,YES
+1171,"Sapone di Marsiglia da 2,5 L",Sapone di Marsiglia,1135,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Pulizia generale,NO
+1172,"Panetto per Lavatrice da 2,5 L",Panetto per Lavatrice,1136,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per bucato,NO
+1173,"Tablet Lavastoviglie da 2,5 L",Tablet Lavastoviglie,1134,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per piatti,NO
+1174,"Deodorante per Ambienti da 2,5 L",Deodorante per Ambienti,1130,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Pulizia generale,YES
+1175,"Ammorbidente da 2,5 L",Ammorbidente,1123,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per bucato,YES
+1176,"Sgrassatore da 2,5 L",Sgrassatore,1125,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per piatti,NO
+1177,"Detersivo Biancheria da 2,5 L",Detersivo Biancheria,1122,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Pulizia generale,YES
+1178,"Detersivo Piatti da 2,5 L",Detersivo Piatti,1121,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per bucato,NO
+1179,"Detersivo Pavimenti da 2,5 L",Detersivo Pavimenti,1131,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per piatti,NO
+1180,"Liquido Lavastoviglie da 2,5 L",Liquido Lavastoviglie,1133,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Pulizia generale,YES
+1181,"Spray Anticalcare da 2,5 L",Spray Anticalcare,1137,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per bucato,YES
+1182,"Detersivo in Polvere da 2,5 L",Detersivo in Polvere,1132,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per piatti,YES
+1183,"Candeggina da 2,5 L",Candeggina,1129,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Pulizia generale,NO
+1184,Detersivo da 5 L,Detersivo,1141,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per bucato,NO
+1185,Sgrassatore Eco da 5 L,Sgrassatore Eco,1140,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per piatti,NO
+1186,Detersivo Delicato da 5 L,Detersivo Delicato,1139,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Pulizia generale,YES
+1187,Disinfettante da 5 L,Disinfettante,1124,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per bucato,NO
+1188,Guanti Monouso da 5 L,Guanti Monouso,1128,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per piatti,NO
+1189,Pulitore Multiuso da 5 L,Pulitore Multiuso,1126,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Pulizia generale,NO
+1190,Acqua Ossigenata da 5 L,Acqua Ossigenata,1138,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Pulizia e lavatrice,Detersivi per bucato,YES
+1191,Candele,Candele,1191,KEEP,Non alimentare,Cura della casa,Cucina monouso,YES
+1192,Fiammiferi,Fiammiferi,1192,KEEP,Non alimentare,Cura della casa,Illuminazione e batterie,NO
+1193,Batterie,Batterie,1193,KEEP,Non alimentare,Cura della casa,Piccola ferramenta,YES
+1194,Lampadine,Lampadine,1194,KEEP,Non alimentare,Cura della casa,Cucina monouso,NO
+1195,Pellicola Trasparente,Pellicola Trasparente,1195,KEEP,Non alimentare,Cura della casa,Illuminazione e batterie,YES
+1196,Carta Alluminio,Carta Alluminio,1196,KEEP,Non alimentare,Cura della casa,Piccola ferramenta,NO
+1197,Carta Forno,Carta Forno,1197,KEEP,Non alimentare,Cura della casa,Cucina monouso,YES
+1198,Carta Accappatoio,Carta Accappatoio,1198,KEEP,Non alimentare,Cura della casa,Illuminazione e batterie,YES
+1199,Spago da Cucina,Spago da Cucina,1199,KEEP,Non alimentare,Cura della casa,Piccola ferramenta,YES
+1200,Stoviglie Monouso,Stoviglie Monouso,1200,KEEP,Non alimentare,Cura della casa,Cucina monouso,YES
+1201,Fornetto Monouso,Fornetto Monouso,1201,KEEP,Non alimentare,Cura della casa,Illuminazione e batterie,YES
+1202,Filo da Stendere,Filo da Stendere,1202,KEEP,Non alimentare,Cura della casa,Piccola ferramenta,YES
+1203,Spazzola da Bucato,Spazzola da Bucato,1203,KEEP,Non alimentare,Cura della casa,Cucina monouso,YES
+1204,Ganci da Stendere,Ganci da Stendere,1204,KEEP,Non alimentare,Cura della casa,Illuminazione e batterie,YES
+1205,Fazzoletti da Tavolo,Fazzoletti da Tavolo,1205,KEEP,Non alimentare,Cura della casa,Piccola ferramenta,YES
+1206,Filo da Stendere Pack da 3,Filo da Stendere,1202,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Cucina monouso,YES
+1207,Fiammiferi Pack da 3,Fiammiferi,1192,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Illuminazione e batterie,NO
+1208,Carta Alluminio Pack da 3,Carta Alluminio,1196,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Piccola ferramenta,NO
+1209,Ganci da Stendere Pack da 3,Ganci da Stendere,1204,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Cucina monouso,YES
+1210,Spago da Cucina Pack da 3,Spago da Cucina,1199,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Illuminazione e batterie,YES
+1211,Carta Accappatoio Pack da 3,Carta Accappatoio,1198,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Piccola ferramenta,YES
+1212,Batterie Pack da 3,Batterie,1193,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Cucina monouso,YES
+1213,Spazzola da Bucato Pack da 3,Spazzola da Bucato,1203,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Illuminazione e batterie,YES
+1214,Fornetto Monouso Pack da 3,Fornetto Monouso,1201,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Piccola ferramenta,YES
+1215,Fazzoletti da Tavolo Pack da 3,Fazzoletti da Tavolo,1205,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Cucina monouso,YES
+1216,Candele Pack da 3,Candele,1191,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Illuminazione e batterie,YES
+1217,Pellicola Trasparente Pack da 3,Pellicola Trasparente,1195,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Piccola ferramenta,YES
+1218,Lampadine Pack da 3,Lampadine,1194,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Cucina monouso,NO
+1219,Stoviglie Monouso Pack da 3,Stoviglie Monouso,1200,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Illuminazione e batterie,YES
+1220,Carta Forno Pack da 3,Carta Forno,1197,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Piccola ferramenta,YES
+1221,Filo da Stendere Pack da 6,Filo da Stendere,1202,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Cucina monouso,YES
+1222,Fiammiferi Pack da 6,Fiammiferi,1192,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Illuminazione e batterie,NO
+1223,Carta Alluminio Pack da 6,Carta Alluminio,1196,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Piccola ferramenta,NO
+1224,Ganci da Stendere Pack da 6,Ganci da Stendere,1204,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Cucina monouso,YES
+1225,Spago da Cucina Pack da 6,Spago da Cucina,1199,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Illuminazione e batterie,YES
+1226,Carta Accappatoio Pack da 6,Carta Accappatoio,1198,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Piccola ferramenta,YES
+1227,Batterie Pack da 6,Batterie,1193,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Cucina monouso,YES
+1228,Spazzola da Bucato Pack da 6,Spazzola da Bucato,1203,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Illuminazione e batterie,YES
+1229,Fornetto Monouso Pack da 6,Fornetto Monouso,1201,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Piccola ferramenta,YES
+1230,Fazzoletti da Tavolo Pack da 6,Fazzoletti da Tavolo,1205,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Cucina monouso,YES
+1231,Candele Pack da 6,Candele,1191,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Illuminazione e batterie,YES
+1232,Pellicola Trasparente Pack da 6,Pellicola Trasparente,1195,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Piccola ferramenta,YES
+1233,Lampadine Pack da 6,Lampadine,1194,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Cucina monouso,NO
+1234,Stoviglie Monouso Pack da 6,Stoviglie Monouso,1200,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Illuminazione e batterie,YES
+1235,Carta Forno Pack da 6,Carta Forno,1197,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Piccola ferramenta,YES
+1236,Filo da Stendere da 10 pezzi,Filo da Stendere,1202,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Cucina monouso,YES
+1237,Fiammiferi da 10 pezzi,Fiammiferi,1192,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Illuminazione e batterie,NO
+1238,Carta Alluminio da 10 pezzi,Carta Alluminio,1196,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Piccola ferramenta,NO
+1239,Ganci da Stendere da 10 pezzi,Ganci da Stendere,1204,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Cucina monouso,YES
+1240,Spago da Cucina da 10 pezzi,Spago da Cucina,1199,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Illuminazione e batterie,YES
+1241,Carta Accappatoio da 10 pezzi,Carta Accappatoio,1198,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Piccola ferramenta,YES
+1242,Batterie da 10 pezzi,Batterie,1193,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Cucina monouso,YES
+1243,Spazzola da Bucato da 10 pezzi,Spazzola da Bucato,1203,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Illuminazione e batterie,YES
+1244,Fornetto Monouso da 10 pezzi,Fornetto Monouso,1201,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Piccola ferramenta,YES
+1245,Fazzoletti da Tavolo da 10 pezzi,Fazzoletti da Tavolo,1205,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Cucina monouso,YES
+1246,Candele da 10 pezzi,Candele,1191,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Illuminazione e batterie,YES
+1247,Pellicola Trasparente da 10 pezzi,Pellicola Trasparente,1195,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Piccola ferramenta,YES
+1248,Lampadine da 10 pezzi,Lampadine,1194,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Cucina monouso,NO
+1249,Stoviglie Monouso da 10 pezzi,Stoviglie Monouso,1200,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Illuminazione e batterie,YES
+1250,Carta Forno da 10 pezzi,Carta Forno,1197,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cura della casa,Piccola ferramenta,YES
+1251,Filo da Stendere Ricaricabile,Filo da Stendere Ricaricabile,1251,KEEP,Non alimentare,Cura della casa,Cucina monouso,NO
+1252,Fiammiferi Ricaricabile,Fiammiferi Ricaricabile,1252,KEEP,Non alimentare,Cura della casa,Illuminazione e batterie,NO
+1253,Carta Alluminio Ricaricabile,Carta Alluminio Ricaricabile,1253,KEEP,Non alimentare,Cura della casa,Piccola ferramenta,NO
+1254,Ganci da Stendere Ricaricabile,Ganci da Stendere Ricaricabile,1254,KEEP,Non alimentare,Cura della casa,Cucina monouso,NO
+1255,Spago da Cucina Ricaricabile,Spago da Cucina Ricaricabile,1255,KEEP,Non alimentare,Cura della casa,Illuminazione e batterie,NO
+1256,Carta Accappatoio Ricaricabile,Carta Accappatoio Ricaricabile,1256,KEEP,Non alimentare,Cura della casa,Piccola ferramenta,NO
+1257,Batterie Ricaricabile,Batterie Ricaricabile,1257,KEEP,Non alimentare,Cura della casa,Cucina monouso,NO
+1258,Spazzola da Bucato Ricaricabile,Spazzola da Bucato Ricaricabile,1258,KEEP,Non alimentare,Cura della casa,Illuminazione e batterie,NO
+1259,Fornetto Monouso Ricaricabile,Fornetto Monouso Ricaricabile,1259,KEEP,Non alimentare,Cura della casa,Piccola ferramenta,NO
+1260,Fazzoletti da Tavolo Ricaricabile,Fazzoletti da Tavolo Ricaricabile,1260,KEEP,Non alimentare,Cura della casa,Cucina monouso,NO
+1261,Penna Blu,Penna Blu,1261,KEEP,Non alimentare,Cartoleria,Scrittura,YES
+1262,Penna Nera,Penna Nera,1262,KEEP,Non alimentare,Cartoleria,Cancelleria,YES
+1263,Matita,Matita,1263,KEEP,Non alimentare,Cartoleria,Materiali scolastici,YES
+1264,Gomma,Gomma,1264,KEEP,Non alimentare,Cartoleria,Scrittura,YES
+1265,Righello,Righello,1265,KEEP,Non alimentare,Cartoleria,Cancelleria,NO
+1266,Quaderno,Quaderno,1266,KEEP,Non alimentare,Cartoleria,Materiali scolastici,YES
+1267,Blocco Note,Blocco Note,1267,KEEP,Non alimentare,Cartoleria,Scrittura,YES
+1268,Colla,Colla,1268,KEEP,Non alimentare,Cartoleria,Cancelleria,NO
+1269,Forbici,Forbici,1269,KEEP,Non alimentare,Cartoleria,Materiali scolastici,YES
+1270,Segnalibri,Segnalibri,1270,KEEP,Non alimentare,Cartoleria,Scrittura,NO
+1271,Cartelline,Cartelline,1271,KEEP,Non alimentare,Cartoleria,Cancelleria,YES
+1272,Penne da Evidenziatore,Penne da Evidenziatore,1272,KEEP,Non alimentare,Cartoleria,Materiali scolastici,NO
+1273,Agenda,Agenda,1273,KEEP,Non alimentare,Cartoleria,Scrittura,NO
+1274,Calcolatrice,Calcolatrice,1274,KEEP,Non alimentare,Cartoleria,Cancelleria,NO
+1275,Collo,Collo,1275,KEEP,Non alimentare,Cartoleria,Materiali scolastici,NO
+1276,Segnalibri Pack da 3,Segnalibri,1270,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Scrittura,NO
+1277,Quaderno Pack da 3,Quaderno,1266,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Cancelleria,YES
+1278,Penna Blu Pack da 3,Penna Blu,1261,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Materiali scolastici,YES
+1279,Agenda Pack da 3,Agenda,1273,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Scrittura,NO
+1280,Colla Pack da 3,Colla,1268,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Cancelleria,NO
+1281,Gomma Pack da 3,Gomma,1264,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Materiali scolastici,YES
+1282,Matita Pack da 3,Matita,1263,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Scrittura,YES
+1283,Blocco Note Pack da 3,Blocco Note,1267,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Cancelleria,YES
+1284,Collo Pack da 3,Collo,1275,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Materiali scolastici,NO
+1285,Forbici Pack da 3,Forbici,1269,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Scrittura,YES
+1286,Righello Pack da 3,Righello,1265,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Cancelleria,NO
+1287,Penne da Evidenziatore Pack da 3,Penne da Evidenziatore,1272,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Materiali scolastici,NO
+1288,Penna Nera Pack da 3,Penna Nera,1262,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Scrittura,YES
+1289,Calcolatrice Pack da 3,Calcolatrice,1274,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Cancelleria,NO
+1290,Cartelline Pack da 3,Cartelline,1271,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Materiali scolastici,YES
+1291,Segnalibri Pack da 10,Segnalibri,1270,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Scrittura,NO
+1292,Quaderno Pack da 10,Quaderno,1266,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Cancelleria,YES
+1293,Penna Blu Pack da 10,Penna Blu,1261,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Materiali scolastici,YES
+1294,Agenda Pack da 10,Agenda,1273,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Scrittura,NO
+1295,Colla Pack da 10,Colla,1268,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Cancelleria,NO
+1296,Gomma Pack da 10,Gomma,1264,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Materiali scolastici,YES
+1297,Matita Pack da 10,Matita,1263,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Scrittura,YES
+1298,Blocco Note Pack da 10,Blocco Note,1267,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Cancelleria,YES
+1299,Collo Pack da 10,Collo,1275,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Materiali scolastici,NO
+1300,Forbici Pack da 10,Forbici,1269,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Scrittura,YES
+1301,Righello Pack da 10,Righello,1265,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Cancelleria,NO
+1302,Penne da Evidenziatore Pack da 10,Penne da Evidenziatore,1272,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Materiali scolastici,NO
+1303,Penna Nera Pack da 10,Penna Nera,1262,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Scrittura,YES
+1304,Calcolatrice Pack da 10,Calcolatrice,1274,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Cancelleria,NO
+1305,Cartelline Pack da 10,Cartelline,1271,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Materiali scolastici,YES
+1306,Segnalibri da 12 pezzi,Segnalibri,1270,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Scrittura,NO
+1307,Quaderno da 12 pezzi,Quaderno,1266,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Cancelleria,YES
+1308,Penna Blu da 12 pezzi,Penna Blu,1261,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Materiali scolastici,YES
+1309,Agenda da 12 pezzi,Agenda,1273,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Scrittura,NO
+1310,Colla da 12 pezzi,Colla,1268,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Cancelleria,NO
+1311,Gomma da 12 pezzi,Gomma,1264,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Materiali scolastici,YES
+1312,Matita da 12 pezzi,Matita,1263,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Scrittura,YES
+1313,Blocco Note da 12 pezzi,Blocco Note,1267,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Cancelleria,YES
+1314,Collo da 12 pezzi,Collo,1275,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Materiali scolastici,NO
+1315,Forbici da 12 pezzi,Forbici,1269,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Scrittura,YES
+1316,Righello da 12 pezzi,Righello,1265,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Cancelleria,NO
+1317,Penne da Evidenziatore da 12 pezzi,Penne da Evidenziatore,1272,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Materiali scolastici,NO
+1318,Penna Nera da 12 pezzi,Penna Nera,1262,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Scrittura,YES
+1319,Calcolatrice da 12 pezzi,Calcolatrice,1274,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Cancelleria,NO
+1320,Cartelline da 12 pezzi,Cartelline,1271,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Cartoleria,Materiali scolastici,YES
+1321,Segnalibri Extra,Segnalibri Extra,1321,KEEP,Non alimentare,Cartoleria,Scrittura,NO
+1322,Quaderno Extra,Quaderno Extra,1322,KEEP,Non alimentare,Cartoleria,Cancelleria,NO
+1323,Penna Blu Extra,Penna Blu Extra,1323,KEEP,Non alimentare,Cartoleria,Materiali scolastici,NO
+1324,Agenda Extra,Agenda Extra,1324,KEEP,Non alimentare,Cartoleria,Scrittura,NO
+1325,Colla Extra,Colla Extra,1325,KEEP,Non alimentare,Cartoleria,Cancelleria,NO
+1326,Gomma Extra,Gomma Extra,1326,KEEP,Non alimentare,Cartoleria,Materiali scolastici,NO
+1327,Matita Extra,Matita Extra,1327,KEEP,Non alimentare,Cartoleria,Scrittura,NO
+1328,Blocco Note Extra,Blocco Note Extra,1328,KEEP,Non alimentare,Cartoleria,Cancelleria,NO
+1329,Collo Extra,Collo Extra,1329,KEEP,Non alimentare,Cartoleria,Materiali scolastici,NO
+1330,Forbici Extra,Forbici Extra,1330,KEEP,Non alimentare,Cartoleria,Scrittura,NO
+1331,Croccantini Cane,Croccantini Cane,1331,KEEP,Non alimentare,Articoli per animali,Alimentazione animali,YES
+1332,Croccantini Gatto,Croccantini Gatto,1332,KEEP,Non alimentare,Articoli per animali,Cura e giochi animali,NO
+1333,Sabbietta Gatto,Sabbietta Gatto,1333,KEEP,Non alimentare,Articoli per animali,Alimentazione animali,YES
+1334,Giochi per Cane,Giochi per Cane,1334,KEEP,Non alimentare,Articoli per animali,Cura e giochi animali,YES
+1335,Collare,Collare,1335,KEEP,Non alimentare,Articoli per animali,Alimentazione animali,NO
+1336,Guinzaglio,Guinzaglio,1336,KEEP,Non alimentare,Articoli per animali,Cura e giochi animali,YES
+1337,Ciotola,Ciotola,1337,KEEP,Non alimentare,Articoli per animali,Alimentazione animali,NO
+1338,Lettiera,Lettiera,1338,KEEP,Non alimentare,Articoli per animali,Cura e giochi animali,NO
+1339,Snack per Cane,Snack per Cane,1339,KEEP,Non alimentare,Articoli per animali,Alimentazione animali,NO
+1340,Shampoo per Animali,Shampoo per Animali,1340,KEEP,Non alimentare,Articoli per animali,Cura e giochi animali,YES
+1341,Spazzola per Animali,Spazzola per Animali,1341,KEEP,Non alimentare,Articoli per animali,Alimentazione animali,YES
+1342,Bocconcini in Conserve,Bocconcini in Conserve,1342,KEEP,Non alimentare,Articoli per animali,Cura e giochi animali,NO
+1343,Giochi per Cane in confezione da 1 kg,Giochi per Cane,1334,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Alimentazione animali,YES
+1344,Croccantini Gatto in confezione da 1 kg,Croccantini Gatto,1332,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Cura e giochi animali,NO
+1345,Guinzaglio in confezione da 1 kg,Guinzaglio,1336,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Alimentazione animali,YES
+1346,Lettiera in confezione da 1 kg,Lettiera,1338,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Cura e giochi animali,NO
+1347,Shampoo per Animali in confezione da 1 kg,Shampoo per Animali,1340,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Alimentazione animali,YES
+1348,Croccantini Cane in confezione da 1 kg,Croccantini Cane,1331,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Cura e giochi animali,YES
+1349,Snack per Cane in confezione da 1 kg,Snack per Cane,1339,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Alimentazione animali,NO
+1350,Bocconcini in Conserve in confezione da 1 kg,Bocconcini in Conserve,1342,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Cura e giochi animali,NO
+1351,Collare in confezione da 1 kg,Collare,1335,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Alimentazione animali,NO
+1352,Sabbietta Gatto in confezione da 1 kg,Sabbietta Gatto,1333,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Cura e giochi animali,YES
+1353,Ciotola in confezione da 1 kg,Ciotola,1337,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Alimentazione animali,NO
+1354,Spazzola per Animali in confezione da 1 kg,Spazzola per Animali,1341,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Cura e giochi animali,YES
+1355,Giochi per Cane in confezione da 3 kg,Giochi per Cane,1334,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Alimentazione animali,YES
+1356,Croccantini Gatto in confezione da 3 kg,Croccantini Gatto,1332,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Cura e giochi animali,NO
+1357,Guinzaglio in confezione da 3 kg,Guinzaglio,1336,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Alimentazione animali,YES
+1358,Lettiera in confezione da 3 kg,Lettiera,1338,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Cura e giochi animali,NO
+1359,Shampoo per Animali in confezione da 3 kg,Shampoo per Animali,1340,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Alimentazione animali,YES
+1360,Croccantini Cane in confezione da 3 kg,Croccantini Cane,1331,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Cura e giochi animali,YES
+1361,Snack per Cane in confezione da 3 kg,Snack per Cane,1339,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Alimentazione animali,NO
+1362,Bocconcini in Conserve in confezione da 3 kg,Bocconcini in Conserve,1342,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Cura e giochi animali,NO
+1363,Collare in confezione da 3 kg,Collare,1335,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Alimentazione animali,NO
+1364,Sabbietta Gatto in confezione da 3 kg,Sabbietta Gatto,1333,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Cura e giochi animali,YES
+1365,Ciotola in confezione da 3 kg,Ciotola,1337,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Alimentazione animali,NO
+1366,Spazzola per Animali in confezione da 3 kg,Spazzola per Animali,1341,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Cura e giochi animali,YES
+1367,Giochi per Cane Pack da 2,Giochi per Cane,1334,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Alimentazione animali,YES
+1368,Croccantini Gatto Pack da 2,Croccantini Gatto,1332,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Cura e giochi animali,NO
+1369,Guinzaglio Pack da 2,Guinzaglio,1336,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Alimentazione animali,YES
+1370,Lettiera Pack da 2,Lettiera,1338,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Cura e giochi animali,NO
+1371,Shampoo per Animali Pack da 2,Shampoo per Animali,1340,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Alimentazione animali,YES
+1372,Croccantini Cane Pack da 2,Croccantini Cane,1331,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Cura e giochi animali,YES
+1373,Snack per Cane Pack da 2,Snack per Cane,1339,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Alimentazione animali,NO
+1374,Bocconcini in Conserve Pack da 2,Bocconcini in Conserve,1342,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Cura e giochi animali,NO
+1375,Collare Pack da 2,Collare,1335,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Alimentazione animali,NO
+1376,Sabbietta Gatto Pack da 2,Sabbietta Gatto,1333,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Cura e giochi animali,YES
+1377,Ciotola Pack da 2,Ciotola,1337,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Alimentazione animali,NO
+1378,Spazzola per Animali Pack da 2,Spazzola per Animali,1341,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Cura e giochi animali,YES
+1379,Giochi per Cane Eco,Giochi per Cane Eco,1379,KEEP,Non alimentare,Articoli per animali,Alimentazione animali,NO
+1380,Croccantini Gatto Eco,Croccantini Gatto Eco,1380,KEEP,Non alimentare,Articoli per animali,Cura e giochi animali,NO
+1381,Guinzaglio Eco,Guinzaglio Eco,1381,KEEP,Non alimentare,Articoli per animali,Alimentazione animali,NO
+1382,Lettiera Eco,Lettiera Eco,1382,KEEP,Non alimentare,Articoli per animali,Cura e giochi animali,NO
+1383,Shampoo per Animali Eco,Shampoo per Animali Eco,1383,KEEP,Non alimentare,Articoli per animali,Alimentazione animali,NO
+1384,Croccantini Cane Eco,Croccantini Cane Eco,1384,KEEP,Non alimentare,Articoli per animali,Cura e giochi animali,NO
+1385,Snack per Cane Eco,Snack per Cane Eco,1385,KEEP,Non alimentare,Articoli per animali,Alimentazione animali,NO
+1386,Bocconcini in Conserve Eco,Bocconcini in Conserve Eco,1386,KEEP,Non alimentare,Articoli per animali,Cura e giochi animali,NO
+1387,Collare Eco,Collare Eco,1387,KEEP,Non alimentare,Articoli per animali,Alimentazione animali,NO
+1388,Sabbietta Gatto Eco,Sabbietta Gatto Eco,1388,KEEP,Non alimentare,Articoli per animali,Cura e giochi animali,NO
+1389,Ciotola Eco,Ciotola Eco,1389,KEEP,Non alimentare,Articoli per animali,Alimentazione animali,NO
+1390,Spazzola per Animali Eco,Spazzola per Animali Eco,1390,KEEP,Non alimentare,Articoli per animali,Cura e giochi animali,NO
+1391,Giochi per Cane in confezione da 500 g,Giochi per Cane,1334,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Alimentazione animali,YES
+1392,Croccantini Gatto in confezione da 500 g,Croccantini Gatto,1332,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Cura e giochi animali,NO
+1393,Guinzaglio in confezione da 500 g,Guinzaglio,1336,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Alimentazione animali,YES
+1394,Lettiera in confezione da 500 g,Lettiera,1338,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Cura e giochi animali,NO
+1395,Shampoo per Animali in confezione da 500 g,Shampoo per Animali,1340,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Alimentazione animali,YES
+1396,Croccantini Cane in confezione da 500 g,Croccantini Cane,1331,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Cura e giochi animali,YES
+1397,Snack per Cane in confezione da 500 g,Snack per Cane,1339,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Alimentazione animali,NO
+1398,Bocconcini in Conserve in confezione da 500 g,Bocconcini in Conserve,1342,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Cura e giochi animali,NO
+1399,Collare in confezione da 500 g,Collare,1335,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Alimentazione animali,NO
+1400,Sabbietta Gatto in confezione da 500 g,Sabbietta Gatto,1333,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Articoli per animali,Cura e giochi animali,YES
+1401,Pannolini,Pannolini,1401,KEEP,Non alimentare,Bambini e neonati,Pannolini e salviette,YES
+1402,Salviette Bimbo,Salviette Bimbo,1402,KEEP,Non alimentare,Bambini e neonati,Cura bambini,YES
+1403,Schiuma Bagno Bimbo,Schiuma Bagno Bimbo,1403,KEEP,Non alimentare,Bambini e neonati,Pannolini e salviette,NO
+1404,Shampoo Bimbo,Shampoo Bimbo,1404,KEEP,Non alimentare,Bambini e neonati,Cura bambini,YES
+1405,Crema Emolliente Bimbo,Crema Emolliente Bimbo,1405,KEEP,Non alimentare,Bambini e neonati,Pannolini e salviette,NO
+1406,Latte in Polvere,Latte in Polvere,1406,KEEP,Non alimentare,Bambini e neonati,Cura bambini,NO
+1407,Biberon,Biberon,1407,KEEP,Non alimentare,Bambini e neonati,Pannolini e salviette,YES
+1408,Ciuccio,Ciuccio,1408,KEEP,Non alimentare,Bambini e neonati,Cura bambini,YES
+1409,Poppatoio,Poppatoio,1409,KEEP,Non alimentare,Bambini e neonati,Pannolini e salviette,YES
+1410,Asciugamano Bimbo,Asciugamano Bimbo,1410,KEEP,Non alimentare,Bambini e neonati,Cura bambini,NO
+1411,Detersivo Bimbo,Detersivo Bimbo,1411,KEEP,Non alimentare,Bambini e neonati,Pannolini e salviette,YES
+1412,Mascherina Bimbo,Mascherina Bimbo,1412,KEEP,Non alimentare,Bambini e neonati,Cura bambini,YES
+1413,Crema Emolliente Bimbo Pack da 2,Crema Emolliente Bimbo,1405,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Pannolini e salviette,NO
+1414,Pannolini Pack da 2,Pannolini,1401,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Cura bambini,YES
+1415,Schiuma Bagno Bimbo Pack da 2,Schiuma Bagno Bimbo,1403,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Pannolini e salviette,NO
+1416,Biberon Pack da 2,Biberon,1407,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Cura bambini,YES
+1417,Salviette Bimbo Pack da 2,Salviette Bimbo,1402,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Pannolini e salviette,YES
+1418,Detersivo Bimbo Pack da 2,Detersivo Bimbo,1411,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Cura bambini,YES
+1419,Shampoo Bimbo Pack da 2,Shampoo Bimbo,1404,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Pannolini e salviette,YES
+1420,Poppatoio Pack da 2,Poppatoio,1409,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Cura bambini,YES
+1421,Ciuccio Pack da 2,Ciuccio,1408,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Pannolini e salviette,YES
+1422,Latte in Polvere Pack da 2,Latte in Polvere,1406,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Cura bambini,NO
+1423,Mascherina Bimbo Pack da 2,Mascherina Bimbo,1412,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Pannolini e salviette,YES
+1424,Asciugamano Bimbo Pack da 2,Asciugamano Bimbo,1410,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Cura bambini,NO
+1425,Crema Emolliente Bimbo Pack da 4,Crema Emolliente Bimbo,1405,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Pannolini e salviette,NO
+1426,Pannolini Pack da 4,Pannolini,1401,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Cura bambini,YES
+1427,Schiuma Bagno Bimbo Pack da 4,Schiuma Bagno Bimbo,1403,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Pannolini e salviette,NO
+1428,Biberon Pack da 4,Biberon,1407,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Cura bambini,YES
+1429,Salviette Bimbo Pack da 4,Salviette Bimbo,1402,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Pannolini e salviette,YES
+1430,Detersivo Bimbo Pack da 4,Detersivo Bimbo,1411,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Cura bambini,YES
+1431,Shampoo Bimbo Pack da 4,Shampoo Bimbo,1404,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Pannolini e salviette,YES
+1432,Poppatoio Pack da 4,Poppatoio,1409,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Cura bambini,YES
+1433,Ciuccio Pack da 4,Ciuccio,1408,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Pannolini e salviette,YES
+1434,Latte in Polvere Pack da 4,Latte in Polvere,1406,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Cura bambini,NO
+1435,Mascherina Bimbo Pack da 4,Mascherina Bimbo,1412,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Pannolini e salviette,YES
+1436,Asciugamano Bimbo Pack da 4,Asciugamano Bimbo,1410,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Cura bambini,NO
+1437,Crema Emolliente Bimbo in confezione da 1 L,Crema Emolliente Bimbo,1405,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Pannolini e salviette,NO
+1438,Pannolini in confezione da 1 L,Pannolini,1401,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Cura bambini,YES
+1439,Schiuma Bagno Bimbo in confezione da 1 L,Schiuma Bagno Bimbo,1403,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Pannolini e salviette,NO
+1440,Biberon in confezione da 1 L,Biberon,1407,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Cura bambini,YES
+1441,Salviette Bimbo in confezione da 1 L,Salviette Bimbo,1402,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Pannolini e salviette,YES
+1442,Detersivo Bimbo in confezione da 1 L,Detersivo Bimbo,1411,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Cura bambini,YES
+1443,Shampoo Bimbo in confezione da 1 L,Shampoo Bimbo,1404,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Pannolini e salviette,YES
+1444,Poppatoio in confezione da 1 L,Poppatoio,1409,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Cura bambini,YES
+1445,Ciuccio in confezione da 1 L,Ciuccio,1408,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Pannolini e salviette,YES
+1446,Latte in Polvere in confezione da 1 L,Latte in Polvere,1406,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Cura bambini,NO
+1447,Mascherina Bimbo in confezione da 1 L,Mascherina Bimbo,1412,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Pannolini e salviette,YES
+1448,Asciugamano Bimbo in confezione da 1 L,Asciugamano Bimbo,1410,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Cura bambini,NO
+1449,Crema Emolliente Bimbo Extra Delicato,Crema Emolliente Bimbo Extra Delicato,1449,KEEP,Non alimentare,Bambini e neonati,Pannolini e salviette,NO
+1450,Pannolini Extra Delicato,Pannolini Extra Delicato,1450,KEEP,Non alimentare,Bambini e neonati,Cura bambini,NO
+1451,Schiuma Bagno Bimbo Extra Delicato,Schiuma Bagno Bimbo Extra Delicato,1451,KEEP,Non alimentare,Bambini e neonati,Pannolini e salviette,NO
+1452,Biberon Extra Delicato,Biberon Extra Delicato,1452,KEEP,Non alimentare,Bambini e neonati,Cura bambini,NO
+1453,Salviette Bimbo Extra Delicato,Salviette Bimbo Extra Delicato,1453,KEEP,Non alimentare,Bambini e neonati,Pannolini e salviette,NO
+1454,Detersivo Bimbo Extra Delicato,Detersivo Bimbo Extra Delicato,1454,KEEP,Non alimentare,Bambini e neonati,Cura bambini,NO
+1455,Shampoo Bimbo Extra Delicato,Shampoo Bimbo Extra Delicato,1455,KEEP,Non alimentare,Bambini e neonati,Pannolini e salviette,NO
+1456,Poppatoio Extra Delicato,Poppatoio Extra Delicato,1456,KEEP,Non alimentare,Bambini e neonati,Cura bambini,NO
+1457,Ciuccio Extra Delicato,Ciuccio Extra Delicato,1457,KEEP,Non alimentare,Bambini e neonati,Pannolini e salviette,NO
+1458,Latte in Polvere Extra Delicato,Latte in Polvere Extra Delicato,1458,KEEP,Non alimentare,Bambini e neonati,Cura bambini,NO
+1459,Mascherina Bimbo Extra Delicato,Mascherina Bimbo Extra Delicato,1459,KEEP,Non alimentare,Bambini e neonati,Pannolini e salviette,NO
+1460,Asciugamano Bimbo Extra Delicato,Asciugamano Bimbo Extra Delicato,1460,KEEP,Non alimentare,Bambini e neonati,Cura bambini,NO
+1461,Crema Emolliente Bimbo Pack da 6,Crema Emolliente Bimbo,1405,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Pannolini e salviette,NO
+1462,Pannolini Pack da 6,Pannolini,1401,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Cura bambini,YES
+1463,Schiuma Bagno Bimbo Pack da 6,Schiuma Bagno Bimbo,1403,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Pannolini e salviette,NO
+1464,Biberon Pack da 6,Biberon,1407,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Cura bambini,YES
+1465,Salviette Bimbo Pack da 6,Salviette Bimbo,1402,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Pannolini e salviette,YES
+1466,Detersivo Bimbo Pack da 6,Detersivo Bimbo,1411,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Cura bambini,YES
+1467,Shampoo Bimbo Pack da 6,Shampoo Bimbo,1404,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Pannolini e salviette,YES
+1468,Poppatoio Pack da 6,Poppatoio,1409,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Cura bambini,YES
+1469,Ciuccio Pack da 6,Ciuccio,1408,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Pannolini e salviette,YES
+1470,Latte in Polvere Pack da 6,Latte in Polvere,1406,MERGE_ID_REFERENCE_REVIEW,Non alimentare,Bambini e neonati,Cura bambini,NO

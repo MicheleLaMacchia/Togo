@@ -13,8 +13,8 @@ import java.util.Locale
  * Accettazione SM-1 (Story 6.4): accuratezza di assegnazione della categoria
  * canonica su un corpus derivato dal catalogo reale.
  *
- * Corpus: per ogni prodotto il nome canonico e tutti i sinonimi (3.251 casi
- * sul catalogo corrente, ben oltre il minimo di 200). Non vengono inventate
+ * Corpus: per ogni prodotto il nome canonico e tutti i sinonimi (oltre 2.000
+ * casi sul catalogo corrente, ben oltre il minimo di 200). Non vengono inventate
  * utterance: ogni riga proviene da `CANONICAL_PRODUCT` o `SYNONYM`.
  *
  * Metrica: un caso è corretto solo se `ProductResolver` restituisce un
