@@ -211,11 +211,13 @@ private fun HistoryItemRow(
                         color = colors.inkSecondary
                     )
                 }
-                Text(
-                    text = "${item.lastQuantity} ${item.lastUnit.displayName}",
-                    style = typography.itemMeta,
-                    color = colors.inkSecondary
-                )
+                if (item.hasQuantity) {
+                    Text(
+                        text = "${item.lastQuantity} ${item.lastUnit.displayName}",
+                        style = typography.itemMeta,
+                        color = colors.inkSecondary
+                    )
+                }
                 Text(
                     text = dateFormat.format(Date(item.purchasedAt)),
                     style = typography.caption,

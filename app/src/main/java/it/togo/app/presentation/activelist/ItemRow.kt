@@ -153,11 +153,17 @@ fun ItemRow(
     // checkbox = spunta/deseleziona.
     // La spunta è comunicata dalla semantica toggleable (Role.Checkbox), non
     // ripetuta nella descrizione.
-    val quantityText = quantityLabel(item.quantity, item.unit)
+    val quantityText = if (item.hasQuantity) {
+        quantityLabel(item.quantity, item.unit)
+    } else {
+        null
+    }
     val categoryText = categoryLabel?.takeIf { it.isNotBlank() } ?: "Categoria non assegnata"
     val stateText = if (isChecked) "selezionato" else "non selezionato"
     val rowDescription = buildString {
-        append("$productName, $quantityText, $categoryText, $stateText.")
+        append(productName)
+        quantityText?.let { append(", $it") }
+        append(", $categoryText, $stateText.")
         rowActionDescription?.let { append(" $it") }
     }
     val checkboxDescription = if (isChecked) {
@@ -304,12 +310,15 @@ fun ItemRow(
                 }
 
                 // Destra: quantità senza badge, allineata al bordo della riga.
-                QuantityText(
-                    quantity = item.quantity,
-                    unit = item.unit.displayName,
-                    typography = typography,
-                    color = colors.inkPrimary,
-                )
+                // Le voci senza quantità non mostrano né numero né unità.
+                if (item.hasQuantity) {
+                    QuantityText(
+                        quantity = item.quantity,
+                        unit = item.unit.displayName,
+                        typography = typography,
+                        color = colors.inkPrimary,
+                    )
+                }
             }
 
             // Checkbox sibling: non è discendente della Row cliccabile, quindi

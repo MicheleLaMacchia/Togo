@@ -98,7 +98,9 @@ class ShareListUseCase(
         val parts = mutableListOf(product.name)
         item.brand?.takeIf { it.isNotBlank() }?.let { parts.add(it) }
         item.variant?.takeIf { it.isNotBlank() }?.let { parts.add(it) }
-        parts.add(item.unit.format(item.quantity))
+        if (item.hasQuantity) {
+            parts.add(item.unit.format(item.quantity))
+        }
         return parts.joinToString(" ")
     }
 }

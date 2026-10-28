@@ -13,6 +13,10 @@ data class HistoricalItem(
     val purchasedAt: Long = System.currentTimeMillis(),
     val purchaseCount: Int = 1
 ) {
+    /** False per le voci acquistate senza quantità: non vanno mostrate. */
+    val hasQuantity: Boolean
+        get() = lastQuantity > 0.0
+
     fun increment(
         quantity: Double,
         unit: StandardUnit,

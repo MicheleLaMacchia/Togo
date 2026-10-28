@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.Flow
  *
  * Gestisce il flusso multi-step:
  * 1. Ricerca prodotto (query → risultati)
- * 2. Selezione prodotto → quantità + unità
+ * 2. Selezione prodotto → quantità + unità (entrambe opzionali)
  * 3. Attributi opzionali (marca, variante, conservazione)
  * 4. Conferma → insert/update diretto e chiusura della sheet
  */
@@ -89,17 +89,27 @@ data class AddItemUiState(
     val quantity: Double
         get() = parseQuantityText(quantityText) ?: 0.0
 
+    /**
+     * True se l'utente ha indicato una quantità. Una quantità vuota è valida:
+     * la voce viene salvata senza quantità né unità.
+     */
+    val hasQuantity: Boolean
+        get() = quantityText.isNotBlank() && quantity > 0
+
     /** Prodotto selezionato valido per procedere allo step 2 */
     val canProceedToStep2: Boolean
         get() = selectedProduct != null
 
-    /** Quantità > 0 e unità selezionata per procedere allo step 3 */
+    /** Quantità e unità sono opzionali: basta aver scelto il prodotto. */
     val canProceedToStep3: Boolean
-        get() = quantityText.isNotBlank() && quantity > 0 && selectedUnit != null
+        get() = selectedProduct != null
 
-    /** Tutti i campi obbligatori validi per conferma */
+    /**
+     * Valido per la conferma: il prodotto è obbligatorio, mentre quantità e
+     * unità possono restare vuote. Se la quantità è compilata, deve essere > 0.
+     */
     val isValidForConfirm: Boolean
-        get() = canProceedToStep3 && selectedProduct != null
+        get() = selectedProduct != null && (quantityText.isBlank() || quantity > 0)
 
     /** Categoria mostrata nel riepilogo: corretta se presente, altrimenti quella del prodotto. */
     val selectedCategoryPath: String
@@ -136,8 +146,11 @@ sealed interface AddItemUiEvent {
     /** Rimuove il filtro categoria e torna alla ricerca testuale. */
     object ClearCategoryFilter : AddItemUiEvent
 
-    /** Cambio quantità (stepper/input), come testo grezzo */
+    /** Cambio quantità (input), come testo grezzo */
     data class QuantityChanged(val quantityText: String) : AddItemUiEvent
+
+    /** Azzera quantità e unità: entrambe sono opzionali. */
+    object ClearQuantityAndUnit : AddItemUiEvent
 
     /** Cambio unità selezionata */
     data class UnitChanged(val unit: StandardUnit) : AddItemUiEvent

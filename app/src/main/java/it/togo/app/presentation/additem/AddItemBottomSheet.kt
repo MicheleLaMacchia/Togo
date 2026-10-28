@@ -303,6 +303,9 @@ fun AddItemBottomSheet(
                             compatibleUnits = uiState.compatibleUnits,
                             errorQuantity = uiState.errors["quantity"],
                             errorUnit = uiState.errors["unit"],
+                            onClearQuantityAndUnit = {
+                                viewModel.onEvent(AddItemUiEvent.ClearQuantityAndUnit)
+                            },
                         )
                         3 -> uiState.selectedProduct?.let { product ->
                             AttributeStep(
@@ -319,10 +322,16 @@ fun AddItemBottomSheet(
                         }
                         4 -> {
                             val product = uiState.selectedProduct ?: return@Column
-                            val unit = uiState.selectedUnit ?: return@Column
+                            val hasQuantity = uiState.hasQuantity
+                            val unit = if (hasQuantity) {
+                                uiState.selectedUnit
+                                    ?: uiState.compatibleUnits.firstOrNull()
+                            } else {
+                                null
+                            }
                             ConfirmStep(
                                 product = product,
-                                quantity = uiState.quantity,
+                                quantity = uiState.quantity.takeIf { hasQuantity },
                                 unit = unit,
                                 brand = uiState.brand,
                                 variant = uiState.variant,
@@ -370,9 +379,11 @@ fun AddItemBottomSheet(
                     if (uiState.currentStep < 4) {
                         val canProceed = when (uiState.currentStep) {
                             1 -> uiState.canProceedToStep2
-                            // Anche con quantità vuota l'utente può premere
-                            // "Avanti": il ViewModel mostra l'errore e resta qui.
-                            2 -> uiState.selectedUnit != null
+                            // Quantità e unità sono opzionali: "Avanti" non è
+                            // più bloccato dalla loro assenza. Una quantità
+                            // compilata ma non valida viene segnalata dal
+                            // ViewModel al tap.
+                            2 -> uiState.canProceedToStep3
                             else -> true
                         }
                         Button(
@@ -396,8 +407,9 @@ fun AddItemBottomSheet(
                             onClick = { viewModel.onEvent(AddItemUiEvent.Confirm) },
                             modifier = Modifier.weight(1f),
                             // La validazione finale (quantità inclusa) avviene
-                            // in handleConfirm, così il messaggio è visibile.
-                            enabled = uiState.selectedProduct != null && uiState.selectedUnit != null,
+                            // in handleConfirm. Quantità e unità possono essere
+                            // vuote: è sufficiente il prodotto.
+                            enabled = uiState.isValidForConfirm,
                             colors = androidx.compose.material3.ButtonDefaults.buttonColors(
                                 containerColor = colors.accentSuccess,
                                 // Il verde è condiviso tra i temi: il testo resta bianco fisso.
@@ -542,6 +554,7 @@ fun QuantityUnitStep(
     compatibleUnits: List<StandardUnit>,
     errorQuantity: String?,
     errorUnit: String?,
+    onClearQuantityAndUnit: () -> Unit,
 ) {
     QuantityUnitPicker(
         quantityText = quantityText,
@@ -551,6 +564,7 @@ fun QuantityUnitStep(
         compatibleUnits = compatibleUnits,
         errorQuantity = errorQuantity,
         errorUnit = errorUnit,
+        onClearQuantityAndUnit = onClearQuantityAndUnit,
     )
 }
 
@@ -584,8 +598,8 @@ fun AttributeStep(
 @Composable
 fun ConfirmStep(
     product: CanonicalProduct,
-    quantity: Double,
-    unit: StandardUnit,
+    quantity: Double?,
+    unit: StandardUnit?,
     brand: String,
     variant: String,
     condition: String,
@@ -615,7 +629,16 @@ fun ConfirmStep(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             SummaryRow("Prodotto", product.name, colorsLocal, typographyLocal)
-            SummaryRow("Quantità", "${formatQuantityText(quantity)} ${unit.displayName}", colorsLocal, typographyLocal)
+            if (quantity != null && unit != null) {
+                SummaryRow(
+                    "Quantità",
+                    "${formatQuantityText(quantity)} ${unit.displayName}",
+                    colorsLocal,
+                    typographyLocal,
+                )
+            } else {
+                SummaryRow("Quantità", "Non specificata", colorsLocal, typographyLocal)
+            }
             if (brand.isNotBlank()) SummaryRow("Marca", brand, colorsLocal, typographyLocal)
             if (variant.isNotBlank()) SummaryRow("Variante", variant, colorsLocal, typographyLocal)
             if (condition.isNotBlank()) SummaryRow("Conservazione", condition, colorsLocal, typographyLocal)

@@ -61,7 +61,7 @@ class AddItemViewModelQuantityTest {
     )
 
     @Test
-    fun `la quantità può essere svuotata e viene validata`() = runTest(testDispatcher) {
+    fun `la quantità può essere svuotata senza bloccare Avanti`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.uiState.collect {}
@@ -77,13 +77,13 @@ class AddItemViewModelQuantityTest {
         advanceUntilIdle()
         assertEquals("", viewModel.uiState.value.quantityText)
         assertEquals(0.0, viewModel.uiState.value.quantity, 0.0)
-        assertFalse(viewModel.uiState.value.canProceedToStep3)
+        assertTrue(viewModel.uiState.value.isValidForConfirm)
 
-        // "Avanti" resta nello step 2 e mostra l'errore.
+        // Quantità e unità sono opzionali: "Avanti" porta allo step 3.
         viewModel.onEvent(AddItemUiEvent.NextStep)
         advanceUntilIdle()
-        assertEquals(2, viewModel.uiState.value.currentStep)
-        assertEquals("Inserisci una quantità", viewModel.uiState.value.errors["quantity"])
+        assertEquals(3, viewModel.uiState.value.currentStep)
+        assertTrue(viewModel.uiState.value.errors.isEmpty())
     }
 
     @Test
@@ -98,7 +98,7 @@ class AddItemViewModelQuantityTest {
         viewModel.onEvent(AddItemUiEvent.QuantityChanged("0"))
         advanceUntilIdle()
 
-        assertFalse(viewModel.uiState.value.canProceedToStep3)
+        assertFalse(viewModel.uiState.value.isValidForConfirm)
 
         viewModel.onEvent(AddItemUiEvent.NextStep)
         advanceUntilIdle()
@@ -107,6 +107,31 @@ class AddItemViewModelQuantityTest {
             "La quantità deve essere maggiore di zero",
             viewModel.uiState.value.errors["quantity"],
         )
+    }
+
+    @Test
+    fun `il pulsante azzera svuota quantità e unità`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.uiState.collect {}
+        }
+        advanceUntilIdle()
+
+        viewModel.onEvent(AddItemUiEvent.ProductSelected(product))
+        advanceUntilIdle()
+        assertEquals(StandardUnit.LITER, viewModel.uiState.value.selectedUnit)
+
+        viewModel.onEvent(AddItemUiEvent.ClearQuantityAndUnit)
+        advanceUntilIdle()
+
+        assertEquals("", viewModel.uiState.value.quantityText)
+        assertEquals(null, viewModel.uiState.value.selectedUnit)
+        assertTrue(viewModel.uiState.value.isValidForConfirm)
+
+        viewModel.onEvent(AddItemUiEvent.NextStep)
+        advanceUntilIdle()
+        assertEquals(3, viewModel.uiState.value.currentStep)
+        assertTrue(viewModel.uiState.value.errors.isEmpty())
     }
 
     @Test

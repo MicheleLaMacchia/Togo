@@ -9,15 +9,19 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import it.togo.app.domain.model.StandardUnit
 import it.togo.app.ui.theme.togoColors
@@ -40,6 +44,7 @@ fun QuantityUnitPicker(
     compatibleUnits: List<StandardUnit>,
     errorQuantity: String?,
     errorUnit: String?,
+    onClearQuantityAndUnit: () -> Unit,
 ) {
     val typography = togoTypography()
     val spacing = togoSpacing()
@@ -48,6 +53,12 @@ fun QuantityUnitPicker(
         modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.space2),
         verticalArrangement = Arrangement.spacedBy(spacing.space3),
     ) {
+        Text(
+            text = "La quantità e l'unità sono opzionali.",
+            style = typography.caption,
+            color = togoColors().inkSecondary,
+        )
+
         // --- Quantità ---
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -153,6 +164,23 @@ fun QuantityUnitPicker(
             if (errorUnit != null) {
                 Text(errorUnit, style = typography.caption, color = togoColors().warningInk)
             }
+        }
+
+        // Azzera entrambi i campi: la voce verrà salvata senza quantità/unità.
+        TextButton(
+            onClick = onClearQuantityAndUnit,
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = spacing.touchTargetMin),
+            colors = ButtonDefaults.textButtonColors(
+                contentColor = togoColors().accentAction,
+            ),
+        ) {
+            Text(
+                text = "Azzera quantità e unità",
+                style = typography.itemMeta,
+                textAlign = TextAlign.Center,
+            )
         }
     }
 }

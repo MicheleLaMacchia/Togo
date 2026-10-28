@@ -14,6 +14,13 @@ data class ShoppingItem(
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 ) {
+    /**
+     * La quantità è opzionale. Il valore 0.0 è la sentinella usata per le
+     * voci salvate senza quantità né unità: non va mostrata in lista.
+     */
+    val hasQuantity: Boolean
+        get() = quantity > 0.0
+
     fun copyWith(
         quantity: Double? = null,
         unit: StandardUnit? = null,

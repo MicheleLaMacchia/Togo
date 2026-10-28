@@ -254,9 +254,10 @@ class AddItemViewModel(
                     val product = catalogRepository.getById(item.productId)
                         ?: throw IllegalStateException("Prodotto non più disponibile nel catalogo")
                     
+                    val hasQuantity = item.quantity > 0.0
                     val compatible = compatibleUnitsFor(product)
                         .toMutableList()
-                        .apply { if (item.unit !in this) add(item.unit) }
+                        .apply { if (hasQuantity && item.unit !in this) add(item.unit) }
 
                     _uiState.update {
                         it.copy(
@@ -264,8 +265,10 @@ class AddItemViewModel(
                             searchResults = emptyList(),
                             searchQuery = product.name,
                             compatibleUnits = compatible,
-                            selectedUnit = item.unit, // Singola assegnazione: usa l'unità dell'item in edit
-                            quantityText = formatQuantityText(item.quantity),
+                            // Una voce salvata senza quantità torna con i campi
+                            // vuoti, così l'utente può decidere di nuovo.
+                            selectedUnit = if (hasQuantity) item.unit else null,
+                            quantityText = if (hasQuantity) formatQuantityText(item.quantity) else "",
                             brand = item.brand ?: "",
                             variant = item.variant ?: "",
                             condition = item.condition ?: "",
@@ -376,6 +379,7 @@ class AddItemViewModel(
             is AddItemUiEvent.CategorySelected -> handleCategorySelected(event.category)
             is AddItemUiEvent.ClearCategoryFilter -> handleClearCategoryFilter()
             is AddItemUiEvent.QuantityChanged -> handleQuantityChanged(event.quantityText)
+            is AddItemUiEvent.ClearQuantityAndUnit -> handleClearQuantityAndUnit()
             is AddItemUiEvent.UnitChanged -> handleUnitChanged(event.unit)
             is AddItemUiEvent.BrandChanged -> handleBrandChanged(event.brand)
             is AddItemUiEvent.VariantChanged -> handleVariantChanged(event.variant)
@@ -1185,12 +1189,32 @@ class AddItemViewModel(
     }
 
     private fun handleQuantityChanged(quantityText: String) {
+        val parsed = parseQuantityText(quantityText)
+        val hasValidQuantity = parsed != null && parsed > 0
         _uiState.update {
             it.copy(
                 // Conserva il testo così com'è: l'utente può svuotare il campo.
                 // La validazione avviene su "Avanti"/"Aggiungi".
                 quantityText = quantityText,
+                // Dopo un azzeramento, digitare una quantità ripristina l'unità
+                // predefinita del prodotto: la quantità non resta senza unità.
+                selectedUnit = if (hasValidQuantity && it.selectedUnit == null) {
+                    it.compatibleUnits.firstOrNull()
+                } else {
+                    it.selectedUnit
+                },
                 errors = it.errors.minus("quantity"),
+            )
+        }
+    }
+
+    /** Azzera entrambi i campi opzionali della pagina quantità. */
+    private fun handleClearQuantityAndUnit() {
+        _uiState.update {
+            it.copy(
+                quantityText = "",
+                selectedUnit = null,
+                errors = it.errors.minus("quantity").minus("unit"),
             )
         }
     }
@@ -1215,14 +1239,15 @@ class AddItemViewModel(
 
     private fun handleNextStep() {
         _uiState.update { state ->
+            // Valida prima di avanzare: quantità vuota è ammessa, mentre un
+            // valore non numerico o <= 0 resta sullo step corrente.
+            val errors = validateStep(state.currentStep, state)
             val nextStep = when (state.currentStep) {
-                1 -> if (state.canProceedToStep2) 2 else 1
-                2 -> if (state.canProceedToStep3) 3 else 2
+                1 -> if (errors.isEmpty() && state.canProceedToStep2) 2 else 1
+                2 -> if (errors.isEmpty()) 3 else 2
                 3 -> 4
                 else -> state.currentStep
             }
-            // Validazione step corrente
-            val errors = validateStep(state.currentStep, state)
             state.copy(currentStep = nextStep, errors = errors)
         }
     }
@@ -1251,7 +1276,13 @@ class AddItemViewModel(
         }
 
         val product = state.selectedProduct ?: return
-        val unit = state.selectedUnit ?: return
+        // La quantità è opzionale: 0.0 è il valore sentinella che la UI
+        // interpreta come "non specificata". L'unità resta valorizzata per
+        // rispettare il modello dati, ma non viene mostrata in lista.
+        val quantity = if (state.hasQuantity) state.quantity else 0.0
+        val unit = state.selectedUnit
+            ?: state.compatibleUnits.firstOrNull()
+            ?: StandardUnit.PIECE
 
         // Marca e variante si salvano sempre in forma "capitalized": "barilla"
         // e "BARILLA" diventano "Barilla", così non nascono duplicati.
@@ -1262,7 +1293,7 @@ class AddItemViewModel(
             // Modalità EDIT: aggiorna item esistente mantenendo ID e timestamp creato
             editItem!!.copy(
                 productId = state.selectedProduct!!.id,
-                quantity = state.quantity,
+                quantity = quantity,
                 unit = unit,
                 brand = brand,
                 variant = variant,
@@ -1275,7 +1306,7 @@ class AddItemViewModel(
             ShoppingItem(
                 id = UUID.randomUUID().toString(),
                 productId = product.id,
-                quantity = state.quantity,
+                quantity = quantity,
                 unit = unit,
                 brand = brand,
                 variant = variant,
@@ -1334,24 +1365,27 @@ class AddItemViewModel(
                 if (!state.canProceedToStep2) errors["product"] = "Seleziona un prodotto"
             }
             2 -> {
+                // Quantità e unità sono opzionali: si valida solo una quantità
+                // effettivamente compilata.
                 quantityValidationError(state)?.let { errors["quantity"] = it }
-                if (state.selectedUnit == null) errors["unit"] = "Seleziona un'unità"
             }
             3 -> {} // Attributi opzionali
             4 -> {
                 if (!state.isValidForConfirm) {
                     if (!state.canProceedToStep2) errors["product"] = "Seleziona un prodotto"
                     quantityValidationError(state)?.let { errors["quantity"] = it }
-                    if (state.selectedUnit == null) errors["unit"] = "Seleziona un'unità"
                 }
             }
         }
         return errors
     }
 
-    /** Messaggio di errore per il campo quantità, o null se valido. */
+    /**
+     * Messaggio di errore per il campo quantità, o null se valido.
+     * Il campo vuoto è valido: quantità e unità non sono obbligatorie.
+     */
     private fun quantityValidationError(state: AddItemUiState): String? = when {
-        state.quantityText.isBlank() -> "Inserisci una quantità"
+        state.quantityText.isBlank() -> null
         parseQuantityText(state.quantityText) == null -> "Inserisci una quantità valida"
         state.quantity <= 0 -> "La quantità deve essere maggiore di zero"
         else -> null

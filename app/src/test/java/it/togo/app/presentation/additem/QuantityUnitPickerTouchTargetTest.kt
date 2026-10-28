@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import it.togo.app.domain.model.StandardUnit
 import it.togo.app.ui.theme.TogoTheme
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -42,6 +43,7 @@ class QuantityUnitPickerTouchTargetTest {
                     compatibleUnits = units,
                     errorQuantity = null,
                     errorUnit = null,
+                    onClearQuantityAndUnit = {},
                 )
             }
         }
@@ -80,5 +82,31 @@ class QuantityUnitPickerTouchTargetTest {
     fun `unit chips are clickable controls`() {
         setPicker(listOf(StandardUnit.GRAM))
         composeTestRule.onNodeWithText("g").assertHasClickAction()
+    }
+
+    @Test
+    fun `clear button clears quantity and unit`() {
+        var cleared = false
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                QuantityUnitPicker(
+                    quantityText = "1",
+                    onQuantityChange = {},
+                    selectedUnit = StandardUnit.LITER,
+                    onUnitChange = {},
+                    compatibleUnits = listOf(StandardUnit.LITER),
+                    errorQuantity = null,
+                    errorUnit = null,
+                    onClearQuantityAndUnit = { cleared = true },
+                )
+            }
+        }
+
+        composeTestRule
+            .onNodeWithText("Azzera quantità e unità")
+            .assertHasClickAction()
+            .performClick()
+
+        assertTrue(cleared)
     }
 }
