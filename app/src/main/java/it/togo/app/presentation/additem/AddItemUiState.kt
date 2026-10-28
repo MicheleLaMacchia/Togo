@@ -30,8 +30,8 @@ data class AddItemUiState(
 
     // Step 2: Prodotto selezionato + quantità/unità
     val selectedProduct: CanonicalProduct? = null,
-    /** Testo grezzo del campo quantità: può essere vuoto mentre l'utente cancella. */
-    val quantityText: String = "1",
+    /** Testo grezzo del campo quantità: vuoto finché l'utente non lo compila. */
+    val quantityText: String = "",
     val selectedUnit: StandardUnit? = null,
     val compatibleUnits: List<StandardUnit> = emptyList(),
 

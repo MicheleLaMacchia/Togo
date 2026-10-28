@@ -126,6 +126,32 @@ class AddItemViewModelVoicePrefillTest {
         }
 
     @Test
+    fun `comando vocale senza quantita lascia i campi vuoti`() =
+        runTest(testDispatcher) {
+            val command = ParsedCommand(
+                productName = "pane",
+                quantity = null,
+                unit = null,
+                variant = null,
+                categoryHint = "pane",
+                confidence = 1.0,
+            )
+            val viewModel = createViewModel(command) { query ->
+                if (query == "pane") listOf(pane) else emptyList()
+            }
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+                viewModel.uiState.collect {}
+            }
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            assertEquals(pane, state.selectedProduct)
+            assertEquals("", state.quantityText)
+            assertNull(state.selectedUnit)
+            assertEquals(2, state.currentStep)
+        }
+
+    @Test
     fun `variante non duplicata se gia nel nome del prodotto`() =
         runTest(testDispatcher) {
             val viewModel = createViewModel(commandPaneIntegrale()) { query ->

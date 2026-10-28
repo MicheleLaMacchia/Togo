@@ -61,7 +61,7 @@ class AddItemViewModelQuantityTest {
     )
 
     @Test
-    fun `la quantità può essere svuotata senza bloccare Avanti`() = runTest(testDispatcher) {
+    fun `quantità e unità partono vuote e non bloccano Avanti`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.uiState.collect {}
@@ -70,12 +70,8 @@ class AddItemViewModelQuantityTest {
 
         viewModel.onEvent(AddItemUiEvent.ProductSelected(product))
         advanceUntilIdle()
-        assertEquals("1", viewModel.uiState.value.quantityText)
-
-        // Cancellare tutto il numero deve lasciare il campo davvero vuoto.
-        viewModel.onEvent(AddItemUiEvent.QuantityChanged(""))
-        advanceUntilIdle()
         assertEquals("", viewModel.uiState.value.quantityText)
+        assertEquals(null, viewModel.uiState.value.selectedUnit)
         assertEquals(0.0, viewModel.uiState.value.quantity, 0.0)
         assertTrue(viewModel.uiState.value.isValidForConfirm)
 
@@ -118,6 +114,8 @@ class AddItemViewModelQuantityTest {
         advanceUntilIdle()
 
         viewModel.onEvent(AddItemUiEvent.ProductSelected(product))
+        // Digitando una quantità viene proposta l'unità predefinita.
+        viewModel.onEvent(AddItemUiEvent.QuantityChanged("1"))
         advanceUntilIdle()
         assertEquals(StandardUnit.LITER, viewModel.uiState.value.selectedUnit)
 

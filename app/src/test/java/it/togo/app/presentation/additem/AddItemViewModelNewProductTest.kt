@@ -2,7 +2,6 @@ package it.togo.app.presentation.additem
 
 import io.mockk.mockk
 import it.togo.app.domain.model.CanonicalProduct
-import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.ShoppingListRepository
@@ -234,11 +233,12 @@ class AddItemViewModelNewProductTest {
         assertEquals(2, repository.products.value.size)
         assertNotNull(state.selectedProduct)
         assertTrue(state.selectedProduct!!.isUserDefined)
-        assertEquals(StandardUnit.LITER, state.selectedUnit)
+        assertEquals("", state.quantityText)
+        assertNull(state.selectedUnit)
     }
 
     @Test
-    fun `creazione normale passa allo step 2 con unita risolta dalla categoria`() =
+    fun `creazione normale passa allo step 2 con quantità e unità vuote`() =
         runTest(testDispatcher) {
             val repository = FakeCatalogRepository(taxonomy = listOf(level1, level2, level3))
             val viewModel = createViewModel(repository)
@@ -252,7 +252,8 @@ class AddItemViewModelNewProductTest {
             val state = viewModel.uiState.value
             assertFalse(state.isNewProductFormVisible)
             assertEquals(2, state.currentStep)
-            assertEquals(StandardUnit.LITER, state.selectedUnit)
+            assertEquals("", state.quantityText)
+            assertNull(state.selectedUnit)
             assertNotNull(state.selectedProduct)
             assertTrue(state.selectedProduct!!.isUserDefined)
             assertEquals("Latte di avena", state.selectedProduct!!.name)

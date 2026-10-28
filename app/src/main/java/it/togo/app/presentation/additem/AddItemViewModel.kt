@@ -308,7 +308,9 @@ class AddItemViewModel(
             .filter { it.isNotBlank() }
             .joinToString(" ")
             .lowercase(Locale.ROOT)
-        val quantityText = command.quantity?.let(::formatQuantityText) ?: "1"
+        // Se il comando vocale non esprime una quantità, il campo resta vuoto:
+        // non inventiamo un "1" che l'utente non ha detto.
+        val quantityText = command.quantity?.let(::formatQuantityText).orEmpty()
 
         pendingVoicePrefill = VoicePrefill(
             quantityText = quantityText,
@@ -510,8 +512,11 @@ class AddItemViewModel(
         // selezione del prodotto (match univoco o tap dell'utente).
         val voice = pendingVoicePrefill
         pendingVoicePrefill = null
-        val selectedUnit = voice?.unit?.takeIf { it in compatible } ?: defaultUnit
-        val quantityText = voice?.quantityText ?: "1"
+        val quantityText = voice?.quantityText.orEmpty()
+        // La selezione manuale parte senza unità. Se invece la voce ha già
+        // indicato una quantità ma non l'unità, usiamo il default merceologico.
+        val selectedUnit = voice?.unit?.takeIf { it in compatible }
+            ?: defaultUnit.takeIf { quantityText.isNotBlank() }
         val voiceVariant = voice?.variant?.trim().orEmpty()
         val variant = voiceVariant
             .takeIf { it.isNotBlank() }
