@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import it.togo.app.data.database.dao.CatalogDao
 import it.togo.app.data.database.dao.HistoryDao
 import it.togo.app.data.database.dao.LearnedRulesDao
@@ -12,16 +13,26 @@ import it.togo.app.data.database.dao.UserAttributeDao
 import it.togo.app.data.database.entity.CanonicalProductEntity
 import it.togo.app.data.database.entity.HistoricalItemEntity
 import it.togo.app.data.database.entity.LearnedRuleEntity
+import it.togo.app.data.database.entity.ListItemEntity
 import it.togo.app.data.database.entity.ShoppingItemEntity
+import it.togo.app.data.database.entity.TaskCategoryEntity
 import it.togo.app.data.database.entity.TaxonomyLevel1Entity
 import it.togo.app.data.database.entity.TaxonomyLevel2Entity
 import it.togo.app.data.database.entity.TaxonomyLevel3Entity
+import it.togo.app.data.database.entity.TogoTypeConverters
+import it.togo.app.data.database.entity.TodoTaskEntity
 import it.togo.app.data.database.entity.UserAttributeEntity
 
+@TypeConverters(TogoTypeConverters::class)
 @Database(
     entities = [
+        // Legacy temporaneo: rimosso nella Story 8.7 con la migrazione 6→7.
         ShoppingItemEntity::class,
         HistoricalItemEntity::class,
+        // Nuove tabelle della lista unificata e delle Task (Story 8.4).
+        ListItemEntity::class,
+        TaskCategoryEntity::class,
+        TodoTaskEntity::class,
         LearnedRuleEntity::class,
         TaxonomyLevel1Entity::class,
         TaxonomyLevel2Entity::class,
@@ -30,7 +41,7 @@ import it.togo.app.data.database.entity.UserAttributeEntity
         it.togo.app.data.database.entity.SynonymEntity::class,
         UserAttributeEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = true
 )
 abstract class TogoDatabase : RoomDatabase() {
@@ -73,9 +84,16 @@ abstract class TogoDatabase : RoomDatabase() {
                         MIGRATION_1_2,
                         MIGRATION_2_3,
                         MIGRATION_3_4,
-                        migration4To5(context.applicationContext)
+                        migration4To5(context.applicationContext),
+                        MIGRATION_5_6
                     )
-                    .fallbackToDestructiveMigration()
+                    // Nessun fallback distruttivo: un errore di migrazione deve
+                    // lasciare il database alla versione precedente.
+                    //
+                    // Story 8.4: SHOPPING_ITEM e HISTORICAL_ITEM restano
+                    // temporaneamente in vita insieme a LIST_ITEM perché il
+                    // codice legacy è ancora registrato. La loro rimozione e la
+                    // migrazione 6→7 sono pianificate nella Story 8.7.
                     .build()
                 INSTANCE = instance
                 instance

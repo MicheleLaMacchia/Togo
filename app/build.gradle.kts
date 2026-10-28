@@ -67,9 +67,10 @@ android {
     }
 }
 
-// Story 8.1: esporta lo schema Room della versione corrente in `app/schemas`.
-// La versione del database resta 5; il file `5.json` è la baseline per la
-// futura migrazione 5→6 (Story 8.4).
+// Story 8.1/8.4: esporta lo schema Room della versione corrente in `app/schemas`.
+// `5.json` resta la baseline congelata; `6.json` viene generato dal build dopo
+// l'aggiunta di LIST_ITEM, TASK_CATEGORY e TODO_TASK (Story 8.4). Non creare
+// `6.json` manualmente.
 ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
 }

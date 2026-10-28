@@ -25,7 +25,7 @@ import java.sql.DriverManager
  *
  * Il DB di asset è l'unica parte che NON viene verificata da un build KSP/Room su
  * questa macchina (SDK assente); Room validerebbe lo schema al primo open su device.
- * L'asset resta `user_version = 1`: Room applica le migrazioni 1→2→3→4→5 al primo
+ * L'asset resta `user_version = 1`: Room applica le migrazioni 1→2→3→4→5→6 al primo
  * avvio, mentre sui DB esistenti la 4→5 applica il mapping del catalogo.
  */
 class CatalogAssetTest {

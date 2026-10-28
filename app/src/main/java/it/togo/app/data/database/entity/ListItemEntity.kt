@@ -1,21 +1,34 @@
 package it.togo.app.data.database.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import it.togo.app.domain.model.ListItem
 import it.togo.app.domain.model.ListItemStatus
 
 /**
- * Entità Room di transizione per la lista unificata.
+ * Entità Room della lista unificata.
  *
- * Non è ancora registrata in `TogoDatabase.entities`: la tabella `LIST_ITEM` e
- * gli indici verranno creati nella Story 8.4. In questa storia l'entità serve
- * solo a definire e testare il mapping con il dominio.
+ * La tabella `LIST_ITEM` viene creata dalla migrazione `5→6` (Story 8.4).
+ * `SHOPPING_ITEM` e `HISTORICAL_ITEM` restano temporaneamente registrate fino
+ * alla Story 8.7, che le rimuoverà con la migrazione `6→7`.
  *
- * `status` è una stringa per non dipendere da un converter non ancora
- * introdotto; i valori ammessi sono quelli di [ListItemStatus].
+ * `status` è una stringa per non dipendere da un converter: i valori ammessi
+ * sono quelli di [ListItemStatus].
  */
-@Entity(tableName = "LIST_ITEM")
+@Entity(
+    tableName = "LIST_ITEM",
+    indices = [
+        Index(value = ["productId"], name = "idx_list_item_product_id"),
+        Index(value = ["status"], name = "idx_list_item_status"),
+        Index(
+            value = ["productId", "status"],
+            name = "idx_list_item_product_status",
+        ),
+        Index(value = ["createdAt"], name = "idx_list_item_created_at"),
+        Index(value = ["statusChangedAt"], name = "idx_list_item_status_changed_at"),
+    ],
+)
 data class ListItemEntity(
     @PrimaryKey
     val id: String,
