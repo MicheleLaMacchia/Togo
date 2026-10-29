@@ -8,7 +8,10 @@ import androidx.room.TypeConverters
 import it.togo.app.data.database.dao.CatalogDao
 import it.togo.app.data.database.dao.HistoryDao
 import it.togo.app.data.database.dao.LearnedRulesDao
+import it.togo.app.data.database.dao.ListItemDao
 import it.togo.app.data.database.dao.ShoppingItemDao
+import it.togo.app.data.database.dao.TaskCategoryDao
+import it.togo.app.data.database.dao.TodoTaskDao
 import it.togo.app.data.database.dao.UserAttributeDao
 import it.togo.app.data.database.entity.CanonicalProductEntity
 import it.togo.app.data.database.entity.HistoricalItemEntity
@@ -48,6 +51,9 @@ abstract class TogoDatabase : RoomDatabase() {
 
     abstract fun shoppingItemDao(): ShoppingItemDao
     abstract fun historyDao(): HistoryDao
+    abstract fun listItemDao(): ListItemDao
+    abstract fun todoTaskDao(): TodoTaskDao
+    abstract fun taskCategoryDao(): TaskCategoryDao
     abstract fun learnedRulesDao(): LearnedRulesDao
     abstract fun catalogDao(): CatalogDao
     abstract fun userAttributeDao(): UserAttributeDao

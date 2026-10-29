@@ -8,7 +8,10 @@ import it.togo.app.data.database.TogoDatabase
 import it.togo.app.data.database.dao.CatalogDao
 import it.togo.app.data.database.dao.HistoryDao
 import it.togo.app.data.database.dao.LearnedRulesDao
+import it.togo.app.data.database.dao.ListItemDao
 import it.togo.app.data.database.dao.ShoppingItemDao
+import it.togo.app.data.database.dao.TaskCategoryDao
+import it.togo.app.data.database.dao.TodoTaskDao
 import it.togo.app.data.database.dao.UserAttributeDao
 
 val databaseModule: Module = module {
@@ -19,6 +22,9 @@ val databaseModule: Module = module {
     factory { get<TogoDatabase>().shoppingItemDao() }
     factory { get<TogoDatabase>().catalogDao() }
     factory { get<TogoDatabase>().historyDao() }
+    factory { get<TogoDatabase>().listItemDao() }
+    factory<TodoTaskDao> { get<TogoDatabase>().todoTaskDao() }
+    factory<TaskCategoryDao> { get<TogoDatabase>().taskCategoryDao() }
     factory { get<TogoDatabase>().learnedRulesDao() }
     factory { get<TogoDatabase>().userAttributeDao() }
 }

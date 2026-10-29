@@ -75,6 +75,13 @@ ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
 }
 
+// `6.json` è un effetto collaterale di KSP. Il merge degli asset può partire
+// prima che KSP lo abbia generato, lasciando i test Robolectric senza schema.
+// Forziamo l'ordine: prima KSP, poi il merge degli asset della variante debug.
+tasks.matching { it.name == "mergeDebugAssets" }.configureEach {
+    dependsOn("kspDebugKotlin")
+}
+
 // Robolectric scarica gli jar android-all con un fetcher Maven interno che in
 // Docker può fallire (SHA-512/rete) e non usa la cache Gradle. Facciamo
 // risolvere gli stessi artifact a Gradle e li passiamo a Robolectric offline.

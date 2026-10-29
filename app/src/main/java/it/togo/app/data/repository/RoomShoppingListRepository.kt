@@ -1,208 +1,128 @@
 package it.togo.app.data.repository
 
-import it.togo.app.data.database.dao.ShoppingItemDao
-import it.togo.app.data.database.dao.HistoryDao
-import it.togo.app.data.database.entity.ShoppingItemEntity
 import it.togo.app.domain.model.AttributeSuggestions
-import it.togo.app.domain.model.HistoricalItem
 import it.togo.app.domain.model.ItemAttributes
+import it.togo.app.domain.model.ListItem
+import it.togo.app.domain.model.ListItemStatus
 import it.togo.app.domain.model.ShoppingItem
+import it.togo.app.domain.model.StandardUnit
+import it.togo.app.domain.repository.ListItemRepository
 import it.togo.app.domain.repository.ShoppingListRepository
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.withContext
-import java.util.Locale
-import androidx.room.Transaction
 
+/**
+ * Adapter legacy tra [ShoppingListRepository] e la nuova fonte di verità
+ * [ListItemRepository] (Story 8.5).
+ *
+ * La UI esistente continua a usare `ShoppingItem`, ma ogni lettura/scrittura
+ * passa da `LIST_ITEM`. Le voci spuntate spariscono subito dagli attivi e la
+ * vecchia sezione “Presi” resta vuota: checkout e staging saranno rimossi
+ * definitivamente nella Story 8.7.
+ */
 class RoomShoppingListRepository(
-    private val shoppingItemDao: ShoppingItemDao,
-    private val historyDao: HistoryDao
+    private val listItemRepository: ListItemRepository,
 ) : ShoppingListRepository {
 
     override fun getAllItems(): Flow<List<ShoppingItem>> =
-        shoppingItemDao.getAll().map { entities ->
-            entities.map { it.toDomain() }
+        listItemRepository.observeActive().map { items ->
+            items.map { it.toShoppingItem() }
         }
 
-    override fun getActiveItems(): Flow<List<ShoppingItem>> =
-        getAllItems().map { items -> items.filter { !it.isChecked } }
+    override fun getActiveItems(): Flow<List<ShoppingItem>> = getAllItems()
 
     override fun getCheckedItems(): Flow<List<ShoppingItem>> =
-        getAllItems().map { items -> items.filter { it.isChecked } }
+        listItemRepository.observePurchased().map { items ->
+            items.map { it.toShoppingItem() }
+        }
 
     override suspend fun insert(item: ShoppingItem) {
-        withContext(Dispatchers.IO) {
-            shoppingItemDao.insert(item.toEntity())
+        val status = if (item.isChecked) {
+            ListItemStatus.PURCHASED
+        } else {
+            ListItemStatus.TO_BUY
         }
+
+        val listItem = ListItem.create(
+            id = item.id,
+            productId = item.productId,
+            quantity = validQuantity(item.quantity),
+            unit = item.unit.name,
+            createdAt = item.createdAt,
+            brand = item.brand,
+            variant = item.variant,
+            condition = item.condition,
+            status = status,
+            purchaseCount = if (status == ListItemStatus.PURCHASED) 1 else 0,
+            statusChangedAt = if (status == ListItemStatus.PURCHASED) {
+                item.updatedAt
+            } else {
+                item.createdAt
+            },
+            updatedAt = item.updatedAt,
+        )
+
+        listItemRepository.add(listItem)
     }
 
     override suspend fun update(item: ShoppingItem) {
-        withContext(Dispatchers.IO) {
-            shoppingItemDao.update(item.toEntity())
+        val existing = listItemRepository.getById(item.id) ?: return
+
+        // PURCHASED è terminale: la UI legacy non può riaprire una voce già
+        // acquistata tramite questo adapter.
+        if (existing.status != ListItemStatus.TO_BUY) return
+
+        if (item.isChecked) {
+            listItemRepository.complete(item.id)
+            return
         }
+
+        listItemRepository.updateDetails(
+            existing.copy(
+                quantity = validQuantity(item.quantity),
+                unit = item.unit.name,
+                brand = item.brand,
+                variant = item.variant,
+                condition = item.condition,
+            ),
+        )
     }
 
     override suspend fun delete(itemId: String) {
-        withContext(Dispatchers.IO) {
-            shoppingItemDao.deleteById(itemId)
-        }
+        listItemRepository.delete(itemId)
     }
 
     override suspend fun getByProductId(productId: Long): ShoppingItem? =
-        withContext(Dispatchers.IO) {
-            shoppingItemDao.getActiveByProductId(productId)?.toDomain()
-        }
-
-    override fun getAttributeSuggestions(): Flow<AttributeSuggestions> =
-        combine(
-            shoppingItemDao.getBrands(),
-            shoppingItemDao.getVariants(),
-            historyDao.getBrands(),
-            historyDao.getVariants(),
-        ) { shoppingBrands, shoppingVariants, historyBrands, historyVariants ->
-            AttributeSuggestions(
-                brands = mergeValues(shoppingBrands, historyBrands),
-                variants = mergeValues(shoppingVariants, historyVariants),
-            )
-        }
-
-    override suspend fun getLastAttributes(productId: Long): ItemAttributes? =
-        withContext(Dispatchers.IO) {
-            // La lista attiva riflette l'ultima intenzione dell'utente: se la
-            // voce è ancora lì, i suoi attributi sono i più recenti. Solo in
-            // mancanza si guarda l'acquisto più recente nello storico.
-            val attributes = shoppingItemDao.getActiveByProductId(productId)?.let {
-                ItemAttributes(it.brand, it.variant, it.condition)
-            } ?: historyDao.getByProductIds(listOf(productId))
-                .maxByOrNull { it.purchasedAt }
-                ?.let { ItemAttributes(it.brand, it.variant, it.condition) }
-            attributes?.takeUnless { it.isEmpty }
-        }
+        listItemRepository.getActiveByProductId(productId)?.toShoppingItem()
 
     /**
-     * Deduplica case-insensitive ("Coop" e "coop" sono la stessa marca) e
-     * ordina alfabeticamente i valori ricordati.
+     * Compatibilità temporanea con la UI pre-Story 8.7.
+     *
+     * È un no-op: le voci sono già `PURCHASED` in `LIST_ITEM`; non si elimina
+     * nulla e non si crea storico. Il metodo verrà rimosso nella Story 8.7.
      */
-    private fun mergeValues(vararg lists: List<String>): List<String> =
-        lists.asSequence()
-            .flatten()
-            .map { it.trim() }
-            .filter { it.isNotEmpty() }
-            .distinctBy { it.lowercase(Locale.ROOT) }
-            .sortedBy { it.lowercase(Locale.ROOT) }
-            .toList()
+    @Deprecated("Checkout legacy: rimosso nella Story 8.7.")
+    override suspend fun checkout(checkedItemIds: List<String>): Boolean = true
 
-    @Transaction
-    override suspend fun checkout(checkedItemIds: List<String>): Boolean {
-        if (checkedItemIds.isEmpty()) return true
+    override fun getAttributeSuggestions(): Flow<AttributeSuggestions> =
+        listItemRepository.observeAttributeSuggestions()
 
-        // Batch read all checked items in one query
-        val checkedItems = shoppingItemDao.getByIds(checkedItemIds)
-            .map { it.toDomain() }
+    override suspend fun getLastAttributes(productId: Long): ItemAttributes? =
+        listItemRepository.getLastAttributes(productId)
 
-        if (checkedItems.isEmpty()) return true
+    private fun ListItem.toShoppingItem(): ShoppingItem = ShoppingItem(
+        id = id,
+        productId = productId,
+        quantity = quantity,
+        unit = StandardUnit.fromCode(unit.trim()) ?: StandardUnit.PIECE,
+        brand = brand,
+        variant = variant,
+        condition = condition,
+        isChecked = status == ListItemStatus.PURCHASED,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+    )
 
-        // Lo storico distingue le varianti: due voci dello stesso prodotto con
-        // marca/variante differenti restano due righe separate. Il confronto è
-        // case-insensitive: "Coop" e "coop" sono la stessa variante.
-        val checkedGroups = checkedItems.groupBy {
-            HistoryKey.of(it.productId, it.brand, it.variant, it.condition)
-        }
-        val productIds = checkedGroups.keys.map { it.productId }.distinct()
-        val existingRows = historyDao.getByProductIds(productIds)
-        val existingByKey = existingRows.associateBy {
-            HistoryKey.of(it.productId, it.brand, it.variant, it.condition)
-        }.toMutableMap()
-
-        // Le righe create prima della migrazione non hanno attributi: possono
-        // essere riutilizzate per il primo acquisto di una variante.
-        val legacyByProduct = existingRows
-            .filter { it.brand == null && it.variant == null && it.condition == null }
-            .associateBy { it.productId }
-            .toMutableMap()
-
-        val now = System.currentTimeMillis()
-        val historicalItems = checkedGroups.map { (key, items) ->
-            val exactMatch = existingByKey.remove(key)
-            val existing = exactMatch ?: legacyByProduct.remove(key.productId)
-            if (existing != null) {
-                // La stessa riga non deve essere aggiornata due volte se nello
-                // stesso checkout convivono variante e voce senza attributi.
-                if (existing.brand == null && existing.variant == null && existing.condition == null) {
-                    legacyByProduct.remove(key.productId)
-                }
-                existingByKey.remove(
-                    HistoryKey.of(
-                        existing.productId,
-                        existing.brand,
-                        existing.variant,
-                        existing.condition,
-                    )
-                )
-                val totalQuantity = items.sumOf { it.quantity }
-                val firstItem = items.first()
-                existing.toDomain().increment(
-                    quantity = totalQuantity,
-                    unit = firstItem.unit,
-                    // Conserva la forma scritta dall'utente (capitalized), non
-                    // quella normalizzata usata solo per il confronto.
-                    brand = firstItem.brand,
-                    variant = firstItem.variant,
-                    condition = firstItem.condition,
-                ).toEntity()
-            } else {
-                val totalQuantity = items.sumOf { it.quantity }
-                val firstItem = items.first()
-                HistoricalItem(
-                    id = firstItem.id,
-                    productId = key.productId,
-                    lastQuantity = totalQuantity,
-                    lastUnit = firstItem.unit,
-                    brand = firstItem.brand,
-                    variant = firstItem.variant,
-                    condition = firstItem.condition,
-                    purchasedAt = now,
-                    purchaseCount = 1
-                ).toEntity()
-            }
-        }
-
-        // Upsert to history
-        historicalItems.forEach { historyDao.upsertHistorical(it) }
-
-        // Delete from shopping list - verify all items deleted
-        val deletedCount = shoppingItemDao.deleteByIds(checkedItemIds)
-        if (deletedCount != checkedItemIds.size) {
-            throw IllegalStateException("Expected to delete ${checkedItemIds.size} items but deleted $deletedCount")
-        }
-
-        return true
-    }
-}
-
-private data class HistoryKey(
-    val productId: Long,
-    val brand: String?,
-    val variant: String?,
-    val condition: String?,
-) {
-    companion object {
-        /** Chiave case-insensitive su marca, variante e conservazione. */
-        fun of(
-            productId: Long,
-            brand: String?,
-            variant: String?,
-            condition: String?,
-        ): HistoryKey = HistoryKey(
-            productId = productId,
-            brand = normalize(brand),
-            variant = normalize(variant),
-            condition = normalize(condition),
-        )
-
-        private fun normalize(value: String?): String? =
-            value?.trim()?.lowercase(Locale.ROOT)?.ifEmpty { null }
-    }
+    private fun validQuantity(quantity: Double): Double =
+        if (quantity.isFinite() && quantity > 0.0) quantity else 1.0
 }
