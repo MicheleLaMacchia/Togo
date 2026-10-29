@@ -4,6 +4,21 @@ $ErrorActionPreference = "Stop"
 
 $repoRoot = $PSScriptRoot
 
+function ConvertTo-WslPath {
+    param([Parameter(Mandatory)][string]$WindowsPath)
+
+    $fullPath = [System.IO.Path]::GetFullPath($WindowsPath)
+    if ($fullPath -notmatch '^([A-Za-z]):\\(.*)$') {
+        throw "Percorso Windows non convertibile in percorso WSL: $fullPath"
+    }
+
+    $drive = $Matches[1].ToLowerInvariant()
+    $relativePath = $Matches[2] -replace '\\', '/'
+    return "/mnt/$drive/$relativePath"
+}
+
+$repoRootWslPath = ConvertTo-WslPath $repoRoot
+
 if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
     throw "Docker non è disponibile. Avvia Docker Desktop e riprova."
 }
@@ -18,12 +33,12 @@ $dockerExitCode = 0
 
 try {
     [System.IO.File]::WriteAllText($localPropertiesTemp, "sdk.dir=/opt/android-sdk" + [Environment]::NewLine, [System.Text.Encoding]::ASCII)
-    $localPropertiesDockerPath = $localPropertiesTemp.Replace('\', '/')
+    $localPropertiesDockerPath = ConvertTo-WslPath $localPropertiesTemp
 
     $previousErrorActionPreference = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
     & docker run --rm `
-      -v "${repoRoot}:/workspace" `
+      -v "${repoRootWslPath}:/workspace" `
       -v "${localPropertiesDockerPath}:/workspace/local.properties:ro" `
       -v "android-gradle-cache:/root/.gradle" `
       -w /workspace `
