@@ -1,9 +1,10 @@
 package it.togo.app.di
 
 import it.togo.app.MainViewModel
-import it.togo.app.domain.repository.ShoppingListRepository
+import it.togo.app.domain.repository.ListItemRepository
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.UserAttributeRepository
+import it.togo.app.domain.time.Clock
 import it.togo.app.domain.usecase.CorrectCategoryUseCase
 import it.togo.app.domain.usecase.CreateCanonicalProductUseCase
 import it.togo.app.domain.usecase.CreateUserLevel3UseCase
@@ -28,8 +29,9 @@ val presentationModule: Module = module {
     
     // Epic 2 - Lista Attiva
     viewModel { ActiveListViewModel(
-        shoppingRepository = get<ShoppingListRepository>(),
+        listItemRepository = get<ListItemRepository>(),
         catalogRepository = get<CatalogRepository>(),
+        clock = get<Clock>(),
     ) }
     
     // Epic 3 - Ricerca
@@ -54,9 +56,8 @@ val presentationModule: Module = module {
 
     // Epic 5 - History (Story 5.1)
     viewModel { HistoryViewModel(
-        historyRepository = get<it.togo.app.domain.repository.HistoryRepository>(),
+        listItemRepository = get<ListItemRepository>(),
         catalogRepository = get<CatalogRepository>(),
-        shoppingListRepository = get<ShoppingListRepository>(),
     ) }
 
     // Epic 5 - Learned Rules (Story 5.2)
@@ -69,7 +70,8 @@ val presentationModule: Module = module {
     // Add Item (FAB "+")
     viewModel { AddItemViewModel(
         catalogRepository = get<CatalogRepository>(),
-        shoppingRepository = get<ShoppingListRepository>(),
+        shoppingRepository = get<ListItemRepository>(),
+        clock = get<Clock>(),
         createProductUseCase = get<CreateCanonicalProductUseCase>(),
         createLevel3UseCase = get<CreateUserLevel3UseCase>(),
         correctCategoryUseCase = get<CorrectCategoryUseCase>(),

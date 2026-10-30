@@ -25,8 +25,7 @@ import org.robolectric.annotation.Config
  * La variante di questa storia **non droppa** `SHOPPING_ITEM` e
  * `HISTORICAL_ITEM`: i test verificano che restino presenti e invariati.
  *
- * I test sono scritti ma non eseguiti in questa sessione. `6.json` deve essere
- * generato dal build KSP/Room, non creato manualmente.
+ * `6.json` deve essere generato dal build KSP/Room, non creato manualmente.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
@@ -34,7 +33,8 @@ class TogoDatabaseMigration5To6Test {
 
     private companion object {
         const val TEST_DB = "togo-migration-5-6-test.db"
-        const val NEW_INSTALL_DB = "togo-new-install-v6-test.db"
+        const val MIGRATION_6_7_DB = "togo-migration-6-7-test.db"
+        const val NEW_INSTALL_DB = "togo-new-install-v7-test.db"
         const val SCHEMA_VERSION = 6
         const val SCHEMA_ASSET_PATH =
             "it.togo.app.data.database.TogoDatabase/6.json"
@@ -56,6 +56,7 @@ class TogoDatabaseMigration5To6Test {
     fun tearDown() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         context.deleteDatabase(TEST_DB)
+        context.deleteDatabase(MIGRATION_6_7_DB)
         context.deleteDatabase(NEW_INSTALL_DB)
     }
 
@@ -191,7 +192,75 @@ class TogoDatabaseMigration5To6Test {
     }
 
     @Test
-    fun `new installation from catalog asset v1 migrates through v6`() {
+    fun `migration 6 to 7 removes legacy tables and preserves unified rows`() {
+        requireSchema6Asset()
+
+        val v5 = migrationHelper.createDatabase(MIGRATION_6_7_DB, 5)
+        try {
+            insertLegacyRows(v5)
+        } finally {
+            v5.close()
+        }
+
+        val v6 = migrationHelper.runMigrationsAndValidate(
+            MIGRATION_6_7_DB,
+            SCHEMA_VERSION,
+            true,
+            MIGRATION_5_6,
+        )
+        v6.close()
+
+        val db = migrationHelper.runMigrationsAndValidate(
+            MIGRATION_6_7_DB,
+            7,
+            true,
+            MIGRATION_6_7,
+        )
+        try {
+            assertEquals("versione dopo la 6→7", 7, db.version)
+            assertEquals("le cinque righe migrate devono restare", 5L, db.count("LIST_ITEM"))
+            assertListItem(
+                db = db,
+                id = "shop-zero",
+                productId = 1L,
+                quantity = 1.0,
+                unit = "KILOGRAM",
+                brand = "BrandZero",
+                variant = "VariantZero",
+                condition = "ConditionZero",
+                status = "TO_BUY",
+                purchaseCount = 0,
+                createdAt = 100L,
+                statusChangedAt = 100L,
+                updatedAt = 110L,
+            )
+            assertListItem(
+                db = db,
+                id = "legacy-hist:shared-id",
+                productId = 4L,
+                quantity = 5.0,
+                unit = "GRAM",
+                brand = "BrandHist",
+                variant = "VariantHist",
+                condition = "ConditionHist",
+                status = "PURCHASED",
+                purchaseCount = 7,
+                createdAt = 400L,
+                statusChangedAt = 400L,
+                updatedAt = 400L,
+            )
+            val tables = db.tableNames()
+            assertTrue(
+                "le tabelle legacy devono essere rimosse nella v7",
+                (setOf("SHOPPING_ITEM", "HISTORICAL_ITEM") intersect tables).isEmpty(),
+            )
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
+    fun `new installation from catalog asset v1 migrates through v7`() {
         requireSchema6Asset()
 
         val context = ApplicationProvider.getApplicationContext<Context>()
@@ -210,13 +279,14 @@ class TogoDatabaseMigration5To6Test {
                 MIGRATION_3_4,
                 migration4To5(context),
                 MIGRATION_5_6,
+                MIGRATION_6_7,
             )
             .build()
 
         try {
             val sqlite = db.openHelper.writableDatabase
 
-            assertEquals("versione dopo la catena 1→6", SCHEMA_VERSION, sqlite.version)
+            assertEquals("versione dopo la catena 1→7", 7, sqlite.version)
             assertEquals(
                 "prodotti canonici",
                 CANONICAL_PRODUCT_COUNT,
@@ -231,13 +301,13 @@ class TogoDatabaseMigration5To6Test {
 
             val tables = sqlite.tableNames()
             assertTrue(
-                "nuove tabelle mancanti dopo la catena 1→6: " +
+                "nuove tabelle mancanti dopo la catena 1→7: " +
                     (setOf("LIST_ITEM", "TASK_CATEGORY", "TODO_TASK") - tables),
                 tables.containsAll(setOf("LIST_ITEM", "TASK_CATEGORY", "TODO_TASK")),
             )
             assertTrue(
-                "le tabelle legacy devono restare nella v6",
-                tables.containsAll(setOf("SHOPPING_ITEM", "HISTORICAL_ITEM")),
+                "le tabelle legacy devono essere rimosse nella v7",
+                (setOf("SHOPPING_ITEM", "HISTORICAL_ITEM") intersect tables).isEmpty(),
             )
         } finally {
             db.close()

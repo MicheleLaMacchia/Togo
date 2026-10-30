@@ -28,12 +28,15 @@ import androidx.compose.runtime.setValue
 import it.togo.app.AppNavigator
 import it.togo.app.data.voice.AndroidVoiceRecognitionGateway
 import it.togo.app.domain.model.CanonicalProduct
-import it.togo.app.domain.model.ShoppingItem
+import it.togo.app.domain.model.ListItem
+import it.togo.app.domain.model.ListItemStatus
+import it.togo.app.domain.model.AttributeSuggestions
+import it.togo.app.domain.model.ItemAttributes
 import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.parser.VoiceCommandParser
 import it.togo.app.domain.repository.CatalogRepository
-import it.togo.app.domain.repository.ShoppingListRepository
+import it.togo.app.domain.repository.ListItemRepository
 import it.togo.app.domain.usecase.ParseVoiceCommandUseCase
 import it.togo.app.domain.voice.ErrorCode
 import it.togo.app.domain.voice.VoiceRecognitionGateway
@@ -74,14 +77,14 @@ class ActiveListAccessibilityTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private val uncheckedItem = ShoppingItem(
+    private val uncheckedItem = listItem(
         productId = 1L,
         quantity = 2.0,
         unit = StandardUnit.PIECE,
         isChecked = false,
     )
 
-    private val checkedItem = ShoppingItem(
+    private val checkedItem = listItem(
         productId = 1L,
         quantity = 2.0,
         unit = StandardUnit.PIECE,
@@ -114,34 +117,6 @@ class ActiveListAccessibilityTest {
                 "Mozzarella, 2 pezzi, Latticini, Formaggi, Mozzarella, non selezionato. Doppio tocco per modificare."
             )
             .assertExists()
-    }
-
-    @Test
-    fun `checked row announces checked state and uncheck action`() {
-        composeTestRule.setContent {
-            TogoTheme(darkTheme = false) {
-                ItemRow(
-                    item = checkedItem,
-                    productName = "Mozzarella",
-                    categoryLabel = "Latticini, Formaggi, Mozzarella",
-                    rowActionDescription = null,
-                    onCheckChange = {},
-                    onClick = {},
-                    onDelete = {},
-                )
-            }
-        }
-
-        composeTestRule
-            .onNodeWithContentDescription(
-                "Mozzarella, 2 pezzi, Latticini, Formaggi, Mozzarella, selezionato."
-            )
-            .assertExists()
-        composeTestRule
-            .onNodeWithContentDescription("Deseleziona Mozzarella.")
-            .assertExists()
-            .assertIsOn()
-            .assertHasClickAction()
     }
 
     @Test
@@ -202,34 +177,6 @@ class ActiveListAccessibilityTest {
     }
 
     @Test
-    fun `checked presi row is not clickable but checkbox still toggles`() {
-        composeTestRule.setContent {
-            TogoTheme(darkTheme = false) {
-                ItemRow(
-                    item = checkedItem,
-                    productName = "Mozzarella",
-                    categoryLabel = "Latticini, Formaggi, Mozzarella",
-                    rowActionDescription = null,
-                    onCheckChange = {},
-                    onClick = {},
-                    onDelete = {},
-                )
-            }
-        }
-
-        composeTestRule
-            .onNodeWithContentDescription(
-                "Mozzarella, 2 pezzi, Latticini, Formaggi, Mozzarella, selezionato."
-            )
-            .assertExists()
-            .assertHasNoClickAction()
-
-        composeTestRule
-            .onNodeWithContentDescription("Deseleziona Mozzarella.")
-            .assertHasClickAction()
-    }
-
-    @Test
     fun `category fallback is never empty`() {
         composeTestRule.setContent {
             TogoTheme(darkTheme = false) {
@@ -253,7 +200,7 @@ class ActiveListAccessibilityTest {
 
     @Test
     fun `level 1 header collapses and expands keeping active item count`() {
-        val item = ShoppingItem(
+        val item = listItem(
             productId = 1L,
             quantity = 2.0,
             unit = StandardUnit.PIECE,
@@ -343,50 +290,23 @@ class ActiveListAccessibilityTest {
     }
 
     @Test
-    fun `presi header announces count and expanded state and toggles`() {
+    fun `active row exposes completion checkbox semantics`() {
+        var checked = false
         composeTestRule.setContent {
             TogoTheme(darkTheme = false) {
-                PresiSection(
-                    items = listOf(checkedItem),
-                    productNames = mapOf(1L to "Mozzarella"),
-                    categoryLabels = mapOf(1L to "Latticini, Formaggi, Mozzarella"),
-                    onUncheck = {},
-                    onCheckout = {},
-                    colors = togoColors(),
-                    typography = togoTypography(),
-                    spacing = togoSpacing(),
-                    tokens = componentTokens(),
+                ItemRow(
+                    item = uncheckedItem,
+                    productName = "Mozzarella",
+                    categoryLabel = "Latticini, Formaggi, Mozzarella",
+                    onCheckChange = { checked = it },
+                    onClick = {},
+                    onDelete = {},
                 )
             }
         }
-
-        val expandedDescription = "Presi, 1 voce. Doppio tocco per collassare."
-        composeTestRule
-            .onNodeWithContentDescription(expandedDescription)
-            .assertExists()
-            .assertHasClickAction()
-            .assert(
-                SemanticsMatcher.expectValue(
-                    SemanticsProperties.StateDescription,
-                    "espansa",
-                )
-            )
-
-        composeTestRule.onNodeWithText("Presi (1)").assertExists()
-
-        composeTestRule.onNodeWithContentDescription(expandedDescription).performClick()
-
-        composeTestRule
-            .onNodeWithContentDescription("Presi, 1 voce. Doppio tocco per espandere.")
-            .assertExists()
-            .assert(
-                SemanticsMatcher.expectValue(
-                    SemanticsProperties.StateDescription,
-                    "collassata",
-                )
-            )
+        composeTestRule.onNodeWithContentDescription("Spunta Mozzarella.").assertExists().performClick()
+        assertTrue(checked)
     }
-
     @Test
     fun `voice fab exposes labels for every state`() {
         // Un solo setContent: lo stato viene aggiornato tra le asserzioni.
@@ -461,7 +381,8 @@ class ActiveListAccessibilityTest {
         val gateway = FakeVoiceGateway()
         val voiceViewModel = VoiceBottomSheetViewModel(gateway)
         val viewModel = ActiveListViewModel(
-            shoppingRepository = FakeShoppingListRepository(),
+            listItemRepository = FakeListItemRepository(),
+            clock = it.togo.app.presentation.FixedClock(),
             catalogRepository = FakeCatalogRepository(),
         )
         shadowOf(RuntimeEnvironment.getApplication())
@@ -497,7 +418,8 @@ class ActiveListAccessibilityTest {
         val gateway = FakeVoiceGateway()
         val voiceViewModel = VoiceBottomSheetViewModel(gateway)
         val viewModel = ActiveListViewModel(
-            shoppingRepository = FakeShoppingListRepository(),
+            listItemRepository = FakeListItemRepository(),
+            clock = it.togo.app.presentation.FixedClock(),
             catalogRepository = FakeCatalogRepository(),
         )
         shadowOf(RuntimeEnvironment.getApplication())
@@ -577,7 +499,8 @@ class ActiveListAccessibilityTest {
     @Test
     fun `real settings button opens learned rules`() {
         val viewModel = ActiveListViewModel(
-            shoppingRepository = FakeShoppingListRepository(),
+            listItemRepository = FakeListItemRepository(),
+            clock = it.togo.app.presentation.FixedClock(),
             catalogRepository = FakeCatalogRepository(),
         )
         val voiceViewModel = VoiceBottomSheetViewModel(FakeVoiceGateway())
@@ -634,7 +557,8 @@ class ActiveListAccessibilityTest {
     @Test
     fun `voice gateway launcher follows composition lifecycle`() {
         val viewModel = ActiveListViewModel(
-            shoppingRepository = FakeShoppingListRepository(),
+            listItemRepository = FakeListItemRepository(),
+            clock = it.togo.app.presentation.FixedClock(),
             catalogRepository = FakeCatalogRepository(),
         )
         val voiceViewModel = VoiceBottomSheetViewModel(FakeVoiceGateway())
@@ -664,48 +588,16 @@ class ActiveListAccessibilityTest {
     }
 
     @Test
-    fun `all checked items keep presi section visible`() {
+    fun `purchased items are excluded from the active list`() {
         val viewModel = ActiveListViewModel(
-            shoppingRepository = FakeShoppingListRepository(items = listOf(checkedItem)),
+            listItemRepository = FakeListItemRepository(items = listOf(checkedItem)),
+            clock = it.togo.app.presentation.FixedClock(),
             catalogRepository = FakeCatalogRepository(),
         )
-        val voiceViewModel = VoiceBottomSheetViewModel(FakeVoiceGateway())
-
-        composeTestRule.setContent {
-            TogoTheme(darkTheme = false) {
-                ActiveListScreen(
-                    viewModel = viewModel,
-                    voiceViewModel = voiceViewModel,
-                    voiceConfirmationViewModel = voiceConfirmationViewModel,
-                    voiceGateway = AndroidVoiceRecognitionGateway(),
-                    onEvent = viewModel::onEvent,
-                )
-            }
-        }
-
         composeTestRule.waitUntil(timeoutMillis = 5_000) {
-            composeTestRule.onAllNodesWithText("Concludi spesa").fetchSemanticsNodes().isNotEmpty()
+            viewModel.uiState.value.activeGroups.isEmpty()
         }
-        composeTestRule
-            .onNodeWithContentDescription("Presi, 1 voce. Doppio tocco per collassare.")
-            .assertExists()
-        composeTestRule.onNodeWithText("Concludi spesa").assertExists()
-        composeTestRule.onNode(
-            hasTestTag("presi_section") and hasAnyDescendant(hasText("Concludi spesa"))
-        ).assertExists()
-
-        composeTestRule.onNodeWithText("Concludi spesa").performClick()
-        // Le voci in "Presi" sono quelle da concludere (spec 2-5): il checkout
-        // non deve lamentare "nessuna voce attiva".
-        composeTestRule.waitUntil(timeoutMillis = 5_000) {
-            composeTestRule.onAllNodesWithText("Spesa conclusa (1 voci)")
-                .fetchSemanticsNodes()
-                .isNotEmpty()
-        }
-        // Regressione 22/10: una sola snackbar, nessun testo duplicato.
-        composeTestRule
-            .onAllNodesWithText("Spesa conclusa (1 voci)")
-            .assertCountEquals(1)
+        assertEquals(0, viewModel.uiState.value.activeCount)
     }
 
     @Test
@@ -716,7 +608,8 @@ class ActiveListAccessibilityTest {
             TaxonomyLevel.Level3(id = 3L, name = "Mozzarella", sortOrder = 1, level2Id = 2L),
         )
         val viewModel = ActiveListViewModel(
-            shoppingRepository = FakeShoppingListRepository(items = listOf(uncheckedItem)),
+            listItemRepository = FakeListItemRepository(items = listOf(uncheckedItem)),
+            clock = it.togo.app.presentation.FixedClock(),
             catalogRepository = FakeCatalogRepository(
                 taxonomy = taxonomy,
                 products = mapOf(
@@ -749,33 +642,27 @@ class ActiveListAccessibilityTest {
     }
 
     @Test
-    fun `presi checkout button invokes callback`() {
-        var checkoutInvoked = false
-
+    fun `active row completion remains independent from history actions`() {
+        var checked = false
         composeTestRule.setContent {
             TogoTheme(darkTheme = false) {
-                PresiSection(
-                    items = listOf(checkedItem),
-                    productNames = mapOf(1L to "Mozzarella"),
-                    categoryLabels = mapOf(1L to "Latticini, Formaggi, Mozzarella"),
-                    onUncheck = {},
-                    onCheckout = { checkoutInvoked = true },
-                    colors = togoColors(),
-                    typography = togoTypography(),
-                    spacing = togoSpacing(),
-                    tokens = componentTokens(),
+                ItemRow(
+                    item = uncheckedItem,
+                    productName = "Mozzarella",
+                    onCheckChange = { checked = it },
+                    onClick = {},
+                    onDelete = {},
                 )
             }
         }
-
-        composeTestRule.onNodeWithText("Concludi spesa").assertExists().performClick()
-        assertTrue("il pulsante deve invocare il checkout", checkoutInvoked)
+        composeTestRule.onNodeWithContentDescription("Spunta Mozzarella.").performClick()
+        assertTrue(checked)
     }
-
     @Test
     fun `active list app bar exposes meaningful descriptions`() {
         val viewModel = ActiveListViewModel(
-            shoppingRepository = FakeShoppingListRepository(),
+            listItemRepository = FakeListItemRepository(),
+            clock = it.togo.app.presentation.FixedClock(),
             catalogRepository = FakeCatalogRepository(),
         )
         val voiceViewModel = VoiceBottomSheetViewModel(FakeVoiceGateway())
@@ -802,7 +689,7 @@ class ActiveListAccessibilityTest {
     }
 
     @Test
-    fun `view model maps checked item to canonical category label`() {
+    fun `view model maps active item to canonical category label`() {
         val taxonomy = listOf(
             TaxonomyLevel.Level1(id = 1L, name = "Latticini", sortOrder = 1),
             TaxonomyLevel.Level2(id = 2L, name = "Formaggi", sortOrder = 1, level1Id = 1L),
@@ -811,11 +698,12 @@ class ActiveListAccessibilityTest {
             TaxonomyLevel.Level2(id = 5L, name = "Panetteria", sortOrder = 1, level1Id = 4L),
             TaxonomyLevel.Level3(id = 6L, name = "Pane", sortOrder = 1, level2Id = 5L),
         )
-        val activeItem = ShoppingItem(productId = 2L, quantity = 1.0, unit = StandardUnit.PIECE)
-        val checked = ShoppingItem(productId = 1L, quantity = 2.0, unit = StandardUnit.PIECE, isChecked = true)
+        val activeItem = listItem(productId = 2L, quantity = 1.0, unit = StandardUnit.PIECE)
+        val checked = listItem(productId = 1L, quantity = 2.0, unit = StandardUnit.PIECE, isChecked = true)
 
         val viewModel = ActiveListViewModel(
-            shoppingRepository = FakeShoppingListRepository(items = listOf(activeItem, checked)),
+            listItemRepository = FakeListItemRepository(items = listOf(activeItem, checked)),
+            clock = it.togo.app.presentation.FixedClock(),
             catalogRepository = FakeCatalogRepository(
                 taxonomy = taxonomy,
                 products = mapOf(
@@ -838,42 +726,38 @@ class ActiveListAccessibilityTest {
             }
         }
 
+        val activeDescription =
+            "Pane, 1 pezzo, Dispensa, Panetteria, Pane, non selezionato. Doppio tocco per modificare."
         composeTestRule.waitUntil(timeoutMillis = 5_000) {
             composeTestRule
-                .onAllNodesWithContentDescription(
-                    "Mozzarella, 2 pezzi, Latticini, Formaggi, Mozzarella, selezionato."
-                )
+                .onAllNodesWithContentDescription(activeDescription)
                 .fetchSemanticsNodes()
                 .isNotEmpty()
         }
 
-        composeTestRule
-            .onNodeWithContentDescription(
-                "Mozzarella, 2 pezzi, Latticini, Formaggi, Mozzarella, selezionato."
-            )
-            .assertExists()
+        composeTestRule.onNodeWithContentDescription(activeDescription).assertExists()
     }
 
     @Test
     fun `quantityLabel formats large numbers without scientific notation`() {
-        assertEquals("1000000 pezzi", quantityLabel(1000000.0, StandardUnit.PIECE))
-        assertEquals("1000000,5 pezzi", quantityLabel(1000000.5, StandardUnit.PIECE))
-        assertEquals("10000000000 pezzi", quantityLabel(1.0E10, StandardUnit.PIECE))
-        assertEquals("0,125 grammi", quantityLabel(0.125, StandardUnit.GRAM))
-        assertEquals("0 pezzi", quantityLabel(0.0, StandardUnit.PIECE))
+        assertEquals("1000000 pezzi", quantityLabel(1000000.0, StandardUnit.PIECE.name))
+        assertEquals("1000000,5 pezzi", quantityLabel(1000000.5, StandardUnit.PIECE.name))
+        assertEquals("10000000000 pezzi", quantityLabel(1.0E10, StandardUnit.PIECE.name))
+        assertEquals("0,125 grammi", quantityLabel(0.125, StandardUnit.GRAM.name))
+        assertEquals("0 pezzi", quantityLabel(0.0, StandardUnit.PIECE.name))
     }
 
     @Test
     fun `quantityLabel uses Italian decimals and full unit names`() {
-        assertEquals("2 pezzi", quantityLabel(2.0, StandardUnit.PIECE))
-        assertEquals("1 pezzo", quantityLabel(1.0, StandardUnit.PIECE))
-        assertEquals("1,5 litri", quantityLabel(1.5, StandardUnit.LITER))
-        assertEquals("2,5 bottiglie", quantityLabel(2.5, StandardUnit.BOTTLE))
-        assertEquals("1000 grammi", quantityLabel(1000.0, StandardUnit.GRAM))
-        assertEquals("1 grammo", quantityLabel(1.0, StandardUnit.GRAM))
-        assertEquals("3 lattine", quantityLabel(3.0, StandardUnit.CAN))
-        assertEquals("1 pentola", quantityLabel(1.0, StandardUnit.POT))
-        assertEquals("1 vasetto", quantityLabel(1.0, StandardUnit.JAR))
+        assertEquals("2 pezzi", quantityLabel(2.0, StandardUnit.PIECE.name))
+        assertEquals("1 pezzo", quantityLabel(1.0, StandardUnit.PIECE.name))
+        assertEquals("1,5 litri", quantityLabel(1.5, StandardUnit.LITER.name))
+        assertEquals("2,5 bottiglie", quantityLabel(2.5, StandardUnit.BOTTLE.name))
+        assertEquals("1000 grammi", quantityLabel(1000.0, StandardUnit.GRAM.name))
+        assertEquals("1 grammo", quantityLabel(1.0, StandardUnit.GRAM.name))
+        assertEquals("3 lattine", quantityLabel(3.0, StandardUnit.CAN.name))
+        assertEquals("1 pentola", quantityLabel(1.0, StandardUnit.POT.name))
+        assertEquals("1 vasetto", quantityLabel(1.0, StandardUnit.JAR.name))
     }
 
     @Test
@@ -902,20 +786,28 @@ class ActiveListAccessibilityTest {
 
     // --- Fakes di dominio per comporre la schermata senza DB ---
 
-    private class FakeShoppingListRepository(
-        private val items: List<ShoppingItem> = emptyList(),
-    ) : ShoppingListRepository {
-        override fun getAllItems(): Flow<List<ShoppingItem>> = flowOf(items)
-        override fun getActiveItems(): Flow<List<ShoppingItem>> =
-            flowOf(items.filter { !it.isChecked })
-        override fun getCheckedItems(): Flow<List<ShoppingItem>> =
-            flowOf(items.filter { it.isChecked })
-        override suspend fun insert(item: ShoppingItem) = Unit
-        override suspend fun update(item: ShoppingItem) = Unit
-        override suspend fun delete(itemId: String) = Unit
-        override suspend fun getByProductId(productId: Long): ShoppingItem? =
-            items.firstOrNull { it.productId == productId }
-        override suspend fun checkout(checkedItemIds: List<String>): Boolean = true
+    private class FakeListItemRepository(
+        private val items: List<ListItem> = emptyList(),
+    ) : ListItemRepository {
+        override fun observeAll(): Flow<List<ListItem>> = flowOf(items)
+        override fun observeActive(): Flow<List<ListItem>> = flowOf(items.filter { it.status == ListItemStatus.TO_BUY })
+        override fun observePurchased(): Flow<List<ListItem>> = flowOf(items.filter { it.status == ListItemStatus.PURCHASED })
+        override fun observeDeleted(): Flow<List<ListItem>> = flowOf(items.filter { it.status == ListItemStatus.DELETED })
+        override suspend fun getById(id: String): ListItem? = items.firstOrNull { it.id == id }
+        override suspend fun getActiveByProductId(productId: Long): ListItem? =
+            items.firstOrNull { it.productId == productId && it.status == ListItemStatus.TO_BUY }
+        override suspend fun getLatestPurchasedByProductId(productId: Long): ListItem? =
+            items.lastOrNull { it.productId == productId && it.status == ListItemStatus.PURCHASED }
+        override suspend fun add(item: ListItem): ListItem = item
+        override suspend fun updateDetails(item: ListItem): ListItem? = item
+        override suspend fun complete(id: String): ListItem? = null
+        override suspend fun delete(id: String): ListItem? = null
+        override suspend fun restore(id: String): ListItem? = null
+        override suspend fun reAdd(purchasedId: String): ListItem? = null
+        override suspend fun clearActive(): Int = 0
+        override suspend fun purgeDeleted(): Int = 0
+        override fun observeAttributeSuggestions(): Flow<AttributeSuggestions> = flowOf(AttributeSuggestions())
+        override suspend fun getLastAttributes(productId: Long): ItemAttributes? = null
     }
 
     private class FakeCatalogRepository(

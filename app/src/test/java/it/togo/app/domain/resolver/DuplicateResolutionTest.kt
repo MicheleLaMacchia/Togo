@@ -1,7 +1,7 @@
 package it.togo.app.domain.resolver
 
 import it.togo.app.domain.model.ResolutionOption
-import it.togo.app.domain.model.ShoppingItem
+import it.togo.app.domain.model.ListItem
 import it.togo.app.domain.model.StandardUnit
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -15,17 +15,17 @@ import java.util.UUID
  */
 class DuplicateResolutionTest {
 
-    // Helper per creare uno ShoppingItem di test
+    // Helper per creare un ListItem di test
     private fun createItem(
         productId: Long = 1,
         quantity: Double = 1.0,
         unit: StandardUnit = StandardUnit.LITER
-    ) = ShoppingItem(
+    ) = ListItem.create(
         id = UUID.randomUUID().toString(),
         productId = productId,
         quantity = quantity,
-        unit = unit,
-        isChecked = false
+        unit = unit.name,
+        createdAt = 1_000L,
     )
 
     // ========== SUM ==========
@@ -36,7 +36,7 @@ class DuplicateResolutionTest {
         val newItem = createItem(quantity = 2.0, unit = StandardUnit.LITER)
         val result = applyResolution(existing, newItem, ResolutionOption.SUM)
         assertEquals(3.0, result.quantity, 0.001)
-        assertEquals(StandardUnit.LITER, result.unit)
+        assertEquals(StandardUnit.LITER.name, result.unit)
     }
 
     @Test
@@ -104,10 +104,10 @@ class DuplicateResolutionTest {
      * Questa è una semplificazione della logica che sarà implementata nel ViewModel.
      */
     private fun applyResolution(
-        existing: ShoppingItem,
-        newItem: ShoppingItem,
+        existing: ListItem,
+        newItem: ListItem,
         option: ResolutionOption
-    ): ShoppingItem {
+    ): ListItem {
         return when (option) {
             ResolutionOption.SUM -> {
                 if (existing.unit == newItem.unit) {

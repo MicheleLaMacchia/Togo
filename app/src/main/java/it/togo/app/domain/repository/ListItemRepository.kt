@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.Flow
 /**
  * Fonte di verità della lista unificata.
  *
- * Il contratto è volutamente privo di checkout, staging e “Presi”: queste
- * responsabilità restano negli adapter legacy fino alla Story 8.7. Le
+ * Il contratto è volutamente privo di checkout, staging e “Presi”: dalla
+ * Story 8.7 questi concetti non esistono più nemmeno come adapter legacy. Le
  * transizioni di stato sono esplicite (`complete`, `delete`, `restore`,
  * `reAdd`) e usano il [it.togo.app.domain.time.Clock] iniettato nel repository.
  */

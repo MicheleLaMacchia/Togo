@@ -1,21 +1,28 @@
 package it.togo.app.domain.usecase
 
-import it.togo.app.domain.model.ShoppingItem
+import it.togo.app.domain.model.ListItem
+import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.repository.CatalogRepository
-import it.togo.app.domain.repository.ShoppingListRepository
+import it.togo.app.domain.repository.ListItemRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
+/**
+ * Condivide la lista attiva come testo.
+ *
+ * Dalla Story 8.7 la fonte è [ListItemRepository]: solo le righe `TO_BUY`
+ * entrano nel testo. Nessuna Task e nessuna riga `PURCHASED`/`DELETED`
+ * compare nella condivisione.
+ */
 class ShareListUseCase(
-    private val shoppingListRepository: ShoppingListRepository,
+    private val listItemRepository: ListItemRepository,
     private val catalogRepository: CatalogRepository
 ) {
 
     suspend operator fun invoke(): android.content.Intent? = withContext(Dispatchers.IO) {
-        val activeItems = shoppingListRepository.getActiveItems().first()
-            .filter { !it.isChecked }
+        val activeItems = listItemRepository.observeActive().first()
 
         if (activeItems.isEmpty()) return@withContext null
 
@@ -38,7 +45,7 @@ class ShareListUseCase(
     }
 
     private fun buildSharedText(
-        items: List<ShoppingItem>,
+        items: List<ListItem>,
         productsById: Map<String, it.togo.app.domain.model.CanonicalProduct>,
         level1Map: Map<Long, TaxonomyLevel.Level1>,
         level2Map: Map<Long, TaxonomyLevel.Level2>,
@@ -90,17 +97,35 @@ class ShareListUseCase(
     /**
      * Riga voce: prodotto, marca e variante (quando presenti), quantità e unità.
      * Es. "Spaghetti Barilla integrale 2 pz".
+     *
+     * L'unità è testo libero: se corrisponde a una [StandardUnit] usa la
+     * formattazione standard, altrimenti è riportata così com'è.
      */
     private fun formatItem(
-        item: ShoppingItem,
+        item: ListItem,
         product: it.togo.app.domain.model.CanonicalProduct,
     ): String {
         val parts = mutableListOf(product.name)
         item.brand?.takeIf { it.isNotBlank() }?.let { parts.add(it) }
         item.variant?.takeIf { it.isNotBlank() }?.let { parts.add(it) }
-        if (item.hasQuantity) {
-            parts.add(item.unit.format(item.quantity))
-        }
+        parts.add(formatQuantityAndUnit(item.quantity, item.unit))
         return parts.joinToString(" ")
     }
 }
+
+/**
+ * Quantità + unità per il testo condiviso: la formattazione standard se
+ * l'unità è riconosciuta, altrimenti quantità e testo libero.
+ */
+internal fun formatQuantityAndUnit(quantity: Double, unit: String): String {
+    val standard = StandardUnit.fromCode(unit.trim())
+    return if (standard != null) {
+        standard.format(quantity)
+    } else {
+        "${formatShareQuantity(quantity)} ${unit.trim()}"
+    }
+}
+
+/** Formatta un Double rimuovendo zeri decimali inutili (2.0 → "2", 1.5 → "1.5"). */
+private fun formatShareQuantity(value: Double): String =
+    if (value == value.toLong().toDouble()) value.toLong().toString() else value.toString()

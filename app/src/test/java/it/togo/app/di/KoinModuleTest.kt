@@ -18,9 +18,7 @@ import it.togo.app.di.databaseModule
 import it.togo.app.di.domainModule
 import it.togo.app.di.presentationModule
 import it.togo.app.di.repositoryModule
-import it.togo.app.domain.repository.HistoryRepository
 import it.togo.app.domain.repository.ListItemRepository
-import it.togo.app.domain.repository.ShoppingListRepository
 import it.togo.app.domain.repository.TodoRepository
 
 @RunWith(RobolectricTestRunner::class)
@@ -80,16 +78,12 @@ class KoinModuleTest {
     }
 
     @Test
-    fun `ListItemRepository e adapter legacy sono risolti via Koin`() {
+    fun `ListItemRepository e risolto via Koin`() {
         val koin = GlobalContext.get()
 
         val listItemRepository = koin.get<ListItemRepository>()
-        val shoppingListRepository = koin.get<ShoppingListRepository>()
-        val historyRepository = koin.get<HistoryRepository>()
 
         assertNotNull("ListItemRepository istanziato", listItemRepository)
-        assertNotNull("ShoppingListRepository legacy istanziato", shoppingListRepository)
-        assertNotNull("HistoryRepository legacy istanziato", historyRepository)
     }
 
     @Test
@@ -99,10 +93,4 @@ class KoinModuleTest {
         assertNotNull("TodoRepository istanziato", repository)
     }
 
-    // TODO(Story 1.3): Add test for Repository resolution when Room*Repository implementations exist
-    // @Test
-    // fun `ShoppingListRepository resolved via Koin`() {
-    //     val repo = GlobalContext.get().get<ShoppingListRepository>()
-    //     assertNotNull("Repository istanziato", repo)
-    // }
 }

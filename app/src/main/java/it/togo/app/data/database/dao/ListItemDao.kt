@@ -13,8 +13,8 @@ import kotlinx.coroutines.flow.Flow
  *
  * Le query di stato usano le stringhe di [it.togo.app.domain.model.ListItemStatus]
  * per restare allineate a [ListItemEntity.status], che è persistito come testo.
- * Le tabelle legacy `SHOPPING_ITEM` e `HISTORICAL_ITEM` restano intatte fino
- * alla Story 8.7.
+ * Dalla Story 8.7 le tabelle legacy `SHOPPING_ITEM` e `HISTORICAL_ITEM` non
+ * esistono più: `LIST_ITEM` è l'unica fonte di lista attiva e storico.
  */
 @Dao
 interface ListItemDao {

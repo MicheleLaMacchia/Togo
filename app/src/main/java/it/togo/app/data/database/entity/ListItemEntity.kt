@@ -10,8 +10,8 @@ import it.togo.app.domain.model.ListItemStatus
  * Entità Room della lista unificata.
  *
  * La tabella `LIST_ITEM` viene creata dalla migrazione `5→6` (Story 8.4).
- * `SHOPPING_ITEM` e `HISTORICAL_ITEM` restano temporaneamente registrate fino
- * alla Story 8.7, che le rimuoverà con la migrazione `6→7`.
+ * Le tabelle legacy `SHOPPING_ITEM` e `HISTORICAL_ITEM` sono state eliminate
+ * dalla migrazione `6→7` (Story 8.7): questa è l'unica tabella della lista.
  *
  * `status` è una stringa per non dipendere da un converter: i valori ammessi
  * sono quelli di [ListItemStatus].

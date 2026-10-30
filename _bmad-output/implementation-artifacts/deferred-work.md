@@ -156,3 +156,21 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-7-2-proposta-nuovo-livello-3.md`
   summary: Aggiungere un indice composto e un tie-breaker per `sortOrder` dei L3.
   evidence: `getLevel3`/`getLevel3ByLevel2` ordinano solo per `sortOrder` e non esiste un indice `(level2_id, sortOrder)`; con creazioni concorrenti `MAX+1` può produrre pareggi. Stessa radice del defer sul calcolo non transazionale.
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-7-adattamento-ui-shopping-esistente-e-regressione.md`
+  summary: Aggiungere una regressione dedicata alla migrazione Room 6→7.
+  evidence: `MIGRATION_6_7` elimina le tabelle legacy ma i test individuati coprono soltanto 5→6; il riepilogo Story 8.7 cita un test 6→7 che non risulta presente.
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-7-adattamento-ui-shopping-esistente-e-regressione.md`
+  summary: Gestire eccezioni repository nel completamento e nell'annullamento eliminazione della lista attiva.
+  evidence: `ActiveListViewModel` rimuove ottimisticamente la riga prima di `complete` e non intercetta le eccezioni di `complete` o `restore` nell'undo.
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-7-adattamento-ui-shopping-esistente-e-regressione.md`
+  summary: Rendere range-safe la formattazione delle quantità condivise.
+  evidence: `formatShareQuantity` converte valori interi `Double` in `Long`, alterando valori validi oltre il range di `Long`.
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-7-adattamento-ui-shopping-esistente-e-regressione.md`
+  summary: Aggiungere un test del completamento riuscito della voce nella lista attiva.
+  evidence: Il fake in `ActiveListAccessibilityTest` restituisce sempre `null` da `complete`; la ricerca non ha trovato test del ViewModel per la transizione riuscita.
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-7-adattamento-ui-shopping-esistente-e-regressione.md`
+  summary: Riallineare il riepilogo Story 8.7 alle verifiche realmente concluse.
+  evidence: `story87_summary.txt` indica ancora la correzione della compilazione di `ActiveListAccessibilityTest` come azione pendente e menziona un test 6→7 non presente.
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-7-adattamento-ui-shopping-esistente-e-regressione.md`
+  summary: Attribuire le modifiche DB/migrazione già presenti a uno scope BMAD coerente.
+  evidence: Il worktree aveva modifiche DB/migrazione prima del fix UI; sono state preservate e non fanno parte di questo intervento di compilazione.

@@ -6,10 +6,8 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 import it.togo.app.data.database.TogoDatabase
 import it.togo.app.data.database.dao.CatalogDao
-import it.togo.app.data.database.dao.HistoryDao
 import it.togo.app.data.database.dao.LearnedRulesDao
 import it.togo.app.data.database.dao.ListItemDao
-import it.togo.app.data.database.dao.ShoppingItemDao
 import it.togo.app.data.database.dao.TaskCategoryDao
 import it.togo.app.data.database.dao.TodoTaskDao
 import it.togo.app.data.database.dao.UserAttributeDao
@@ -19,9 +17,8 @@ val databaseModule: Module = module {
     single { TogoDatabase.build(androidContext()) }
 
     // DAOs - factory (new instance per use)
-    factory { get<TogoDatabase>().shoppingItemDao() }
+    // LIST_ITEM remains the single source for shopping rows and history.
     factory { get<TogoDatabase>().catalogDao() }
-    factory { get<TogoDatabase>().historyDao() }
     factory { get<TogoDatabase>().listItemDao() }
     factory<TodoTaskDao> { get<TogoDatabase>().todoTaskDao() }
     factory<TaskCategoryDao> { get<TogoDatabase>().taskCategoryDao() }

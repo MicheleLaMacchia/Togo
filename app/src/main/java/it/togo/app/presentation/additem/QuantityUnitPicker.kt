@@ -32,7 +32,7 @@ import it.togo.app.ui.theme.togoTypography
  * Campo quantità modificabile con tastiera + selettore delle unità compatibili.
  *
  * - La quantità viene inserita direttamente dall'utente nel campo di testo.
- * - Le unità mostrate sono solo quelle compatibili con il prodotto.
+ * - PIECE is the default; compatible product units are also available.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -54,7 +54,7 @@ fun QuantityUnitPicker(
         verticalArrangement = Arrangement.spacedBy(spacing.space3),
     ) {
         Text(
-            text = "La quantità e l'unità sono opzionali.",
+            text = "Valore iniziale: 1 pz.",
             style = typography.caption,
             color = togoColors().inkSecondary,
         )

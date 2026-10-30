@@ -37,7 +37,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import it.togo.app.domain.model.TaxonomyLevel
-import it.togo.app.domain.model.ShoppingItem
+import it.togo.app.domain.model.ListItem
 import it.togo.app.ui.theme.componentTokens
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
@@ -147,7 +147,7 @@ fun CategorySection(
     productNames: Map<Long, String> = emptyMap(),
     categoryLabels: Map<Long, String> = emptyMap(),
     onCheckOff: (String, Boolean) -> Unit,
-    onEdit: (ShoppingItem) -> Unit,
+    onEdit: (ListItem) -> Unit,
     onDelete: (String) -> Unit,
     colors: it.togo.app.ui.theme.TogoColorScheme,
     typography: it.togo.app.ui.theme.TogoTypography,

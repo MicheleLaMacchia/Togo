@@ -17,7 +17,6 @@ class DarkModeTokenUsageTest {
     private val scopedComponents = listOf(
         "presentation/activelist/ItemRow.kt",
         "presentation/activelist/CategoryHeader.kt",
-        "presentation/activelist/PresiSection.kt",
         "presentation/activelist/VoiceFab.kt",
         "presentation/activelist/EmptyState.kt",
         "presentation/activelist/ActiveListScreen.kt",

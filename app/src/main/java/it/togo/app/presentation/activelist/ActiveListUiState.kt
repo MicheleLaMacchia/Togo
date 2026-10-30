@@ -1,38 +1,32 @@
 package it.togo.app.presentation.activelist
 
-import it.togo.app.domain.model.ShoppingItem
+import it.togo.app.domain.model.ListItem
 import it.togo.app.domain.model.TaxonomyLevel
-import kotlinx.coroutines.flow.Flow
 
 /**
  * UI State per la schermata Lista Attiva (MVI pattern).
  *
- * - [activeGroups]: gruppi di voci per categoria L1→L2→L3 ordinati per sortOrder
- * - [checkedItems]: voci spuntate (per sezione "Presi")
+ * - [activeGroups]: gruppi di voci `TO_BUY` per categoria L1→L2→L3 ordinati
+ *   per sortOrder
  * - [error]: messaggio errore se repository fallisce
+ *
+ * Dalla Story 8.7 non esistono più "Presi", checkout e undo checkout: la
+ * spunta porta la riga direttamente a `PURCHASED` e la riga sparisce dagli
+ * attivi perché `observeActive()` non la emette più.
  */
 data class ActiveListUiState(
     val activeGroups: List<CategoryGroup> = emptyList(),
-    val checkedItems: List<ShoppingItem> = emptyList(),
     val productNames: Map<Long, String> = emptyMap(),
     /**
      * Etichetta di categoria canonica (L1, L2, L3) per ogni prodotto.
-     *
-     * Necessaria anche per le voci spuntate in "Presi", dove la riga non passa
-     * per [CategoryGroup] e quindi non conosce la tassonomia.
      */
     val categoryLabels: Map<Long, String> = emptyMap(),
     val error: String? = null,
     val checkingOffItemId: String? = null,      // Item in corso di animazione check-off
     val pendingCheckOffItemId: String? = null,  // Item in attesa di check-off (300ms delay)
-    val checkoutSnackbarMessage: String? = null, // Messaggio snackbar per checkout undo
-    val checkedItemsForUndo: List<ShoppingItem> = emptyList(), // Item per undo checkout
 ) {
-    /** Totale voci attive (non checkate) */
+    /** Totale voci attive */
     val activeCount: Int = activeGroups.sumOf { it.items.size }
-
-    /** Sezione "Presi" visibile solo se ci sono elementi checkati */
-    val hasCheckedItems: Boolean = checkedItems.isNotEmpty()
 
     /** Se c'è un'animazione in corso */
     val isAnimating: Boolean = checkingOffItemId != null || pendingCheckOffItemId != null
@@ -48,7 +42,7 @@ data class CategoryGroup(
     val level2Groups: List<Level2Group>
 ) {
     /** Tutte le voci di questo gruppo (flattened per conteggio) */
-    val items: List<ShoppingItem> = level2Groups.flatMap { it.items }
+    val items: List<ListItem> = level2Groups.flatMap { it.items }
 }
 
 /** Sottogruppo per Level2 con i suoi gruppi Level3. */
@@ -57,13 +51,13 @@ data class Level2Group(
     val level3Groups: List<Level3Group>
 ) {
     /** Tutte le voci di questo gruppo (flattened per conteggio) */
-    val items: List<ShoppingItem> = level3Groups.flatMap { it.items }
+    val items: List<ListItem> = level3Groups.flatMap { it.items }
 }
 
 /** Sottogruppo per Level3 con le voci. */
 data class Level3Group(
     val level3: TaxonomyLevel.Level3,
-    val items: List<ShoppingItem>
+    val items: List<ListItem>
 )
 
 /**
@@ -72,7 +66,7 @@ data class Level3Group(
  * Sigillata per exhaustiveness checking in when().
  */
 sealed interface UiEvent {
-    /** Spunta/ripristina una voce */
+    /** Spunta una voce: `isChecked = false` è un no-op (non c'è più "Presi"). */
     data class CheckOff(val itemId: String, val isChecked: Boolean) : UiEvent
 
     /** Testo confermato dalla cattura vocale. */
@@ -93,15 +87,9 @@ sealed interface UiEvent {
     /** Condividi lista (icona AppBar) */
     object ShareList : UiEvent
 
-    /** Concludi spesa (pulsante in sezione Presi) */
-    object Checkout : UiEvent
-
     /** Aggiungi voce manuale (pulsante stato vuoto) */
     object AddItemManual : UiEvent
 
     /** Annulla eliminazione (Snackbar undo) */
     object UndoDelete : UiEvent
-
-    /** Annulla checkout (Snackbar undo) */
-    object UndoCheckout : UiEvent
 }

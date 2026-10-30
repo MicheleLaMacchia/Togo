@@ -22,6 +22,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -32,7 +33,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import it.togo.app.core.TogoLog
-import it.togo.app.domain.model.HistoricalItem
+import it.togo.app.domain.model.ListItem
+import it.togo.app.domain.model.ListItemStatus
+import it.togo.app.presentation.activelist.quantityLabel
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
@@ -134,7 +137,13 @@ fun HistoryScreen(
                             item = item,
                             productName = uiState.productNames[item.productId]
                                 ?: "Prodotto #${item.productId}",
-                            onReAdd = { viewModel.reAddToActiveList(item) },
+                            onAction = {
+                                if (item.status == ListItemStatus.PURCHASED) {
+                                    viewModel.reAddToActiveList(item)
+                                } else {
+                                    viewModel.restore(item)
+                                }
+                            },
                             colors = colors,
                             typography = typography,
                             spacing = spacing
@@ -169,9 +178,9 @@ private fun EmptyState(
 
 @Composable
 private fun HistoryItemRow(
-    item: HistoricalItem,
+    item: ListItem,
     productName: String,
-    onReAdd: () -> Unit,
+    onAction: () -> Unit,
     colors: it.togo.app.ui.theme.TogoColors,
     typography: it.togo.app.ui.theme.TogoTypography,
     spacing: it.togo.app.ui.theme.TogoSpacing
@@ -197,6 +206,11 @@ private fun HistoryItemRow(
                     style = typography.itemTitle,
                     color = colors.inkPrimary
                 )
+                Text(
+                    text = if (item.status == ListItemStatus.PURCHASED) "Acquistato" else "Eliminato",
+                    style = typography.caption,
+                    color = colors.inkSecondary,
+                )
                 // Marca, variante e conservazione sono opzionali: mostriamo solo
                 // quelle valorizzate, separate da un punto mediano.
                 val attributes = listOfNotNull(
@@ -211,25 +225,26 @@ private fun HistoryItemRow(
                         color = colors.inkSecondary
                     )
                 }
-                if (item.hasQuantity) {
-                    Text(
-                        text = "${item.lastQuantity} ${item.lastUnit.displayName}",
-                        style = typography.itemMeta,
-                        color = colors.inkSecondary
-                    )
+                Text(
+                    text = quantityLabel(item.quantity, item.unit),
+                    style = typography.itemMeta,
+                    color = colors.inkSecondary,
+                )
+                if (item.purchaseCount > 1) {
+                    Text("Acquisti: ${item.purchaseCount}", style = typography.itemMeta, color = colors.inkSecondary)
                 }
                 Text(
-                    text = dateFormat.format(Date(item.purchasedAt)),
+                    text = dateFormat.format(Date(item.statusChangedAt)),
                     style = typography.caption,
                     color = colors.inkSecondary
                 )
             }
 
-            IconButton(onClick = onReAdd) {
+            TextButton(onClick = onAction) {
                 Text(
-                    text = "+",
-                    style = typography.sectionHeader,
-                    color = colors.accent
+                    text = if (item.status == ListItemStatus.PURCHASED) "Di nuovo" else "Ripristina",
+                    style = typography.caption,
+                    color = colors.accent,
                 )
             }
         }

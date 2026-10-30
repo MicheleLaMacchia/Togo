@@ -1,13 +1,13 @@
 package it.togo.app.presentation.history
 
-import it.togo.app.domain.model.HistoricalItem
+import it.togo.app.domain.model.ListItem
 
 /**
  * Stato UI per la schermata Storico.
  */
 data class HistoryUiState(
-    val items: List<HistoricalItem> = emptyList(),
-    val filteredItems: List<HistoricalItem> = emptyList(),
+    val items: List<ListItem> = emptyList(),
+    val filteredItems: List<ListItem> = emptyList(),
     /** Nome prodotto per `productId`, risolto dal catalogo per la UI. */
     val productNames: Map<Long, String> = emptyMap(),
     val searchQuery: String = "",

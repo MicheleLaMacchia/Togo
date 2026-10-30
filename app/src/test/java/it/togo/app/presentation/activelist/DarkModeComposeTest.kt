@@ -21,7 +21,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.dp
 import it.togo.app.R
-import it.togo.app.domain.model.ShoppingItem
+import it.togo.app.domain.model.ListItem
 import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.voice.VoiceRecognitionState
@@ -64,18 +64,11 @@ class DarkModeComposeTest {
         stopKoin()
     }
 
-    private val activeItem = ShoppingItem(
+    private val activeItem = listItem(
         productId = 1L,
         quantity = 2.0,
         unit = StandardUnit.PIECE,
         isChecked = false,
-    )
-
-    private val checkedItem = ShoppingItem(
-        productId = 1L,
-        quantity = 2.0,
-        unit = StandardUnit.PIECE,
-        isChecked = true,
     )
 
     private val level1 = TaxonomyLevel.Level1(id = 1L, name = "Latticini", sortOrder = 1)
@@ -87,57 +80,24 @@ class DarkModeComposeTest {
     )
 
     @Test
-    fun `dark item rows keep active and checked semantics`() {
+    fun `dark active row exposes edit and completion controls`() {
         composeTestRule.setContent {
             TogoTheme(darkTheme = true) {
-                Column {
-                    ItemRow(
-                        item = activeItem,
-                        productName = "Mozzarella",
-                        categoryLabel = "Latticini, Formaggi, Mozzarella",
-                        onCheckChange = {},
-                        onClick = {},
-                        onDelete = {},
-                    )
-                    ItemRow(
-                        item = checkedItem,
-                        productName = "Mozzarella",
-                        categoryLabel = "Latticini, Formaggi, Mozzarella",
-                        rowActionDescription = null,
-                        onCheckChange = {},
-                        onClick = {},
-                        onDelete = {},
-                    )
-                }
+                ItemRow(
+                    item = activeItem,
+                    productName = "Mozzarella",
+                    categoryLabel = "Latticini, Formaggi, Mozzarella",
+                    onCheckChange = {},
+                    onClick = {},
+                    onDelete = {},
+                )
             }
         }
-
-        composeTestRule
-            .onNodeWithContentDescription(
-                "Mozzarella, 2 pezzi, Latticini, Formaggi, Mozzarella, " +
-                    "non selezionato. Doppio tocco per modificare."
-            )
-            .assertExists()
-            .assertHasClickAction()
-
-        composeTestRule
-            .onNodeWithContentDescription(
-                "Mozzarella, 2 pezzi, Latticini, Formaggi, Mozzarella, selezionato."
-            )
-            .assertExists()
-            .assertHasNoClickAction()
-
-        composeTestRule
-            .onNodeWithContentDescription("Spunta Mozzarella.")
-            .assertExists()
-            .assertIsOff()
-
-        composeTestRule
-            .onNodeWithContentDescription("Deseleziona Mozzarella.")
-            .assertExists()
-            .assertIsOn()
+        composeTestRule.onNodeWithContentDescription(
+            "Mozzarella, 2 pezzi, Latticini, Formaggi, Mozzarella, non selezionato. Doppio tocco per modificare."
+        ).assertExists().assertHasClickAction()
+        composeTestRule.onNodeWithContentDescription("Spunta Mozzarella.").assertExists().assertIsOff()
     }
-
     @Test
     fun `dark category header keeps title and count`() {
         composeTestRule.setContent {
@@ -151,34 +111,21 @@ class DarkModeComposeTest {
     }
 
     @Test
-    fun `dark presi section keeps header checkout and uncheck semantics`() {
+    fun `dark active row keeps accessible completion control`() {
         composeTestRule.setContent {
             TogoTheme(darkTheme = true) {
-                PresiSection(
-                    items = listOf(checkedItem),
-                    productNames = mapOf(1L to "Mozzarella"),
-                    categoryLabels = mapOf(1L to "Latticini, Formaggi, Mozzarella"),
-                    onUncheck = {},
-                    onCheckout = {},
-                    colors = togoColors(),
-                    typography = togoTypography(),
-                    spacing = togoSpacing(),
-                    tokens = componentTokens(),
+                ItemRow(
+                    item = activeItem,
+                    productName = "Mozzarella",
+                    categoryLabel = "Latticini, Formaggi, Mozzarella",
+                    onCheckChange = {},
+                    onClick = {},
+                    onDelete = {},
                 )
             }
         }
-
-        composeTestRule.onNodeWithTag("presi_section").assertExists()
-        composeTestRule.onNodeWithTag("checkout_button").assertExists()
-        composeTestRule
-            .onNodeWithContentDescription("Presi, 1 voce. Doppio tocco per collassare.")
-            .assertExists()
-        composeTestRule
-            .onNodeWithContentDescription("Deseleziona Mozzarella.")
-            .assertExists()
-            .assertIsOn()
+        composeTestRule.onNodeWithContentDescription("Spunta Mozzarella.").assertExists()
     }
-
     @Test
     fun `dark voice fab idle keeps its accessible label`() {
         composeTestRule.setContent {

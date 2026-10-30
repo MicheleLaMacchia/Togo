@@ -35,11 +35,12 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.CatalogCategoryResult
-import it.togo.app.domain.model.ShoppingItem
+import it.togo.app.domain.model.ListItem
 import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.parser.ParsedCommand
 import it.togo.app.domain.repository.CatalogRepository
-import it.togo.app.domain.repository.ShoppingListRepository
+import it.togo.app.domain.repository.ListItemRepository
+import it.togo.app.domain.time.Clock
 import it.togo.app.domain.repository.UserAttributeRepository
 import it.togo.app.domain.usecase.CorrectCategoryUseCase
 import it.togo.app.domain.usecase.CreateCanonicalProductUseCase
@@ -82,7 +83,7 @@ import org.koin.core.context.GlobalContext
 @Composable
 fun AddItemBottomSheet(
     onDismiss: () -> Unit,
-    editItem: ShoppingItem? = null,
+    editItem: ListItem? = null,
     initialVoiceCommand: ParsedCommand? = null,
 ) {
     // La factory esplicita permette di passare l'item in modifica; per
@@ -100,7 +101,8 @@ fun AddItemBottomSheet(
             initializer {
                 AddItemViewModel(
                     catalogRepository = GlobalContext.get().get<CatalogRepository>(),
-                    shoppingRepository = GlobalContext.get().get<ShoppingListRepository>(),
+                    shoppingRepository = GlobalContext.get().get<ListItemRepository>(),
+                    clock = GlobalContext.get().get<Clock>(),
                     createProductUseCase = GlobalContext.get().get<CreateCanonicalProductUseCase>(),
                     createLevel3UseCase = GlobalContext.get().get<CreateUserLevel3UseCase>(),
                     correctCategoryUseCase = GlobalContext.get().get<CorrectCategoryUseCase>(),
@@ -322,23 +324,20 @@ fun AddItemBottomSheet(
                         }
                         4 -> {
                             val product = uiState.selectedProduct ?: return@Column
-                            val hasQuantity = uiState.hasQuantity
-                            val unit = if (hasQuantity) {
-                                uiState.selectedUnit
-                                    ?: uiState.compatibleUnits.firstOrNull()
-                            } else {
-                                null
-                            }
                             ConfirmStep(
                                 product = product,
-                                quantity = uiState.quantity.takeIf { hasQuantity },
-                                unit = unit,
+                                quantity = uiState.quantity.takeIf { it.isFinite() && it > 0.0 } ?: 1.0,
+                                unit = uiState.selectedUnit?.displayName
+                                    ?: editItem?.unit
+                                    ?: uiState.compatibleUnits.firstOrNull()?.displayName
+                                    ?: StandardUnit.PIECE.displayName,
                                 brand = uiState.brand,
                                 variant = uiState.variant,
                                 condition = uiState.condition,
                                 categoryPath = uiState.selectedCategoryPath,
                                 categoryMessage = uiState.categoryCorrectionMessage,
                                 errorQuantity = uiState.errors["quantity"],
+                                errorSave = uiState.errors["save"],
                                 onCorrectCategory = {
                                     viewModel.onEvent(AddItemUiEvent.ShowCategoryCorrection)
                                 },
@@ -599,7 +598,7 @@ fun AttributeStep(
 fun ConfirmStep(
     product: CanonicalProduct,
     quantity: Double?,
-    unit: StandardUnit?,
+    unit: String?,
     brand: String,
     variant: String,
     condition: String,
@@ -611,6 +610,7 @@ fun ConfirmStep(
     spacing: it.togo.app.ui.theme.TogoSpacing,
     categoryPath: String = "",
     categoryMessage: String? = null,
+    errorSave: String? = null,
     onCorrectCategory: () -> Unit = {},
 ) {
     val colorsLocal = colors
@@ -632,7 +632,7 @@ fun ConfirmStep(
             if (quantity != null && unit != null) {
                 SummaryRow(
                     "Quantità",
-                    "${formatQuantityText(quantity)} ${unit.displayName}",
+                    "${formatQuantityText(quantity)} $unit",
                     colorsLocal,
                     typographyLocal,
                 )
@@ -674,6 +674,14 @@ fun ConfirmStep(
         if (errorQuantity != null) {
             Text(
                 text = errorQuantity,
+                style = typographyLocal.caption,
+                color = colorsLocal.warningInk,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+        }
+        if (errorSave != null) {
+            Text(
+                text = errorSave,
                 style = typographyLocal.caption,
                 color = colorsLocal.warningInk,
                 modifier = Modifier.padding(horizontal = 16.dp),

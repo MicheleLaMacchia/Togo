@@ -4,13 +4,16 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 /**
- * Migrazione 5→6: crea le tabelle della lista unificata e delle Task e copia
- * i dati legacy.
+ * Migrazioni della lista unificata.
  *
- * Questa è la variante concordata per la Story 8.4: `SHOPPING_ITEM` e
- * `HISTORICAL_ITEM` **non** vengono eliminate, perché il codice legacy è
- * ancora registrato in [TogoDatabase]. La loro rimozione avverrà nella Story
- * 8.7 con la migrazione 6→7.
+ * `MIGRATION_5_6` (Story 8.4) crea le tabelle della lista unificata e delle
+ * Task e copia i dati legacy. In quella storia `SHOPPING_ITEM` e
+ * `HISTORICAL_ITEM` **non** sono state eliminate, perché il codice legacy era
+ * ancora registrato in [TogoDatabase].
+ *
+ * `MIGRATION_6_7` (Story 8.7) chiude il debito: droppa **solo** le due tabelle
+ * legacy, che non sono più registrate né usate. I dati vivono già in
+ * `LIST_ITEM` dalla 5→6, quindi la 6→7 non copia nulla.
  *
  * Room esegue `migrate` in una transazione; la transazione esplicita qui sotto
  * rende atomico anche l'harness che invoca direttamente la migrazione.
@@ -30,6 +33,21 @@ val MIGRATION_5_6 = object : Migration(5, 6) {
         } finally {
             db.endTransaction()
         }
+    }
+}
+
+/**
+ * Migrazione 6→7 (Story 8.7): elimina le tabelle legacy.
+ *
+ * Droppa **solo** `SHOPPING_ITEM` e `HISTORICAL_ITEM`: i loro dati sono già
+ * stati copiati in `LIST_ITEM` dalla 5→6. Non tocca `LIST_ITEM`,
+ * `TASK_CATEGORY`, `TODO_TASK` né alcuna altra tabella.
+ */
+val MIGRATION_6_7 = object : Migration(6, 7) {
+
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("DROP TABLE IF EXISTS SHOPPING_ITEM")
+        db.execSQL("DROP TABLE IF EXISTS HISTORICAL_ITEM")
     }
 }
 

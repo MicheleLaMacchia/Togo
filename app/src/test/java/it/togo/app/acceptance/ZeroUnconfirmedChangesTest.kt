@@ -1,13 +1,17 @@
 package it.togo.app.acceptance
 
 import it.togo.app.domain.model.CanonicalProduct
-import it.togo.app.domain.model.ShoppingItem
+import it.togo.app.domain.model.AttributeSuggestions
+import it.togo.app.domain.model.ItemAttributes
+import it.togo.app.domain.model.ListItem
+import it.togo.app.domain.model.ListItemStatus
 import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.repository.CatalogRepository
-import it.togo.app.domain.repository.ShoppingListRepository
+import it.togo.app.domain.repository.ListItemRepository
 import it.togo.app.presentation.activelist.ActiveListViewModel
 import it.togo.app.presentation.activelist.UiEvent
+import it.togo.app.presentation.FixedClock
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -62,15 +66,17 @@ class ZeroUnconfirmedChangesTest {
     @Test
     fun `ignored voice command produces no repository writes and no list change`() =
         runTest(testDispatcher) {
-            val item = ShoppingItem(
+            val item = ListItem.create(
                 id = "item-1",
                 productId = 1L,
                 quantity = 1.0,
-                unit = StandardUnit.LITER,
+                unit = StandardUnit.LITER.name,
+                createdAt = 1_000L,
+                status = ListItemStatus.TO_BUY,
             )
-            val shopping = RecordingShoppingListRepository(listOf(item))
+            val shopping = RecordingListItemRepository(listOf(item))
             val catalog = FakeCatalogRepository()
-            val viewModel = ActiveListViewModel(shopping, catalog)
+            val viewModel = ActiveListViewModel(shopping, catalog, FixedClock())
 
             backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
                 viewModel.uiState.collect { }
@@ -85,7 +91,7 @@ class ZeroUnconfirmedChangesTest {
             advanceUntilIdle()
 
             assertEquals(
-                "VoiceCommand non deve scrivere su ShoppingListRepository",
+                "VoiceCommand non deve scrivere su ListItemRepository",
                 0,
                 shopping.writeCount,
             )
@@ -127,39 +133,47 @@ class ZeroUnconfirmedChangesTest {
     private fun readProjectFile(relativePath: String): String =
         projectFile(relativePath).readText()
 
-    private class RecordingShoppingListRepository(
-        initialItems: List<ShoppingItem>,
-    ) : ShoppingListRepository {
+    private class RecordingListItemRepository(
+        initialItems: List<ListItem>,
+    ) : ListItemRepository {
         val items = MutableStateFlow(initialItems)
         var writeCount = 0
             private set
 
-        override fun getAllItems(): Flow<List<ShoppingItem>> = items
-        override fun getActiveItems(): Flow<List<ShoppingItem>> = items
-        override fun getCheckedItems(): Flow<List<ShoppingItem>> = items
+        override fun observeAll(): Flow<List<ListItem>> = items
+        override fun observeActive(): Flow<List<ListItem>> = items
+        override fun observePurchased(): Flow<List<ListItem>> = items
+        override fun observeDeleted(): Flow<List<ListItem>> = items
+        override suspend fun getById(id: String): ListItem? = items.value.firstOrNull { it.id == id }
+        override suspend fun getActiveByProductId(productId: Long): ListItem? = null
+        override suspend fun getLatestPurchasedByProductId(productId: Long): ListItem? = null
 
-        override suspend fun insert(item: ShoppingItem) {
+        override suspend fun add(item: ListItem): ListItem {
             writeCount++
             items.value = items.value + item
+            return item
         }
 
-        override suspend fun update(item: ShoppingItem) {
+        override suspend fun updateDetails(item: ListItem): ListItem {
             writeCount++
             items.value = items.value.map { if (it.id == item.id) item else it }
+            return item
         }
 
-        override suspend fun delete(itemId: String) {
+        override suspend fun complete(id: String): ListItem? {
             writeCount++
-            items.value = items.value.filterNot { it.id == itemId }
+            return null
         }
-
-        override suspend fun getByProductId(productId: Long): ShoppingItem? =
-            items.value.firstOrNull { it.productId == productId }
-
-        override suspend fun checkout(checkedItemIds: List<String>): Boolean {
+        override suspend fun delete(id: String): ListItem? {
             writeCount++
-            return true
+            return null
         }
+        override suspend fun restore(id: String): ListItem? = null
+        override suspend fun reAdd(purchasedId: String): ListItem? = null
+        override suspend fun clearActive(): Int = 0
+        override suspend fun purgeDeleted(): Int = 0
+        override fun observeAttributeSuggestions(): Flow<AttributeSuggestions> = flowOf(AttributeSuggestions())
+        override suspend fun getLastAttributes(productId: Long): ItemAttributes? = null
     }
 
     private class FakeCatalogRepository : CatalogRepository {

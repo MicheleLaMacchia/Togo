@@ -5,13 +5,14 @@ import androidx.lifecycle.viewModelScope
 import it.togo.app.core.TogoLog
 import it.togo.app.domain.catalog.ProductNameNormalizer
 import it.togo.app.domain.model.CanonicalProduct
-import it.togo.app.domain.model.ShoppingItem
+import it.togo.app.domain.model.ListItem
 import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.parser.ParsedCommand
 import it.togo.app.domain.product.ProductUnitResolver
 import it.togo.app.domain.repository.CatalogRepository
-import it.togo.app.domain.repository.ShoppingListRepository
+import it.togo.app.domain.repository.ListItemRepository
+import it.togo.app.domain.time.Clock
 import it.togo.app.domain.usecase.ResolveVoiceProductUseCase
 import it.togo.app.domain.usecase.ShareListUseCase
 import kotlinx.coroutines.CancellationException
@@ -22,21 +23,28 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 
+/**
+ * ViewModel della lista attiva.
+ *
+ * Dalla Story 8.7 [ListItemRepository] è l'unica fonte di verità: la lista
+ * mostra solo righe `TO_BUY`, la spunta chiama `complete` e la riga passa a
+ * `PURCHASED` (visibile nello storico). Non esistono più "Presi", checkout e
+ * undo checkout.
+ */
 class ActiveListViewModel(
-    private val shoppingRepository: ShoppingListRepository,
-    private val catalogRepository: CatalogRepository
+    private val listItemRepository: ListItemRepository,
+    private val catalogRepository: CatalogRepository,
+    private val clock: Clock,
 ) : ViewModel() {
 
-    private val shareListUseCase = ShareListUseCase(shoppingRepository, catalogRepository)
+    private val shareListUseCase = ShareListUseCase(listItemRepository, catalogRepository)
     private val resolveVoiceProduct = ResolveVoiceProductUseCase(catalogRepository)
 
     /**
@@ -53,15 +61,13 @@ class ActiveListViewModel(
     private val taxonomyCache = MutableStateFlow<TaxonomyCache?>(null)
 
     private val _snackbarCounter = AtomicInteger(0)
-    private val _checkoutSnackbarCounter = AtomicInteger(0)
 
-    private var _isCheckingOut = false
-    private val _deletedItemForUndo = MutableStateFlow<ShoppingItem?>(null)
+    private val _deletedItemForUndo = MutableStateFlow<ListItem?>(null)
     private val _snackbarMessage = MutableStateFlow<String?>(null)
 
     init {
         loadTaxonomy()
-        observeAllItems()
+        observeActiveItems()
     }
 
     private fun loadTaxonomy() {
@@ -77,30 +83,23 @@ class ActiveListViewModel(
         }
     }
 
-    private fun observeAllItems() {
+    private fun observeActiveItems() {
         viewModelScope.launch {
             combine(
-                shoppingRepository.getAllItems(),
+                listItemRepository.observeActive(),
                 taxonomyCache.filterNotNull()
             ) { items, taxonomy ->
                 buildUiState(items, taxonomy)
             }
                 .onEach { newState ->
-                    // I campi transitori (snackbar/undo) non arrivano dal DB:
-                    // vanno preservati, altrimenti l'emissione Room successiva
-                    // al checkout cancellerebbe subito il messaggio e l'undo.
-                    val current = _uiState.value
-                    _uiState.value = newState.copy(
-                        checkoutSnackbarMessage = current.checkoutSnackbarMessage,
-                        checkedItemsForUndo = current.checkedItemsForUndo,
-                    )
+                    _uiState.value = newState
                 }
                 .launchIn(viewModelScope)
         }
     }
 
     private suspend fun buildUiState(
-        items: List<ShoppingItem>,
+        items: List<ListItem>,
         taxonomy: TaxonomyCache
     ): ActiveListUiState {
         val (l1List, l2List, l3List) = taxonomy
@@ -109,14 +108,12 @@ class ActiveListViewModel(
         val l2ById = l2List.associateBy { it.id }
         val l3ById = l3List.associateBy { it.id }
 
-        // Una sola emissione: ogni voce è in esattamente una delle due liste.
-        val activeOnly = items.filterNot { it.isChecked }
-        val checkedItems = items.filter { it.isChecked }
-
-        val itemsByL3 = mutableMapOf<Long, MutableList<ShoppingItem>>()
+        // Tutte le righe ricevute sono TO_BUY: non c'è più separazione tra
+        // "attivi" e "spuntati".
+        val itemsByL3 = mutableMapOf<Long, MutableList<ListItem>>()
         val productNames = mutableMapOf<Long, String>()
         val categoryLabels = mutableMapOf<Long, String>()
-        for (item in activeOnly) {
+        for (item in items) {
             val product = catalogRepository.getById(item.productId) ?: continue
             productNames[item.productId] = product.name
             categoryLabels[item.productId] = canonicalCategoryLabel(product, l1ById, l2ById, l3ById)
@@ -124,15 +121,6 @@ class ActiveListViewModel(
             if (l3List.any { it.id == l3Id }) {
                 itemsByL3.getOrPut(l3Id) { mutableListOf() }.add(item)
             }
-        }
-
-        // Le voci spuntate non entrano nei gruppi attivi, ma servono nome e
-        // categoria nella sezione "Presi".
-        for (item in checkedItems) {
-            if (productNames.containsKey(item.productId)) continue
-            val product = catalogRepository.getById(item.productId) ?: continue
-            productNames[item.productId] = product.name
-            categoryLabels[item.productId] = canonicalCategoryLabel(product, l1ById, l2ById, l3ById)
         }
 
         itemsByL3.values.forEach { list -> list.sortBy { item -> item.productId } }
@@ -161,7 +149,6 @@ class ActiveListViewModel(
 
         return ActiveListUiState(
             activeGroups = groups,
-            checkedItems = checkedItems,
             productNames = productNames,
             categoryLabels = categoryLabels,
             error = null
@@ -207,11 +194,9 @@ class ActiveListViewModel(
             is UiEvent.NavigateToSettings -> { }
             // La UI chiama direttamente shareListIntent().
             is UiEvent.ShareList -> { }
-            is UiEvent.Checkout -> handleCheckout()
             // Apre il bottom sheet di inserimento manuale: gestito dalla UI.
             is UiEvent.AddItemManual -> { }
             is UiEvent.UndoDelete -> handleUndoDelete()
-            is UiEvent.UndoCheckout -> handleUndoCheckout()
         }
     }
 
@@ -219,7 +204,7 @@ class ActiveListViewModel(
         val intent = shareListUseCase()
         TogoLog.d(
             if (intent == null) {
-                "ShareList: nessun articolo non spuntato, intent nullo"
+                "ShareList: nessun articolo attivo, intent nullo"
             } else {
                 "ShareList: intent pronto"
             }
@@ -260,19 +245,16 @@ class ActiveListViewModel(
                     .takeIf { it.isNotBlank() }
                     ?.takeUnless { productNameContains(product.name, it) }
 
-                val item = ShoppingItem(
-                    id = UUID.randomUUID().toString(),
+                val item = ListItem.create(
                     productId = product.id,
                     quantity = quantity,
-                    unit = unit,
+                    unit = unit.name,
+                    createdAt = clock.nowMillis(),
                     variant = variant,
-                    isChecked = false,
-                    createdAt = System.currentTimeMillis(),
-                    updatedAt = System.currentTimeMillis(),
                 )
 
                 withContext(Dispatchers.IO) {
-                    shoppingRepository.insert(item)
+                    listItemRepository.add(item)
                 }
             } catch (e: CancellationException) {
                 throw e
@@ -302,71 +284,51 @@ class ActiveListViewModel(
         return normalizedValue.isNotEmpty() && normalizedName.contains(normalizedValue)
     }
 
-    private fun findItem(itemId: String): ShoppingItem? {
+    private fun findItem(itemId: String): ListItem? {
         return _uiState.value.activeGroups
             .flatMap { group -> group.level2Groups.flatMap { l2 -> l2.level3Groups.flatMap { l3 -> l3.items } } }
             .find { it.id == itemId }
-            ?: _uiState.value.checkedItems.find { it.id == itemId }
     }
 
     private fun handleCheckOff(itemId: String, isChecked: Boolean) {
-        val item = findItem(itemId) ?: return
+        // La lista attiva mostra solo TO_BUY: la deselezione non esiste più.
+        if (!isChecked) return
+        findItem(itemId) ?: return
 
-        if (isChecked) {
-            _uiState.value = _uiState.value.copy(pendingCheckOffItemId = itemId)
+        _uiState.value = _uiState.value.copy(pendingCheckOffItemId = itemId)
 
-            viewModelScope.launch {
-                delay(300)
-                _uiState.value = _uiState.value.copy(
-                    activeGroups = _uiState.value.activeGroups.map { group ->
-                        group.copy(
-                            level2Groups = group.level2Groups.map { l2 ->
-                                l2.copy(
-                                    level3Groups = l2.level3Groups
-                                        .map { l3 ->
-                                            l3.copy(items = l3.items.filter { it.id != itemId })
-                                        }
-                                        .filter { it.items.isNotEmpty() }
-                                )
-                            }.filter { it.level3Groups.isNotEmpty() }
-                        )
-                    },
-                    pendingCheckOffItemId = null,
-                    checkingOffItemId = itemId
-                )
-
-                withContext(Dispatchers.IO) {
-                    shoppingRepository.update(item.copyWith(isChecked = true))
-                }
-                delay(300)
-                _uiState.value = _uiState.value.copy(checkingOffItemId = null)
-            }
-        } else {
-            val updated = item.copyWith(isChecked = false)
+        viewModelScope.launch {
+            delay(300)
             _uiState.value = _uiState.value.copy(
                 activeGroups = _uiState.value.activeGroups.map { group ->
                     group.copy(
                         level2Groups = group.level2Groups.map { l2 ->
                             l2.copy(
-                                level3Groups = l2.level3Groups.map { l3 ->
-                                    if (l3.items.any { it.id == itemId }) {
-                                        l3.copy(items = (l3.items + updated).sortedBy { it.productId })
-                                    } else {
-                                        l3
+                                level3Groups = l2.level3Groups
+                                    .map { l3 ->
+                                        l3.copy(items = l3.items.filter { it.id != itemId })
                                     }
-                                }.filter { it.items.isNotEmpty() }
+                                    .filter { it.items.isNotEmpty() }
                             )
                         }.filter { it.level3Groups.isNotEmpty() }
                     )
                 },
-                checkedItems = _uiState.value.checkedItems.filter { it.id != itemId }
+                pendingCheckOffItemId = null,
+                checkingOffItemId = itemId
             )
 
-            viewModelScope.launch {
-                withContext(Dispatchers.IO) {
-                    shoppingRepository.update(updated)
-                }
+            val completed = withContext(Dispatchers.IO) {
+                listItemRepository.complete(itemId)
             }
+            if (completed == null) {
+                // Riga non più completabile (già rimossa/eliminata): lo stato
+                // si riallinea alla prossima emissione di observeActive().
+                _uiState.value = _uiState.value.copy(
+                    error = "Voce non più disponibile",
+                )
+            }
+            delay(300)
+            _uiState.value = _uiState.value.copy(checkingOffItemId = null)
         }
     }
 
@@ -377,10 +339,17 @@ class ActiveListViewModel(
 
         viewModelScope.launch {
             try {
-                withContext(Dispatchers.IO) {
-                    shoppingRepository.delete(itemId)
+                val deleted = withContext(Dispatchers.IO) {
+                    listItemRepository.delete(itemId)
                 }
-                showUndoSnackbar("Voce eliminata")
+                if (deleted == null) {
+                    _deletedItemForUndo.value = null
+                    _uiState.value = _uiState.value.copy(
+                        error = "Voce non più eliminabile",
+                    )
+                } else {
+                    showUndoSnackbar("Voce eliminata")
+                }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(error = "Eliminazione fallita: ${e.message}")
             }
@@ -389,10 +358,14 @@ class ActiveListViewModel(
 
     private fun handleUndoDelete() {
         _deletedItemForUndo.value?.let { item ->
-            val restored = item.copyWith()
             viewModelScope.launch {
-                withContext(Dispatchers.IO) {
-                    shoppingRepository.insert(restored)
+                val restored = withContext(Dispatchers.IO) {
+                    listItemRepository.restore(item.id)
+                }
+                if (restored == null) {
+                    _uiState.value = _uiState.value.copy(
+                        error = "Ripristino non riuscito",
+                    )
                 }
             }
             _deletedItemForUndo.value = null
@@ -407,91 +380,6 @@ class ActiveListViewModel(
             delay(5000)
             if (_snackbarCounter.get() == currentCount && _snackbarMessage.value != null) {
                 _snackbarMessage.value = null
-            }
-        }
-    }
-
-    private fun showCheckoutSnackbar(message: String) {
-        val currentCount = _checkoutSnackbarCounter.incrementAndGet()
-        _uiState.value = _uiState.value.copy(checkoutSnackbarMessage = message)
-        viewModelScope.launch {
-            delay(5000)
-            if (_checkoutSnackbarCounter.get() == currentCount && _uiState.value.checkoutSnackbarMessage != null) {
-                _uiState.value = _uiState.value.copy(checkoutSnackbarMessage = null)
-            }
-        }
-    }
-
-    /**
-     * Conclude la spesa: sposta atomicamente le voci spuntate ("Presi") nello
-     * storico e le rimuove dalla lista attiva (spec 2-5).
-     *
-     * La transazione è in `ShoppingListRepository.checkout`: se fallisce le
-     * voci restano in "Presi" e viene mostrato un errore.
-     */
-    private fun handleCheckout() {
-        if (_isCheckingOut) return
-        _isCheckingOut = true
-
-        // Le voci da concludere sono quelle spuntate, non quelle attive:
-        // il pulsante vive nella sezione "Presi".
-        val items = _uiState.value.checkedItems
-
-        if (items.isEmpty()) {
-            _isCheckingOut = false
-            _uiState.value = _uiState.value.copy(checkedItemsForUndo = emptyList())
-            showCheckoutSnackbar("Nessuna voce in 'Presi' da concludere")
-            return
-        }
-
-        viewModelScope.launch {
-            try {
-                withContext(Dispatchers.IO) {
-                    shoppingRepository.checkout(items.map { it.id })
-                }
-                TogoLog.i("Checkout: ${items.size} voci spostate nello storico")
-                _uiState.value = _uiState.value.copy(checkedItemsForUndo = items)
-                showCheckoutSnackbar("Spesa conclusa (${items.size} voci)")
-            } catch (e: Exception) {
-                TogoLog.e("Checkout fallito", e)
-                _uiState.value = _uiState.value.copy(
-                    error = "Checkout fallito: ${e.message}",
-                    checkedItemsForUndo = emptyList(),
-                )
-            } finally {
-                _isCheckingOut = false
-            }
-        }
-    }
-
-    /**
-     * Annulla il checkout: le voci erano state rimosse dalla lista attiva dalla
-     * transazione, quindi vanno reinserite (non aggiornate) come non spuntate.
-     *
-     * Le righe di storico restano registrate (scelta di prodotto, spec 2-5).
-     */
-    private fun handleUndoCheckout() {
-        val items = _uiState.value.checkedItemsForUndo
-        if (items.isEmpty()) return
-
-        _uiState.value = _uiState.value.copy(
-            checkedItemsForUndo = emptyList(),
-            checkoutSnackbarMessage = null,
-        )
-
-        viewModelScope.launch {
-            try {
-                withContext(Dispatchers.IO) {
-                    items.forEach { item ->
-                        shoppingRepository.insert(item.copyWith(isChecked = false))
-                    }
-                }
-                TogoLog.i("Undo checkout: ${items.size} voci ripristinate in lista")
-            } catch (e: Exception) {
-                TogoLog.e("Undo checkout fallito", e)
-                _uiState.value = _uiState.value.copy(
-                    error = "Annulla checkout fallito: ${e.message}",
-                )
             }
         }
     }

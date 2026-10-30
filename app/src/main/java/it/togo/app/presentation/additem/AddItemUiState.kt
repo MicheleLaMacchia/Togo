@@ -4,7 +4,7 @@ import it.togo.app.domain.category.CategoryAssignment
 import it.togo.app.domain.category.CategoryCorrection
 import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.CatalogCategoryResult
-import it.togo.app.domain.model.ShoppingItem
+import it.togo.app.domain.model.ListItem
 import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.model.TaxonomyLevel
 import kotlinx.coroutines.flow.Flow
@@ -30,9 +30,9 @@ data class AddItemUiState(
 
     // Step 2: Prodotto selezionato + quantità/unità
     val selectedProduct: CanonicalProduct? = null,
-    /** Testo grezzo del campo quantità: vuoto finché l'utente non lo compila. */
-    val quantityText: String = "",
-    val selectedUnit: StandardUnit? = null,
+    /** Quantity starts at 1 and can be edited as raw text. */
+    val quantityText: String = "1",
+    val selectedUnit: StandardUnit? = StandardUnit.PIECE,
     val compatibleUnits: List<StandardUnit> = emptyList(),
 
     // Step 3: Attributi (marca e variante sempre presenti, modificabili)
@@ -254,7 +254,7 @@ sealed interface AddItemUiEvent {
     object DismissRememberCategory : AddItemUiEvent
 }
 
-/** Risultato conferma: ShoppingItem pronto per insert */
+/** Risultato conferma: ListItem pronto per il repository. */
 data class AddItemConfirmed(
-    val item: ShoppingItem
+    val item: ListItem
 )

@@ -6,7 +6,8 @@ import it.togo.app.domain.model.ItemAttributes
 import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.parser.ParsedCommand
 import it.togo.app.domain.repository.CatalogRepository
-import it.togo.app.domain.repository.ShoppingListRepository
+import it.togo.app.domain.repository.ListItemRepository
+import it.togo.app.presentation.FixedClock
 import it.togo.app.domain.usecase.CreateCanonicalProductUseCase
 import it.togo.app.domain.usecase.CreateUserLevel3UseCase
 import kotlinx.coroutines.Dispatchers
@@ -79,7 +80,7 @@ class AddItemViewModelVoicePrefillTest {
         search: (String) -> List<CanonicalProduct>,
     ): AddItemViewModel {
         val catalogRepository = mockk<CatalogRepository>()
-        val shoppingRepository = mockk<ShoppingListRepository>()
+        val shoppingRepository = mockk<ListItemRepository>()
         every { catalogRepository.search(any()) } answers {
             flowOf(search(firstArg<String>()))
         }
@@ -89,6 +90,7 @@ class AddItemViewModelVoicePrefillTest {
         return AddItemViewModel(
             catalogRepository = catalogRepository,
             shoppingRepository = shoppingRepository,
+            clock = FixedClock(),
             createProductUseCase = CreateCanonicalProductUseCase(catalogRepository),
             createLevel3UseCase = CreateUserLevel3UseCase(catalogRepository),
             ioDispatcher = testDispatcher,
@@ -126,7 +128,7 @@ class AddItemViewModelVoicePrefillTest {
         }
 
     @Test
-    fun `comando vocale senza quantita lascia i campi vuoti`() =
+    fun `comando vocale senza quantita usa valori predefiniti`() =
         runTest(testDispatcher) {
             val command = ParsedCommand(
                 productName = "pane",
@@ -146,8 +148,8 @@ class AddItemViewModelVoicePrefillTest {
 
             val state = viewModel.uiState.value
             assertEquals(pane, state.selectedProduct)
-            assertEquals("", state.quantityText)
-            assertNull(state.selectedUnit)
+            assertEquals("1", state.quantityText)
+            assertEquals(StandardUnit.PIECE, state.selectedUnit)
             assertEquals(2, state.currentStep)
         }
 

@@ -42,7 +42,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -53,7 +52,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
-import it.togo.app.domain.model.ShoppingItem
+import it.togo.app.domain.model.ListItem
 import it.togo.app.domain.model.StandardUnit
 import it.togo.app.ui.theme.componentTokens
 import it.togo.app.ui.theme.togoColors
@@ -68,9 +67,10 @@ import it.togo.app.ui.theme.togoTypography
  * 2. Nome prodotto + meta opzionale (brand/variante)
  * 3. Quantità allineata a destra, senza badge
  *
- * Stati:
- * - Attivo: bordo crisp, testo inkPrimary
- * - Checked: testo barrato inkPrimary, bordo/checkbox verde
+ * Dalla Story 8.7 la lista mostra solo righe `TO_BUY`: la checkbox è sempre
+ * non selezionata e al tocco chiama `onCheckChange(true)`. Dopo la
+ * transizione a `PURCHASED` la riga sparisce perché `observeActive()` non la
+ * emette più: qui non esiste più lo stato "Presi".
  *
  * Dynamic Type:
  * - Il nome prodotto non viene mai troncato (niente maxLines/ellissi): la riga
@@ -78,14 +78,12 @@ import it.togo.app.ui.theme.togoTypography
  *   sovrapposta. `minHeight` garantisce il target da 48dp anche a font piccolo.
  *
  * Accessibilità:
- * - Attivo: la riga è cliccabile → modifica; la checkbox → spunta.
- * - In "Presi" (rowActionDescription == null): la riga non è cliccabile, i
- *   dettagli restano annunciati e la checkbox deseleziona.
+ * - La riga è cliccabile → modifica; la checkbox → spunta.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ItemRow(
-    item: ShoppingItem,
+    item: ListItem,
     productName: String = "Prodotto #${item.productId}",
     categoryLabel: String? = null,
     rowActionDescription: String? = "Doppio tocco per modificare.",
@@ -139,38 +137,26 @@ fun ItemRow(
         }
     }
 
-    val isChecked = item.isChecked
-    // Il testo barrato resta inkPrimary: inkMuted/inkSecondary non raggiungono
-    // il rapporto 7:1 richiesto su entrambi i temi.
     val textColor = colors.inkPrimary
-    val borderColor = if (isChecked) colors.accentSuccess else colors.borderCrisp
-    val checkboxBorderColor = if (isChecked) colors.accentSuccess else colors.borderCrisp
-    val checkboxBgColor = if (isChecked) colors.accentAction else Color.Transparent
+    val borderColor = colors.borderCrisp
+    val checkboxBorderColor = colors.borderCrisp
+    val checkboxBgColor = Color.Transparent
 
     // --- Semantica accessibile (TalkBack) ---
     // La riga annuncia dati + stato; la checkbox annuncia l'azione di spunta.
     // Le due azioni restano separate: tap sulla riga = modifica, tap sulla
-    // checkbox = spunta/deseleziona.
+    // checkbox = spunta.
     // La spunta è comunicata dalla semantica toggleable (Role.Checkbox), non
     // ripetuta nella descrizione.
-    val quantityText = if (item.hasQuantity) {
-        quantityLabel(item.quantity, item.unit)
-    } else {
-        null
-    }
+    val quantityText = quantityLabel(item.quantity, item.unit)
     val categoryText = categoryLabel?.takeIf { it.isNotBlank() } ?: "Categoria non assegnata"
-    val stateText = if (isChecked) "selezionato" else "non selezionato"
     val rowDescription = buildString {
         append(productName)
-        quantityText?.let { append(", $it") }
-        append(", $categoryText, $stateText.")
+        append(", $quantityText")
+        append(", $categoryText, non selezionato.")
         rowActionDescription?.let { append(" $it") }
     }
-    val checkboxDescription = if (isChecked) {
-        "Deseleziona $productName."
-    } else {
-        "Spunta $productName."
-    }
+    val checkboxDescription = "Spunta $productName."
 
     Box(
         modifier = Modifier
@@ -205,12 +191,8 @@ fun ItemRow(
             .fillMaxWidth()
             .offset { IntOffset(horizontalDrag.roundToInt(), 0) }
 
-        // Le righe "Presi" (rowActionDescription == null) non hanno azione di
-        // tap né di swipe: niente combinedClickable e niente gesture di
-        // eliminazione, così TalkBack non espone azioni vuote. I dettagli
-        // accessibili restano (mergeDescendants) e la checkbox continua a
-        // funzionare. Le righe attive restano cliccabili → modifica e
-        // trascinabili → rivelano il bottone elimina (poi tap per confermare).
+        // Le righe attive restano cliccabili → modifica e trascinabili →
+        // rivelano il bottone elimina (poi tap per confermare).
         val swipeModifier = if (rowActionDescription != null) {
             baseModifier.pointerInput(item.id, onDelete) {
                 detectHorizontalDragGestures(
@@ -289,7 +271,6 @@ fun ItemRow(
                         text = productName,
                         style = typography.itemName,
                         color = textColor,
-                        textDecoration = if (isChecked) TextDecoration.LineThrough else TextDecoration.None,
                     )
 
                     // Meta opzionale: brand + variante + condition
@@ -310,15 +291,12 @@ fun ItemRow(
                 }
 
                 // Destra: quantità senza badge, allineata al bordo della riga.
-                // Le voci senza quantità non mostrano né numero né unità.
-                if (item.hasQuantity) {
-                    QuantityText(
-                        quantity = item.quantity,
-                        unit = item.unit.displayName,
-                        typography = typography,
-                        color = colors.inkPrimary,
-                    )
-                }
+                QuantityText(
+                    quantity = item.quantity,
+                    unit = unitDisplayName(item.unit),
+                    typography = typography,
+                    color = colors.inkPrimary,
+                )
             }
 
             // Checkbox sibling: non è discendente della Row cliccabile, quindi
@@ -327,7 +305,7 @@ fun ItemRow(
                 modifier = Modifier
                     .align(Alignment.CenterStart)
                     .padding(start = tokens.itemRow.paddingHorizontal),
-                checked = isChecked,
+                checked = false,
                 contentDescription = checkboxDescription,
                 onCheckedChange = { newChecked ->
                     performShortHapticFeedback(context)
@@ -357,9 +335,9 @@ internal fun performShortHapticFeedback(context: Context) {
  * Il riquadro visivo è più piccolo (`visualSize` del token) ma l'area
  * interattiva resta 48dp. È un controllo accessibile vero e proprio:
  * [Modifier.toggleable] espone ruolo `Checkbox`, stato di spunta e azione di
- * toggle; la descrizione contiene nome prodotto e azione
- * ("Spunta"/"Deseleziona"). L'icona interna è decorativa
- * (`contentDescription = null`) per evitare annunci duplicati.
+ * toggle; la descrizione contiene nome prodotto e azione ("Spunta"). L'icona
+ * interna è decorativa (`contentDescription = null`) per evitare annunci
+ * duplicati.
  */
 @Composable
 private fun CheckboxUtility(
@@ -408,13 +386,27 @@ private fun CheckboxUtility(
 }
 
 /**
+ * Nome visualizzato dell'unità (testo libero nel dominio): il `displayName`
+ * della [StandardUnit] se riconosciuta, altrimenti il testo originale.
+ */
+internal fun unitDisplayName(unit: String): String =
+    StandardUnit.fromCode(unit.trim())?.displayName ?: unit.trim()
+
+/**
  * Etichetta parlata di quantità + unità.
  *
+ * Se l'unità corrisponde a una [StandardUnit] usa il nome italiano completo
+ * al singolare/plurale; altrimenti riporta il testo libero così com'è.
  * Numeri in formato italiano (separatore decimale virgola, nessuna notazione
- * scientifica) e nomi unità completi al singolare/plurale.
+ * scientifica).
  */
-internal fun quantityLabel(quantity: Double, unit: StandardUnit): String {
-    return "${formatQuantity(quantity)} ${unit.italianName(quantity)}"
+internal fun quantityLabel(quantity: Double, unit: String): String {
+    val standard = StandardUnit.fromCode(unit.trim())
+    return if (standard != null) {
+        "${formatQuantity(quantity)} ${standard.italianName(quantity)}"
+    } else {
+        "${formatQuantity(quantity)} ${unit.trim()}"
+    }
 }
 
 /** Formatta una quantità in modo stabile e leggibile (es. "1500,5", "2"). */

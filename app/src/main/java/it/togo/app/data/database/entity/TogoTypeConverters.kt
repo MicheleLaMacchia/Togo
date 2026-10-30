@@ -7,11 +7,11 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 /**
- * Converter delle nuove entità Task.
+ * Converter delle entità Task.
  *
- * Non sostituisce [TypeConverters]: quella classe resta disponibile per le
- * entità legacy. `ListItemEntity.status` continua a usare una stringa, quindi
- * non richiede un converter dedicato.
+ * Dalla Story 8.7 è l'unica classe di converter registrata: la vecchia
+ * `TypeConverters` serviva solo alle entità legacy ed è stata rimossa.
+ * `ListItemEntity.status` resta una stringa e non richiede un converter.
  */
 class TogoTypeConverters {
 

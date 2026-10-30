@@ -56,7 +56,7 @@ import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import it.togo.app.core.TogoLog
-import it.togo.app.domain.model.ShoppingItem
+import it.togo.app.domain.model.ListItem
 import it.togo.app.domain.parser.ParsedCommand
 import it.togo.app.presentation.additem.AddItemBottomSheet
 import it.togo.app.presentation.voice.VoiceBottomSheet
@@ -84,23 +84,6 @@ fun ActiveListScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    // Un solo punto di visualizzazione per il checkout: la snackbar passa
-    // dall'host Material invece di essere composta nel contenuto. Evita due
-    // testi sovrapposti nella stessa posizione (vedi segnalazione 22/10).
-    LaunchedEffect(uiState.checkoutSnackbarMessage) {
-        val message = uiState.checkoutSnackbarMessage ?: return@LaunchedEffect
-        val result = snackbarHostState.showSnackbar(
-            message = message,
-            actionLabel = if (uiState.checkedItemsForUndo.isNotEmpty()) "Annulla" else null,
-            // Il timer dei 5 s resta nel ViewModel; quando azzera il messaggio
-            // questo effetto viene cancellato e la snackbar si chiude.
-            duration = SnackbarDuration.Indefinite,
-        )
-        if (result == SnackbarResult.ActionPerformed) {
-            onEvent(UiEvent.UndoCheckout)
-        }
-    }
-
     val colors = togoColors()
     val typography = togoTypography()
     val spacing = togoSpacing()
@@ -112,7 +95,7 @@ fun ActiveListScreen(
 
     val context = LocalContext.current
     var showAddItemSheet by remember { mutableStateOf(false) }
-    var editingItem by remember { mutableStateOf<ShoppingItem?>(null) }
+    var editingItem by remember { mutableStateOf<ListItem?>(null) }
     // Comando vocale da precompilare nella sheet di aggiunta. Null per
     // l'aggiunta manuale o la modifica di una voce esistente.
     var voicePrefill by remember { mutableStateOf<ParsedCommand?>(null) }
@@ -388,7 +371,7 @@ fun ActiveListScreen(
                             color = colors.warningInk,
                             modifier = Modifier.padding(spacing.space4)
                         )
-                    } else if (uiState.activeGroups.isEmpty() && !uiState.hasCheckedItems) {
+                    } else if (uiState.activeGroups.isEmpty()) {
                         EmptyState(
                             onAddManual = {
                                 voicePrefill = null
@@ -421,22 +404,6 @@ fun ActiveListScreen(
                                     tokens = tokens,
                                 )
                                 androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(spacing.space3))
-                            }
-
-                            if (uiState.hasCheckedItems) {
-                                item {
-                                    PresiSection(
-                                        items = uiState.checkedItems,
-                                        productNames = uiState.productNames,
-                                        categoryLabels = uiState.categoryLabels,
-                                        onUncheck = { itemId -> onEvent(UiEvent.CheckOff(itemId, false)) },
-                                        onCheckout = { onEvent(UiEvent.Checkout) },
-                                        colors = colors,
-                                        typography = typography,
-                                        spacing = spacing,
-                                        tokens = tokens,
-                                    )
-                                }
                             }
                         }
                     }

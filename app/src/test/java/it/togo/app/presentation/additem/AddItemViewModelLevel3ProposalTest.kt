@@ -5,7 +5,8 @@ import it.togo.app.domain.model.CanonicalProduct
 import kotlinx.coroutines.CompletableDeferred
 import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.repository.CatalogRepository
-import it.togo.app.domain.repository.ShoppingListRepository
+import it.togo.app.domain.repository.ListItemRepository
+import it.togo.app.presentation.FixedClock
 import it.togo.app.domain.usecase.CreateCanonicalProductUseCase
 import it.togo.app.domain.usecase.CreateUserLevel3UseCase
 import kotlinx.coroutines.Dispatchers
@@ -143,7 +144,8 @@ class AddItemViewModelLevel3ProposalTest {
     private fun TestScope.createViewModel(repository: FakeCatalogRepository): AddItemViewModel {
         val viewModel = AddItemViewModel(
             catalogRepository = repository,
-            shoppingRepository = mockk<ShoppingListRepository>(relaxed = true),
+            shoppingRepository = mockk<ListItemRepository>(relaxed = true),
+            clock = FixedClock(),
             createProductUseCase = CreateCanonicalProductUseCase(repository),
             createLevel3UseCase = CreateUserLevel3UseCase(repository),
             ioDispatcher = testDispatcher,

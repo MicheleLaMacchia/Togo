@@ -7,15 +7,17 @@ import it.togo.app.domain.category.AssignmentSource
 import it.togo.app.domain.category.CategoryAssignment
 import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.CatalogCategoryResult
-import it.togo.app.domain.model.ShoppingItem
+import it.togo.app.domain.model.ListItem
+import it.togo.app.domain.model.ListItemStatus
 import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.model.UserAttributeType
 import it.togo.app.domain.parser.ParsedCommand
 import it.togo.app.domain.product.ProductUnitResolver
 import it.togo.app.domain.repository.CatalogRepository
-import it.togo.app.domain.repository.ShoppingListRepository
+import it.togo.app.domain.repository.ListItemRepository
 import it.togo.app.domain.repository.UserAttributeRepository
+import it.togo.app.domain.time.Clock
 import it.togo.app.domain.usecase.CorrectCategoryUseCase
 import it.togo.app.domain.usecase.CreateCanonicalProductUseCase
 import it.togo.app.domain.usecase.CreateLevel3Result
@@ -46,7 +48,6 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Locale
-import java.util.UUID
 
 /**
  * ViewModel per il Bottom Sheet "Aggiungi/Modifica Voce Manuale".
@@ -58,14 +59,15 @@ import java.util.UUID
  * Gestisce:
  * - Ricerca prodotti con debounce 300ms
  * - Validazione step-by-step
- * - Mapping a ShoppingItem su conferma (insert o update)
+ * - Mapping a ListItem su conferma (insert o update)
  */
 class AddItemViewModel(
     private val catalogRepository: CatalogRepository,
-    private val shoppingRepository: ShoppingListRepository,
+    private val shoppingRepository: ListItemRepository,
+    private val clock: Clock,
     private val createProductUseCase: CreateCanonicalProductUseCase,
     private val createLevel3UseCase: CreateUserLevel3UseCase,
-    private val editItem: ShoppingItem? = null,
+    private val editItem: ListItem? = null,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val correctCategoryUseCase: CorrectCategoryUseCase? = null,
     private val userAttributeRepository: UserAttributeRepository? = null,
@@ -176,7 +178,7 @@ class AddItemViewModel(
         viewModelScope.launch {
             try {
                 val suggestions = userAttributeRepository?.observeSuggestions()
-                    ?: shoppingRepository.getAttributeSuggestions()
+                    ?: shoppingRepository.observeAttributeSuggestions()
                 suggestions.collect { values ->
                     _uiState.update {
                         it.copy(
@@ -254,10 +256,10 @@ class AddItemViewModel(
                     val product = catalogRepository.getById(item.productId)
                         ?: throw IllegalStateException("Prodotto non più disponibile nel catalogo")
                     
-                    val hasQuantity = item.quantity > 0.0
+                    val parsedUnit = StandardUnit.fromCode(item.unit)
                     val compatible = compatibleUnitsFor(product)
                         .toMutableList()
-                        .apply { if (hasQuantity && item.unit !in this) add(item.unit) }
+                        .apply { if (parsedUnit != null && parsedUnit !in this) add(parsedUnit) }
 
                     _uiState.update {
                         it.copy(
@@ -265,10 +267,9 @@ class AddItemViewModel(
                             searchResults = emptyList(),
                             searchQuery = product.name,
                             compatibleUnits = compatible,
-                            // Una voce salvata senza quantità torna con i campi
-                            // vuoti, così l'utente può decidere di nuovo.
-                            selectedUnit = if (hasQuantity) item.unit else null,
-                            quantityText = if (hasQuantity) formatQuantityText(item.quantity) else "",
+                            // ListItem stores a positive quantity and a unit.
+                            selectedUnit = parsedUnit,
+                            quantityText = formatQuantityText(item.quantity),
                             brand = item.brand ?: "",
                             variant = item.variant ?: "",
                             condition = item.condition ?: "",
@@ -506,17 +507,16 @@ class AddItemViewModel(
 
         // L'ordine è significativo: il resolver mette per primo il default
         // merceologico (kg per pasta/carne, L per bevande, pz per le uova).
-        val defaultUnit = compatible.first()
+        val availableUnits = (listOf(StandardUnit.PIECE) + compatible).distinct()
 
         // Precompilazione vocale: si applica una sola volta, alla prima
         // selezione del prodotto (match univoco o tap dell'utente).
         val voice = pendingVoicePrefill
         pendingVoicePrefill = null
-        val quantityText = voice?.quantityText.orEmpty()
-        // La selezione manuale parte senza unità. Se invece la voce ha già
-        // indicato una quantità ma non l'unità, usiamo il default merceologico.
-        val selectedUnit = voice?.unit?.takeIf { it in compatible }
-            ?: defaultUnit.takeIf { quantityText.isNotBlank() }
+        val quantityText = voice?.quantityText?.takeIf { it.isNotBlank() } ?: "1"
+        // PIECE is always available as the default; compatible units are alternatives.
+        val selectedUnit = voice?.unit?.takeIf { it in availableUnits }
+            ?: StandardUnit.PIECE
         val voiceVariant = voice?.variant?.trim().orEmpty()
         val variant = voiceVariant
             .takeIf { it.isNotBlank() }
@@ -530,7 +530,7 @@ class AddItemViewModel(
                 categoryResults = emptyList(),
                 activeCategory = null,
                 searchQuery = product.name,
-                compatibleUnits = compatible,
+                compatibleUnits = availableUnits,
                 selectedUnit = selectedUnit,
                 quantityText = quantityText,
                 // Gli attributi appartengono alla voce: non trascinarli da un
@@ -1281,13 +1281,13 @@ class AddItemViewModel(
         }
 
         val product = state.selectedProduct ?: return
-        // La quantità è opzionale: 0.0 è il valore sentinella che la UI
-        // interpreta come "non specificata". L'unità resta valorizzata per
-        // rispettare il modello dati, ma non viene mostrata in lista.
-        val quantity = if (state.hasQuantity) state.quantity else 0.0
-        val unit = state.selectedUnit
-            ?: state.compatibleUnits.firstOrNull()
-            ?: StandardUnit.PIECE
+        // ListItem requires a positive quantity; a cleared field falls back to the form default.
+        val quantity = state.quantity.takeIf { it.isFinite() && it > 0.0 } ?: 1.0
+        val unit = if (isEditMode && state.selectedUnit == null) {
+            editItem!!.unit
+        } else {
+            (state.selectedUnit ?: StandardUnit.PIECE).name
+        }
 
         // Marca e variante si salvano sempre in forma "capitalized": "barilla"
         // e "BARILLA" diventano "Barilla", così non nascono duplicati.
@@ -1303,33 +1303,38 @@ class AddItemViewModel(
                 brand = brand,
                 variant = variant,
                 condition = state.condition.ifBlank { null },
-                isChecked = editItem!!.isChecked, // mantiene stato check
-                updatedAt = System.currentTimeMillis(),
             )
         } else {
             // Modalità INSERT: nuova voce
-            ShoppingItem(
-                id = UUID.randomUUID().toString(),
+            ListItem.create(
                 productId = product.id,
                 quantity = quantity,
                 unit = unit,
+                createdAt = clock.nowMillis(),
                 brand = brand,
                 variant = variant,
                 condition = state.condition.ifBlank { null },
-                isChecked = false,
-                createdAt = System.currentTimeMillis(),
-                updatedAt = System.currentTimeMillis(),
+                status = ListItemStatus.TO_BUY,
             )
         }
 
         // Inserisci/aggiorna in repository, poi notifica la sheet.
         viewModelScope.launch {
-            withContext(ioDispatcher) {
+            val saved = withContext(ioDispatcher) {
                 if (isEditMode) {
-                    shoppingRepository.update(item)
+                    shoppingRepository.updateDetails(item) != null
                 } else {
-                    shoppingRepository.insert(item)
+                    shoppingRepository.add(item)
+                    true
                 }
+            }
+            if (!saved) {
+                _uiState.update {
+                    it.copy(errors = it.errors + ("save" to "La voce non e piu modificabile"))
+                }
+                return@launch
+            }
+            withContext(ioDispatcher) {
                 // Registra i valori digitati dall'utente: restano disponibili
                 // come suggerimenti e compaiono nelle Impostazioni. I valori
                 // predefiniti e i duplicati vengono ignorati dal repository.
@@ -1400,13 +1405,15 @@ class AddItemViewModel(
     companion object {
         fun forInsert(
             catalogRepository: CatalogRepository,
-            shoppingRepository: ShoppingListRepository,
+            shoppingRepository: ListItemRepository,
+            clock: Clock,
             createProductUseCase: CreateCanonicalProductUseCase,
             createLevel3UseCase: CreateUserLevel3UseCase,
             correctCategoryUseCase: CorrectCategoryUseCase? = null,
         ): AddItemViewModel = AddItemViewModel(
             catalogRepository = catalogRepository,
             shoppingRepository = shoppingRepository,
+            clock = clock,
             createProductUseCase = createProductUseCase,
             createLevel3UseCase = createLevel3UseCase,
             correctCategoryUseCase = correctCategoryUseCase,
@@ -1415,14 +1422,16 @@ class AddItemViewModel(
         /** Factory per modalità EDIT */
         fun forEdit(
             catalogRepository: CatalogRepository,
-            shoppingRepository: ShoppingListRepository,
+            shoppingRepository: ListItemRepository,
+            clock: Clock,
             createProductUseCase: CreateCanonicalProductUseCase,
             createLevel3UseCase: CreateUserLevel3UseCase,
-            item: ShoppingItem,
+            item: ListItem,
             correctCategoryUseCase: CorrectCategoryUseCase? = null,
         ): AddItemViewModel = AddItemViewModel(
             catalogRepository = catalogRepository,
             shoppingRepository = shoppingRepository,
+            clock = clock,
             createProductUseCase = createProductUseCase,
             createLevel3UseCase = createLevel3UseCase,
             correctCategoryUseCase = correctCategoryUseCase,

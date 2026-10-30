@@ -12,7 +12,7 @@ import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.unit.dp
-import it.togo.app.domain.model.ShoppingItem
+import it.togo.app.domain.model.ListItem
 import it.togo.app.domain.model.StandardUnit
 import it.togo.app.ui.theme.TogoTheme
 import it.togo.app.ui.theme.componentTokens
@@ -29,10 +29,7 @@ import org.robolectric.RobolectricTestRunner
 /**
  * Audit dei touch target (Story 6.2).
  *
- * Verifica che i controlli custom della lista attiva — intestazione "Presi",
- * checkbox di riga, pulsante checkout, pulsanti dello stato vuoto — abbiano
- * area di tocco ≥48×48dp. I controlli Material (TopAppBar IconButton,
- * FloatingActionButton) garantiscono già 48dp per default del design system.
+ * Verifica checkbox e pulsanti dello stato vuoto su touch target da almeno 48dp.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
@@ -41,42 +38,27 @@ class TouchTargetAuditTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private val checkedItem = ShoppingItem(
+    private val activeItem = listItem(
         id = "item-1",
         productId = 1L,
         quantity = 2.0,
         unit = StandardUnit.PIECE,
-        isChecked = true,
+        isChecked = false,
     )
 
-    private fun setPresiAndRow() {
+    private fun setActiveRow() {
         composeTestRule.setContent {
             TogoTheme(darkTheme = false) {
-                val colors = togoColors()
-                val typography = togoTypography()
-                val spacing = togoSpacing()
-                val tokens = componentTokens()
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(spacing.space2),
-                ) {
-                    PresiSection(
-                        items = listOf(checkedItem),
-                        productNames = mapOf(1L to "Mozzarella"),
-                        onUncheck = {},
-                        onCheckout = {},
-                        colors = colors,
-                        typography = typography,
-                        spacing = spacing,
-                        tokens = tokens,
-                    )
-                }
+                ItemRow(
+                    item = activeItem,
+                    productName = "Mozzarella",
+                    onCheckChange = {},
+                    onClick = {},
+                    onDelete = {},
+                )
             }
         }
     }
-
     private fun setEmptyState() {
         composeTestRule.setContent {
             TogoTheme(darkTheme = false) {
@@ -97,36 +79,14 @@ class TouchTargetAuditTest {
     }
 
     @Test
-    fun `presi header toggle is at least 48dp`() {
-        setPresiAndRow()
-
-        // L'intestazione collassabile è il nodo con la descrizione "Presi, ...".
-        val header = composeTestRule.onNode(hasContentDescription("Presi, 1 voce. Doppio tocco per collassare."))
-        assertTarget(header)
+    fun `active row completion control is at least 48dp`() {
+        setActiveRow()
+        assertTarget(composeTestRule.onNode(hasContentDescription("Spunta Mozzarella.")))
     }
-
-    @Test
-    fun `presi row checkbox is at least 48dp`() {
-        setPresiAndRow()
-
-        val checkbox = composeTestRule.onNode(hasContentDescription("Deseleziona Mozzarella."))
-        assertTarget(checkbox)
-    }
-
-    @Test
-    fun `presi checkout button is at least 48dp`() {
-        setPresiAndRow()
-
-        val checkout = composeTestRule.onNode(hasTestTag("checkout_button"))
-        assertTarget(checkout)
-    }
-
     @Test
     fun `empty state add button is at least 48dp`() {
         setEmptyState()
-
-        val add = composeTestRule.onNode(hasTestTag("add_manual_button"))
-        assertTarget(add)
+        assertTarget(composeTestRule.onNode(hasTestTag("add_manual_button")))
     }
 
     @Test

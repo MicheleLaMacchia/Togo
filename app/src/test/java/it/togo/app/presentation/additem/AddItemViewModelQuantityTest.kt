@@ -5,7 +5,8 @@ import io.mockk.mockk
 import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.repository.CatalogRepository
-import it.togo.app.domain.repository.ShoppingListRepository
+import it.togo.app.domain.repository.ListItemRepository
+import it.togo.app.presentation.FixedClock
 import it.togo.app.domain.usecase.CreateCanonicalProductUseCase
 import it.togo.app.domain.usecase.CreateUserLevel3UseCase
 import kotlinx.coroutines.Dispatchers
@@ -42,11 +43,12 @@ class AddItemViewModelQuantityTest {
 
     private fun createViewModel(): AddItemViewModel {
         val catalogRepository = mockk<CatalogRepository>()
-        val shoppingRepository = mockk<ShoppingListRepository>()
+        val shoppingRepository = mockk<ListItemRepository>()
         every { catalogRepository.search(any()) } returns flowOf(emptyList())
         return AddItemViewModel(
             catalogRepository = catalogRepository,
             shoppingRepository = shoppingRepository,
+            clock = FixedClock(),
             createProductUseCase = CreateCanonicalProductUseCase(catalogRepository),
             createLevel3UseCase = CreateUserLevel3UseCase(catalogRepository),
             ioDispatcher = testDispatcher,
@@ -61,7 +63,7 @@ class AddItemViewModelQuantityTest {
     )
 
     @Test
-    fun `quantità e unità partono vuote e non bloccano Avanti`() = runTest(testDispatcher) {
+    fun `quantita e unita predefinite sono inizializzate`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.uiState.collect {}
@@ -70,9 +72,9 @@ class AddItemViewModelQuantityTest {
 
         viewModel.onEvent(AddItemUiEvent.ProductSelected(product))
         advanceUntilIdle()
-        assertEquals("", viewModel.uiState.value.quantityText)
-        assertEquals(null, viewModel.uiState.value.selectedUnit)
-        assertEquals(0.0, viewModel.uiState.value.quantity, 0.0)
+        assertEquals("1", viewModel.uiState.value.quantityText)
+        assertEquals(StandardUnit.PIECE, viewModel.uiState.value.selectedUnit)
+        assertEquals(1.0, viewModel.uiState.value.quantity, 0.0)
         assertTrue(viewModel.uiState.value.isValidForConfirm)
 
         // Quantità e unità sono opzionali: "Avanti" porta allo step 3.
@@ -117,7 +119,7 @@ class AddItemViewModelQuantityTest {
         // Digitando una quantità viene proposta l'unità predefinita.
         viewModel.onEvent(AddItemUiEvent.QuantityChanged("1"))
         advanceUntilIdle()
-        assertEquals(StandardUnit.LITER, viewModel.uiState.value.selectedUnit)
+        assertEquals(StandardUnit.PIECE, viewModel.uiState.value.selectedUnit)
 
         viewModel.onEvent(AddItemUiEvent.ClearQuantityAndUnit)
         advanceUntilIdle()

@@ -109,6 +109,10 @@ val prepareRobolectricDependencies = tasks.register<Copy>("prepareRobolectricDep
 
 tasks.withType<Test>().configureEach {
     dependsOn(prepareRobolectricDependencies)
+    // Byte Buddy's external attach is blocked by the Linux container's process
+    // boundary. Start HotSpot's attach listener with the test JVM so MockK can
+    // install its instrumentation reliably.
+    jvmArgs("-XX:+StartAttachListener")
     systemProperty(
         "robolectric.dependency.dir",
         layout.buildDirectory.dir("robolectric-dependencies").get().asFile.absolutePath,

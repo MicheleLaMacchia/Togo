@@ -2,9 +2,11 @@ package it.togo.app.presentation.additem
 
 import io.mockk.mockk
 import it.togo.app.domain.model.CanonicalProduct
+import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.repository.CatalogRepository
-import it.togo.app.domain.repository.ShoppingListRepository
+import it.togo.app.domain.repository.ListItemRepository
+import it.togo.app.presentation.FixedClock
 import it.togo.app.domain.usecase.CreateCanonicalProductUseCase
 import it.togo.app.domain.usecase.CreateUserLevel3UseCase
 import kotlinx.coroutines.Dispatchers
@@ -100,7 +102,8 @@ class AddItemViewModelNewProductTest {
     ): AddItemViewModel {
         val viewModel = AddItemViewModel(
             catalogRepository = repository,
-            shoppingRepository = mockk<ShoppingListRepository>(relaxed = true),
+            shoppingRepository = mockk<ListItemRepository>(relaxed = true),
+            clock = FixedClock(),
             createProductUseCase = CreateCanonicalProductUseCase(repository),
             createLevel3UseCase = CreateUserLevel3UseCase(repository),
             ioDispatcher = testDispatcher,
@@ -233,12 +236,12 @@ class AddItemViewModelNewProductTest {
         assertEquals(2, repository.products.value.size)
         assertNotNull(state.selectedProduct)
         assertTrue(state.selectedProduct!!.isUserDefined)
-        assertEquals("", state.quantityText)
-        assertNull(state.selectedUnit)
+        assertEquals("1", state.quantityText)
+        assertEquals(StandardUnit.PIECE, state.selectedUnit)
     }
 
     @Test
-    fun `creazione normale passa allo step 2 con quantità e unità vuote`() =
+    fun `creazione normale passa allo step 2 con valori predefiniti`() =
         runTest(testDispatcher) {
             val repository = FakeCatalogRepository(taxonomy = listOf(level1, level2, level3))
             val viewModel = createViewModel(repository)
@@ -252,8 +255,8 @@ class AddItemViewModelNewProductTest {
             val state = viewModel.uiState.value
             assertFalse(state.isNewProductFormVisible)
             assertEquals(2, state.currentStep)
-            assertEquals("", state.quantityText)
-            assertNull(state.selectedUnit)
+            assertEquals("1", state.quantityText)
+            assertEquals(StandardUnit.PIECE, state.selectedUnit)
             assertNotNull(state.selectedProduct)
             assertTrue(state.selectedProduct!!.isUserDefined)
             assertEquals("Latte di avena", state.selectedProduct!!.name)

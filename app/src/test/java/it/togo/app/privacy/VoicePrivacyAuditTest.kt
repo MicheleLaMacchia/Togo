@@ -134,11 +134,8 @@ class VoicePrivacyAuditTest {
     @Test
     fun `voice code does not pass recognized text to repositories`() {
         val forbiddenRepositories = listOf(
-            "ShoppingListRepository",
-            "HistoryRepository",
+            "ListItemRepository",
             "CatalogRepository",
-            "ShoppingItemDao",
-            "HistoryDao",
         )
         val violations = voiceSourceFiles().flatMap { file ->
             val text = file.readText()

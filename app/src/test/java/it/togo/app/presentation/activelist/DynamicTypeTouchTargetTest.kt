@@ -16,7 +16,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
-import it.togo.app.domain.model.ShoppingItem
+import it.togo.app.domain.model.ListItem
 import it.togo.app.domain.model.StandardUnit
 import it.togo.app.ui.theme.TogoTheme
 import org.junit.Assert.assertTrue
@@ -47,7 +47,7 @@ class DynamicTypeTouchTargetTest {
 
     private val longName = "Latte parzialmente scremato"
 
-    private fun longNameItem(checked: Boolean = false) = ShoppingItem(
+    private fun longNameItem(checked: Boolean = false) = listItem(
         id = "item-1",
         productId = 1L,
         quantity = 2.0,
@@ -67,7 +67,7 @@ class DynamicTypeTouchTargetTest {
     private fun setRow(
         fontScale: Float = 2.0f,
         productName: String = longName,
-        item: ShoppingItem = longNameItem(),
+        item: ListItem = longNameItem(),
     ) {
         composeTestRule.setContent {
             val baseDensity = LocalDensity.current
@@ -182,15 +182,15 @@ class DynamicTypeTouchTargetTest {
     }
 
     @Test
-    fun `checked row at max font keeps name untruncated and checkbox target`() {
-        setRow(item = longNameItem(checked = true))
+    fun `active row at max font keeps name untruncated and checkbox target`() {
+        setRow()
 
         composeTestRule
             .onNodeWithText(longName)
             .assertIsDisplayed()
 
         composeTestRule
-            .onNodeWithContentDescription("Deseleziona $longName.")
+            .onNodeWithContentDescription("Spunta $longName.")
             .assertHeightIsAtLeast(48.dp)
             .assertWidthIsAtLeast(48.dp)
     }
