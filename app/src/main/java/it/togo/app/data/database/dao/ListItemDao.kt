@@ -65,7 +65,7 @@ interface ListItemDao {
     @Query("DELETE FROM LIST_ITEM WHERE status = 'DELETED'")
     suspend fun deleteDeleted(): Int
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(entity: ListItemEntity)
 
     @Update

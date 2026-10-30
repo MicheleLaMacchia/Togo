@@ -101,6 +101,141 @@ class RoomListItemRepositoryTest {
     }
 
     @Test
+    fun `add canonicalizza gli alias noti senza riscrivere l'unita originale`() = runBlocking {
+        val aliases = listOf(
+            Triple(1L, "L", "litri"),
+            Triple(2L, "KG", "chilogrammo"),
+            Triple(3L, "KG", "chili"),
+            Triple(4L, "HG", "ettogrammi"),
+            Triple(5L, "CN", "lattina"),
+            Triple(6L, "BX", "scatole"),
+            Triple(7L, "RL", "rotolo"),
+        )
+
+        aliases.forEachIndexed { index, (productId, originalUnit, alias) ->
+            repository.add(
+                item(
+                    id = "original-$index",
+                    productId = productId,
+                    quantity = 1.0,
+                    unit = originalUnit,
+                    createdAt = 100L,
+                ),
+            )
+
+            val merged = repository.add(
+                item(
+                    id = "alias-$index",
+                    productId = productId,
+                    quantity = 2.0,
+                    unit = alias,
+                    createdAt = 200L,
+                ),
+            )
+
+            assertEquals("original-$index", merged.id)
+            assertEquals(3.0, merged.quantity, 0.0)
+            assertEquals(originalUnit, merged.unit)
+        }
+    }
+
+    @Test
+    fun `add non confonde unita compatibili ma non equivalenti`() = runBlocking {
+        repository.add(item(id = "kg", quantity = 1.0, unit = "kg"))
+        repository.add(item(id = "g", quantity = 1.0, unit = "g"))
+
+        assertEquals(2, repository.observeActive().first().size)
+    }
+
+    @Test
+    fun `add non fonde righe con note diverse e normalizza le note uguali`() = runBlocking {
+        repository.add(item(id = "noted", note = "senza zucchero", createdAt = 100L))
+
+        val differentNote = repository.add(
+            item(id = "organic", note = "biologico", createdAt = 200L),
+        )
+        val sameNote = repository.add(
+            item(id = "same-note", note = " BIOLOGICO ", createdAt = 300L),
+        )
+
+        assertEquals("organic", differentNote.id)
+        assertEquals("organic", sameNote.id)
+        assertEquals(2.0, sameNote.quantity, 0.0)
+        assertEquals(2, repository.observeActive().first().size)
+    }
+
+    @Test
+    fun `add mantiene separate le righe con attributi diversi`() = runBlocking {
+        val base = item(
+            id = "base",
+            brand = "Coop",
+            variant = "Intero",
+            condition = "Fresco",
+        )
+        repository.add(base)
+
+        repository.add(base.copy(id = "brand", brand = "Conad"))
+        repository.add(base.copy(id = "variant", variant = "Scremato"))
+        repository.add(base.copy(id = "condition", condition = "Surgelato"))
+
+        assertEquals(4, repository.observeActive().first().size)
+    }
+
+    @Test
+    fun `add con ID gia acquistato e idempotente e preserva lo storico`() = runBlocking {
+        val active = repository.add(item(id = "same-id", quantity = 2.0, createdAt = 100L))
+        val repeatedActive = repository.add(
+            item(id = "same-id", quantity = 7.0, createdAt = 200L),
+        )
+        assertEquals(active, repeatedActive)
+        assertEquals(2.0, repeatedActive.quantity, 0.0)
+
+        clock.now = 5_000L
+        val purchased = repository.complete("same-id")!!
+
+        val duplicate = repository.add(
+            item(
+                id = "same-id",
+                quantity = 7.0,
+                unit = "L",
+                note = "non deve sostituire lo storico",
+                createdAt = 6_000L,
+            ),
+        )
+
+        assertEquals(purchased, duplicate)
+        assertEquals(purchased, dao.getById("same-id")?.toDomain())
+        assertEquals(1, duplicate.purchaseCount)
+        assertTrue(repository.observeActive().first().isEmpty())
+    }
+
+    @Test
+    fun `restore non fonde una riga con nota diversa e conserva entrambe`() = runBlocking {
+        repository.add(
+            item(id = "active", quantity = 2.0, note = "senza zucchero", createdAt = 100L),
+        )
+        dao.insert(
+            item(
+                id = "deleted",
+                quantity = 3.0,
+                note = "biologico",
+                status = ListItemStatus.DELETED,
+                createdAt = 200L,
+                statusChangedAt = 300L,
+                updatedAt = 300L,
+            ).toEntity(),
+        )
+
+        val restored = repository.restore("deleted")!!
+
+        assertEquals("deleted", restored.id)
+        assertEquals("biologico", restored.note)
+        assertEquals(2, repository.observeActive().first().size)
+        assertEquals("senza zucchero", dao.getById("active")?.note)
+        assertEquals("biologico", dao.getById("deleted")?.note)
+    }
+
+    @Test
     fun `add con unita diversa crea due righe`() = runBlocking {
         repository.add(item(id = "kg", quantity = 1.0, unit = "KG"))
         repository.add(item(id = "litri", quantity = 2.0, unit = "L"))

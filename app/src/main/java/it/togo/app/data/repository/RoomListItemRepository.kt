@@ -8,6 +8,7 @@ import it.togo.app.domain.model.AttributeSuggestions
 import it.togo.app.domain.model.ItemAttributes
 import it.togo.app.domain.model.ListItem
 import it.togo.app.domain.model.ListItemStatus
+import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.repository.ListItemRepository
 import it.togo.app.domain.time.Clock
 import kotlinx.coroutines.flow.Flow
@@ -54,6 +55,10 @@ class RoomListItemRepository(
         dao.getLatestPurchasedByProductId(productId)?.toDomain()
 
     override suspend fun add(item: ListItem): ListItem = database.withTransaction {
+        // Repeated submission with the same ID is idempotent. Never let an
+        // insert replace a persisted purchase or count the same request twice.
+        dao.getById(item.id)?.let { return@withTransaction it.toDomain() }
+
         val incoming = item.toEntity()
 
         if (item.status == ListItemStatus.TO_BUY) {
@@ -224,15 +229,46 @@ class RoomListItemRepository(
 
     /**
      * Chiave di merge: stesso prodotto e stessa unità (trim + case-insensitive).
-     * Marca, variante e conservazione sono confrontate ignorando spazi e case;
-     * `null` e stringa vuota sono equivalenti. Le note non partecipano.
+     * Gli alias noti delle unità condividono una chiave senza riscrivere il
+     * valore originale. Nota, marca, variante e conservazione devono coincidere
+     * dopo trim + case-fold; `null` e stringa vuota sono equivalenti.
      */
     private fun ListItemEntity.hasSameMergeKeyAs(other: ListItemEntity): Boolean =
         productId == other.productId &&
-            normalize(unit) == normalize(other.unit) &&
+            unitComparisonKey(unit) == unitComparisonKey(other.unit) &&
+            normalize(note) == normalize(other.note) &&
             normalize(brand) == normalize(other.brand) &&
             normalize(variant) == normalize(other.variant) &&
             normalize(condition) == normalize(other.condition)
+
+    private fun unitComparisonKey(value: String): String {
+        val normalized = normalize(value).orEmpty()
+        val aliasKey = when (normalized) {
+            "litro", "litri" -> StandardUnit.LITER.name.lowercase(Locale.ROOT)
+            "chilogrammo", "chilogrammi", "chilo", "chili", "chilos" ->
+                StandardUnit.KILOGRAM.name.lowercase(Locale.ROOT)
+            "grammo", "grammi" -> StandardUnit.GRAM.name.lowercase(Locale.ROOT)
+            // Etti sono una scala diversa dai grammi: non sommare le quantità.
+            "etto", "etti", "ettogrammo", "ettogrammi", "hg" -> "hectogram"
+            "millilitro", "millilitri" -> StandardUnit.MILLILITER.name.lowercase(Locale.ROOT)
+            "pezzo", "pezzi" -> StandardUnit.PIECE.name.lowercase(Locale.ROOT)
+            "confezione", "confezioni", "conf" -> StandardUnit.PACKAGE.name.lowercase(Locale.ROOT)
+            "barattolo", "barattoli" -> StandardUnit.JAR.name.lowercase(Locale.ROOT)
+            "vasetto", "vasetti" -> StandardUnit.POT.name.lowercase(Locale.ROOT)
+            "bottiglia", "bottiglie" -> StandardUnit.BOTTLE.name.lowercase(Locale.ROOT)
+            "lattina", "lattine" -> StandardUnit.CAN.name.lowercase(Locale.ROOT)
+            "scatola", "scatole", "scat" -> StandardUnit.BOX.name.lowercase(Locale.ROOT)
+            "rotolo", "rotoli" -> StandardUnit.ROLL.name.lowercase(Locale.ROOT)
+            else -> null
+        }
+        if (aliasKey != null) return aliasKey
+
+        val standard = StandardUnit.values().firstOrNull {
+            it.code.lowercase(Locale.ROOT) == normalized ||
+                it.name.lowercase(Locale.ROOT) == normalized
+        }
+        return standard?.name?.lowercase(Locale.ROOT) ?: normalized
+    }
 
     private fun normalize(value: String?): String? =
         value?.trim()?.lowercase(Locale.ROOT)?.ifEmpty { null }

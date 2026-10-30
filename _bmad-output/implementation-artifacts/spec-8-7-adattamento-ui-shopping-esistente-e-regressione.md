@@ -2,7 +2,7 @@
 title: '8.7 Ripristino compilazione UI shopping su ListItem'
 type: 'bugfix'
 created: '2026-10-29'
-status: 'done'
+status: 'review'
 story: 8.7
 epic: 8
 route: 'dispatch'
@@ -45,13 +45,13 @@ context:
 - [x] `PresentationModule.kt` e `AddItemBottomSheet.kt` -- passare i parametri e le dipendenze correnti, incluso `Clock`, così Koin costruisce i ViewModel senza riferimenti legacy.
 - [x] `AddItemViewModel.kt` e `AddItemUiState.kt` -- usare `ListItem` in inserimento e modifica; impostare i default richiesti, salvare con `add` o `updateDetails` e preservare attributi/suggerimenti.
 - [x] `HistoryViewModel.kt`, `HistoryUiState.kt` e `HistoryScreen.kt` -- proiettare correttamente righe `PURCHASED`/`DELETED`, mantenere nomi/ricerca/attributi/data/conteggio, e delegare le azioni alle transizioni del repository.
-- [ ] Test di presentazione additem e history -- migrare fake/mock ai nuovi contratti e verificare i comportamenti di regressione descritti sopra.
+- [x] Test di presentazione additem e history -- migrare fake/mock ai nuovi contratti e verificare i comportamenti di regressione descritti sopra.
 
 **Acceptance Criteria:**
 - Given i contratti Epic 8 presenti, when si analizzano sorgenti e wiring, then nessun file UI/DI/test referenzia i tipi o repository rimossi.
 - Given una voce da aggiungere o modificare, when il form salva, then persiste un `ListItem` valido, la modifica conserva ID e timestamp di stato, e usa il `Clock` iniettato.
 - Given righe in `LIST_ITEM`, when si apre/cerca nello storico o si riaggiunge una riga, then sono disponibili solo gli stati storici, i dettagli restano ricercabili e la transizione/merge è delegata al repository.
-- Given i test aggiornati, when l'utente li eseguirà, then coprono i contratti correnti senza richiedere tipi legacy. In questa iterazione l'agente non esegue build o test Gradle.
+- Given i test aggiornati, when viene eseguita la suite `test-android.ps1` il 2026-10-30, then i test JVM passano senza riferimenti legacy. `build-android.ps1` completa `clean assembleDebug` e produce l'APK debug.
 
 ## Implementation Notes
 
@@ -59,12 +59,13 @@ context:
 - Allineati moduli Koin, add/edit, cronologia e test a `ListItemRepository`; la cronologia mantiene `PURCHASED` e `DELETED` e usa il formatter quantità condiviso.
 - Il form salva con il `Clock` iniettato, usa quantità predefinita `1`/unità `PIECE` e resta aperto se `updateDetails` non trova una riga modificabile.
 - Aggiunta gestione errori di repository nella cronologia e test per messaggi visibili, pulizia snackbar e modifica non riuscita.
-- Revisione statica dei contratti: nessun riferimento ai tipi/repository shopping rimossi in UI, DI e test. Nessun build o test Gradle eseguito; restano differiti gli aspetti elencati sotto.
+- Revisione statica iniziale: nessun riferimento ai tipi/repository shopping rimossi in UI, DI e test; in quella fase build/test Gradle non erano stati eseguiti. I follow-up ancora aperti sono elencati sotto.
 
 ## Review Triage Log
 
-- medium/defer -- Blind Hunter, `ListItemMigration.kt`: `MIGRATION_6_7` has no explicit transaction for a direct harness; Room runs the migration transactionally, and this preexisting migration/harness surface is recorded with the missing 6→7 regression in `deferred-work.md`.
-- medium/defer -- Blind Hunter, `ListItemMigration.kt`: manca un test dedicato 6→7; il test trovato copre 5→6 e il riepilogo 8.7 cita una regressione 6→7 non presente. Registrato in `deferred-work.md` perché riguarda modifiche migrazione preesistenti.
+- Closure verification 2026-10-30: `test-android.ps1` completed successfully and `build-android.ps1` produced the debug APK. The suite now also includes seeded 6-to-7 migration coverage that verifies legacy tables are dropped while the migrated `LIST_ITEM` rows remain.
+
+- medium/defer -- Blind Hunter, `ListItemMigration.kt`: in produzione Room gestisce la transazione della migrazione; non e' richiesta transazionalita' autonoma del metodo migrate.
 - false -- Blind Hunter, `ActiveListViewModel.kt`: `complete` restituisce `null` quando la riga è assente o non più attiva; rimuoverla dall'elenco attivo è coerente con lo stato persistito, mentre l'errore segnala la race.
 - medium/defer -- Blind Hunter, `ActiveListViewModel.kt`: un'eccezione da `complete` interrompe la coroutine dopo la rimozione ottimistica; questa gestione non è stata introdotta dal fix UI ed è registrata in `deferred-work.md`.
 - medium/defer -- Blind Hunter, scope DB: le modifiche di schema/migrazione citate erano già presenti nel worktree prima dell'intervento e sono state preservate come richiesto; non sono state attribuite al fix UI.
@@ -72,11 +73,10 @@ context:
 - low/defer -- Blind Hunter, `ShareListUseCase.kt`: il cast `Double`→`Long` può alterare valori interi oltre il range; è codice preesistente fuori dal fix compile ed è registrato in `deferred-work.md`.
 - medium/patch -- Blind Hunter, `HistoryViewModelTest.kt`: il nuovo test verifica ora il risultato visibile di riaggiunta/ripristino e la pulizia snackbar; il merge è già coperto da `RoomListItemRepositoryTest`.
 - medium/defer -- Blind Hunter, `ActiveListAccessibilityTest.kt`: il fake non esercita il completamento riuscito e non è stato trovato un test del ViewModel per la transizione; registrato in `deferred-work.md`, fuori dagli errori additem/history richiesti.
-- low/defer -- Blind Hunter, `story87_summary.txt`: resta un riepilogo preesistente con azioni di compilazione/test non aggiornate; registrato in `deferred-work.md` senza modificarlo.
+- resolved -- Blind Hunter, `story87_summary.txt`: il riepilogo segnalato non e' presente nel checkout corrente; la verifica effettiva e' riportata in questa spec.
 - medium/patch -- Edge Case Hunter, `AddItemViewModel.kt`: ora `updateDetails == null` lascia aperto il form e mostra un errore, invece di emettere successo.
 - medium/defer -- Edge Case Hunter, `ActiveListViewModel.kt`: rilievo duplicato sulla mancata gestione di eccezioni da `complete`; aggregato con il finding Blind Hunter in `deferred-work.md`.
 - medium/defer -- Edge Case Hunter, `ActiveListViewModel.kt`: un'eccezione di `restore` nell'undo non viene gestita; registrata insieme alla gestione incompleta delle transizioni attive in `deferred-work.md`.
 - medium/patch -- Edge Case Hunter, `HistoryViewModel.kt`: `reAdd` e `restore` ora propagano la cancellazione e mostrano feedback per errori repository.
 - medium/patch -- Edge Case Hunter, `AddItemViewModel.kt`: `PIECE` è sempre disponibile come default; aggiornate le aspettative dei test del form.
 - medium/defer -- Edge Case Hunter, scope DB: stesso rilievo di attribuzione delle modifiche migrazione preesistenti; nessun cambio schema è stato fatto da questo intervento.
-- medium/defer -- Verification Gap, `ListItemMigration.kt`: stesso gap del test 6→7 rilevato da Blind Hunter, registrato una sola volta in `deferred-work.md`.
