@@ -487,6 +487,33 @@ Aggiungi la versione necessaria:
 build-tools;XX.X.X
 ```
 
+### `invalid mode: /workspace`
+
+Succede quando il client `docker` di Windows invia al demone Linux percorsi in
+forma `C:\...`. Il demone non conosce la lettera di unità e spezza la specifica
+del volume sui due punti:
+
+```text
+C:\Users\...\Togo:/workspace   →   "C"  +  "\Users\...\Togo"  +  "/workspace"
+                                        (mode non valido) ───────────┘
+```
+
+È tipico dei motori Docker nativi in **WSL** (Ubuntu, Debian, …), che non fanno
+la traduzione automatica dei percorsi come fanno invece Docker Desktop o Rancher
+Desktop. Gli script `build-android.ps1`, `build-install-android.ps1`,
+`test-android.ps1` e `test-build-android.ps1` convertono già i percorsi in forma
+WSL (`/mnt/c/...`), quindi con quegli script l'errore non si presenta.
+
+Se lanci `docker run` a mano, usa la stessa forma:
+
+```powershell
+docker run --rm -v /mnt/c/Users/tuo-utente/progetto:/workspace ...
+```
+
+La conversione presuppone che il demone veda i dischi Windows sotto `/mnt/`
+(impostazione predefinita di WSL). Se hai cambiato `[automount] root` in
+`/etc/wsl.conf`, sostituisci `/mnt/` con il valore configurato.
+
 ### ADB non vede il telefono
 
 Controlla:

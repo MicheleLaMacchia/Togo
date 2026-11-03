@@ -4,6 +4,20 @@ $ErrorActionPreference = "Stop"
 
 $repoRoot = $PSScriptRoot
 
+# Docker gira nel motore Linux di WSL: i percorsi host vanno passati in forma
+# WSL (/mnt/c/...). Passando "C:\..." il demone spezza la specifica del volume
+# sui due punti del drive e fallisce con "invalid mode: /workspace".
+function ConvertTo-WslDockerPath {
+    param([Parameter(Mandatory)][string]$Path)
+    $normalized = $Path.Replace('\', '/')
+    if ($normalized -match '^([A-Za-z]):/(.*)$') {
+        return "/mnt/$($matches[1].ToLowerInvariant())/$($matches[2])"
+    }
+    return $normalized
+}
+
+$repoRootDockerPath = ConvertTo-WslDockerPath $repoRoot
+
 if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
     throw "Docker non è disponibile. Avvia Docker Desktop e riprova."
 }
@@ -18,12 +32,12 @@ $dockerExitCode = 0
 
 try {
     [System.IO.File]::WriteAllText($localPropertiesTemp, "sdk.dir=/opt/android-sdk" + [Environment]::NewLine, [System.Text.Encoding]::ASCII)
-    $localPropertiesDockerPath = $localPropertiesTemp.Replace('\', '/')
+    $localPropertiesDockerPath = ConvertTo-WslDockerPath $localPropertiesTemp
 
     $previousErrorActionPreference = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
     & docker run --rm `
-      -v "${repoRoot}:/workspace" `
+      -v "${repoRootDockerPath}:/workspace" `
       -v "${localPropertiesDockerPath}:/workspace/local.properties:ro" `
       -v "android-gradle-cache:/root/.gradle" `
       -w /workspace `
