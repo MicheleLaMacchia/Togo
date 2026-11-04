@@ -10,6 +10,7 @@ import it.togo.app.presentation.history.HistoryViewModel
 import it.togo.app.presentation.rules.LearnedRulesScreen
 import it.togo.app.presentation.rules.LearnedRulesViewModel
 import it.togo.app.presentation.settings.SettingsScreen
+import it.togo.app.presentation.settings.ImportListViewModel
 import it.togo.app.presentation.settings.UserDataViewModel
 import it.togo.app.presentation.voice.VoiceBottomSheetViewModel
 import it.togo.app.presentation.voice.VoiceConfirmationViewModel
@@ -26,6 +27,7 @@ class MainActivity : ComponentActivity(), KoinComponent {
     private val learnedRulesViewModel: LearnedRulesViewModel by inject()
     private val historyViewModel: HistoryViewModel by inject()
     private val userDataViewModel: UserDataViewModel by inject()
+    private val importListViewModel: ImportListViewModel by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,6 +49,7 @@ class MainActivity : ComponentActivity(), KoinComponent {
                             onOpenAbout = onOpenAbout,
                             onBack = onBack,
                             userDataViewModel = userDataViewModel,
+                            importViewModel = importListViewModel,
                         )
                     },
                     learnedRulesContent = { onBack ->

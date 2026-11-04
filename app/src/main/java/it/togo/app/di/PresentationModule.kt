@@ -15,6 +15,7 @@ import it.togo.app.presentation.history.HistoryViewModel
 import it.togo.app.presentation.rules.LearnedRulesViewModel
 import it.togo.app.presentation.search.SearchViewModel
 import it.togo.app.presentation.settings.UserDataViewModel
+import it.togo.app.presentation.settings.ImportListViewModel
 import it.togo.app.presentation.voice.VoiceBottomSheetViewModel
 import it.togo.app.presentation.voice.VoiceConfirmationViewModel
 import it.togo.app.presentation.voice.VoiceResilienceViewModel
@@ -79,6 +80,13 @@ val presentationModule: Module = module {
     // Impostazioni - "I miei dati" (prodotti, marche, varianti)
     viewModel { UserDataViewModel(
         catalogRepository = get<CatalogRepository>(),
+        userAttributeRepository = get<UserAttributeRepository>(),
+    ) }
+
+    // Impostazioni - Importazione lista esportata
+    viewModel { ImportListViewModel(
+        catalogRepository = get<CatalogRepository>(),
+        shoppingListRepository = get<ShoppingListRepository>(),
         userAttributeRepository = get<UserAttributeRepository>(),
     ) }
 

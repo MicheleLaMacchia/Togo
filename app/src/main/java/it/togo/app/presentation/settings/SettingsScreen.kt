@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -45,18 +46,20 @@ private const val SECTION_MENU = "menu"
 private const val SECTION_PRODUCTS = "products"
 private const val SECTION_BRANDS = "brands"
 private const val SECTION_VARIANTS = "variants"
+private const val SECTION_IMPORT = "import"
 
 /**
  * Menù Impostazioni.
  *
  * L'ingranaggio nella lista attiva apre questa schermata. Da qui si accede:
  * - ai dati creati dall'utente (prodotti, marche, varianti);
+ * - all'importazione di una lista esportata da TOGO;
  * - alle regole apprese;
  * - alle informazioni sull'app.
  *
- * Le tre sezioni "I miei dati" sono gestite internamente: il menù resta la
- * schermata radice e il back da una sezione torna al menù, senza introdurre
- * nuove destinazioni nel navigatore principale.
+ * Le tre sezioni "I miei dati" e l'importazione sono gestite internamente: il
+ * menù resta la schermata radice e il back da una sezione torna al menù, senza
+ * introdurre nuove destinazioni nel navigatore principale.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,10 +68,23 @@ fun SettingsScreen(
     onOpenAbout: () -> Unit,
     onBack: () -> Unit,
     userDataViewModel: UserDataViewModel? = null,
+    importViewModel: ImportListViewModel? = null,
 ) {
     var section by rememberSaveable { mutableStateOf(SECTION_MENU) }
 
-    if (userDataViewModel != null && section != SECTION_MENU) {
+    if (section == SECTION_IMPORT && importViewModel != null) {
+        BackHandler { section = SECTION_MENU }
+
+        ImportListScreen(
+            viewModel = importViewModel,
+            onBack = { section = SECTION_MENU },
+        )
+        return
+    }
+
+    if (userDataViewModel != null &&
+        section in setOf(SECTION_PRODUCTS, SECTION_BRANDS, SECTION_VARIANTS)
+    ) {
         BackHandler { section = SECTION_MENU }
 
         when (section) {
@@ -123,6 +139,7 @@ fun SettingsScreen(
                 .padding(spacing.space4),
             verticalArrangement = Arrangement.spacedBy(spacing.space3),
         ) {
+            var hasSectionAbove = false
             if (userDataViewModel != null) {
                 Text(
                     text = "I miei dati",
@@ -152,20 +169,41 @@ fun SettingsScreen(
                     description = "Varianti aggiunte da te, oltre ai valori predefiniti.",
                     onClick = { section = SECTION_VARIANTS },
                 )
-
-                Text(
-                    text = "Apprendimento",
-                    style = typography.caption,
-                    color = colors.inkSecondary,
-                    modifier = Modifier.padding(top = spacing.space4),
-                )
-            } else {
-                Text(
-                    text = "Apprendimento",
-                    style = typography.caption,
-                    color = colors.inkSecondary,
-                )
+                hasSectionAbove = true
             }
+
+            if (importViewModel != null) {
+                Text(
+                    text = "Lista della spesa",
+                    style = typography.caption,
+                    color = colors.inkSecondary,
+                    modifier = if (hasSectionAbove) {
+                        Modifier.padding(top = spacing.space4)
+                    } else {
+                        Modifier
+                    },
+                )
+
+                SettingsMenuItem(
+                    icon = Icons.Filled.UploadFile,
+                    title = "Importa lista",
+                    description = "Incolla il testo esportato da TOGO per aggiungere " +
+                        "prodotti e categorie alla lista.",
+                    onClick = { section = SECTION_IMPORT },
+                )
+                hasSectionAbove = true
+            }
+
+            Text(
+                text = "Apprendimento",
+                style = typography.caption,
+                color = colors.inkSecondary,
+                modifier = if (hasSectionAbove) {
+                    Modifier.padding(top = spacing.space4)
+                } else {
+                    Modifier
+                },
+            )
 
             SettingsMenuItem(
                 icon = Icons.Filled.School,
