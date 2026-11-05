@@ -58,56 +58,69 @@
       font-size: 12px;
     }
 
-    /* App Bar */
+    /* App Bar: history + page arrows + title + share + settings */
     .app-bar {
       background: #FFFFFF;
-      padding: 14px 20px 14px 20px;
+      padding: 8px 12px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      gap: 2px;
       border-bottom: 2px solid #0F172A;
       z-index: 10;
+      min-height: 64px;
+    }
+
+    .header-side {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+
+    .app-title-group {
+      flex: 1;
+      min-width: 0;
+      text-align: center;
+      padding: 0 2px;
     }
 
     .app-title-group h1 {
-      font-size: 26px;
+      font-size: 20px;
       font-weight: 900;
-      letter-spacing: -0.5px;
+      letter-spacing: -0.3px;
       color: #0F172A;
       line-height: 1.1;
+      white-space: nowrap;
     }
 
     .app-title-group .subtitle {
-      font-size: 13px;
-      font-weight: 700;
+      font-size: 11px;
+      font-weight: 800;
       color: #475569;
       margin-top: 2px;
       display: flex;
       align-items: center;
-      gap: 6px;
+      justify-content: center;
+      gap: 5px;
+      white-space: nowrap;
     }
 
     .badge-counter {
       background: #0F172A;
       color: #FFFFFF;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 800;
-      padding: 2px 7px;
-      border-radius: 12px;
+      padding: 1px 6px;
+      border-radius: 10px;
       letter-spacing: 0.3px;
     }
 
-    .app-actions {
-      display: flex;
-      gap: 10px;
-    }
-
     .icon-btn {
-      min-width: 48px;
-      min-height: 48px;
+      width: 48px;
+      height: 48px;
       background: #F8FAFC;
       border: 2px solid #0F172A;
-      border-radius: 12px;
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -119,9 +132,20 @@
     }
 
     .icon-btn svg {
-      width: 22px;
-      height: 22px;
-      stroke-width: 2.2;
+      width: 20px;
+      height: 20px;
+      stroke-width: 2.4;
+    }
+
+    .icon-btn.arrow {
+      background: #FFFFFF;
+    }
+
+    .icon-btn.disabled {
+      color: #94A3B8;
+      border-color: #CBD5E1;
+      box-shadow: none;
+      cursor: default;
     }
 
     /* Main Scroll Area */
@@ -329,6 +353,16 @@
       stroke-width: 2.5;
     }
 
+    /* Focus visibile per tastiera / D-pad / Switch Access */
+    .icon-btn:focus-visible, .checkbox-touch:focus-visible, .conclude-btn:focus-visible, .voice-main-btn:focus-visible {
+      outline: 3px solid #2563EB;
+      outline-offset: 2px;
+    }
+    .category-header:focus-visible, .presi-header:focus-visible {
+      outline: 3px solid #2563EB;
+      outline-offset: 2px;
+    }
+
     /* Bottom Actions Bar */
     .bottom-bar {
       position: absolute;
@@ -428,24 +462,28 @@
       </div>
     </div>
 
-    <!-- App Bar -->
+    <!-- App Bar: history + page arrows + title + share + settings -->
     <div class="app-bar">
-      <div class="app-title-group">
-        <h1>Spesa</h1>
-        <div class="subtitle">
-          <span class="badge-counter">4 DA PRENDERE</span>
-          <span>• Aisle Order</span>
-        </div>
-      </div>
-      <div class="app-actions">
-        <!-- Storico Icon Button (Touch Target 48dp) -->
+      <div class="header-side">
         <button class="icon-btn" title="Storico prodotti" aria-label="Storico">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <circle cx="12" cy="12" r="10"/>
             <polyline points="12 6 12 12 16 14"/>
           </svg>
         </button>
-        <!-- Condividi Icon Button (Touch Target 48dp) -->
+        <button class="icon-btn arrow disabled" title="Nessuna pagina a sinistra" aria-label="Nessuna pagina a sinistra" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+      </div>
+
+      <div class="app-title-group">
+        <h1>Spesa (4)</h1>
+      </div>
+
+      <div class="header-side">
+        <button class="icon-btn arrow" title="Vai a Da fare" aria-label="Vai a Da fare">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
         <button class="icon-btn" title="Condividi lista" aria-label="Condividi">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <circle cx="18" cy="5" r="3"/>
@@ -453,6 +491,12 @@
             <circle cx="18" cy="19" r="3"/>
             <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
             <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+        </button>
+        <button class="icon-btn" title="Impostazioni" aria-label="Impostazioni">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.14.38.35.72.6 1 .3.27.67.42 1.1.4H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51.6z"/>
           </svg>
         </button>
       </div>
@@ -601,7 +645,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
-          Concludi Spesa (Archivia 2)
+          Concludi spesa
         </button>
       </div>
 

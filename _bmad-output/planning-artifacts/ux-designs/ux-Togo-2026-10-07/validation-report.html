@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Validation Report — TOGO</title>
+<style>
+  :root{
+    --ink:#0F172A; --surface:#FFFFFF; --line:#CBD5E1;
+    --critical:#B91C1C; --high:#C2410C; --medium:#B45309; --low:#65A30D;
+    --bg:#F8FAFC; --card:#FFFFFF; --muted:#64748B;
+  }
+  *{box-sizing:border-box}
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; margin:0; padding:24px; color:var(--ink); background:var(--bg); line-height:1.55;}
+  .max{max-width:980px; margin:0 auto;}
+  header{border-bottom:2px solid var(--line); padding-bottom:16px; margin-bottom:24px;}
+  h1{font-size:22px; margin:0 0 4px; letter-spacing:-0.01em;}
+  h2{font-size:17px; margin:26px 0 8px; border-bottom:1px solid var(--line); padding-bottom:6px;}
+  h3{font-size:14px; margin:18px 0 6px; color:var(--muted);}
+  p{margin:0 0 10px;}
+  a{color:#2563EB; text-decoration:underline;}
+  .meta{color:var(--muted); font-size:13px; margin:6px 0 2px;}
+  .meta b{color:var(--ink);}
+  table{border-collapse:collapse; width:100%; margin:10px 0 18px; font-size:13px;}
+  th,td{border:1px solid var(--line); padding:6px 8px; text-align:left; vertical-align:top;}
+  th{background:#EEF2F7; color:#334155; font-size:12px; text-transform:uppercase; letter-spacing:.04em;}
+  tr:nth-child(even) td{background:#FBFDFF;}
+  .badge{display:inline-block; font-size:11px; font-weight:700; padding:2px 6px; border-radius:8px; color:#FFF; letter-spacing:.02em; vertical-align:middle; margin-right:6px;}
+  .b-critical{background:var(--critical);} .b-high{background:var(--high);}
+  .b-medium{background:var(--medium);} .b-low{background:var(--low);}
+  .b-open{background:#0F172A;} .b-closed{background:#65A30D;}
+  .finding{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin:0 0 12px; page-break-inside:avoid;}
+  .finding .head{display:flex; align-items:baseline; gap:8px; margin-bottom:6px;}
+  .finding .title{font-weight:700; font-size:14px;}
+  .finding .loc{font-size:12px; color:var(--muted); white-space:nowrap;}
+  .finding p{margin:4px 0 2px; font-size:13.5px;}
+  .finding .fix{margin-top:6px; font-size:12.5px;}
+  .finding .fix b{color:var(--ink);}
+  ul{margin:4px 0 12px 18px; padding:0;}
+  li{margin:0 0 5px; font-size:13.5px;}
+  .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; margin:10px 0 18px;}
+  .stat{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 14px;}
+  .stat .big{font-size:26px; font-weight:800; color:var(--critical); line-height:1;}
+  .stat .big.high{color:var(--high);} .stat .big.medium{color:var(--medium);} .stat .big.low{color:var(--low);}
+  .stat .lab{font-size:12px; color:var(--muted); margin-top:4px;}
+  .verdict{font-weight:700;}
+  .verdict.thin{color:#B45309;} .verdict.adequate{color:#1D6F42;} .verdict.broken{color:#B91C1C;} .verdict.strong{color:#15803D;}
+  .note{background:#FEF3C7; border-left:3px solid var(--high); padding:10px 14px; border-radius:0 8px 8px 0; margin:14px 0; font-size:13px;}
+  .callout{background:#ECFEFF; border-left:3px solid #0891B2; padding:10px 14px; border-radius:0 8px 8px 0; margin:14px 0; font-size:13px;}
+  .files{font-size:12.5px; color:var(--muted); margin-top:6px;}
+  .files b{color:var(--ink);}
+  .small{font-size:12px; color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="max">
+<header>
+  <h1>Validation Report — TOGO</h1>
+  <div class="meta"><b>DESIGN.md:</b> <code>_bmad-output/planning-artifacts/ux-designs/ux-Togo-2026-10-07/DESIGN.md</code></div>
+  <div class="meta"><b>EXPERIENCE.md:</b> <code>_bmad-output/planning-artifacts/ux-designs/ux-Togo-2026-10-07/EXPERIENCE.md</code></div>
+  <div class="meta"><b>Run at:</b> 2026-11-05T12:00:00+01:00</div>
+</header>
+
+<h2>Overall verdict</h2>
+<p>La coppia è un contratto ricco e leggibile per la Spesa e per la nuova pagina Da fare: i riferimenti token risolvono, gli 8 mockup sono linkati e i componenti core hanno spec visiva e comportamentale. Non è però ancora source-extractable senza ambiguità: la condivisione ha tre regole incompatibili, il dark mode è dichiarato ma non tokenizzato, e alcuni flussi e stati chiave restano non committed. Il rischio downstream è concreto: un architetto o uno story-dev può implementare formati di share, stati vuoti e temi diversi da quelli voluti senza violare alcuna riga esplicita.</p>
+<p>I reviewer di struttura, prosa e accessibilità confermano e aggravano il quadro: nessun punto d'ingresso per Cose da fare, regole portanti ripetute in 3-8 sedi, tassonomia dei componenti instabile, copy con varianti multiple, e quattro blocchi critici di accessibilità (contrasto righe spuntate, dark mode non tokenizzato, swipe-to-delete senza alternativa, focus visibile/traversal mancante). La coppia <b>non supera il gate</b> nello stato attuale.</p>
+
+<h2>Category verdicts</h2>
+<table>
+<tr><th>Categoria</th><th>Verdetto</th><th>Stato</th></tr>
+<tr><td>Flow coverage</td><td><span class="verdict thin">thin</span></td><td><span class="badge b-open">aperto</span></td></tr>
+<tr><td>Token completeness</td><td><span class="verdict thin">thin</span></td><td><span class="badge b-open">aperto</span></td></tr>
+<tr><td>Component coverage</td><td><span class="verdict adequate">adequate</span></td><td><span class="badge b-closed">chiuso</span></td></tr>
+<tr><td>State coverage</td><td><span class="verdict thin">thin</span></td><td><span class="badge b-open">aperto</span></td></tr>
+<tr><td>Visual reference coverage</td><td><span class="verdict thin">thin</span></td><td><span class="badge b-open">aperto</span></td></tr>
+<tr><td>Bloat &amp; overspecification</td><td><span class="verdict adequate">adequate</span></td><td><span class="badge b-closed">chiuso</span></td></tr>
+<tr><td>Inheritance discipline</td><td><span class="verdict thin">thin</span></td><td><span class="badge b-open">aperto</span></td></tr>
+<tr><td>Shape fit</td><td><span class="verdict adequate">adequate</span></td><td><span class="badge b-closed">chiuso</span></td></tr>
+<tr><td>Structure (reviewer extra)</td><td><span class="verdict thin">thin</span></td><td><span class="badge b-open">aperto</span></td></tr>
+<tr><td>Prose (reviewer extra)</td><td><span class="verdict thin">thin</span></td><td><span class="badge b-open">aperto</span></td></tr>
+<tr><td>Accessibility (reviewer extra)</td><td><span class="verdict thin">thin</span></td><td><span class="badge b-open">aperto, 4 blocchi critici</span></td></tr>
+</table>
+
+<div class="grid">
+  <div class="stat"><div class="big">166</div><div class="lab">finding totali</div></div>
+  <div class="stat"><div class="big">6</div><div class="lab">Critical</div></div>
+  <div class="stat"><div class="big high">53</div><div class="lab">High</div></div>
+  <div class="stat"><div class="big medium">81</div><div class="lab">Medium</div></div>
+  <div class="stat"><div class="big low">26</div><div class="lab">Low</div></div>
+</div>
+
+<div class="callout">Per le categorie <i>thin</i> o <i>broken</i> la sezione resta <b>aperta</b>; per le categorie <i>adequate</i>/<i>strong</i> è <b>chiusa</b>. I reviewer extra (Structure, Prose, Accessibility) mantengono la voce avversaria originale.</div>
+
+<h2>Findings by severity</h2>
+
+<h3>Critical (6)</h3>
+
+<div class="finding">
+  <div class="head"><span class="badge b-critical">Critical</span><span class="title">1. Dark mode dichiarato ma non tokenizzato</span><span class="loc">[Rubric + Accessibility] §2 L191-192; token L7-47</span></div>
+  <p>Dieci token chiari non hanno coppia scura: <code>surface-subtle</code>, <code>surface-inverse</code>, <code>ink-muted</code>, <code>ink-inverse</code>, <code>border-hairline</code>, <code>accent-action</code>, <code>accent-success</code>, <code>accent-warning</code>, <code>badge-bg</code>, <code>badge-ink</code>. In dark mode <code>category-header</code> ha titolo su sfondo chiaro (1,00:1), <code>badge-bg</code> e <code>accent-action</code> spariscono (1,07:1). Un implementatore deve inventare metà del tema.</p>
+  <div class="fix"><b>Fix:</b> definire le coppie <code>*-dark</code> (o mapping esplicito) per tutte le superfici usate dai componenti, oppure rimuovere la promessa dark mode dalle spine. Aggiungere un mockup scuro di verifica.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-critical">Critical</span><span class="title">2. Righe spuntate illeggibili: contrasto ≈ 1,46:1</span><span class="loc">[Accessibility] §7.1 L255</span></div>
+  <p><code>ink-muted</code> (#94A3B8) con opacity 45% su bianco dà circa 1,46:1; il mockup pieno arriva a circa 2,5:1. Le righe restano interattive (la checkbox deseleziona), quindi non sono componenti disabilitati ed escono dall'eccezione 1.4.3; si viola anche il floor 7:1 dichiarato dalla spina.</p>
+  <div class="fix"><b>Fix:</b> introdurre token <code>ink-struck</code> ≥4,5:1 (idealmente 7:1), nessuna opacità sul testo, barratura + checkbox come ridondanza, <code>ink-muted</code> riservato a veri disabilitati.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-critical">Critical</span><span class="title">3. Swipe-to-delete senza alternativa accessibile</span><span class="loc">[Accessibility + Rubric] §4.7 L143; §7 L227</span></div>
+  <p>L'eliminazione è solo swipe a sinistra e l'etichetta TalkBack dice "Swipe a sinistra per eliminare". Con TalkBack lo swipe a un dito cambia il focus; con Switch Access il gesto non esiste. CAP-6 resta accessibile solo a chi usa il gesto (violazione WCAG 2.5.7).</p>
+  <div class="fix"><b>Fix:</b> aggiungere azione "Elimina" nelle custom action TalkBack o menu contestuale, con stessa snackbar di undo; correggere l'etichetta in "Azioni disponibili: Elimina".</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-critical">Critical</span><span class="title">4. Focus visibile e ordine di traversal mancanti</span><span class="loc">[Accessibility] §7 L219-232; DESIGN.md</span></div>
+  <p>Nessun token <code>focus-ring</code>, nessun ordine di traversal, controlli disegnati a mano. Con D-pad, tastiera e Switch Access il focus può essere invisibile o su nodi non operabili (violazione WCAG 2.4.7).</p>
+  <div class="fix"><b>Fix:</b> definire focus ring ad alto contrasto (≥3:1 sulle superfici adiacenti), ordine header → lista → sezioni → FAB, test con tastiera, D-pad e Switch Access.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-critical">Critical</span><span class="title">5. Microcopy dichiarato non vincolante</span><span class="loc">[Prose] §9 L331</span></div>
+  <p>"Il microcopy esatto può essere rifinito in build senza cambiare i comportamenti descritti" indebolisce il contratto di copy; §3 e §4 presentano le stringhe come esatte. Un consumatore non sa quali stringhe siano contract e quali indicative.</p>
+  <div class="fix"><b>Fix:</b> dichiarare vincolanti le stringhe quotate (salvo elenco esplicito di "copy provvisorio") e rimuovere o restringere la clausola.</div>
+</div>
+
+<h3>High (53)</h3>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">6. Condivisione a tre scelte con regole incompatibili</span><span class="loc">[Rubric + Structure + Prose] §4.10 L169 vs §5 L194; SPEC.md L66</span></div>
+  <p>§4.10 disabilita le opzioni con parte vuota; §5 dice che <code>Entrambe</code> resta disponibile se almeno una parte ha voci. Non è chiaro se <code>Entrambe</code> con spesa vuota sia selezionabile, cosa generi e quale default si applichi quando la parte corrente ha 0 voci.</p>
+  <div class="fix"><b>Fix:</b> scrivere una matrice scelta × parti vuote e allineare copy, stato, default e share text.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">7. `Concludi spesa` ambiguo: dialog o snackbar</span><span class="loc">[Prose + Accessibility + Rubric] §4.3 L111; §3 L71</span></div>
+  <p>Una snackbar non è una conferma (svanisce, non richiede azione); il microcopy prevede <code>[Concludi spesa]</code>/<code>[Annulla]</code>. Chi implementa dal flusso costruisce un comportamento diverso da quello della conclusione attività.</p>
+  <div class="fix"><b>Fix:</b> scegliere un unico pattern (dialog con titolo, corpo, conteggio e due azioni definite); usare la snackbar solo come feedback post-azione.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">8. Flow 3 descrive la share legacy con formato emoji/bullet</span><span class="loc">[Rubric] §8 L254-268</span></div>
+  <p>Mostra <code>🛒 TOGO - Lista Spesa</code> e <code>🥦 ORTOFRUTTA:</code> che contraddicono il formato reale <code>[L1] / + L2 / - L3</code> e il dialogo a tre scelte. Chi implementa dal flusso costruisce la vecchia share e il formato sbagliato.</p>
+  <div class="fix"><b>Fix:</b> riscrivere Flow 3 come baseline legacy o fonderlo nel Flow 8, passando dal dialogo e sostituendo l'esempio con il formato <code>[L1]</code>.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">9. Pattern "conclusione" duplicato e asimmetrico in almeno 7 sedi</span><span class="loc">[Structure] §2.1, §3, §4.2-4.3, §4.8, §5, §7, Flow 2, Flow 7, DESIGN §7.3, §7.9-7.10</span></div>
+  <p><code>Concludi spesa</code> in §4.2-4.3, Flow 2, DESIGN §7.3; <code>Concludi attività</code> in §2.1, §3, §4.8, §5, §7, Flow 7, DESIGN §7.9-7.10. Le regole "solo spuntate", "niente undo", "niente storico" compaiono in più punti con parole diverse.</p>
+  <div class="fix"><b>Fix:</b> un solo pattern <code>Conclusione</code> con varianti <code>Spesa</code> e <code>Attività</code>; stati e flow che vi rimandano.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">10. Contratto pager ripetuto in almeno 8 punti</span><span class="loc">[Structure] DESIGN §1, §4, §7.6; EXPERIENCE §1, §2.1, §2.2, §4.6, §6, §7, Flow 6, Flow 10, §9</span></div>
+  <p>Una modifica a frecce, back, swipe o conteggi richiede molti edit in punti diversi della coppia.</p>
+  <div class="fix"><b>Fix:</b> sezione canonica <code>Page header &amp; pager</code> (anatomia in DESIGN, comportamento in EXPERIENCE), solo rimandi brevi altrove.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">11. `State Patterns` senza colonna Superficie/Ambito</span><span class="loc">[Structure] §5 L184-201</span></div>
+  <p>Mescola stati di app, pagina, sezione, dialogo, import e interazione. Un consumatore non sa a quale schermata applicare una riga.</p>
+  <div class="fix"><b>Fix:</b> aggiungere <code>Superficie</code> e <code>Ambito</code> (globale/pagina/sezione/overlay), separare le righe per area, spostare <code>Cambio pagina</code> in Interaction Primitives.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">12. `Voice and Tone` non è fonte unica del microcopy</span><span class="loc">[Structure] §3 L61-87; §4.9 L163; §4.10 L169-172; DESIGN §7.8 L307</span></div>
+  <p>Le stesse stringhe vivono in più sezioni con e senza punto (<code>§3 L81/L192</code> vs <code>§4.7 L146/§4.9 L163</code>). Non esiste una stringa sorgente.</p>
+  <div class="fix"><b>Fix:</b> trasformare §3 in inventario <code>Contesto | Stringa | Note</code> e fare riferimento alla chiave da componenti e flussi senza riscrivere il testo.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">13. Raggruppamento azioni ambiguo: urgenza header o solo ordine?</span><span class="loc">[Structure + Prose + Rubric] §2.1 L40; §4.7 L145; §6 L215; Flow 6 L289; todo-page L496-589; SPEC.md L54</span></div>
+  <p>IA dice "raggruppate per ambito e urgenza"; Flow 6 dice "sotto Salute → Urgente"; il mockup mostra solo header ambito. Non è chiaro se l'urgenza sia header annidato, etichetta di percorso o solo criterio di ordinamento.</p>
+  <div class="fix"><b>Fix:</b> dichiarare esplicitamente "header di ambito; urgenza = ordinamento, non header" (o il contrario) e allineare mockup, copy e Flow 6.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">14. Tassonomia componenti instabile (frontmatter vs corpo vs mockup)</span><span class="loc">[Structure + Prose + Rubric] DESIGN L77-151, L266, L275, L309, L316, L322; EXPERIENCE L116, L125, L150, L167</span></div>
+  <p><code>duplicate-modal</code> vs <code>duplicate-dialog</code>; <code>voice-sheet</code> vs <code>voice-fab</code>; <code>share-dialog</code> vs <code>choice-dialog</code>; <code>fatte-section</code> e <code>conclude-dialog</code> senza token. Nessuna chiave unica tra frontmatter, prosa, EXPERIENCE e mockup.</p>
+  <div class="fix"><b>Fix:</b> tabella <code>token | nome visuale | pattern EXPERIENCE | mockup</code> con un solo nome canonico per componente e alias espliciti.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">15. `Lista attiva` cambia referente dopo il pager</span><span class="loc">[Structure + Prose] §2.1 L39; DESIGN §7.3 L263; PRD.md L61</span></div>
+  <p>Nel PRD è l'intera lista Spesa; nella spina è pagina 1 del pager. Chi deriva storie dal PRD non sa quale significato prevale.</p>
+  <div class="fix"><b>Fix:</b> usare "lista della spesa" / "lista delle cose da fare"; se "attiva" significa "non spuntata", definirlo una volta e non usarlo come nome di superficie.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">16. Nessuna mappa di copertura CAP → sezioni → flow → mockup</span><span class="loc">[Structure] EXPERIENCE L4-8, L238-322; SPEC.md CAP-1..CAP-10 L18-47</span></div>
+  <p>I flow Cose da fare (Flow 6-10) non hanno CAP né UJ, mentre i flow baseline hanno UJ-1..UJ-5. Uno story-dev non può verificare se una storia copre CAP-3 o CAP-6.</p>
+  <div class="fix"><b>Fix:</b> tabella <code>Feature coverage map</code> con una riga per CAP (sezioni, flow, mockup, stato); taggare i flow.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">17. Precedenza SPEC.md vs spine non dichiarata</span><span class="loc">[Structure] SPEC.md L8; EXPERIENCE.md L15-18; DESIGN.md L156-158</span></div>
+  <p>In caso di conflitto tra regole di SPEC e spine (condivisione, undo, raggruppamento) il consumatore non sa quale prevale. Il preambolo dice solo che le spine vincono sui mockup.</p>
+  <div class="fix"><b>Fix:</b> dichiarare precedenza: SPEC/brownfield vincono sul comportamento di prodotto; le spine vincono su UX e visuale; i mockup sono illustrativi.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">18. Stato vuoto Spesa in due varianti</span><span class="loc">[Prose] §3 L73 vs §5 L189</span></div>
+  <p>"La tua lista è vuota. Tocca il microfono o premi + per aggiungere prodotti" contro "Nessun prodotto da acquistare" con "pulsanti chiari per dettare a voce o digitare". Non è detto quale sia titolo, corpo e CTA.</p>
+  <div class="fix"><b>Fix:</b> definire <code>titolo | corpo | CTA</code> in un'unica riga e usare la stessa stringa in §5.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">19. Errori di import senza contratto di annuncio/associazione</span><span class="loc">[Accessibility] §4.9 L163; §5 L196</span></div>
+  <p><code>Azione già presente</code> appare inline e l'import riporta numero di riga e motivo, ma non è detto che il campo abbia <code>isError</code>/<code>supportingText</code>, che il messaggio sia una live region, né che il focus si sposti sul campo o sul primo errore. Un utente TalkBack può non accorgersi dell'errore e riprovare.</p>
+  <div class="fix"><b>Fix:</b> associare l'errore al campo, annunciarlo con <code>LiveRegionMode.Assertive</code>, spostare il focus sul campo (o su un riepilogo errori nell'import) e conservare i valori.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">20. Placeholder e hint sotto soglia di contrasto</span><span class="loc">[Accessibility] placeholder #94A3B8 2,56:1; hint #64748B su #F1F5F9 4,34:1</span></div>
+  <p>Non sono decorativi: spiegano dove cercare e come chiudere una sezione.</p>
+  <div class="fix"><b>Fix:</b> portare placeholder e hint almeno a 4,5:1; mantenere un'etichetta visibile accanto al campo (già presente nel foglio azione).</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">21. `border-crisp-dark` ha due valori</span><span class="loc">[Rubric + Accessibility] frontmatter L37 vs prosa L192</span></div>
+  <p>#64748B nel frontmatter vs #475569 nella prosa. Su base #0B0F17 il secondo scende a 2,26:1 sui card scuri, sotto 3:1 di 1.4.11 per identificare i controlli.</p>
+  <div class="fix"><b>Fix:</b> fissare un unico valore, correggere la prosa, verificare i bordi su entrambe le superfici scure.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">22. Contrasto Urgente 6,37:1 sotto il floor 7:1 dichiarato</span><span class="loc">[Rubric + Accessibility] §2 L22-23; §8 L338; §7 L221</span></div>
+  <p>Passano AA (4,5:1) ma non il floor della spina; mancano i rapporti dichiarati per badge urgenza e ambito.</p>
+  <div class="fix"><b>Fix:</b> o abbassare il floor ad AA (4,5:1 testo, 3:1 non-testo) e dichiararlo, o scurire i token; documentare i ratio delle combinazioni portanti.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">23. Focus perso dopo spostamento riga a 300 ms</span><span class="loc">[Accessibility] §4.1 L97-98; §4.7 L144-145</span></div>
+  <p>La riga si sposta in Presi/Fatte mentre l'annuncio TalkBack è in corso: focus perso o salto imprevedibile; anche per il tocco il prossimo tap può cadere su un'altra riga.</p>
+  <div class="fix"><b>Fix:</b> non spostare la riga finché il focus è su di essa; in alternativa spostare il focus sull'header della sezione e annunciare "Spostata in Presi, N articoli" con un'azione "Annulla spunta" immediata.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">24. Ritorno del focus dopo chiusura dialog/fogli non specificato</span><span class="loc">[Accessibility] §4.5 L125-129; §4.9 L159-165; §4.10 L167-172</span></div>
+  <p>Dopo <code>Concludi attività</code> il pulsante trigger scompare (la sezione Fatte non c'è più); dopo <code>Condividi</code> si apre lo Sharesheet. Senza regola il focus resta sul nodo rimosso o torna all'inizio della pagina (WCAG 2.4.3).</p>
+  <div class="fix"><b>Fix:</b> definire per ogni modale il target di ritorno (trigger; se non esiste, titolo pagina o FAB), con fallback e annuncio; al ritorno dallo Sharesheet riportare il focus sull'icona Condividi.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">25. Undo snackbar senza durata, pausa o annuncio</span><span class="loc">[Accessibility] §4.7 L147</span></div>
+  <p>Durata pochi secondi: troppo poco per ipovedenti e utenti cognitivi (WCAG 2.2.1).</p>
+  <div class="fix"><b>Fix:</b> durata ≥10 s o persistente fino all'azione successiva, pausa su focus/hover, live region educata con "Azione eliminata. Annulla disponibile", azione Annulla ≥48dp.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">26. Pager/cestino e gesture navigation: nessuna politica edge-to-edge, inset, predictive back</span><span class="loc">[Accessibility] §2.2 L54; §4.6 L134-135; brownfield.md L17, L22</span></div>
+  <p>Su gesture navigation lo swipe da bordo può uscire dall'app invece di cambiare pagina o rivelare il cestino; il back da Da fare rischia un'anteprima di chiusura app invece di Spesa.</p>
+  <div class="fix"><b>Fix:</b> definire zone di swipe lontane dai bordi, <code>systemGestureExclusion</code> solo per l'header del pager, <code>PredictiveBackHandler</code> per Da fare → Spesa, test con gesture nav e 3-button nav.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">27. Freccia disabilitata: annunciata ma non focusabile</span><span class="loc">[Accessibility] §7.6 L288; §4.6 L134; §7 L225</span></div>
+  <p>Resta annunciata come non disponibile, ma un controllo <code>enabled=false</code> non è focusabile in TalkBack: le due richieste sono incompatibili.</p>
+  <div class="fix"><b>Fix:</b> scegliere — rimuovere la freccia e annunciare "pagina 1 di 2" nel titolo, oppure tenerla focusabile con <code>stateDescription="Non disponibile"</code> e nessuna azione.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">28. `Concludi attività`: icona warning non commessa, etichetta del trigger invece della conseguenza</span><span class="loc">[Accessibility] §4.10 L167-172; conclude-dialog L555-573; DESIGN §7.10 L316-320</span></div>
+  <p>Per un'azione irreversibile senza undo, l'etichetta dovrebbe dire cosa succede.</p>
+  <div class="fix"><b>Fix:</b> primario "Elimina N attività" (stile distruttivo), icona warning commessa, Annulla resta l'azione sicura.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">29. Import: anteprima non annunciata come regione, primario "Accetta" non definito</span><span class="loc">[Accessibility] §4.11 L177-180; Flow 9 L312</span></div>
+  <p>L'anteprima non è specificata come riepilogo annunciato; il primario dice "Accetta" invece di descrivere l'azione.</p>
+  <div class="fix"><b>Fix:</b> rendere l'anteprima una region con heading, etichettare il primario "Importa N prodotti e M azioni", annunciare l'esito e offrire un riepilogo post-import.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">30. Semantica mancante: checkbox, chip, sezioni, dialog/fogli</span><span class="loc">[Accessibility] §7 L223-229; action-sheet L592-607; conclude-dialog</span></div>
+  <p>La checkbox è "un controllo separato" ma non si dice <code>Role.Checkbox</code>, <code>toggleable</code> o <code>stateDescription</code>; i chip non hanno gruppo, <code>selected</code> né etichetta di gruppo; header collassabile ha testo di annuncio ma non semantica; dialog e bottom sheet non hanno <code>paneTitle</code>, focus trap, <code>onDismissRequest</code> né focus di ritorno.</p>
+  <div class="fix"><b>Fix:</b> <code>Role.Checkbox</code> con <code>stateDescription</code>; radiogroup con label "Urgenza"/"Ambito" e <code>selected</code> per chip; <code>Modifier.expandable</code> + <code>stateDescription</code> su header Presi/Fatte; Compose <code>Dialog</code>/<code>ModalBottomSheet</code> con <code>paneTitle</code>, focus iniziale, trap e focus di ritorno.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">31. Font scaling dichiarato lineare ma Android 14+ è non lineare; header 64dp fisso, titolo `nowrap`</span><span class="loc">[Accessibility] §7 L232; DESIGN L81, L120; todo-page L84-103</span></div>
+  <p>A 200% il layout non è definito e il titolo non può andare a capo nei mockup.</p>
+  <div class="fix"><b>Fix:</b> usare <code>sp</code>, testare 130/150/200% a 320dp, rimuovere <code>nowrap</code>, permettere header a più righe e overflow; non promettere scaling lineare.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">32. Tastiera/IME non considerata: foglio 65-68% con autofocus e pulsanti in fondo</span><span class="loc">[Accessibility] §9 L327; action-sheet L290-305</span></div>
+  <p>A font grande campi e pulsanti possono essere coperti dalla tastiera.</p>
+  <div class="fix"><b>Fix:</b> <code>Modifier.imePadding()</code>, <code>bringIntoViewRequester</code> sul campo attivo, pulsanti sticky sopra la tastiera, test con Gboard e font scale 200%.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">33. Mockup con target sotto 48dp: icone header 44×44, checkbox azione 40×40, chip 38dp</span><span class="loc">[Rubric + Accessibility] active-list L118-124; todo-page L234-242; action-sheet L395-409</span></div>
+  <p>Violano il target minimo 48dp dichiarato (DESIGN.md L76, L219; EXPERIENCE.md L206).</p>
+  <div class="fix"><b>Fix:</b> portare l'area di tocco a 48dp mantenendo la dimensione visiva; aggiungere token <code>chip</code> e <code>icon-button</code> con hit area esplicita.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">34. Mockup omettono badge urgenza su righe che dovrebbero averlo sempre</span><span class="loc">[Rubric + Accessibility] action-sheet L540-545, L563-569; share-dialog L462-484; conclude-dialog L517-524</span></div>
+  <p>Contraddice SPEC.md CAP-5 L32, DESIGN.md §7.7 L295, EXPERIENCE.md §4.7 L142. L'urgenza non è percepibile né annunciabile.</p>
+  <div class="fix"><b>Fix:</b> aggiungere il badge a ogni riga o annotare i mockup come non normativi.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">35. `Inspiration &amp; Anti-patterns` mancante; rifiuti di navigazione sparsi</span><span class="loc">[Structure] §1 L26; §2.2 L53; §7 L212; .memlog.md L8-11, L18-19</span></div>
+  <p>I rifiuti (bottom tab bar, drawer, pager a tutta schermata, check-off) sono sparsi in Foundation e Interaction Primitives. L'omissione è difendibile, ma il "perché no" non è in un posto solo.</p>
+  <div class="fix"><b>Fix:</b> aggiungere una sezione breve con i soli rifiuti che vincolano il design, oppure rimuovere i riferimenti sparsi.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">36. Frontmatter DESIGN senza `sources`; EXPERIENCE ha quattro path</span><span class="loc">[Structure] DESIGN L1-6 vs EXPERIENCE L1-11</span></div>
+  <p>Chi legge solo il visual spine non sa che è stato aggiornato per <code>spec-cose-da-fare</code> e non può risalire alle decisioni.</p>
+  <div class="fix"><b>Fix:</b> aggiungere <code>sources</code> o una riga <code>Aggiornato per: SPEC-cose-da-fare</code> nel preambolo, con i path a SPEC e brownfield.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">37. Terminologia iOS `Dynamic Type` su Android</span><span class="loc">[Prose] §4 L221-222; §7 L232; §7.6 L291; §8 L344</span></div>
+  <p>Su Android il comportamento è la scalabilità del testo di sistema (<code>fontScale</code>); un lettore può implementare l'API sbagliata o cercare una feature inesistente.</p>
+  <div class="fix"><b>Fix:</b> "scalabilità del testo di sistema (font scale Android)" ovunque.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">38. Riferimenti al baseline non risolti: "Invariato", "come oggi", "formato attuale"</span><span class="loc">[Prose] §2.1 L43-49; §4.10 L171; §4.11 L175</span></div>
+  <p>Chi non conosce l'app deve aprire <code>brownfield.md</code> per sapere cosa è invariato.</p>
+  <div class="fix"><b>Fix:</b> una riga di sintesi per ogni superficie invariata, con rimando alla fonte.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">39. Microcopy duplicato con varianti in §3, §4, §5, flussi e DESIGN</span><span class="loc">[Prose] conclusione in 6 sedi; condivisione in 3</span></div>
+  <p>Non c'è una stringa sorgente.</p>
+  <div class="fix"><b>Fix:</b> un inventario <code>chiave | stringa | contesto | note</code> in §3 e rimandi dalle altre sezioni.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">40. CAP-1 (pager) e CAP-5 (distinzione visiva) senza Key Flow dedicato; CAP-6 senza passi/climax/failure</span><span class="loc">[Rubric] §4.7 L146-147</span></div>
+  <p>CAP-1 coperto solo incidentalmente da Flow 6/10; CAP-5 dalla sola <code>§4.7</code>; CAP-6 solo in <code>§4.7 L146-147</code> senza passi.</p>
+  <div class="fix"><b>Fix:</b> accettare esplicitamente la copertura da component pattern o aggiungere un flusso di cambio pagina e Flow 11 "Mike modifica ed elimina un'azione".</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">41. Sette flussi senza failure path</span><span class="loc">[Rubric] Flow 1, 2, 3, 4, 5, 6, 9</span></div>
+  <p>Flow 1 (voce non disponibile o ambigua), Flow 2 (elemento non trovato), Flow 3 (lista vuota o share annullata), Flow 4 (annulla o unità incompatibili), Flow 5 (duplicato al riaggiungi), Flow 6 (duplicato o testo vuoto), Flow 9 (import non valido).</p>
+  <div class="fix"><b>Fix:</b> una riga "Failure:" per flusso, coerente con <code>§5</code>.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-high">High</span><span class="title">42. Quattro flussi senza climax osservabile</span><span class="loc">[Rubric] Flow 3, 4, 5, 10</span></div>
+  <p>Si fermano alla risoluzione: manca sharesheet aperto, riga aggiornata a 2 l, prodotto riaggiunto nella categoria, annuncio TalkBack del nuovo titolo.</p>
+  <div class="fix"><b>Fix:</b> aggiungere un climax osservabile per ciascuno.</div>
+</div>
+
+<h3>Medium (81)</h3>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">43. Numerazione componenti non parallela tra DESIGN e EXPERIENCE</span><span class="loc">[Structure] DESIGN §7.8 vs EXPERIENCE §4.9; DESIGN §7.9 vs EXPERIENCE §4.8</span></div>
+  <p>Chi usa i numeri come chiave incrociata finisce su componenti diversi.</p>
+  <div class="fix"><b>Fix:</b> riallineare la numerazione o aggiungere tabella mapping componente → sezione DESIGN → sezione EXPERIENCE.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">44. `Import con Azioni` mescolato con i componenti atomici</span><span class="loc">[Structure] DESIGN §7.12 L328-331</span></div>
+  <p>Non è un componente, non ha anatomia né token; va in una sezione di flusso o schermata.</p>
+  <div class="fix"><b>Fix:</b> separare <code>Componenti atomici</code>, <code>Pattern compositi</code>, <code>Overlay</code>, <code>Schermate/Flussi</code>; spostare Import in sezione di flusso.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">45. Tabella IA mescola destinazioni, overlay e chrome</span><span class="loc">[Structure] §2.1 L37-50</span></div>
+  <p><code>Intestazione di Pagina (Pager)</code> non è una superficie raggiungibile; <code>Risoluzione Duplicati</code>, <code>Condivisione</code>, <code>Conferma Conclusione</code> sono overlay; <code>Gestione Regole Apprese</code> e <code>Importa Lista</code> sono sotto-schermate di Impostazioni.</p>
+  <div class="fix"><b>Fix:</b> aggiungere colonna <code>Tipo</code> (Schermata / Overlay / Chrome / Sotto-schermata) e separare shell dalle destinazioni.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">46. Nessun TOC in nessuno dei due documenti (354 e 331 righe)</span><span class="loc">[Structure] DESIGN L154-158; EXPERIENCE L13-18</span></div>
+  <p>L'unica navigazione è la lista di link nel preambolo.</p>
+  <div class="fix"><b>Fix:</b> aggiungere TOC di 8-10 voci all'inizio di ciascuna spina.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">47. Path in `sources` stringhe repo-relative, non link cliccabili; riferimento spec Google Labs senza URL</span><span class="loc">[Structure] EXPERIENCE L4-8; DESIGN L156</span></div>
+  <div class="fix"><b>Fix:</b> usare link Markdown relativi alla workspace e aggiungere l'URL della spec.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">48. `reconcile-inputs.md` stale e non linkato dalle spine</span><span class="loc">[Structure] reconcile-inputs.md L1-21, L15, L20-21</span></div>
+  <p>Mappa solo requisiti PRD, cita <code>UJ-5</code> inesistente, dichiara "nessuna omissione o conflitto" senza coprire Cose da fare.</p>
+  <div class="fix"><b>Fix:</b> rigenerarlo per la feature o marcarlo <code>superato</code>/rimuoverlo.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">49. Gli 8 link ai mockup ripetuti in DESIGN e EXPERIENCE</span><span class="loc">[Structure] DESIGN L158; EXPERIENCE L18</span></div>
+  <p>Aggiungere o rinominare un mockup richiede due modifiche e può far divergere le liste.</p>
+  <div class="fix"><b>Fix:</b> unico <code>mockups/README.md</code> come indice, linkato da entrambe le spine.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">50. Stato dello stato spuntato ha tre verbi: "spuntato", "barrato", "depennato"</span><span class="loc">[Prose] §4.7 L143/L144; DESIGN §2 L181</span></div>
+  <p>"Barrato" è il trattamento visivo, non lo stato; "depennato" è fuori uso.</p>
+  <div class="fix"><b>Fix:</b> "spuntata" per lo stato, "barrata" per il rendering; eliminare "depennato".</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">51. Nomi delle azioni non stabili: "Condividi", "Aggiungi", "+ Aggiungi", "+ Riaggiungi"</span><span class="loc">[Prose] §3, §4, history L307, Flow 5 L281, §2.1 L48</span></div>
+  <div class="fix"><b>Fix:</b> tabella <code>controllo | etichetta | contesto</code> e una sola etichetta per il pulsante dello storico.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">52. Nomi di categoria e chrome divergenti tra spine e mockup</span><span class="loc">[Prose] §6 L215; history L335; §1, §4, §6</span></div>
+  <p>"Banco Frigo" / "Banco Frigo / Latticini"; "Igiene/Cura Casa" vs "Pulizia casa"; "intestazione" / "App Bar" / "top bar".</p>
+  <div class="fix"><b>Fix:</b> usare i nomi del catalogo o marcare gli esempi come illustrativi.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">53. Voice and Tone: EXPERIENCE scivola nel registro promozionale e narrativo</span><span class="loc">[Prose] §8 Flow 1 L242-243; §4.1 L98; Flow 8 L305; Flow 2 L248</span></div>
+  <p>"la forma d'onda cattura l'audio", "l'interpretazione è perfetta", "scivola fluidamente", "in due tocchi" sono giudizi non osservabili, non regole.</p>
+  <div class="fix"><b>Fix:</b> sostituire con esiti verificabili (es. "la trascrizione compare entro 0,8 s").</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">54. Domande di conferma cambiano persona</span><span class="loc">[Prose] §3 L69, L70, L71, L82, L84</span></div>
+  <p>Infinito, seconda persona e prima persona si mescolano nelle conferme.</p>
+  <div class="fix"><b>Fix:</b> scegliere una forma ("Vuoi concludere la spesa?", "Vuoi condividere…?") e applicarla a tutti i dialoghi.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">55. Prompt di apprendimento antropomorfo e risposte non concordanti</span><span class="loc">[Prose] §3 L69</span></div>
+  <p>"Ricordo questa scelta per i prossimi inserimenti?" con <code>[Ricorda]</code> / <code>[Solo per ora]</code>: domanda in prima persona, risposte imperative rivolte all'app.</p>
+  <div class="fix"><b>Fix:</b> "Vuoi che ricordi questa scelta per i prossimi inserimenti?" <code>[Sì, ricorda]</code> / <code>[No, solo per ora]</code>.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">56. Verbi per interazione tattile non coerenti: "Tocca", "premi +", "swipa", "Tap", "Doppio tocco"</span><span class="loc">[Prose] §3 L73; Flow 6 L286; §4.1 L95; §7 L227</span></div>
+  <div class="fix"><b>Fix:</b> "tocca" per i controlli, "scorri" per il gesto, "doppio tocco" nelle stringhe TalkBack; evitare "swipa".</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">57. DESIGN overclaim: "massimo contrasto acromatico", "leggibilità impeccabile", "inconfondibile"</span><span class="loc">[Prose] §2 L175; §1 L166; §6 L243</span></div>
+  <p>Assoluti che contraddicono i token (palette con blu, verde e ambra).</p>
+  <div class="fix"><b>Fix:</b> tenere la voce editoriale, togliere gli assoluti che contraddicono i token.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">58. Stato vuoto Fatte: stringa "Nessuna attività conclusa." per sezione che non compare se N = 0</span><span class="loc">[Prose] §3 L83 vs §4.8 L157</span></div>
+  <p>Se la sezione non compare, la stringa non è raggiungibile.</p>
+  <div class="fix"><b>Fix:</b> eliminarla oppure decidere che la sezione resti visibile vuota e allineare §4.8/§5.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">59. Pulsante conferma import definito solo in un flusso: "Accetta"</span><span class="loc">[Prose] Flow 9 L312</span></div>
+  <p>§3 non definisce l'etichetta e DESIGN §7.12 non la nomina.</p>
+  <div class="fix"><b>Fix:</b> aggiungere "Importa" (o "Conferma import") all'inventario e usarla nel flusso.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">60. Dialogo duplicati: tre versioni e referente indefinito</span><span class="loc">[Prose] §3 L70; Flow 4 L273; DESIGN §7.5 L278</span></div>
+  <p>"Il prodotto" non dice quale; la nuova quantità manca nel corpo di §3.</p>
+  <div class="fix"><b>Fix:</b> template unico con <code>{prodotto}</code>, <code>{quantità attuale}</code>, <code>{categoria}</code>, <code>{nuova quantità}</code> e stessa stringa in flusso, §3 e mockup.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">61. Titolo dialogo condivisione duplicato/invertito</span><span class="loc">[Prose] §3 L84 vs share-dialog L491-492</span></div>
+  <p>§3 dice titolo "Cosa vuoi condividere?"; il mockup mostra titolo "Condividi" e sottotitolo "Cosa vuoi condividere?".</p>
+  <div class="fix"><b>Fix:</b> scegliere una gerarchia e riportarla in §3 e nel mockup.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">62. "Nessuna voce" non spiega perché l'opzione è disabilitata</span><span class="loc">[Prose] §4.10 L169 vs §7 L230</span></div>
+  <div class="fix"><b>Fix:</b> "Nessun prodotto" / "Nessuna azione" oppure "Niente da condividere in questa lista".</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">63. "Sostituisci quantità (1 l)" non dice con cosa sostituisce</span><span class="loc">[Prose] duplicate-dialog L278</span></div>
+  <p>Nell'esempio quantità attuale e nuova sono entrambe 1 l, l'effetto è indistinguibile.</p>
+  <div class="fix"><b>Fix:</b> "Sostituisci con 1 l" e usare un esempio con quantità diverse.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">64. Conferma vocale telegrafica e non idiomatica</span><span class="loc">[Prose] §3 L68</span></div>
+  <p>"Aggiunto: 2 l di Latte parzialmente scremato in Banco Frigo" non è idiomatico.</p>
+  <div class="fix"><b>Fix:</b> "Aggiunto: latte parzialmente scremato, 2 l, in Banco Frigo" o "2 l di latte… aggiunti a Banco Frigo".</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">65. Tre urgenze non glossate; "Eccezionale" semanticamente ambiguo</span><span class="loc">[Prose] SPEC.md L54; §4.9 L161</span></div>
+  <p>Suona "più importante" ma è ultimo nell'ordine.</p>
+  <div class="fix"><b>Fix:</b> riga di definizione per ciascuna urgenza o helper nel foglio; confermare l'ordine voluto.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">66. Stringhe TalkBack con placeholder e istruzione ineseguibile</span><span class="loc">[Prose] §7 L224/L227</span></div>
+  <p>"espansa/collassata" va letta scegliendo uno stato; "Swipe a sinistra per eliminare" istruisce un gesto che TalkBack intercetta.</p>
+  <div class="fix"><b>Fix:</b> stringhe condizionali e azione accessibile annunciata (es. "Elimina, azione disponibile").</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">67. Suggerimento sezioni collassabile statico: "Tocca per nascondere" resta anche quando chiuso</span><span class="loc">[Prose] active-list L603; todo-page L599; conclude-dialog L534</span></div>
+  <div class="fix"><b>Fix:</b> "Tocca per mostrare/nascondere" in base allo stato, o rimuovere il suggerimento.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">68. Conteggi dentro le CTA divergenti dalla spina</span><span class="loc">[Prose] active-list L641; todo-page L635; DESIGN §7.10 L319</span></div>
+  <p>"Concludi Spesa (Archivia 2)", "Concludi attività (2)" vs <code>Concludi attività</code> senza conteggio nella spina.</p>
+  <div class="fix"><b>Fix:</b> togliere il conteggio dalle etichette e lasciarlo nel corpo del dialogo.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">69. Punteggiatura e notazione del copy non uniforme</span><span class="loc">[Prose] §4.8 L155; §3 L69; DESIGN §8 L349</span></div>
+  <p>Backtick, parentesi quadre e virgolette dritte si mescolano; le quadre confondono con <code>[DA FARE]</code>.</p>
+  <div class="fix"><b>Fix:</b> backtick per tutte le stringhe di UI; nota che le quadre non fanno parte del copy.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">70. Numeri e unità senza convenzione unica</span><span class="loc">[Prose] §96, L98, L134, L242; L206; §2.1 L43; §5 L200</span></div>
+  <p>"15ms", "300ms", "0.8s" vs "240 ms"; "48x48dp" vs "48dp"; "1400+ prodotti" vs "1.400 voci".</p>
+  <div class="fix"><b>Fix:</b> "15 ms", "300 ms", "0,8 s", "48×48 dp", "1.400" sempre.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">71. "sente" usato per l'aptic</span><span class="loc">[Prose] Flow 2 L249; Flow 10 L321</span></div>
+  <p>"sente la vibrazione tattile", "sente il feedback aptico": il feedback si percepisce, non si sente.</p>
+  <div class="fix"><b>Fix:</b> "percepisce"; uniformare "feedback aptico" / "vibrazione".</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">72. `Eccezionale` come urgenza ambiguo in italiano</span><span class="loc">[Accessibility] §4.9 L161</span></div>
+  <p>Può significare "ottimo".</p>
+  <div class="fix"><b>Fix:</b> riga di aiuto sotto il selettore ("Eccezionale = fuori routine, da fare appena possibile") o termine più chiaro, senza cambiare il contratto.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">73. Nessuna live region per cambi dinamici</span><span class="loc">[Accessibility] §7 L226 annuncia solo cambio pagina</span></div>
+  <p>Spunta, spostamento Presi/Fatte, aggiunta, eliminazione+undo, esito condivisione/import, trascrizione vocale mancanti.</p>
+  <div class="fix"><b>Fix:</b> definire per ogni evento testo, priorità (polite/assertive) e se spostare il focus; evitare doppio annuncio.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">74. Semantica righe sovraccarica: due nodi per riga</span><span class="loc">[Accessibility] §7 L227/L229</span></div>
+  <p>Stesse informazioni lette 2-3 volte per riga.</p>
+  <div class="fix"><b>Fix:</b> un solo nodo per riga (toggle + custom actions) o badge decorativi nel contesto; documentare reading order.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">75. Solo titolo pagina è heading; header categoria/ambito e sezioni no</span><span class="loc">[Accessibility] §7 L225; §7.3 L261-264; §7.9 L309-314</span></div>
+  <p>TalkBack per heading non può saltare tra gruppi in lista lunga.</p>
+  <div class="fix"><b>Fix:</b> <code>heading()</code> su ogni header di gruppo e sezione, livello coerente.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">76. FAB cambia significato per pagina senza `contentDescription` per pagina</span><span class="loc">[Accessibility] §4.6 L138; DESIGN §6 L243; todo-page L640</span></div>
+  <div class="fix"><b>Fix:</b> descrizione esplicita "Aggiungi prodotto"/"Aggiungi cosa da fare" e stato per pagina.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">77. Badge quantità senza `contentDescription` estesa né espansione unità</span><span class="loc">[Accessibility] §7 L223</span></div>
+  <div class="fix"><b>Fix:</b> mappare unità → testo parlato e applicare a tutti i badge; nascondere testo visivo duplicato.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">78. Nessuna strategia reduced motion</span><span class="loc">[Accessibility] §4.6 L134; §4.1 L98; voice-sheet L89</span></div>
+  <p>Pager 240 ms, spostamento riga 300 ms, sheet 250 ms, onda vocale.</p>
+  <div class="fix"><b>Fix:</b> rispettare <code>ANIMATOR_DURATION_SCALE</code>/<code>LocalMotionDurationScale</code>, ridurre a dissolvenza o nessuna animazione; onda vocale icona statica.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">79. Azioni globali in alto, fuori zona pollice su schermi grandi</span><span class="loc">[Accessibility] §1 L167; §1 L24</span></div>
+  <p>Contrasta l'uso a una mano promesso.</p>
+  <div class="fix"><b>Fix:</b> spostare azioni secondarie in menu raggiungibile dal basso o valutare con test a una mano.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">80. `category-header` senza pattern comportamentale</span><span class="loc">[Rubric] DESIGN §7.2 L257-259 vs EXPERIENCE §4</span></div>
+  <p>Non è chiaro se il tap sull'header faccia qualcosa e come si comporti il conteggio del gruppo.</p>
+  <div class="fix"><b>Fix:</b> aggiungere riga "Header di categoria — statico; zona swipe pager; conteggio = voci non spuntate del gruppo".</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">81. `conclude-dialog` senza Component Pattern dedicata</span><span class="loc">[Rubric] §4.8 L155; DESIGN §7.10 L316-320; conclude-dialog L555-573</span></div>
+  <p>Anatomia e copy vivono in DESIGN e nello stato; mockup aggiunge icona warning, preview righe, nota irreversibile non commesse.</p>
+  <div class="fix"><b>Fix:</b> aggiungere riga componente con anatomia esatta (icona sì/no, preview sì/no, ordine pulsanti).</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">82. Empty state senza spec visiva e senza riga in Component Patterns</span><span class="loc">[Rubric] §3 L72-74; §5 L189-190</span></div>
+  <p>Icona/illustrazione, altezza, CTA e rapporto con FAB non definiti.</p>
+  <div class="fix"><b>Fix:</b> aggiungere componente <code>empty-state</code> in DESIGN §7 e pattern in EXPERIENCE §4.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">83. Import: spec solo per contenuto, senza anatomia visiva né token per blocco `[DA FARE]`</span><span class="loc">[Rubric] DESIGN §7.12 L328-331</span></div>
+  <div class="fix"><b>Fix:</b> aggiungere spec pannello anteprima/errore e trattamento visivo del blocco.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">84. FAB senza riga propria: FAB (+) di Da fare citato in prosa senza token né stato</span><span class="loc">[Rubric] §6 L243; §7.6 L290</span></div>
+  <div class="fix"><b>Fix:</b> aggiungere <code>fab-action</code> o variante contestuale con token e pattern in EXPERIENCE §4.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">85. Quattro coppie di component token duplicano anatomia</span><span class="loc">[Rubric] DESIGN L78-151</span></div>
+  <p><code>app-bar</code>/<code>page-header</code>, <code>bottom-sheet</code>/<code>action-sheet</code>, <code>duplicate-dialog</code>/<code>choice-dialog</code>; <code>voice-fab</code> unico token FAB.</p>
+  <div class="fix"><b>Fix:</b> tenere un token per ruolo, alias o <code>extends</code>, non copie.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">86. Numeri precisione finta</span><span class="loc">[Rubric] L98, L118, L134, L242, L327</span></div>
+  <p>haptic 15ms, ritardo 300ms, transizione 240ms, trascrizione 0.8s, sheet 45%, foglio 65%.</p>
+  <div class="fix"><b>Fix:</b> spostare in "default di build" o rimuovere; lasciare come contract solo valori che cambiano il comportamento.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">87. Cinque flow (1-5) narrativi e in parte superati (Flow 3)</span><span class="loc">[Rubric] §8 L236-322</span></div>
+  <p>Occupano metà Key Flows e spingono la feature in coda.</p>
+  <div class="fix"><b>Fix:</b> separare sezione "Baseline — Spesa (Flow 1-5)" da "Cose da fare (Flow 6-10)" o rimuovere flow superati.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">88. `UX Assumptions §9` non elenca decisioni aperte</span><span class="loc">[Rubric] §9 L324-331</span></div>
+  <p>Ripete cinque regole già normative e aggiunge "microcopy può essere rifinito".</p>
+  <div class="fix"><b>Fix:</b> spostare decisioni nel corpo, lasciare in Open decisions solo ciò che è davvero aperto, limitare deroga microcopy a stringhe non contrattuali.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">89. `Key Flows` lista piatta di 10 flow senza separatore baseline/feature</span><span class="loc">[Structure] §8 L236-322</span></div>
+  <div class="fix"><b>Fix:</b> sottosezioni "Baseline — Spesa (Flow 1-5)" e "Cose da fare (Flow 6-10)".</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">90. Nessuna file map oltre lista mockup nel preambolo</span><span class="loc">[Structure] DESIGN L158; EXPERIENCE L18; mockups/</span></div>
+  <p>Non si dice quale mockup illustra quale superficie/componente.</p>
+  <div class="fix"><b>Fix:</b> tabella <code>Mockup | Superficie/Componente | Cosa illustra | Stato</code> nel preambolo o <code>mockups/README.md</code>.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">91. Mockup senza semantica: checkbox, scelte condivisione, chip</span><span class="loc">[Accessibility] active-list L513-515; todo-page L507-511; share-dialog L495-520; action-sheet L592-607</span></div>
+  <p>Sono l'unica anatomia disponibile e verranno copiati.</p>
+  <div class="fix"><b>Fix:</b> aggiungere semantica ARIA ai mockup o scheda "semantics checklist"; in Compose mappare 1:1.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">92. Contrasto e dimensioni nei mockup: badge 10px; "CONSIGLIATO" 3,30:1</span><span class="loc">[Accessibility] todo-page L291-299; duplicate-dialog L178-187; voice-sheet L199-209</span></div>
+  <div class="fix"><b>Fix:</b> badge ≥12sp, verde più scuro o testo scuro su verde chiaro; usare <code>accent-success #15803D</code> (5,02:1).</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">93. Nessun mockup mostra stato focus (`:focus-visible`)</span><span class="loc">[Accessibility] mockup/</span></div>
+  <div class="fix"><b>Fix:</b> aggiungere frame "focus" per header, riga, checkbox, chip, FAB e dialoghi con token <code>focus-ring</code>.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">94. Titoli/conteggi mockup divergenti dalla spina</span><span class="loc">[Accessibility] active-list L469-474; todo-page L465-470</span></div>
+  <p>"Spesa" + badge "4 DA PRENDERE" vs "Spesa (4)"; "Da fare" + "4 AZIONI • 2 FATTE" vs "Da fare (4)".</p>
+  <div class="fix"><b>Fix:</b> allineare titolo, badge e conteggi; un solo punto di annuncio del conteggio.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">95. Nessun mockup dark, benché dark mode dichiarato</span><span class="loc">[Accessibility] DESIGN L191-192</span></div>
+  <div class="fix"><b>Fix:</b> produrre almeno <code>active-list-dark</code> e <code>action-sheet-dark</code>, o rimuovere dark mode dal contratto.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">96. Selezioni chip e scelte condivisione solo riempimento/bordo, senza spunta</span><span class="loc">[Accessibility] action-sheet L411-427; share-dialog L305-338</span></div>
+  <div class="fix"><b>Fix:</b> aggiungere spunta/icona di stato al selezionato (ridondanza non cromatica).</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">97. `DESIGN.md` §7.5 dice "3 pulsanti" ma ne elenca quattro</span><span class="loc">[Rubric] DESIGN L279-283; duplicate-dialog L265-294</span></div>
+  <div class="fix"><b>Fix:</b> correggere in "quattro".</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">98. Mockup conteggi interni incoerenti</span><span class="loc">[Rubric] action-sheet L505 vs L527-571; share-dialog L441 vs L456-485</span></div>
+  <div class="fix"><b>Fix:</b> allineare conteggi o usare caso con 5 righe.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">99. Token orfani/deprecati non referenziati</span><span class="loc">[Rubric] DESIGN L11, L21, L64</span></div>
+  <p><code>surface-inverse</code>, <code>rounded.none</code>, <code>accent-warning</code>, <code>app-bar</code>, <code>bottom-sheet</code>, <code>duplicate-dialog</code>.</p>
+  <div class="fix"><b>Fix:</b> rimuovere i token morti o dichiararli deprecati.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-medium">Medium</span><span class="title">100. Glossario mancante per termini nuovi</span><span class="loc">[Structure + Prose] "azione", "ambito" (5 valori), "urgenza" (3 valori), "Fatte", "lista attiva"</span></div>
+  <div class="fix"><b>Fix:</b> tabella <code>Termine | Valori | Default | Ordine | Token badge</code> in Foundation.</div>
+</div>
+
+<h3>Low (26)</h3>
+
+<div class="finding">
+  <div class="head"><span class="badge b-low">Low</span><span class="title">101. Punteggiatura del copy non uniforme per tipo di stringa</span><span class="loc">[Prose] §81-L90</span></div>
+  <div class="fix"><b>Fix:</b> titolo senza punto, corpo con punto, etichetta pulsante senza punto, messaggio errore con punto.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-low">Low</span><span class="title">102. Maiuscola dopo due punti non uniforme</span><span class="loc">[Prose] §191; §6 L215</span></div>
+  <div class="fix"><b>Fix:</b> minuscola dopo i due punti, salvo nomi propri o frasi autonome.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-low">Low</span><span class="title">103. Conteggi senza template di singolare/plurale</span><span class="loc">[Prose] §143</span></div>
+  <p>"Spesa (N)", "Da fare (N)", "Presi (N)", "Fatte (N)"; mockup aggiungono "4 DA PRENDERE", "4 AZIONI", "2 FATTE", "2 VOCI", "1 VOCE".</p>
+  <div class="fix"><b>Fix:</b> tabella template <code>{n} prodotto/i</code>, <code>{n} azione/i</code>, <code>{n} articolo/i</code> con regole per n = 0, 1, molti.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-low">Low</span><span class="title">104. Brand "Togo" nel frontmatter vs "TOGO" nel corpo</span><span class="loc">[Rubric - mechanical notes]</span></div>
+  <div class="fix"><b>Fix:</b> allineare il naming.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-low">Low</span><span class="title">105. `status: draft` mentre `.memlog.md` dice "pronta per il Reviewer Gate"</span><span class="loc">[Rubric - mechanical notes]</span></div>
+  <div class="fix"><b>Fix:</b> decidere se il gate produce <code>final</code> e aggiornare frontmatter.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-low">Low</span><span class="title">106. Spine da finalizzare dopo validazione</span><span class="loc">[Structure]</span></div>
+  <div class="fix"><b>Fix:</b> impostare <code>status: final</code>, <code>updated: 2026-11-05</code>, registrare "spines finalized" nel memlog.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-low">Low</span><span class="title">107. "Azione già presente" con e senza punto</span><span class="loc">[Rubric - mechanical notes] DESIGN L307; EXPERIENCE L146/L163; SPEC L61 vs L81/L192</span></div>
+  <div class="fix"><b>Fix:</b> uniformare prima del final.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-low">Low</span><span class="title">108. Haptics: rispettare impostazioni di sistema, mai unico feedback</span><span class="loc">[Accessibility] §231</span></div>
+  <div class="fix"><b>Fix:</b> documentare come ridondanza.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-low">Low</span><span class="title">109. Lingua: locale italiana e `localeConfig`; pronuncia TalkBack di unità, "TOGO", nomi stranieri</span><span class="loc">[Accessibility] §232</span></div>
+  <div class="fix"><b>Fix:</b> testare pronuncia e configurare <code>localeConfig</code>.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-low">Low</span><span class="title">110. Magnification: header e bottom bar fissi riducono area utile</span><span class="loc">[Accessibility] §229</span></div>
+  <div class="fix"><b>Fix:</b> testare su device a 200-300% e scroll sotto barre.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-low">Low</span><span class="title">111. Voce esterna: `RecognizerIntent` può mancare o richiedere rete</span><span class="loc">[Accessibility] §230</span></div>
+  <div class="fix"><b>Fix:</b> fallback manuale visibile e annunciato.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-low">Low</span><span class="title">112. Mockup legacy non distinti (datati 2026-10-07 vs 2026-11-04)</span><span class="loc">[Structure] §56</span></div>
+  <div class="fix"><b>Fix:</b> link inline per sezione con etichetta "Aggiornato per Cose da fare" / "Legacy" e data.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-low">Low</span><span class="title">113. `.working/` contiene copie pre-pager non contract</span><span class="loc">[Structure] §98</span></div>
+  <div class="fix"><b>Fix:</b> escludere o marcare come non contract.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-low">Low</span><span class="title">114. Artefatto stale `reconcile-inputs.md`</span><span class="loc">[Rubric] §101</span></div>
+  <div class="fix"><b>Fix:</b> rigenerare o rimuovere dal workspace.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="badge b-low">Low</span><span class="title">115. File di review (`review-rubric.md`) presente nello workspace UX: non è fonte UX</span><span class="loc">[Rubric] §98</span></div>
+  <div class="fix"><b>Fix:</b> non citare come fonte nelle spine.</div>
+</div>
+
+<h2>Nota per categoria (aperte se thin/broken)</h2>
+<ul>
+<li><b>Flow coverage — aperto.</b> CAP-1/CAP-5 senza flow dedicato, CAP-6 senza passi/climax/failure, 7 flow senza failure, 4 flow senza climax, Flow 3 legacy.</li>
+<li><b>Token completeness — aperto.</b> Dark mode senza coppie scure, <code>border-crisp-dark</code> due valori, Urgente sotto floor 7:1, oggetti tipografici su chiavi scalari, rapporti contrasto badge non dichiarati.</li>
+<li><b>Component coverage — chiuso.</b> 10/12 coppie component-pattern; mancano <code>category-header</code>, <code>conclude-dialog</code>, empty state e FAB senza riga propria.</li>
+<li><b>State coverage — aperto.</b> Condivisione contraddittoria, regole visibilità sezioni incomplete, tema scuro senza stato, storico senza empty, undo non in pattern, focus visibile mancante.</li>
+<li><b>Visual reference coverage — aperto.</b> Mockup linkati solo in preambolo, badge urgenza mancante in alcuni mockup, target sotto 48dp, titoli/conteggi non allineati, stile chip/sheet solo nei mockup, conteggi incoerenti.</li>
+<li><b>Inheritance discipline — aperto.</b> Nomi componenti instabili, UJ-4/UJ-5 non nelle fonti, glossario mancante, checkbox descritta in due modi, raggruppamento ambiguo.</li>
+<li><b>Shape fit — chiuso.</b> Ordine canonico e default presenti; <code>UX Assumptions</code> da ripulire; <code>Inspiration</code> omessa difendibile.</li>
+<li><b>Structure — aperto.</b> Nessun punto d'ingresso Cose da fare, regole ripetute, tassonomia instabile, nessuna coverage map, precedenza SPEC/spine non dichiarata.</li>
+<li><b>Prose — aperto.</b> Microcopy non vincolante (§9 L331), condivisione contraddittoria, copy duplicato con varianti, terminologia iOS, riferimenti baseline non risolti.</li>
+<li><b>Accessibility — aperto.</b> 4 blocchi critici (contrasto righe spuntate, dark mode non tokenizzato, swipe senza alternativa, focus mancante) + 19 high.</li>
+</ul>
+
+<h2>Next steps (rolling findings into un Update)</h2>
+<ol>
+<li><b>Critical first:</b> definire coppie dark o rimuovere la promessa dark; token <code>ink-struck</code> per righe spuntate; azione "Elimina" accessibile al posto del solo swipe; token <code>focus-ring</code> e ordine di traversal; dichiarare vincolante il microcopy quotato (rimuovere/clausola §9 L331).</li>
+<li><b>High:</b> matrice condivisione scelta × parti vuote; un unico pattern <code>Conclusione</code>; Flow 3 riscritto come legacy/fuso in Flow 8; sezione canonica pager; <code>State Patterns</code> con colonna Superficie/Ambito; <code>Voice and Tone</code> come inventario unico; raggruppamento azioni dichiarato (ambito header, urgenza ordine); tassonomia componenti canonica; <code>lista attiva</code> ridefinita; coverage map CAP → flow; precedenza SPEC vs spine dichiarata.</li>
+<li><b>Medium/Low:</b> residui di terminologia, copy duplicato, contrasto placeholder/hint/bordi, semantica TalkBack, live region, font scaling, IME, mockup (badge urgenza, target 48dp, focus state, dark mockup, conteggi).</li>
+<li>Dopo il fix: impostare <code>DESIGN.md</code> ed <code>EXPERIENCE.md</code> a <code>status: final</code>, <code>updated: 2026-11-05</code>, registrare "spines finalized" nel <code>.memlog.md</code>.</li>
+<li>Poi: avviare <code>bmad-architecture</code>, emendare AD-7 e AD-2, derivare epiche/storie e pianificare lo sprint.</li>
+</ol>
+
+<h2>Reviewer files</h2>
+<ul>
+<li><code>review-rubric.md</code></li>
+<li><code>review-structure.md</code></li>
+<li><code>review-prose.md</code></li>
+<li><code>review-accessibility.md</code></li>
+</ul>
+<p class="small files">Generato dalla pipeline di sintesi UX (bmad-ux / references/validate.md §64-75). I singoli file <code>review-*.md</code> persistono; il report consolidato viene sovrascritto a ogni nuovo run.</p>
+</div>
+</body>
+</html>
