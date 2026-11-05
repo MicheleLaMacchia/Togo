@@ -86,4 +86,58 @@ development_status:
   7-1-aggiunta-nuovo-prodotto-canonico-su-categoria-esistente: done
   7-2-proposta-nuovo-livello-3-sotto-un-livello-2-esistente: done
   epic-7-retrospective: optional
-last_updated: 10-22-2026
+
+  epic-8: backlog
+  8-1-tabella-action_item-e-migrazione-room-5-6: backlog
+  8-2-repository-e-use-case-per-le-azioni: backlog
+  8-3-pagina-da-fare-con-pager-e-intestazione: backlog
+  8-4-riga-azione-con-checkbox-badge-urgenza-e-badge-ambito: backlog
+  8-5-foglio-azione-aggiungi-modifica-con-testo-urgenza-e-ambito: backlog
+  8-6-spunta-azione-e-spostamento-in-fatte: backlog
+  8-7-modifica-azione-da-foglio: backlog
+  8-8-eliminazione-azione-con-cestino-e-undo: backlog
+  8-9-deduplica-azioni-per-testo-ambito-urgenza: backlog
+  8-10-raggruppamento-azioni-per-ambito-urgenza-alfabetico: backlog
+  epic-8-retrospective: optional
+
+  epic-9: backlog
+  9-1-sezione-fatte-collassabile-con-conteggio: backlog
+  9-2-pulsante-concludi-attività-e-dialog-di-conferma: backlog
+  9-3-eliminazione-azioni-spuntate-senza-undo-e-senza-storico: backlog
+  9-4-deselezione-azione-da-fatte: backlog
+  epic-9-retrospective: optional
+
+  epic-10: backlog
+  10-1-horizontalpager-con-due-pagine: backlog
+  10-2-intestazione-fissa-con-titolo-frecce-e-azioni-globali: backlog
+  10-3-swipe-solo-su-intestazione-gruppi-spazi-vuoti-non-su-righe: backlog
+  10-4-frecce-pager-focusabili-con-talkback: backlog
+  10-5-back-da-da-fare-torna-a-spesa: backlog
+  10-6-persistenza-pagina-corrente-e-posizione-di-scroll: backlog
+  epic-10-retrospective: optional
+
+  epic-11: backlog
+  11-1-dialog-a-tre-scelte-con-conteggi: backlog
+  11-2-formato-testo-da-fare-per-condivisione-azioni: backlog
+  11-3-oggetto-dinamico-in-base-alla-scelta-di-condivisione: backlog
+  11-4-matrice-scelta-parti-vuote: backlog
+  11-5-sharelistusecase-non-restituisce-null-su-spesa-vuota-con-azi: backlog
+  epic-11-retrospective: optional
+
+  epic-12: backlog
+  12-1-parser-riconosce-blocco-da-fare: backlog
+  12-2-import-di-sole-azioni-valido-0-prodotti: backlog
+  12-3-deduplica-azioni-per-testo-ambito-urgenza-con-accenti-signif: backlog
+  12-4-validazione-ambito-e-urgenza-nell-import: backlog
+  12-5-import-tutto-o-niente-transazionale-room: backlog
+  12-6-anteprima-e-messaggio-esito-import: backlog
+  epic-12-retrospective: optional
+
+  epic-13: backlog
+  13-1-token-dark-mode-coppie-dark: backlog
+  13-2-token-ink-struck-per-righe-spuntate: backlog
+  13-3-token-focus-ring-e-ordine-traversal: backlog
+  13-4-semantica-talkback-per-checkbox-chip-sezioni-e-dialog: backlog
+  13-5-mockup-allineati-badge-urgenza-target-48dp-stato-focus-dark: backlog
+  epic-13-retrospective: optional
+last_updated: 11-05-2026 14:00

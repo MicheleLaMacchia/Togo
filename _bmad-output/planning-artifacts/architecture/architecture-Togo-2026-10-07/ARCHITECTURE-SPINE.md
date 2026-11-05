@@ -7,7 +7,7 @@ paradigm: 'Clean Architecture with Unidirectional Data Flow (MVI/UDF)'
 scope: 'TOGO Android Native App MVP'
 status: final
 created: '2026-10-07'
-updated: '2026-10-07'
+updated: '2026-11-05'
 binds:
   - FR-1
   - FR-2
@@ -88,9 +88,9 @@ flowchart LR
 
 ### AD-2 — Single-Writer Local Persistence via Room & Kotlin Flow [ADOPTED]
 
-- **Binds:** `data.database`, `domain.repository`, `data.repository`, gestione lista attiva, storico e tassonomia.
-- **Prevents:** Incoerenze e race condition tra schermate (es. modifica vocale contemporanea a spunta in corsia), desincronizzazioni di stato e letture parziali durante le transazioni di checkout.
-- **Rule:** Il database SQLite locale gestito tramite Room è l'unica sorgente di verità (Single Source of Truth) dell'app. Qualsiasi lettura di stato verso la UI avviene tramite flussi immutabili `Flow<T>`. Tutte le mutazioni (aggiunta, spunta, conclusione spesa, eliminazione) devono essere atomiche, eseguite su thread IO e coordinate esclusivamente tramite `ShoppingListRepository`. L'operazione "Concludi spesa" (`CheckoutShoppingListUseCase`) esegue una transazione atomica Room che trasferisce tutte le voci con `is_checked = 1` nella tabella `HISTORICAL_ITEM` (upsert incrementando `purchase_count`), le rimuove da `SHOPPING_ITEM`, e preserva intatte le voci non spuntate.
+- **Binds:** `data.database`, `domain.repository`, `data.repository`, gestione lista attiva, storico, tassonomia e azioni della lista Da fare.
+- **Prevents:** Incoerenze e race condition tra schermate (es. modifica vocale contemporanea a spunta in corsia), desincronizzazioni di stato, letture parziali durante le transazioni di checkout e scritture parziali nell'import di azioni.
+- **Rule:** Il database SQLite locale gestito tramite Room è l'unica sorgente di verità (Single Source of Truth) dell'app. Qualsiasi lettura di stato verso la UI avviene tramite flussi immutabili `Flow<T>`. Tutte le mutazioni (aggiunta, spunta, conclusione spesa, eliminazione, aggiunta/modifica/eliminazione azioni) devono essere atomiche, eseguite su thread IO e coordinate esclusivamente tramite `ShoppingListRepository`. L'operazione "Concludi spesa" (`CheckoutShoppingListUseCase`) esegue una transazione atomica Room che trasferisce tutte le voci con `is_checked = 1` nella tabella `HISTORICAL_ITEM` (upsert incrementando `purchase_count`), le rimuove da `SHOPPING_ITEM`, e preserva intatte le voci non spuntate. L'operazione "Concludi attività" elimina le sole azioni spuntate della tabella `ACTION_ITEM` senza scrivere `HISTORICAL_ITEM` e senza incrementare conteggi. Le azioni sono modellate in una tabella dedicata `ACTION_ITEM` (testo, ambito, urgenza, stato spunta, timestamp) indipendente da `SHOPPING_ITEM` e dal catalogo prodotti; la migrazione Room 5→6 crea tale tabella in modo non distruttivo preservando il catalogo precompilato. L'import del blocco `[DA FARE]` è tutto-o-niente: validato prima e applicato in un'unica transazione Room, senza scritture parziali.
 
 ### AD-3 — Bundled Pre-populated Catalog Seed with User Overlay [ADOPTED]
 
@@ -126,9 +126,15 @@ flowchart LR
 
 ### AD-7 — Sandbox Plain-Text Sharing via Android Intent [ADOPTED]
 
-- **Binds:** FR-10, `feature.share`.
-- **Prevents:** Dipendenze da server di condivisione esterni, registrazioni account o fughe involontarie dello storico acquisti e delle regole apprese dell'utente.
-- **Rule:** La condivisione esporta esclusivamente i prodotti correntemente attivi (non spuntati), formattati come testo leggibile strutturato per categoria (Livello 2 / Livello 3). L'invio avviene tramite Android `Intent.ACTION_SEND` (`text/plain`). Nessun dato dello storico o metadato privato dell'utente viene mai incluso nell'export.
+- **Binds:** FR-10, `feature.share`, condivisione spesa e/o cose da fare.
+- **Prevents:** Dipendenze da server di condivisione esterni, registrazioni account, fughe involontarie dello storico acquisti e delle regole apprese dell'utente, e blocco della condivisione quando una delle due liste è vuota.
+- **Rule:** La condivisione esporta esclusivamente voci correntemente attive (non spuntate), formattate come testo leggibile strutturato, tramite Android `Intent.ACTION_SEND` (`text/plain`). L'utente sceglie tra tre opzioni: `Solo spesa` (formato attuale `[L1] / + L2 / - L3`), `Solo azioni` (solo il blocco `[DA FARE]` con `+ AMBITO`, `- URGENZA` e riga azione indentata di due spazi), o `Entrambe` (prima la spesa, poi `[DA FARE]`). Le azioni spuntate sono sempre escluse. L'oggetto è `Lista spesa TOGO`, `Cose da fare TOGO` o `Lista spesa e cose da fare TOGO` in base alla scelta. Se una parte è vuota, il relativo blocco viene omesso; se entrambe sono vuote, la condivisione è disabilitata con messaggio. Nessun dato dello storico o metadato privato dell'utente viene mai incluso nell'export. `ShareListUseCase` restituisce il testo da condividere anche quando la spesa è vuota ma ci sono azioni da condividere (non restituisce `null` solo perché la spesa è vuota).
+
+### AD-8 — Pager Orizzontale e Navigazione tra Spesa e Da fare [NEW]
+
+- **Binds:** `feature.activelist`, `AppNavigator`, `HorizontalPager`, `domain.repository`, CAP-1, CAP-5, CAP-6.
+- **Prevents:** Il pager che intercetta lo swipe iniziato su una riga (rompere il gesto del cestino), navigazione ambigua tra le due liste, back da Da fare che esce dall'app invece di tornare a Spesa.
+- **Rule:** L'intestazione fissa sopra la lista contiene titolo della pagina (`Spesa (N)` / `Da fare (N)`), frecce di cambio pagina e azioni globali (Storico solo su Spesa, Condividi e Impostazioni su entrambe). Il cambio pagina tramite swipe avviene solo se il drag inizia sull'intestazione, su un'intestazione di gruppo o su uno spazio non occupato da righe; lo swipe orizzontale su una riga resta esclusivamente il gesto del cestino e non muove il pager. Le frecce di pagina sono sempre focusabili e utilizzabili con TalkBack; la freccia senza pagina disponibile è disabilitata ma annunciata. Il back dalla pagina Da fare torna a Spesa (non esce dall'app), gestito tramite `BackHandler` coordinato con il pager. L'app parte sempre dalla pagina Spesa a freddo; pagina corrente e posizione di scorrimento sopravvivono a rotazione e navigazione interna. Le azioni della lista Da fare non occupano nodi L1/L2/L3, non diventano prodotti canonici e non compaiono nella ricerca prodotti.
 
 ## Consistency Conventions
 
