@@ -4,11 +4,13 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import it.togo.app.data.database.dao.ActionItemDao
 import it.togo.app.data.database.dao.CatalogDao
 import it.togo.app.data.database.dao.HistoryDao
 import it.togo.app.data.database.dao.LearnedRulesDao
 import it.togo.app.data.database.dao.ShoppingItemDao
 import it.togo.app.data.database.dao.UserAttributeDao
+import it.togo.app.data.database.entity.ActionItemEntity
 import it.togo.app.data.database.entity.CanonicalProductEntity
 import it.togo.app.data.database.entity.HistoricalItemEntity
 import it.togo.app.data.database.entity.LearnedRuleEntity
@@ -28,9 +30,12 @@ import it.togo.app.data.database.entity.UserAttributeEntity
         TaxonomyLevel3Entity::class,
         CanonicalProductEntity::class,
         it.togo.app.data.database.entity.SynonymEntity::class,
-        UserAttributeEntity::class
+        UserAttributeEntity::class,
+        ActionItemEntity::class
     ],
-    version = 5,
+    // Story 8.1: la versione 6 aggiunge ACTION_ITEM; la MIGRATION_5_6 è
+    // non distruttiva e preserva catalogo e dati utente.
+    version = 6,
     exportSchema = false
 )
 abstract class TogoDatabase : RoomDatabase() {
@@ -40,6 +45,7 @@ abstract class TogoDatabase : RoomDatabase() {
     abstract fun learnedRulesDao(): LearnedRulesDao
     abstract fun catalogDao(): CatalogDao
     abstract fun userAttributeDao(): UserAttributeDao
+    abstract fun actionItemDao(): ActionItemDao
 
     companion object {
         @Volatile
@@ -73,8 +79,14 @@ abstract class TogoDatabase : RoomDatabase() {
                         MIGRATION_1_2,
                         MIGRATION_2_3,
                         MIGRATION_3_4,
-                        migration4To5(context.applicationContext)
+                        migration4To5(context.applicationContext),
+                        // Story 8.1: crea ACTION_ITEM senza toccare catalogo
+                        // e dati utente. Con questa migrazione registrata il
+                        // percorso 5→6 non passa dal fallback distruttivo.
+                        MIGRATION_5_6
                     )
+                    // Resta come rete di sicurezza per versioni non coperte,
+                    // non per la 5→6 (gestita da MIGRATION_5_6).
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

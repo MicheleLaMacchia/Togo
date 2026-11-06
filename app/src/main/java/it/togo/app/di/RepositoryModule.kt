@@ -15,7 +15,7 @@ import it.togo.app.domain.repository.UserAttributeRepository
 
 val repositoryModule: Module = module {
     // Repository implementations - single instance per repository
-    single<ShoppingListRepository> { RoomShoppingListRepository(get(), get()) }
+    single<ShoppingListRepository> { RoomShoppingListRepository(get(), get(), get()) }
     single<CatalogRepository> { RoomCatalogRepository(get()) }
     single<HistoryRepository> { RoomHistoryRepository(get()) }
     single<LearnedRulesRepository> { RoomLearnedRulesRepository(get()) }

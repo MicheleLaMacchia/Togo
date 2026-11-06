@@ -35,7 +35,11 @@ class RoomShoppingListRepositoryCheckoutTest {
         db = Room.inMemoryDatabaseBuilder(context, TogoDatabase::class.java)
             .allowMainThreadQueries()
             .build()
-        repository = RoomShoppingListRepository(db.shoppingItemDao(), db.historyDao())
+        repository = RoomShoppingListRepository(
+            db.shoppingItemDao(),
+            db.historyDao(),
+            db.actionItemDao(),
+        )
     }
 
     @After

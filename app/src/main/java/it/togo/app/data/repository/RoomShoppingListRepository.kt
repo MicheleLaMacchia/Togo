@@ -1,8 +1,14 @@
 package it.togo.app.data.repository
 
+import it.togo.app.data.database.dao.ActionItemDao
 import it.togo.app.data.database.dao.ShoppingItemDao
 import it.togo.app.data.database.dao.HistoryDao
+import it.togo.app.data.database.entity.ActionItemEntity
 import it.togo.app.data.database.entity.ShoppingItemEntity
+import it.togo.app.domain.action.ActionTextNormalizer
+import it.togo.app.domain.model.ActionItem
+import it.togo.app.domain.model.ActionScope
+import it.togo.app.domain.model.ActionUrgency
 import it.togo.app.domain.model.AttributeSuggestions
 import it.togo.app.domain.model.HistoricalItem
 import it.togo.app.domain.model.ItemAttributes
@@ -18,7 +24,8 @@ import androidx.room.Transaction
 
 class RoomShoppingListRepository(
     private val shoppingItemDao: ShoppingItemDao,
-    private val historyDao: HistoryDao
+    private val historyDao: HistoryDao,
+    private val actionItemDao: ActionItemDao,
 ) : ShoppingListRepository {
 
     override fun getAllItems(): Flow<List<ShoppingItem>> =
@@ -80,6 +87,61 @@ class RoomShoppingListRepository(
                 ?.let { ItemAttributes(it.brand, it.variant, it.condition) }
             attributes?.takeUnless { it.isEmpty }
         }
+
+    // --- Azioni "Cose da fare" (Epic 8) ---
+
+    override fun getActions(): Flow<List<ActionItem>> =
+        actionItemDao.getAll().map { entities -> entities.map { it.toDomain() } }
+
+    override suspend fun addAction(action: ActionItem) {
+        withContext(Dispatchers.IO) {
+            actionItemDao.insert(action.toEntity())
+        }
+    }
+
+    override suspend fun updateAction(action: ActionItem) {
+        withContext(Dispatchers.IO) {
+            actionItemDao.update(action.toEntity())
+        }
+    }
+
+    override suspend fun deleteAction(actionId: String) {
+        withContext(Dispatchers.IO) {
+            actionItemDao.deleteById(actionId)
+        }
+    }
+
+    override suspend fun checkOffAction(actionId: String, checked: Boolean) {
+        withContext(Dispatchers.IO) {
+            actionItemDao.setChecked(
+                id = actionId,
+                checked = checked,
+                updatedAt = System.currentTimeMillis(),
+            )
+        }
+    }
+
+    override suspend fun checkDuplicateAction(
+        normalizedText: String,
+        scope: ActionScope,
+        urgency: ActionUrgency,
+        excludeActionId: String?,
+    ): Boolean = withContext(Dispatchers.IO) {
+        if (excludeActionId == null) {
+            actionItemDao.checkDuplicate(
+                testoNormalizzato = normalizedText,
+                ambito = scope.label,
+                urgenza = urgency.label,
+            )
+        } else {
+            actionItemDao.checkDuplicateExcluding(
+                testoNormalizzato = normalizedText,
+                ambito = scope.label,
+                urgenza = urgency.label,
+                excludeId = excludeActionId,
+            )
+        }
+    }
 
     /**
      * Deduplica case-insensitive ("Coop" e "coop" sono la stessa marca) e
@@ -206,3 +268,26 @@ private data class HistoryKey(
             value?.trim()?.lowercase(Locale.ROOT)?.ifEmpty { null }
     }
 }
+
+private fun ActionItemEntity.toDomain(): ActionItem = ActionItem(
+    id = id,
+    text = testo,
+    scope = ActionScope.fromLabel(ambito),
+    urgency = ActionUrgency.fromLabel(urgenza),
+    isChecked = statoSpunta,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+)
+
+private fun ActionItem.toEntity(): ActionItemEntity = ActionItemEntity(
+    id = id,
+    testo = text,
+    ambito = scope.label,
+    urgenza = urgency.label,
+    statoSpunta = isChecked,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+    // La chiave di deduplica è calcolata nel domain e salvata esplicitamente:
+    // un copy() dell'entità non ricalcolerebbe il default.
+    testoNormalizzato = ActionTextNormalizer.normalize(text),
+)
