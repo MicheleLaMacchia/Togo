@@ -59,6 +59,16 @@ data class ActiveListUiState(
     val checkedItemsForUndo: List<ShoppingItem> = emptyList(), // Item per undo checkout
     /** Messaggio transitorio del foglio azione (es. "Azione già presente"). */
     val actionSnackbarMessage: String? = null,
+    /**
+     * Messaggio dello snackbar undo dopo l'eliminazione di una singola azione
+     * (Story 8.8). Mostra "Annulla" per almeno 10 s.
+     */
+    val actionDeleteUndoMessage: String? = null,
+    /**
+     * Contatore monotono usato per ri-mostrare lo snackbar undo dopo ogni
+     * eliminazione, così una nuova eliminazione rimpiazza il precedente.
+     */
+    val actionDeleteUndoCounter: Int = 0,
 ) {
     /** Totale prodotti attivi (non spuntati) mostrato nel titolo "Spesa (N)". */
     val activeCount: Int = activeGroups.sumOf { it.items.size }
@@ -143,6 +153,12 @@ sealed interface UiEvent {
 
     /** Annulla eliminazione (Snackbar undo) */
     object UndoDelete : UiEvent
+
+    /** Elimina azione (swipe cestino o azione accessibile "Elimina"). */
+    data class DeleteAction(val actionId: String) : UiEvent
+
+    /** Annulla eliminazione azione (Snackbar undo). */
+    object UndoDeleteAction : UiEvent
 
     /** Annulla checkout (Snackbar undo) */
     object UndoCheckout : UiEvent

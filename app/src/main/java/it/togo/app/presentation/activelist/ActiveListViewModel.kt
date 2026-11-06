@@ -18,6 +18,7 @@ import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.ShoppingListRepository
 import it.togo.app.domain.usecase.AddActionUseCase
 import it.togo.app.domain.usecase.CheckDuplicateActionUseCase
+import it.togo.app.domain.usecase.DeleteActionUseCase
 import it.togo.app.domain.usecase.GetActionsUseCase
 import it.togo.app.domain.usecase.ResolveVoiceProductUseCase
 import it.togo.app.domain.usecase.ShareListUseCase
@@ -52,6 +53,7 @@ class ActiveListViewModel(
     private val checkDuplicateAction = CheckDuplicateActionUseCase(shoppingRepository)
     private val addActionUseCase = AddActionUseCase(shoppingRepository, checkDuplicateAction)
     private val updateActionUseCase = UpdateActionUseCase(shoppingRepository, checkDuplicateAction)
+    private val deleteActionUseCase = DeleteActionUseCase(shoppingRepository)
 
     /**
      * Comando vocale confermato che non identifica un prodotto univoco (o ha
@@ -72,6 +74,11 @@ class ActiveListViewModel(
     private var _isCheckingOut = false
     private val _deletedItemForUndo = MutableStateFlow<ShoppingItem?>(null)
     private val _snackbarMessage = MutableStateFlow<String?>(null)
+
+    // Undo eliminazione singola azione (Story 8.8).
+    private val _deletedActionForUndo = MutableStateFlow<ActionItem?>(null)
+    private val _actionUndoMessage = MutableStateFlow<String?>(null)
+    private val _actionUndoCounter = AtomicInteger(0)
 
     init {
         loadTaxonomy()
@@ -111,6 +118,7 @@ class ActiveListViewModel(
                         checkoutSnackbarMessage = current.checkoutSnackbarMessage,
                         checkedItemsForUndo = current.checkedItemsForUndo,
                         actionSnackbarMessage = current.actionSnackbarMessage,
+                        actionDeleteUndoMessage = current.actionDeleteUndoMessage,
                     )
                 }
                 .launchIn(viewModelScope)
@@ -225,6 +233,9 @@ class ActiveListViewModel(
             // alla sheet di aggiunta; qui non si scrive nulla.
             is UiEvent.VoiceCommand -> { }
             is UiEvent.DeleteItem -> handleDeleteItem(event.itemId)
+            // Elimina una singola azione con cestino + undo (Story 8.8).
+            is UiEvent.DeleteAction -> handleDeleteAction(event.actionId)
+            is UiEvent.UndoDeleteAction -> handleUndoDeleteAction()
             // Apre il foglio vocale: gestito direttamente dalla UI.
             is UiEvent.NavigateToVoice -> { }
             // Navigazione: gestita da AppNavigator prima di arrivare qui.
@@ -652,6 +663,54 @@ class ActiveListViewModel(
                 )
             }
         }
+    }
+
+    /**
+     * Elimina una singola azione e mostra lo snackbar undo (≥10 s).
+     * L'eliminazione toglie solo quell'azione, non le altre. L'undo la
+     * ripristina con lo stesso id e le stesse temporanee.
+     */
+    private fun handleDeleteAction(actionId: String) {
+        val action = _uiState.value.actions.find { it.id == actionId } ?: return
+        _deletedActionForUndo.value = action
+
+        viewModelScope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    deleteActionUseCase(action.id.trim())
+                }
+                showActionUndoSnackbar("Azione eliminata")
+            } catch (e: Exception) {
+                _deletedActionForUndo.value = null
+                _uiState.value = _uiState.value.copy(
+                    error = "Eliminazione azione fallita: ${e.message}",
+                )
+            }
+        }
+    }
+
+    /** Ripristina l'azione eliminata (undo) e chiude lo snackbar. */
+    private fun handleUndoDeleteAction() {
+        _deletedActionForUndo.value?.let { action ->
+            viewModelScope.launch {
+                withContext(Dispatchers.IO) {
+                    shoppingRepository.addAction(action)
+                }
+            }
+        }
+        _deletedActionForUndo.value = null
+        clearActionUndoSnackbar()
+    }
+
+    /** Segnala alla UI di mostrare lo snackbar undo per l'eliminazione azione. */
+    fun showActionUndoSnackbar(message: String) {
+        val currentCount = _actionUndoCounter.incrementAndGet()
+        _actionUndoMessage.value = message
+    }
+
+    /** Chiude lo snackbar undo dell'eliminazione azione. */
+    fun clearActionUndoSnackbar() {
+        _actionUndoMessage.value = null
     }
 
     private data class TaxonomyCache(

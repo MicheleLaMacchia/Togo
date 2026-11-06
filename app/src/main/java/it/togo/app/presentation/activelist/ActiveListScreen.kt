@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
@@ -50,6 +51,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import kotlinx.coroutines.delay
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,9 +60,11 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.AccessibilityLiveRegion
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -102,6 +106,9 @@ fun ActiveListScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    // Traccia se lo snackbar ha il focus di accessibilità: usata dal timer di
+    // auto-dimissione dello snackbar undo azione (pausa su focus/hover).
+    var snackbarFocused by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     // Un solo punto di visualizzazione per il checkout: la snackbar passa
@@ -123,6 +130,47 @@ fun ActiveListScreen(
         if (result == SnackbarResult.ActionPerformed) {
             onEvent(UiEvent.UndoCheckout)
         }
+    }
+
+    /**
+     * Snackbar undo per eliminazione di una singola azione.
+     *
+     * Durata ≥10 s, pausa su focus/hover (il timer si ferma mentre lo snackbar
+     * ha il focus di accessibilità), live region educata e tasto "Annulla"
+     * con touch target ≥48dp.
+     */
+    LaunchedEffect(uiState.actionDeleteUndoCounter) {
+        val message = uiState.actionDeleteUndoMessage ?: return@LaunchedEffect
+        var finished = false
+
+        // Auto-dimissione dopo 10 secondi. Il timer non avanza mentre lo
+        // snackbar ha il focus di accessibilità (TalkBack esplora il
+        // messaggio o il tasto Annulla), così l'utente ha sempre almeno
+        // 10 s per annullare l'eliminazione.
+        scope.launch {
+            var elapsed = 0L
+            while (!finished && elapsed < 10000) {
+                delay(200)
+                if (!snackbarFocused) elapsed += 200
+            }
+            if (!finished) {
+                finished = true
+                snackbarHostState.dismissCurrentSnackbar()
+                viewModel.clearActionUndoSnackbar()
+            }
+        }
+
+        val result = snackbarHostState.showSnackbar(
+            message = message,
+            actionLabel = "Annulla",
+            duration = SnackbarDuration.Indefinite,
+        )
+
+        finished = true
+        if (result == SnackbarResult.ActionPerformed) {
+            onEvent(UiEvent.UndoDeleteAction)
+        }
+        viewModel.clearActionUndoSnackbar()
     }
 
     val colors = togoColors()
@@ -414,37 +462,52 @@ fun ActiveListScreen(
         snackbarHost = {
             SnackbarHost(snackbarHostState) { data ->
                 val actionLabel = data.visuals.actionLabel
-                Snackbar(
-                    action = if (actionLabel != null) {
-                        {
-                            TextButton(
-                                onClick = { data.performAction() },
-                                colors = ButtonDefaults.textButtonColors(
-                                    contentColor = tokens.snackbar.action,
-                                ),
-                            ) {
-                                Text(actionLabel)
-                            }
+                Box(
+                    modifier = Modifier
+                        .semantics {
+                            // Live region educata: l'annuncio non interrompe
+                            // l'utente, viene letto al prossimo passaggio.
+                            accessibilityLiveRegion = AccessibilityLiveRegion.Polite
+                            mergeDescendants = true
                         }
-                    } else {
-                        null
-                    },
-                    dismissAction = if (data.visuals.withDismissAction) {
-                        {
-                            IconButton(onClick = { data.dismiss() }) {
-                                Icon(
-                                    imageVector = Icons.Filled.Close,
-                                    contentDescription = "Chiudi",
-                                )
-                            }
-                        }
-                    } else {
-                        null
-                    },
-                    containerColor = tokens.snackbar.container,
-                    contentColor = tokens.snackbar.content,
+                        .onFocusChanged { snackbarFocused = it.isFocused },
                 ) {
-                    Text(data.visuals.message, style = typography.itemMeta)
+                    Snackbar(
+                        action = if (actionLabel != null) {
+                            {
+                                TextButton(
+                                    onClick = { data.performAction() },
+                                    modifier = Modifier.sizeIn(
+                                        minWidth = 48.dp,
+                                        minHeight = 48.dp,
+                                    ),
+                                    colors = ButtonDefaults.textButtonColors(
+                                        contentColor = tokens.snackbar.action,
+                                    ),
+                                ) {
+                                    Text(actionLabel)
+                                }
+                            }
+                        } else {
+                            null
+                        },
+                        dismissAction = if (data.visuals.withDismissAction) {
+                            {
+                                IconButton(onClick = { data.dismiss() }) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Close,
+                                        contentDescription = "Chiudi",
+                                    )
+                                }
+                            }
+                        } else {
+                            null
+                        },
+                        containerColor = tokens.snackbar.container,
+                        contentColor = tokens.snackbar.content,
+                    ) {
+                        Text(data.visuals.message, style = typography.itemMeta)
+                    }
                 }
             }
         },
@@ -706,6 +769,7 @@ private fun ActionsPage(
                                 onEvent(UiEvent.CheckOff(action.id, checked))
                             },
                             onClick = { onEditAction(action) },
+                            onDelete = { onEvent(UiEvent.DeleteAction(action.id)) },
                             rowActionDescription = "Doppio tocco per modificare.",
                         )
                     }

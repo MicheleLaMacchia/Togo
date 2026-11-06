@@ -13,7 +13,14 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -24,10 +31,17 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customAccessibilityAction
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextDecoration
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import it.togo.app.domain.model.ActionItem
 import it.togo.app.domain.model.ActionUrgency
 import it.togo.app.ui.theme.ActionRowTokens
@@ -50,8 +64,8 @@ import java.util.Locale
  * Le azioni non sono prodotti: qui non esistono quantità, unità, marca o
  * variante, quindi nessun badge quantità viene disegnato.
  *
- * [onClick] è opzionale: la modifica (Story 8.7) e lo swipe cestino (Story 8.8)
- * verranno collegati in seguito, senza cambiare questa struttura.
+ * [onClick] apre l'editor di modifica (Story 8.7). [onDelete] espone lo swipe
+ * cestino e l'azione accessibile "Elimina" con annulla (Story 8.8).
  */
 @OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 @Composable
@@ -60,6 +74,8 @@ fun ActionRow(
     onCheckChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
+    /** Eliminazione azione con cestino/undo (Story 8.8). */
+    onDelete: (() -> Unit)? = null,
     rowActionDescription: String? = null,
     /** Quando vera (sezione "Fatte"), i badge urgenza/ambito sono resi attenuati. */
     badgesMuted: Boolean = false,
@@ -70,6 +86,46 @@ fun ActionRow(
     val tokens = componentTokens()
     val actionTokens = tokens.actionRow
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    // Larghezza dell'azione rivelata dallo swipe (touch target ≥48dp).
+    val revealWidth = 88.dp
+    val revealWidthPx = with(LocalDensity.current) { revealWidth.toPx() }
+    val settleThresholdPx = revealWidthPx / 2f
+
+    var horizontalDrag by remember(action.id) { mutableStateOf(0f) }
+    var isRevealed by remember(action.id) { mutableStateOf(false) }
+    var settleJob by remember(action.id) { mutableStateOf<Job?>(null) }
+
+    /**
+     * Porta la riga alla posizione [target] (0 = chiusa, -revealWidth = aperta)
+     * e, se aperta, la richiude da sola dopo 3 secondi. Il timer vive nello
+     * stesso job dell'animazione: un nuovo drag lo cancella (onDragStart), così
+     * la riga non si richiude mentre l'utente la sta trascinando.
+     */
+    fun settleTo(target: Float) {
+        settleJob?.cancel()
+        isRevealed = target < 0f
+        settleJob = scope.launch {
+            animate(
+                initialValue = horizontalDrag,
+                targetValue = target,
+                animationSpec = tween(durationMillis = 180),
+            ) { value, _ -> horizontalDrag = value }
+            horizontalDrag = target
+
+            if (target < 0f) {
+                delay(3000)
+                animate(
+                    initialValue = horizontalDrag,
+                    targetValue = 0f,
+                    animationSpec = tween(durationMillis = 180),
+                ) { value, _ -> horizontalDrag = value }
+                horizontalDrag = 0f
+                isRevealed = false
+            }
+        }
+    }
 
     val isChecked = action.isChecked
     val stateText = if (isChecked) "spuntata" else "non spuntata"
@@ -107,6 +163,8 @@ fun ActionRow(
     val scopeBadgeContent = if (badgesMuted) colors.inkMuted else actionTokens.areaBadgeContent
     val scopeBadgeBorder = if (badgesMuted) colors.borderHairline else actionTokens.areaBadgeBorder
 
+    val canDelete = onDelete != null && !action.isChecked
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -114,10 +172,42 @@ fun ActionRow(
             .heightIn(min = actionTokens.minHeight)
             .clip(actionTokens.radius)
             .background(actionTokens.background)
+            .testTag("action_row"),
+    ) {
+        // Cestino rivelato dallo swipe: resta dietro la card e viene scoperto
+        // quando la riga si sposta a sinistra. Touch target ≥48dp.
+        if (canDelete) {
+            Box(
+                modifier = Modifier.matchParentSize(),
+                contentAlignment = Alignment.CenterEnd,
+            ) {
+                IconButton(
+                    onClick = { onDelete?.invoke() },
+                    modifier = Modifier
+                        .width(revealWidth)
+                        .fillMaxHeight()
+                        .background(colors.error, shape = actionTokens.radius),
+                ) {
+                    Icon(
+                        imageVector = Delete,
+                        contentDescription = "Elimina ${action.text}",
+                        tint = colors.inkInverse,
+                    )
+                }
+            }
+        }
+
+        // Contenuto della riga: si sposta orizzontalmente per rivelare il
+        // cestino. Il drag orizzontale viene consumato qui, quindi il pager
+        // non cambia pagina (AD-8, CAP-1).
+        val contentModifier = Modifier
+            .fillMaxWidth()
+            .offset { IntOffset(horizontalDrag.roundToInt(), 0) }
+            .heightIn(min = actionTokens.minHeight)
+            .clip(actionTokens.radius)
+            .background(actionTokens.background)
             .border(actionTokens.borderWidth, borderColor, actionTokens.radius)
             .drawBehind {
-                // Accento discreto sul bordo interno sinistro. Il clip della
-                // card lo costringe dentro gli angoli arrotondati.
                 drawRect(
                     color = accentColor,
                     size = Size(
@@ -126,17 +216,36 @@ fun ActionRow(
                     ),
                 )
             }
-            // Lo swipe orizzontale su una riga non deve cambiare pagina
-            // (CAP-1). La rivelazione del cestino arriva con la storia 8.8:
-            // fino ad allora il gesto viene solo riservato alla riga.
-            .pointerInput(action.id) {
+
+        val swipeModifier = if (canDelete) {
+            contentModifier.pointerInput(action.id) {
+                detectHorizontalDragGestures(
+                    onDragStart = { settleJob?.cancel() },
+                    onHorizontalDrag = { change, dragAmount ->
+                        change.consume()
+                        horizontalDrag = (horizontalDrag + dragAmount)
+                            .coerceIn(-revealWidthPx, 0f)
+                    },
+                    onDragEnd = {
+                        settleTo(
+                            if (horizontalDrag <= -settleThresholdPx) -revealWidthPx else 0f
+                        )
+                    },
+                    onDragCancel = { settleTo(0f) },
+                )
+            }
+        } else {
+            contentModifier.pointerInput(action.id) {
                 detectHorizontalDragGestures { change, _ ->
                     change.consume()
                 }
             }
-            .testTag("action_row"),
-    ) {
-        Row(
+        }
+
+        Box(
+            modifier = swipeModifier
+        ) {
+            Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
@@ -150,13 +259,27 @@ fun ActionRow(
                 )
                 .then(
                     if (onClick != null) {
-                        Modifier.combinedClickable(onClick = { onClick?.invoke() })
+                        Modifier.combinedClickable(
+                            onClick = {
+                                // Con la riga aperta il tap la richiude invece
+                                // di aprire l'editor.
+                                if (isRevealed) settleTo(0f) else onClick?.invoke()
+                            },
+                        )
                     } else {
                         Modifier
                     }
                 )
                 .semantics(mergeDescendants = true) {
                     contentDescription = rowDescription
+                    // Azione accessibile "Elimina" (menu contestuale TalkBack):
+                    // stessa snackbar di undo dello swipe a sinistra.
+                    onDelete?.let {
+                        customAccessibilityAction("Elimina") {
+                            it.invoke()
+                            true
+                        }
+                    }
                 },
             verticalAlignment = Alignment.CenterVertically,
         ) {
