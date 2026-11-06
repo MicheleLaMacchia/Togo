@@ -1,14 +1,38 @@
 package it.togo.app.presentation.activelist
 
+import it.togo.app.domain.model.ActionItem
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.TaxonomyLevel
-import kotlinx.coroutines.flow.Flow
+
+/**
+ * Pagina mostrata dal pager orizzontale della Lista Attiva (AD-8).
+ *
+ * L'app parte sempre da [SHOPPING] a freddo. L'ordine degli elementi è anche
+ * l'ordine delle pagine: Spesa a sinistra, Da fare a destra.
+ */
+enum class ActiveListPage {
+    SHOPPING,
+    ACTIONS;
+
+    /** L'altra pagina rispetto a questa. */
+    fun other(): ActiveListPage = if (this == SHOPPING) ACTIONS else SHOPPING
+
+    /** Nome leggibile usato nell'intestazione e dai lettori di schermo. */
+    val label: String
+        get() = when (this) {
+            SHOPPING -> "Spesa"
+            ACTIONS -> "Da fare"
+        }
+}
 
 /**
  * UI State per la schermata Lista Attiva (MVI pattern).
  *
  * - [activeGroups]: gruppi di voci per categoria L1→L2→L3 ordinati per sortOrder
  * - [checkedItems]: voci spuntate (per sezione "Presi")
+ * - [actions]: azioni non spuntate della pagina "Da fare"
+ * - [checkedActions]: azioni spuntate (sezione "Fatte", resa in una storia successiva)
+ * - [currentPage]: pagina corrente del pager (AD-8)
  * - [error]: messaggio errore se repository fallisce
  */
 data class ActiveListUiState(
@@ -22,14 +46,23 @@ data class ActiveListUiState(
      * per [CategoryGroup] e quindi non conosce la tassonomia.
      */
     val categoryLabels: Map<Long, String> = emptyMap(),
+    /** Azioni non spuntate: alimentano il conteggio del titolo "Da fare (N)". */
+    val actions: List<ActionItem> = emptyList(),
+    /** Azioni spuntate: non contribuiscono al conteggio della pagina. */
+    val checkedActions: List<ActionItem> = emptyList(),
+    /** Pagina corrente del pager. A freddo è sempre [ActiveListPage.SHOPPING]. */
+    val currentPage: ActiveListPage = ActiveListPage.SHOPPING,
     val error: String? = null,
     val checkingOffItemId: String? = null,      // Item in corso di animazione check-off
     val pendingCheckOffItemId: String? = null,  // Item in attesa di check-off (300ms delay)
     val checkoutSnackbarMessage: String? = null, // Messaggio snackbar per checkout undo
     val checkedItemsForUndo: List<ShoppingItem> = emptyList(), // Item per undo checkout
 ) {
-    /** Totale voci attive (non checkate) */
+    /** Totale prodotti attivi (non spuntati) mostrato nel titolo "Spesa (N)". */
     val activeCount: Int = activeGroups.sumOf { it.items.size }
+
+    /** Totale azioni attive (non spuntate) mostrato nel titolo "Da fare (N)". */
+    val activeActionsCount: Int = actions.size
 
     /** Sezione "Presi" visibile solo se ci sono elementi checkati */
     val hasCheckedItems: Boolean = checkedItems.isNotEmpty()
@@ -104,4 +137,11 @@ sealed interface UiEvent {
 
     /** Annulla checkout (Snackbar undo) */
     object UndoCheckout : UiEvent
+
+    /**
+     * Cambia la pagina del pager (frecce, swipe sull'intestazione o back da
+     * "Da fare"). Lo stato vive nel ViewModel per sopravvivere a rotazione e
+     * navigazione interna (AD-8).
+     */
+    data class SelectPage(val page: ActiveListPage) : UiEvent
 }

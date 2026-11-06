@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import it.togo.app.core.TogoLog
 import it.togo.app.domain.catalog.ProductNameNormalizer
+import it.togo.app.domain.model.ActionItem
 import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.StandardUnit
@@ -12,6 +13,7 @@ import it.togo.app.domain.parser.ParsedCommand
 import it.togo.app.domain.product.ProductUnitResolver
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.ShoppingListRepository
+import it.togo.app.domain.usecase.GetActionsUseCase
 import it.togo.app.domain.usecase.ResolveVoiceProductUseCase
 import it.togo.app.domain.usecase.ShareListUseCase
 import kotlinx.coroutines.CancellationException
@@ -22,7 +24,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
@@ -38,6 +39,7 @@ class ActiveListViewModel(
 
     private val shareListUseCase = ShareListUseCase(shoppingRepository, catalogRepository)
     private val resolveVoiceProduct = ResolveVoiceProductUseCase(catalogRepository)
+    private val getActionsUseCase = GetActionsUseCase(shoppingRepository)
 
     /**
      * Comando vocale confermato che non identifica un prodotto univoco (o ha
@@ -81,16 +83,19 @@ class ActiveListViewModel(
         viewModelScope.launch {
             combine(
                 shoppingRepository.getAllItems(),
+                getActionsUseCase(),
                 taxonomyCache.filterNotNull()
-            ) { items, taxonomy ->
-                buildUiState(items, taxonomy)
+            ) { items, actions, taxonomy ->
+                buildUiState(items, actions, taxonomy)
             }
                 .onEach { newState ->
-                    // I campi transitori (snackbar/undo) non arrivano dal DB:
-                    // vanno preservati, altrimenti l'emissione Room successiva
-                    // al checkout cancellerebbe subito il messaggio e l'undo.
+                    // I campi transitori (snackbar/undo) e la pagina corrente
+                    // non arrivano dal DB: vanno preservati, altrimenti
+                    // l'emissione Room successiva al checkout cancellerebbe
+                    // subito il messaggio, l'undo o riporterebbe la UI su Spesa.
                     val current = _uiState.value
                     _uiState.value = newState.copy(
+                        currentPage = current.currentPage,
                         checkoutSnackbarMessage = current.checkoutSnackbarMessage,
                         checkedItemsForUndo = current.checkedItemsForUndo,
                     )
@@ -101,6 +106,7 @@ class ActiveListViewModel(
 
     private suspend fun buildUiState(
         items: List<ShoppingItem>,
+        actions: List<ActionItem>,
         taxonomy: TaxonomyCache
     ): ActiveListUiState {
         val (l1List, l2List, l3List) = taxonomy
@@ -159,11 +165,18 @@ class ActiveListViewModel(
             }
         }
 
+        // Le azioni non passano dal catalogo: una sola partizione per
+        // alimentare il conteggio "Da fare (N)" e la futura sezione "Fatte".
+        val activeActions = actions.filterNot { it.isChecked }
+        val checkedActions = actions.filter { it.isChecked }
+
         return ActiveListUiState(
             activeGroups = groups,
             checkedItems = checkedItems,
             productNames = productNames,
             categoryLabels = categoryLabels,
+            actions = activeActions,
+            checkedActions = checkedActions,
             error = null
         )
     }
@@ -212,7 +225,18 @@ class ActiveListViewModel(
             is UiEvent.AddItemManual -> { }
             is UiEvent.UndoDelete -> handleUndoDelete()
             is UiEvent.UndoCheckout -> handleUndoCheckout()
+            is UiEvent.SelectPage -> handleSelectPage(event.page)
         }
+    }
+
+    /**
+     * Cambia la pagina del pager. Lo stato vive qui (e non in un
+     * `rememberSaveable` locale) perché deve sopravvivere alla rotazione e
+     * alla navigazione interna (AD-8).
+     */
+    private fun handleSelectPage(page: ActiveListPage) {
+        if (_uiState.value.currentPage == page) return
+        _uiState.value = _uiState.value.copy(currentPage = page)
     }
 
     suspend fun shareListIntent(): android.content.Intent? {

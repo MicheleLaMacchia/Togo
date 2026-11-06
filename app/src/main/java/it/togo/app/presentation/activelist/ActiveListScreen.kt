@@ -1,29 +1,38 @@
 package it.togo.app.presentation.activelist
 
+import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -44,15 +53,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import android.Manifest
-import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import it.togo.app.core.TogoLog
@@ -68,8 +76,18 @@ import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Lista Attiva con due pagine: Spesa (sinistra) e Da fare (destra).
+ *
+ * L'intestazione fissa contiene il titolo della pagina corrente e le frecce
+ * sempre annunciate da TalkBack. Il pager non intercetta lo swipe sulle righe:
+ * lì il gesto resta quello del cestino. Lo swipe cambia pagina solo se inizia
+ * sull'intestazione, su un'intestazione di gruppo o su uno spazio non occupato
+ * da righe (AD-8).
+ */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ActiveListScreen(
     viewModel: ActiveListViewModel,
@@ -103,7 +121,6 @@ fun ActiveListScreen(
 
     val colors = togoColors()
     val typography = togoTypography()
-    val spacing = togoSpacing()
     val tokens = componentTokens()
 
     val voiceUiState by voiceViewModel.uiState.collectAsState()
@@ -230,69 +247,77 @@ fun ActiveListScreen(
         onDismiss = { voiceConfirmationViewModel.cancel() },
     )
 
-    Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text("Spesa (${uiState.activeCount})", style = typography.sectionHeader) },
-                    navigationIcon = {
-                        IconButton(onClick = {
-                            TogoLog.d("TopBar: tap su Cronologia")
-                            onEvent(UiEvent.NavigateToHistory)
-                        }) {
-                            Icon(Icons.Filled.History, contentDescription = "Storico")
-                        }
-                    },
-                    actions = {
-                        IconButton(onClick = {
-                            TogoLog.d("TopBar: tap su Condividi")
-                            scope.launch {
-                                val intent = viewModel.shareListIntent()
-                                val activity = context.findActivity()
-                                when {
-                                    intent == null -> {
-                                        TogoLog.w(
-                                            "Condividi: nessun articolo attivo da condividere",
-                                        )
-                                        snackbarHostState.showSnackbar(
-                                            "Nessun articolo da condividere: " +
-                                                "la lista attiva è vuota"
-                                        )
-                                    }
+    // La pagina corrente vive nel ViewModel: qui la si riflette solo sul pager.
+    val page = uiState.currentPage
+    val pagerState = rememberPagerState(
+        initialPage = page.ordinal,
+        pageCount = { ActiveListPage.entries.size },
+    )
+    LaunchedEffect(page) {
+        pagerState.animateScrollToPage(page.ordinal)
+    }
 
-                                    activity == null -> {
-                                        TogoLog.w(
-                                            "Condividi: context senza Activity, chooser non avviato",
-                                        )
-                                        snackbarHostState.showSnackbar(
-                                            "Impossibile aprire la condivisione"
-                                        )
-                                    }
+    // Lo swipe non è gestito dal pager (userScrollEnabled = false): viene
+    // riconosciuto solo dalle zone che possono cambiare pagina. Con due sole
+    // pagine qualsiasi direzione porta all'altra pagina.
+    val pagerSwipeModifier = rememberPagerSwipeModifier(
+        onSwipe = { onEvent(UiEvent.SelectPage(page.other())) },
+    )
 
-                                    else -> {
-                                        TogoLog.d("Condividi: apertura chooser di sistema")
-                                        activity.startActivity(
-                                            Intent.createChooser(
-                                                intent,
-                                                "Condividi lista spesa",
-                                            )
-                                        )
-                                    }
-                                }
-                            }
-                        }) {
-                            Icon(Icons.Filled.Share, contentDescription = "Condividi lista")
-                        }
-                        IconButton(onClick = { onEvent(UiEvent.NavigateToSettings) }) {
-                            Icon(Icons.Filled.Settings, contentDescription = "Impostazioni")
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = colors.surface,
-                        titleContentColor = colors.inkPrimary,
+    val shareList: () -> Unit = {
+        TogoLog.d("TopBar: tap su Condividi")
+        scope.launch {
+            val intent = viewModel.shareListIntent()
+            val activity = context.findActivity()
+            when {
+                intent == null -> {
+                    TogoLog.w(
+                        "Condividi: nessun articolo attivo da condividere",
                     )
-                )
-            },
-            floatingActionButton = {
+                    snackbarHostState.showSnackbar(
+                        "Nessun articolo da condividere: " +
+                            "la lista attiva è vuota"
+                    )
+                }
+
+                activity == null -> {
+                    TogoLog.w(
+                        "Condividi: context senza Activity, chooser non avviato",
+                    )
+                    snackbarHostState.showSnackbar(
+                        "Impossibile aprire la condivisione"
+                    )
+                }
+
+                else -> {
+                    TogoLog.d("Condividi: apertura chooser di sistema")
+                    activity.startActivity(
+                        Intent.createChooser(
+                            intent,
+                            "Condividi lista spesa",
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            ActiveListHeader(
+                page = page,
+                activeCount = uiState.activeCount,
+                activeActionsCount = uiState.activeActionsCount,
+                swipeModifier = pagerSwipeModifier,
+                onEvent = onEvent,
+                onShare = shareList,
+            )
+        },
+        floatingActionButton = {
+            // Il FAB è contestuale: sulla pagina Da fare il foglio azione
+            // arriva con la storia 8.5, quindi qui non si mostrano né il
+            // microfono (solo Spesa) né un (+) che aggiungerebbe un prodotto.
+            if (page == ActiveListPage.SHOPPING) {
                 Box(
                     modifier = Modifier
                         .padding(16.dp),
@@ -335,114 +360,297 @@ fun ActiveListScreen(
                         }
                     }
                 }
-            },
-            floatingActionButtonPosition = androidx.compose.material3.FabPosition.End,
-            snackbarHost = {
-                SnackbarHost(snackbarHostState) { data ->
-                    val actionLabel = data.visuals.actionLabel
-                    Snackbar(
-                        action = if (actionLabel != null) {
-                            {
-                                TextButton(
-                                    onClick = { data.performAction() },
-                                    colors = ButtonDefaults.textButtonColors(
-                                        contentColor = tokens.snackbar.action,
-                                    ),
-                                ) {
-                                    Text(actionLabel)
-                                }
+            }
+        },
+        floatingActionButtonPosition = androidx.compose.material3.FabPosition.End,
+        snackbarHost = {
+            SnackbarHost(snackbarHostState) { data ->
+                val actionLabel = data.visuals.actionLabel
+                Snackbar(
+                    action = if (actionLabel != null) {
+                        {
+                            TextButton(
+                                onClick = { data.performAction() },
+                                colors = ButtonDefaults.textButtonColors(
+                                    contentColor = tokens.snackbar.action,
+                                ),
+                            ) {
+                                Text(actionLabel)
                             }
-                        } else {
-                            null
-                        },
-                        dismissAction = if (data.visuals.withDismissAction) {
-                            {
-                                IconButton(onClick = { data.dismiss() }) {
-                                    Icon(
-                                        imageVector = Icons.Filled.Close,
-                                        contentDescription = "Chiudi",
-                                    )
-                                }
+                        }
+                    } else {
+                        null
+                    },
+                    dismissAction = if (data.visuals.withDismissAction) {
+                        {
+                            IconButton(onClick = { data.dismiss() }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Close,
+                                    contentDescription = "Chiudi",
+                                )
                             }
-                        } else {
-                            null
-                        },
-                        containerColor = tokens.snackbar.container,
-                        contentColor = tokens.snackbar.content,
-                    ) {
-                        Text(data.visuals.message, style = typography.itemMeta)
-                    }
-                }
-            },
-            content = { innerPadding ->
-                Column(
-                    modifier = Modifier
-                        .padding(innerPadding)
-                        .fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(spacing.space2)
+                        }
+                    } else {
+                        null
+                    },
+                    containerColor = tokens.snackbar.container,
+                    contentColor = tokens.snackbar.content,
                 ) {
-                    if (uiState.error != null) {
-                        Text(
-                            text = uiState.error.orEmpty(),
-                            style = typography.itemMeta,
-                            color = colors.warningInk,
-                            modifier = Modifier.padding(spacing.space4)
-                        )
-                    } else if (uiState.activeGroups.isEmpty() && !uiState.hasCheckedItems) {
-                        EmptyState(
-                            onAddManual = {
-                                voicePrefill = null
-                                showAddItemSheet = true
-                            },
-                            onVoice = startVoiceWithPermission,
+                    Text(data.visuals.message, style = typography.itemMeta)
+                }
+            }
+        },
+        content = { innerPadding ->
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize(),
+                // Le righe consumano il drag orizzontale per il cestino: il
+                // pager non deve mai contenderselo. Lo swipe di pagina passa
+                // da pagerSwipeModifier, applicato solo alle zone consentite.
+                userScrollEnabled = false,
+                key = { index -> ActiveListPage.entries[index].name },
+            ) { index ->
+                when (ActiveListPage.entries[index]) {
+                    ActiveListPage.SHOPPING -> ShoppingPage(
+                        uiState = uiState,
+                        pagerSwipeModifier = pagerSwipeModifier,
+                        onEvent = onEvent,
+                        onAddManual = {
+                            voicePrefill = null
+                            showAddItemSheet = true
+                        },
+                        onVoice = startVoiceWithPermission,
+                        onEdit = { item ->
+                            voicePrefill = null
+                            editingItem = item
+                        },
+                    )
+
+                    ActiveListPage.ACTIONS -> ActionsPage(
+                        uiState = uiState,
+                        pagerSwipeModifier = pagerSwipeModifier,
+                    )
+                }
+            }
+        },
+    )
+}
+
+/** Intestazione fissa: titolo dinamico, frecce e azioni globali. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ActiveListHeader(
+    page: ActiveListPage,
+    activeCount: Int,
+    activeActionsCount: Int,
+    swipeModifier: Modifier,
+    onEvent: (UiEvent) -> Unit,
+    onShare: () -> Unit,
+) {
+    val colors = togoColors()
+    val typography = togoTypography()
+    val count = if (page == ActiveListPage.SHOPPING) activeCount else activeActionsCount
+
+    TopAppBar(
+        modifier = swipeModifier,
+        title = {
+            Text(
+                text = "${page.label} ($count)",
+                style = typography.sectionHeader,
+            )
+        },
+        navigationIcon = {
+            IconButton(
+                onClick = { onEvent(UiEvent.SelectPage(ActiveListPage.SHOPPING)) },
+                enabled = page == ActiveListPage.ACTIONS,
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Pagina precedente",
+                )
+            }
+        },
+        actions = {
+            IconButton(
+                onClick = { onEvent(UiEvent.SelectPage(ActiveListPage.ACTIONS)) },
+                enabled = page == ActiveListPage.SHOPPING,
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = "Pagina successiva",
+                )
+            }
+            // Storico resta solo sulla pagina Spesa.
+            if (page == ActiveListPage.SHOPPING) {
+                IconButton(onClick = {
+                    TogoLog.d("TopBar: tap su Cronologia")
+                    onEvent(UiEvent.NavigateToHistory)
+                }) {
+                    Icon(Icons.Filled.History, contentDescription = "Storico")
+                }
+            }
+            IconButton(onClick = onShare) {
+                Icon(Icons.Filled.Share, contentDescription = "Condividi lista")
+            }
+            IconButton(onClick = { onEvent(UiEvent.NavigateToSettings) }) {
+                Icon(Icons.Filled.Settings, contentDescription = "Impostazioni")
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = colors.surface,
+            titleContentColor = colors.inkPrimary,
+        ),
+    )
+}
+
+/** Pagina Spesa: contenuto invariato rispetto alla lista a pagina singola. */
+@Composable
+private fun ShoppingPage(
+    uiState: ActiveListUiState,
+    pagerSwipeModifier: Modifier,
+    onEvent: (UiEvent) -> Unit,
+    onAddManual: () -> Unit,
+    onVoice: () -> Unit,
+    onEdit: (ShoppingItem) -> Unit,
+) {
+    val colors = togoColors()
+    val typography = togoTypography()
+    val spacing = togoSpacing()
+    val tokens = componentTokens()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .testTag("shopping_page")
+            .then(pagerSwipeModifier),
+        verticalArrangement = Arrangement.spacedBy(spacing.space2),
+    ) {
+        if (uiState.error != null) {
+            Text(
+                text = uiState.error.orEmpty(),
+                style = typography.itemMeta,
+                color = colors.warningInk,
+                modifier = Modifier.padding(spacing.space4),
+            )
+        } else if (uiState.activeGroups.isEmpty() && !uiState.hasCheckedItems) {
+            EmptyState(
+                onAddManual = onAddManual,
+                onVoice = onVoice,
+                colors = colors,
+                typography = typography,
+                spacing = spacing,
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(spacing.space2),
+            ) {
+                items(uiState.activeGroups, key = { group -> group.level1.id.toString() }) { group ->
+                    CategorySection(
+                        group = group,
+                        productNames = uiState.productNames,
+                        categoryLabels = uiState.categoryLabels,
+                        onCheckOff = { itemId, checked -> onEvent(UiEvent.CheckOff(itemId, checked)) },
+                        onEdit = onEdit,
+                        onDelete = { itemId -> onEvent(UiEvent.DeleteItem(itemId)) },
+                        colors = colors,
+                        typography = typography,
+                        spacing = spacing,
+                        tokens = tokens,
+                    )
+                    Spacer(modifier = Modifier.padding(spacing.space3))
+                }
+
+                if (uiState.hasCheckedItems) {
+                    item {
+                        PresiSection(
+                            items = uiState.checkedItems,
+                            productNames = uiState.productNames,
+                            categoryLabels = uiState.categoryLabels,
+                            onUncheck = { itemId -> onEvent(UiEvent.CheckOff(itemId, false)) },
+                            onCheckout = { onEvent(UiEvent.Checkout) },
                             colors = colors,
                             typography = typography,
                             spacing = spacing,
+                            tokens = tokens,
                         )
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.spacedBy(spacing.space2)
-                        ) {
-                            items(uiState.activeGroups, key = { group -> group.level1.id.toString() }) { group ->
-                                CategorySection(
-                                    group = group,
-                                    productNames = uiState.productNames,
-                                    categoryLabels = uiState.categoryLabels,
-                                    onCheckOff = { itemId, checked -> onEvent(UiEvent.CheckOff(itemId, checked)) },
-                                    onEdit = { item ->
-                                        voicePrefill = null
-                                        editingItem = item
-                                    },
-                                    onDelete = { itemId -> onEvent(UiEvent.DeleteItem(itemId)) },
-                                    colors = colors,
-                                    typography = typography,
-                                    spacing = spacing,
-                                    tokens = tokens,
-                                )
-                                androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(spacing.space3))
-                            }
-
-                            if (uiState.hasCheckedItems) {
-                                item {
-                                    PresiSection(
-                                        items = uiState.checkedItems,
-                                        productNames = uiState.productNames,
-                                        categoryLabels = uiState.categoryLabels,
-                                        onUncheck = { itemId -> onEvent(UiEvent.CheckOff(itemId, false)) },
-                                        onCheckout = { onEvent(UiEvent.Checkout) },
-                                        colors = colors,
-                                        typography = typography,
-                                        spacing = spacing,
-                                        tokens = tokens,
-                                    )
-                                }
-                            }
-                        }
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * Pagina Da fare (storia 8.3).
+ *
+ * Le righe azione con checkbox e badge arrivano con le storie 8.4/8.5: qui la
+ * pagina esiste, è raggiungibile e mostra il conteggio corretto delle azioni
+ * non spuntate.
+ */
+@Composable
+private fun ActionsPage(
+    uiState: ActiveListUiState,
+    pagerSwipeModifier: Modifier,
+) {
+    val colors = togoColors()
+    val typography = togoTypography()
+    val spacing = togoSpacing()
+    val count = uiState.activeActionsCount
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .testTag("actions_page")
+            .then(pagerSwipeModifier),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = when (count) {
+                0 -> "Nessuna azione da fare"
+                1 -> "1 azione da fare"
+                else -> "$count azioni da fare"
+            },
+            style = typography.itemName,
+            color = colors.inkSecondary,
+            modifier = Modifier.padding(spacing.space4),
         )
+    }
+}
+
+/**
+ * Riconosce uno swipe orizzontale in una zona che può cambiare pagina.
+ *
+ * Il pager ha `userScrollEnabled = false`: questo modificatore è applicato solo
+ * alla pagina (intestazione, intestazioni di gruppo e spazi non occupati da
+ * righe). Le righe attive consumano il drag prima che arrivi qui, quindi il loro
+ * swipe resta il gesto del cestino (AD-8).
+ */
+@Composable
+private fun rememberPagerSwipeModifier(onSwipe: () -> Unit): Modifier {
+    // La lambda viene aggiornata senza riavviare il gesto: una ricomposizione
+    // durante il drag non deve cancellare lo swipe in corso.
+    val currentOnSwipe by rememberUpdatedState(onSwipe)
+    return remember {
+        Modifier.pointerInput(Unit) {
+            val threshold = 48.dp.toPx()
+            var totalDrag = 0f
+            detectHorizontalDragGestures(
+                onDragStart = { totalDrag = 0f },
+                onHorizontalDrag = { change, dragAmount ->
+                    change.consume()
+                    totalDrag += dragAmount
+                },
+                onDragEnd = {
+                    if (abs(totalDrag) >= threshold) currentOnSwipe()
+                    totalDrag = 0f
+                },
+                onDragCancel = { totalDrag = 0f },
+            )
+        }
+    }
 }
 
 /** Intent verso i dettagli dell'app, usato quando il permesso è negato per sempre. */

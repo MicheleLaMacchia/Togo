@@ -3,6 +3,8 @@ package it.togo.app
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import it.togo.app.presentation.activelist.ActiveListScreen
 import it.togo.app.presentation.activelist.ActiveListViewModel
 import it.togo.app.presentation.history.HistoryScreen
@@ -33,8 +35,12 @@ class MainActivity : ComponentActivity(), KoinComponent {
         super.onCreate(savedInstanceState)
         setContent {
             TogoTheme(darkTheme = isSystemDarkTheme()) {
+                // Osservato solo per il back coordinato con il pager: la
+                // pagina corrente vive nel ViewModel (AD-8).
+                val activeListUiState by viewModel.uiState.collectAsState()
                 AppNavigator(
                     onActiveListEvent = viewModel::onEvent,
+                    activeListPage = activeListUiState.currentPage,
                     activeListContent = { onEvent ->
                         ActiveListScreen(
                             viewModel = viewModel,

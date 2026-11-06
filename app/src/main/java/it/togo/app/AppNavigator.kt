@@ -9,6 +9,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import it.togo.app.core.TogoLog
+import it.togo.app.presentation.activelist.ActiveListPage
 import it.togo.app.presentation.activelist.UiEvent
 import it.togo.app.presentation.settings.AboutScreen
 import it.togo.app.presentation.settings.SettingsScreen
@@ -58,6 +59,8 @@ private val ScreenSaver = Saver<Screen, String>(
  * - Da Impostazioni si accede alle Regole apprese e alle Informazioni su TOGO.
  * - Back da Regole apprese e Informazioni su TOGO torna a Impostazioni; back da
  *   Impostazioni e Storico torna alla lista attiva.
+ * - Con [activeListPage] su [ActiveListPage.ACTIONS], il back di sistema torna
+ *   alla pagina Spesa e non chiude l'app (AD-8).
  * - Gli altri eventi sono delegati a [onActiveListEvent].
  *
  * @param onActiveListEvent gestore degli eventi della Lista Attiva non relativi
@@ -70,6 +73,8 @@ private val ScreenSaver = Saver<Screen, String>(
  *   [SettingsScreen].
  * @param aboutContent contenuto delle Informazioni su TOGO, con il callback di
  *   ritorno. Il default usa [AboutScreen].
+ * @param activeListPage pagina corrente del pager della Lista Attiva. Serve al
+ *   back: da [ActiveListPage.ACTIONS] si torna a [ActiveListPage.SHOPPING].
  */
 @Composable
 fun AppNavigator(
@@ -77,6 +82,7 @@ fun AppNavigator(
     activeListContent: @Composable ((UiEvent) -> Unit) -> Unit,
     learnedRulesContent: @Composable (() -> Unit) -> Unit,
     historyContent: @Composable (() -> Unit) -> Unit,
+    activeListPage: ActiveListPage = ActiveListPage.SHOPPING,
     settingsContent: @Composable (() -> Unit, () -> Unit, () -> Unit) -> Unit =
         { onOpenLearnedRules, onOpenAbout, onBack ->
             SettingsScreen(
@@ -102,6 +108,12 @@ fun AppNavigator(
 
     when (currentScreen) {
         Screen.ActiveList -> stateHolder.SaveableStateProvider(Screen.ActiveList.saveKey) {
+            // Il back dalla pagina Da fare torna a Spesa: il pager è uno stato
+            // della Lista Attiva, non una destinazione del navigator.
+            BackHandler(enabled = activeListPage == ActiveListPage.ACTIONS) {
+                TogoLog.d("Navigazione: back da Da fare -> Spesa")
+                onActiveListEvent(UiEvent.SelectPage(ActiveListPage.SHOPPING))
+            }
             activeListContent { event ->
                 when (event) {
                     is UiEvent.NavigateToSettings -> navigateTo(Screen.Settings)
