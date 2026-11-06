@@ -57,6 +57,8 @@ data class ActiveListUiState(
     val pendingCheckOffItemId: String? = null,  // Item in attesa di check-off (300ms delay)
     val checkoutSnackbarMessage: String? = null, // Messaggio snackbar per checkout undo
     val checkedItemsForUndo: List<ShoppingItem> = emptyList(), // Item per undo checkout
+    /** Messaggio transitorio del foglio azione (es. "Azione già presente"). */
+    val actionSnackbarMessage: String? = null,
 ) {
     /** Totale prodotti attivi (non spuntati) mostrato nel titolo "Spesa (N)". */
     val activeCount: Int = activeGroups.sumOf { it.items.size }

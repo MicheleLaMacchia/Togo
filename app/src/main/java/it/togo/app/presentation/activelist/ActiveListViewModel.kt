@@ -3,8 +3,11 @@ package it.togo.app.presentation.activelist
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import it.togo.app.core.TogoLog
+import it.togo.app.domain.action.ActionMutationResult
 import it.togo.app.domain.catalog.ProductNameNormalizer
 import it.togo.app.domain.model.ActionItem
+import it.togo.app.domain.model.ActionScope
+import it.togo.app.domain.model.ActionUrgency
 import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.StandardUnit
@@ -13,9 +16,12 @@ import it.togo.app.domain.parser.ParsedCommand
 import it.togo.app.domain.product.ProductUnitResolver
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.ShoppingListRepository
+import it.togo.app.domain.usecase.AddActionUseCase
+import it.togo.app.domain.usecase.CheckDuplicateActionUseCase
 import it.togo.app.domain.usecase.GetActionsUseCase
 import it.togo.app.domain.usecase.ResolveVoiceProductUseCase
 import it.togo.app.domain.usecase.ShareListUseCase
+import it.togo.app.domain.usecase.UpdateActionUseCase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -40,6 +46,12 @@ class ActiveListViewModel(
     private val shareListUseCase = ShareListUseCase(shoppingRepository, catalogRepository)
     private val resolveVoiceProduct = ResolveVoiceProductUseCase(catalogRepository)
     private val getActionsUseCase = GetActionsUseCase(shoppingRepository)
+
+    // Mutazioni azioni "Cose da fare" (Epic 8): coordinate via repository su
+    // thread IO, deduplica nel domain (AD-1/AD-2).
+    private val checkDuplicateAction = CheckDuplicateActionUseCase(shoppingRepository)
+    private val addActionUseCase = AddActionUseCase(shoppingRepository, checkDuplicateAction)
+    private val updateActionUseCase = UpdateActionUseCase(shoppingRepository, checkDuplicateAction)
 
     /**
      * Comando vocale confermato che non identifica un prodotto univoco (o ha
@@ -98,6 +110,7 @@ class ActiveListViewModel(
                         currentPage = current.currentPage,
                         checkoutSnackbarMessage = current.checkoutSnackbarMessage,
                         checkedItemsForUndo = current.checkedItemsForUndo,
+                        actionSnackbarMessage = current.actionSnackbarMessage,
                     )
                 }
                 .launchIn(viewModelScope)
@@ -311,6 +324,64 @@ class ActiveListViewModel(
     /** La UI ha aperto la scheda precompilata: il comando è stato consumato. */
     fun consumeVoicePrefillRequest() {
         _voicePrefillRequest.value = null
+    }
+
+    /**
+     * Aggiunge una nuova azione dalla pagina "Da fare" (Story 8.5).
+     *
+     * La scrittura è delegata al repository, che la esegue in modo atomico
+     * sul thread IO. Se testo, ambito e urgenza coincidono con un'azione
+     * esistente — anche spuntata — l'operazione è bloccata e viene mostrato
+     * "Azione già presente".
+     */
+    fun addAction(text: String, scope: ActionScope, urgency: ActionUrgency) {
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                addActionUseCase(text, scope, urgency)
+            }
+            onActionMutationResult(result)
+        }
+    }
+
+    /**
+     * Modifica testo, ambito e urgenza di un'azione esistente (Story 8.5,
+     * modalità modifica del foglio azione).
+     *
+     * Le azioni in Fatte non sono modificabili: il use case restituisce
+     * [ActionMutationResult.NotEditable].
+     */
+    fun updateAction(
+        action: ActionItem,
+        text: String,
+        scope: ActionScope,
+        urgency: ActionUrgency,
+    ) {
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                updateActionUseCase(action, text, scope, urgency)
+            }
+            onActionMutationResult(result)
+        }
+    }
+
+    private fun onActionMutationResult(result: ActionMutationResult) {
+        when (result) {
+            is ActionMutationResult.Success -> Unit // il flusso getActions() aggiorna la UI
+            ActionMutationResult.Duplicate -> showActionMessage("Azione già presente")
+            is ActionMutationResult.Invalid -> showActionMessage(result.message)
+            ActionMutationResult.NotEditable ->
+                showActionMessage("Le azioni completate non sono modificabili.")
+        }
+    }
+
+    private fun showActionMessage(message: String) {
+        _uiState.value = _uiState.value.copy(actionSnackbarMessage = message)
+        viewModelScope.launch {
+            delay(5000)
+            if (_uiState.value.actionSnackbarMessage == message) {
+                _uiState.value = _uiState.value.copy(actionSnackbarMessage = null)
+            }
+        }
     }
 
     private fun supportsUnit(product: CanonicalProduct, unit: StandardUnit): Boolean {

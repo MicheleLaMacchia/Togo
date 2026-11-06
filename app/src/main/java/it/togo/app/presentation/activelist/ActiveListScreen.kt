@@ -65,6 +65,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import it.togo.app.core.TogoLog
+import it.togo.app.domain.model.ActionItem
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.parser.ParsedCommand
 import it.togo.app.presentation.additem.AddItemBottomSheet
@@ -106,14 +107,18 @@ fun ActiveListScreen(
     // Un solo punto di visualizzazione per il checkout: la snackbar passa
     // dall'host Material invece di essere composta nel contenuto. Evita due
     // testi sovrapposti nella stessa posizione (vedi segnalazione 22/10).
-    LaunchedEffect(uiState.checkoutSnackbarMessage) {
-        val message = uiState.checkoutSnackbarMessage ?: return@LaunchedEffect
+    LaunchedEffect(uiState.checkoutSnackbarMessage, uiState.actionSnackbarMessage) {
+        val checkoutMessage = uiState.checkoutSnackbarMessage
+        val actionMessage = uiState.actionSnackbarMessage
+        val message = checkoutMessage ?: actionMessage ?: return@LaunchedEffect
+        val isCheckout = checkoutMessage != null
         val result = snackbarHostState.showSnackbar(
             message = message,
-            actionLabel = if (uiState.checkedItemsForUndo.isNotEmpty()) "Annulla" else null,
-            // Il timer dei 5 s resta nel ViewModel; quando azzera il messaggio
-            // questo effetto viene cancellato e la snackbar si chiude.
-            duration = SnackbarDuration.Indefinite,
+            actionLabel = if (isCheckout && uiState.checkedItemsForUndo.isNotEmpty()) "Annulla" else null,
+            // Il timer dei 5 s del checkout resta nel ViewModel; quando azzera
+            // il messaggio questo effetto viene cancellato e la snackbar si
+            // chiude. I messaggi del foglio azione hanno durata breve.
+            duration = if (isCheckout) SnackbarDuration.Indefinite else SnackbarDuration.Short,
         )
         if (result == SnackbarResult.ActionPerformed) {
             onEvent(UiEvent.UndoCheckout)
@@ -134,6 +139,11 @@ fun ActiveListScreen(
     // Comando vocale da precompilare nella sheet di aggiunta. Null per
     // l'aggiunta manuale o la modifica di una voce esistente.
     var voicePrefill by remember { mutableStateOf<ParsedCommand?>(null) }
+
+    // Foglio azione "Cose da fare" (Story 8.5): aperto dal FAB (+) sulla
+    // pagina Da fare; lo stato è locale perché il foglio è legato alla UI.
+    var showActionSheet by remember { mutableStateOf(false) }
+    var editingAction by remember { mutableStateOf<ActionItem?>(null) }
 
     // Se il comando confermato non è univoco, il ViewModel chiede di aprire la
     // scheda di aggiunta precompilata. I comandi univoci vengono invece inseriti
@@ -204,6 +214,25 @@ fun ActiveListScreen(
             },
             editItem = editingItem,
             initialVoiceCommand = voicePrefill,
+        )
+    }
+
+    if (showActionSheet) {
+        ActionSheet(
+            onDismiss = {
+                showActionSheet = false
+                editingAction = null
+            },
+            editingAction = editingAction,
+            onConfirm = { text, scope, urgency ->
+                if (editingAction != null) {
+                    viewModel.updateAction(editingAction, text, scope, urgency)
+                } else {
+                    viewModel.addAction(text, scope, urgency)
+                }
+                showActionSheet = false
+                editingAction = null
+            },
         )
     }
 
@@ -315,51 +344,68 @@ fun ActiveListScreen(
             )
         },
         floatingActionButton = {
-            // Il FAB è contestuale: sulla pagina Da fare il foglio azione
-            // arriva con la storia 8.5, quindi qui non si mostrano né il
-            // microfono (solo Spesa) né un (+) che aggiungerebbe un prodotto.
-            if (page == ActiveListPage.SHOPPING) {
-                Box(
-                    modifier = Modifier
-                        .padding(16.dp),
-                ) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        horizontalAlignment = Alignment.End,
+            // Il FAB è contestuale: sulla pagina Spesa aggiunge una voce della
+            // spesa, sulla pagina Da fare apre il foglio azione (Story 8.5).
+            when (page) {
+                ActiveListPage.SHOPPING -> {
+                    Box(
+                        modifier = Modifier
+                            .padding(16.dp),
                     ) {
-                        VoiceFab(
-                            state = when {
-                                voiceUiState is it.togo.app.presentation.voice.VoiceBottomSheetUiState.Listening -> it.togo.app.domain.voice.VoiceRecognitionState.Listening
-                                voiceUiState is it.togo.app.presentation.voice.VoiceBottomSheetUiState.Processing -> it.togo.app.domain.voice.VoiceRecognitionState.Processing
-                                voiceUiState is it.togo.app.presentation.voice.VoiceBottomSheetUiState.Ready -> it.togo.app.domain.voice.VoiceRecognitionState.Result("")
-                                voiceUiState is it.togo.app.presentation.voice.VoiceBottomSheetUiState.Error -> it.togo.app.domain.voice.VoiceRecognitionState.Error(it.togo.app.domain.voice.ErrorCode.UNKNOWN, "")
-                                else -> it.togo.app.domain.voice.VoiceRecognitionState.Idle
-                            },
-                            onClick = {
-                                if (voiceUiState is it.togo.app.presentation.voice.VoiceBottomSheetUiState.Listening) {
-                                    voiceViewModel.cancel()
-                                } else {
-                                    startVoiceWithPermission()
-                                }
-                            }
-                        )
-
-                        FloatingActionButton(
-                            onClick = {
-                                voicePrefill = null
-                                showAddItemSheet = true
-                            },
-                            containerColor = colors.accentAction,
-                            contentColor = colors.inkInverse,
-                            shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            horizontalAlignment = Alignment.End,
                         ) {
-                            Icon(
-                                imageVector = Icons.Filled.Add,
-                                contentDescription = "Aggiungi voce",
-                                tint = colors.inkInverse,
+                            VoiceFab(
+                                state = when {
+                                    voiceUiState is it.togo.app.presentation.voice.VoiceBottomSheetUiState.Listening -> it.togo.app.domain.voice.VoiceRecognitionState.Listening
+                                    voiceUiState is it.togo.app.presentation.voice.VoiceBottomSheetUiState.Processing -> it.togo.app.domain.voice.VoiceRecognitionState.Processing
+                                    voiceUiState is it.togo.app.presentation.voice.VoiceBottomSheetUiState.Ready -> it.togo.app.domain.voice.VoiceRecognitionState.Result("")
+                                    voiceUiState is it.togo.app.presentation.voice.VoiceBottomSheetUiState.Error -> it.togo.app.domain.voice.VoiceRecognitionState.Error(it.togo.app.domain.voice.ErrorCode.UNKNOWN, "")
+                                    else -> it.togo.app.domain.voice.VoiceRecognitionState.Idle
+                                },
+                                onClick = {
+                                    if (voiceUiState is it.togo.app.presentation.voice.VoiceBottomSheetUiState.Listening) {
+                                        voiceViewModel.cancel()
+                                    } else {
+                                        startVoiceWithPermission()
+                                    }
+                                }
                             )
+
+                            FloatingActionButton(
+                                onClick = {
+                                    voicePrefill = null
+                                    showAddItemSheet = true
+                                },
+                                containerColor = colors.accentAction,
+                                contentColor = colors.inkInverse,
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Add,
+                                    contentDescription = "Aggiungi voce",
+                                    tint = colors.inkInverse,
+                                )
+                            }
                         }
                     }
+                }
+
+                ActiveListPage.ACTIONS -> FloatingActionButton(
+                    onClick = {
+                        voicePrefill = null
+                        showActionSheet = true
+                    },
+                    containerColor = colors.accentAction,
+                    contentColor = colors.inkInverse,
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "Aggiungi azione",
+                        tint = colors.inkInverse,
+                    )
                 }
             }
         },
