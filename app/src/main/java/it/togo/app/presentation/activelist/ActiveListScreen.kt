@@ -225,8 +225,9 @@ fun ActiveListScreen(
             },
             editingAction = editingAction,
             onConfirm = { text, scope, urgency ->
-                if (editingAction != null) {
-                    viewModel.updateAction(editingAction, text, scope, urgency)
+                val action = editingAction
+                if (action != null) {
+                    viewModel.updateAction(action, text, scope, urgency)
                 } else {
                     viewModel.addAction(text, scope, urgency)
                 }
@@ -479,6 +480,10 @@ fun ActiveListScreen(
                         uiState = uiState,
                         pagerSwipeModifier = pagerSwipeModifier,
                         onEvent = onEvent,
+                        onEditAction = { action ->
+                            editingAction = action
+                            showActionSheet = true
+                        },
                     )
                 }
             }
@@ -644,6 +649,7 @@ private fun ActionsPage(
     uiState: ActiveListUiState,
     pagerSwipeModifier: Modifier,
     onEvent: (UiEvent) -> Unit,
+    onEditAction: (ActionItem) -> Unit,
 ) {
     val colors = togoColors()
     val typography = togoTypography()
@@ -699,8 +705,8 @@ private fun ActionsPage(
                             onCheckChange = { checked ->
                                 onEvent(UiEvent.CheckOff(action.id, checked))
                             },
-                            onClick = null,
-                            rowActionDescription = null,
+                            onClick = { onEditAction(action) },
+                            rowActionDescription = "Doppio tocco per modificare.",
                         )
                     }
                 }
