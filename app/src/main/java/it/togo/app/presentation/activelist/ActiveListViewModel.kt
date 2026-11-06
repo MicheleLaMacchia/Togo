@@ -405,10 +405,73 @@ class ActiveListViewModel(
     }
 
     private fun handleCheckOff(itemId: String, isChecked: Boolean) {
-        val item = findItem(itemId) ?: return
+        val item = findItem(itemId)
+        if (item != null) {
+            handleShoppingItemCheckOff(item, isChecked)
+            return
+        }
+        val action = findAction(itemId)
+        if (action != null) {
+            handleActionCheckOff(action, isChecked)
+        }
+    }
 
+    private fun findAction(actionId: String): ActionItem? =
+        _uiState.value.actions.find { it.id == actionId }
+            ?: _uiState.value.checkedActions.find { it.id == actionId }
+
+    /**
+     * Spunta o deseleziona un'azione della pagina "Da fare" (CAP-3).
+     *
+     * La spunta non elimina l'azione: dopo 300 ms si sposta nella sezione
+     * Fatte, restando barrata e mantenendo urgenza e ambito. La deselezione
+     * riporta l'azione nel gruppo del suo ambito e della sua urgenza.
+     * La scrittura è atomica, sul thread IO, coordinata via repository (AD-2).
+     */
+    private fun handleActionCheckOff(action: ActionItem, checked: Boolean) {
+        if (checked) {
+            _uiState.value = _uiState.value.copy(pendingCheckOffItemId = action.id)
+
+            viewModelScope.launch {
+                delay(300)
+                _uiState.value = _uiState.value.copy(
+                    actions = _uiState.value.actions.filter { it.id != action.id },
+                    checkedActions = (_uiState.value.checkedActions + action.copy(
+                        isChecked = true,
+                        updatedAt = System.currentTimeMillis(),
+                    )).sortedByDescending { it.createdAt },
+                    pendingCheckOffItemId = null,
+                    checkingOffItemId = action.id,
+                )
+
+                withContext(Dispatchers.IO) {
+                    shoppingRepository.checkOffAction(action.id.trim(), true)
+                }
+
+                delay(300)
+                _uiState.value = _uiState.value.copy(checkingOffItemId = null)
+            }
+        } else {
+            val updated = action.copy(
+                isChecked = false,
+                updatedAt = System.currentTimeMillis(),
+            )
+            _uiState.value = _uiState.value.copy(
+                checkedActions = _uiState.value.checkedActions.filter { it.id != action.id },
+                actions = _uiState.value.actions + updated,
+            )
+
+            viewModelScope.launch {
+                withContext(Dispatchers.IO) {
+                    shoppingRepository.checkOffAction(action.id.trim(), false)
+                }
+            }
+        }
+    }
+
+    private fun handleShoppingItemCheckOff(item: ShoppingItem, isChecked: Boolean) {
         if (isChecked) {
-            _uiState.value = _uiState.value.copy(pendingCheckOffItemId = itemId)
+            _uiState.value = _uiState.value.copy(pendingCheckOffItemId = item.id)
 
             viewModelScope.launch {
                 delay(300)
@@ -419,7 +482,7 @@ class ActiveListViewModel(
                                 l2.copy(
                                     level3Groups = l2.level3Groups
                                         .map { l3 ->
-                                            l3.copy(items = l3.items.filter { it.id != itemId })
+                                            l3.copy(items = l3.items.filter { it.id != item.id })
                                         }
                                         .filter { it.items.isNotEmpty() }
                                 )
@@ -427,7 +490,7 @@ class ActiveListViewModel(
                         )
                     },
                     pendingCheckOffItemId = null,
-                    checkingOffItemId = itemId
+                    checkingOffItemId = item.id
                 )
 
                 withContext(Dispatchers.IO) {
@@ -444,7 +507,7 @@ class ActiveListViewModel(
                         level2Groups = group.level2Groups.map { l2 ->
                             l2.copy(
                                 level3Groups = l2.level3Groups.map { l3 ->
-                                    if (l3.items.any { it.id == itemId }) {
+                                    if (l3.items.any { it.id == item.id }) {
                                         l3.copy(items = (l3.items + updated).sortedBy { it.productId })
                                     } else {
                                         l3
@@ -454,7 +517,7 @@ class ActiveListViewModel(
                         }.filter { it.level3Groups.isNotEmpty() }
                     )
                 },
-                checkedItems = _uiState.value.checkedItems.filter { it.id != itemId }
+                checkedItems = _uiState.value.checkedItems.filter { it.id != item.id }
             )
 
             viewModelScope.launch {

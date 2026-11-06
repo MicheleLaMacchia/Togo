@@ -478,6 +478,7 @@ fun ActiveListScreen(
                     ActiveListPage.ACTIONS -> ActionsPage(
                         uiState = uiState,
                         pagerSwipeModifier = pagerSwipeModifier,
+                        onEvent = onEvent,
                     )
                 }
             }
@@ -642,10 +643,12 @@ private fun ShoppingPage(
 private fun ActionsPage(
     uiState: ActiveListUiState,
     pagerSwipeModifier: Modifier,
+    onEvent: (UiEvent) -> Unit,
 ) {
     val colors = togoColors()
     val typography = togoTypography()
     val spacing = togoSpacing()
+    val tokens = componentTokens()
 
     Box(
         modifier = Modifier
@@ -654,7 +657,7 @@ private fun ActionsPage(
             .then(pagerSwipeModifier),
         contentAlignment = Alignment.Center,
     ) {
-        if (uiState.actions.isEmpty()) {
+        if (uiState.actions.isEmpty() && uiState.checkedActions.isEmpty()) {
             Text(
                 text = "Nessuna azione da fare",
                 style = typography.itemName,
@@ -693,9 +696,28 @@ private fun ActionsPage(
                     ) { action ->
                         ActionRow(
                             action = action,
-                            // La spunta e lo spostamento in "Fatte" arrivano
-                            // con la storia 8.6: qui la riga è solo resa.
-                            onCheckChange = { },
+                            onCheckChange = { checked ->
+                                onEvent(UiEvent.CheckOff(action.id, checked))
+                            },
+                            onClick = null,
+                            rowActionDescription = null,
+                        )
+                    }
+                }
+
+                // Sezione "Fatte" in fondo: le azioni spuntate restano visibili
+                // e barrate, dalla più recente; si possono solo deselezionare.
+                if (uiState.checkedActions.isNotEmpty()) {
+                    item(key = "fatto_section") {
+                        FatteSection(
+                            items = uiState.checkedActions,
+                            onUncheck = { actionId ->
+                                onEvent(UiEvent.CheckOff(actionId, false))
+                            },
+                            colors = colors,
+                            typography = typography,
+                            spacing = spacing,
+                            tokens = tokens,
                         )
                     }
                 }

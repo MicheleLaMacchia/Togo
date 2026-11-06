@@ -61,6 +61,8 @@ fun ActionRow(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
     rowActionDescription: String? = null,
+    /** Quando vera (sezione "Fatte"), i badge urgenza/ambito sono resi attenuati. */
+    badgesMuted: Boolean = false,
 ) {
     val colors = togoColors()
     val typography = togoTypography()
@@ -94,6 +96,16 @@ fun ActionRow(
     val urgencyColors = action.urgency.badgeColors(colors)
     val accentColor = action.urgency.accentColor(colors)
     val borderColor = if (isChecked) actionTokens.checkedBorderColor else actionTokens.borderColor
+
+    // Badge attenuati nella sezione Fatte: solo testo, colore neutro, senza
+    // rilevare l'urgenza visivamente (l'azione è già conclusa).
+    val badgeBackground = if (badgesMuted) colors.surfaceSubtle else urgencyColors.background
+    val badgeContent = if (badgesMuted) colors.inkMuted else urgencyColors.content
+    val badgeBorder = if (badgesMuted) colors.borderHairline else urgencyColors.border
+
+    val scopeBadgeBackground = if (badgesMuted) colors.surfaceSubtle else actionTokens.areaBadgeBackground
+    val scopeBadgeContent = if (badgesMuted) colors.inkMuted else actionTokens.areaBadgeContent
+    val scopeBadgeBorder = if (badgesMuted) colors.borderHairline else actionTokens.areaBadgeBorder
 
     Box(
         modifier = modifier
@@ -170,17 +182,17 @@ fun ActionRow(
                 ) {
                     ActionBadge(
                         text = action.urgency.label,
-                        background = urgencyColors.background,
-                        contentColor = urgencyColors.content,
-                        borderColor = urgencyColors.border,
+                        background = badgeBackground,
+                        contentColor = badgeContent,
+                        borderColor = badgeBorder,
                         tokens = actionTokens,
                         tag = "action_urgency_badge",
                     )
                     ActionBadge(
                         text = action.scope.label,
-                        background = actionTokens.areaBadgeBackground,
-                        contentColor = actionTokens.areaBadgeContent,
-                        borderColor = actionTokens.areaBadgeBorder,
+                        background = scopeBadgeBackground,
+                        contentColor = scopeBadgeContent,
+                        borderColor = scopeBadgeBorder,
                         tokens = actionTokens,
                         tag = "action_scope_badge",
                     )
