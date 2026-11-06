@@ -33,6 +33,31 @@ data class ItemRowTokens(
     val swipeDeleteIconColor: Color,
 )
 
+/**
+ * Riga azione "Cose da fare" (DESIGN.md §7.7).
+ *
+ * L'accento verticale usa il colore dell'urgenza, fornito dal color scheme;
+ * qui vivono solo geometria, superfici e colori neutri condivisi.
+ */
+data class ActionRowTokens(
+    val minHeight: Dp = 48.dp,
+    val borderWidth: Dp = 1.5.dp,
+    val borderColor: Color,
+    val background: Color,
+    val paddingHorizontal: Dp = 16.dp,
+    val paddingVertical: Dp = 12.dp,
+    val radius: RoundedCornerShape,
+    val accentWidth: Dp = 4.dp,
+    val checkedBorderColor: Color,
+    val badgeRadius: RoundedCornerShape,
+    val badgePaddingHorizontal: Dp = 8.dp,
+    val badgePaddingVertical: Dp = 4.dp,
+    val badgeBorderWidth: Dp = 1.dp,
+    val areaBadgeBackground: Color,
+    val areaBadgeContent: Color,
+    val areaBadgeBorder: Color,
+)
+
 data class CheckboxUtilityTokens(
     /** Area di tocco minima accessibile (48dp). */
     val size: Dp = 48.dp,
@@ -97,6 +122,7 @@ data class SnackbarTokens(
 data class TogoComponentTokens(
     val appBar: AppBarTokens,
     val itemRow: ItemRowTokens,
+    val actionRow: ActionRowTokens,
     val checkboxUtility: CheckboxUtilityTokens,
     val categoryHeader: CategoryHeaderTokens,
     val quantityBadge: QuantityBadgeTokens,
@@ -121,6 +147,16 @@ fun togoComponentTokensFrom(
         radius = shapes.md,
         swipeDeleteBackground = colors.accentSuccess,
         swipeDeleteIconColor = TogoColorTokens.OnAccent,
+    ),
+    actionRow = ActionRowTokens(
+        borderColor = colors.borderCrisp,
+        background = colors.surfaceCard,
+        radius = shapes.md,
+        checkedBorderColor = colors.accentSuccess,
+        badgeRadius = shapes.sm,
+        areaBadgeBackground = colors.surfaceSubtle,
+        areaBadgeContent = colors.inkSecondary,
+        areaBadgeBorder = colors.borderHairline,
     ),
     checkboxUtility = CheckboxUtilityTokens(
         borderColor = colors.borderCrisp,

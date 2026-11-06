@@ -64,6 +64,13 @@ data class ActiveListUiState(
     /** Totale azioni attive (non spuntate) mostrato nel titolo "Da fare (N)". */
     val activeActionsCount: Int = actions.size
 
+    /**
+     * Azioni attive pronte per la pagina "Da fare": raggruppate per ambito
+     * nell'ordine fisso e ordinate per urgenza, poi alfabeticamente.
+     */
+    val actionGroups: List<ActionGroup>
+        get() = groupActionsByScope(actions)
+
     /** Sezione "Presi" visibile solo se ci sono elementi checkati */
     val hasCheckedItems: Boolean = checkedItems.isNotEmpty()
 

@@ -362,7 +362,7 @@ internal fun performShortHapticFeedback(context: Context) {
  * (`contentDescription = null`) per evitare annunci duplicati.
  */
 @Composable
-private fun CheckboxUtility(
+internal fun CheckboxUtility(
     modifier: Modifier = Modifier,
     checked: Boolean,
     contentDescription: String,

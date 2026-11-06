@@ -50,6 +50,14 @@ data class TogoTypographyTokens(
         fontSize = 12.sp,
         lineHeight = 16.sp
     ),
+    /** Etichetta dei badge urgenza/ambito: 12sp Bold, tracking 0.3sp. */
+    val badgeLabel: TextStyle = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Bold,
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.3.sp
+    ),
 ) {
     val itemTitle: TextStyle get() = itemName
 }

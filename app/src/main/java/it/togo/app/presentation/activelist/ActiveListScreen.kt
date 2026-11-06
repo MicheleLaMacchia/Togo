@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -584,11 +585,12 @@ private fun ShoppingPage(
 }
 
 /**
- * Pagina Da fare (storia 8.3).
+ * Pagina Da fare (storie 8.3/8.4).
  *
- * Le righe azione con checkbox e badge arrivano con le storie 8.4/8.5: qui la
- * pagina esiste, è raggiungibile e mostra il conteggio corretto delle azioni
- * non spuntate.
+ * Le azioni attive sono raggruppate per ambito e ordinate per urgenza e
+ * alfabeticamente. Ogni riga è una [ActionRow]: checkbox a sinistra, testo al
+ * centro, badge urgenza e ambito sotto il testo, accento verticale. Le azioni
+ * non sono prodotti: nessun badge quantità, marca, variante o unità.
  */
 @Composable
 private fun ActionsPage(
@@ -598,7 +600,6 @@ private fun ActionsPage(
     val colors = togoColors()
     val typography = togoTypography()
     val spacing = togoSpacing()
-    val count = uiState.activeActionsCount
 
     Box(
         modifier = Modifier
@@ -607,16 +608,53 @@ private fun ActionsPage(
             .then(pagerSwipeModifier),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = when (count) {
-                0 -> "Nessuna azione da fare"
-                1 -> "1 azione da fare"
-                else -> "$count azioni da fare"
-            },
-            style = typography.itemName,
-            color = colors.inkSecondary,
-            modifier = Modifier.padding(spacing.space4),
-        )
+        if (uiState.actions.isEmpty()) {
+            Text(
+                text = "Nessuna azione da fare",
+                style = typography.itemName,
+                color = colors.inkSecondary,
+                modifier = Modifier.padding(spacing.space4),
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(vertical = spacing.space2)
+                    .testTag("actions_list"),
+                verticalArrangement = Arrangement.spacedBy(spacing.space2),
+            ) {
+                uiState.actionGroups.forEach { group ->
+                    // L'ambito è un header; l'urgenza resta un criterio di
+                    // ordinamento e vive nel badge della riga.
+                    item(key = "action_scope_${group.scope.name}") {
+                        Text(
+                            text = group.scope.label,
+                            style = typography.sectionHeader,
+                            color = colors.inkPrimary,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    horizontal = spacing.space2,
+                                    vertical = spacing.space1,
+                                )
+                                .testTag("action_scope_header_${group.scope.name}"),
+                        )
+                    }
+
+                    items(
+                        items = group.actions,
+                        key = { action -> action.id },
+                    ) { action ->
+                        ActionRow(
+                            action = action,
+                            // La spunta e lo spostamento in "Fatte" arrivano
+                            // con la storia 8.6: qui la riga è solo resa.
+                            onCheckChange = { },
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 

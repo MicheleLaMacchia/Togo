@@ -37,6 +37,17 @@ object TogoColorTokens {
     val LightBadgeBg = Color(0xFF0F172A)           // #0F172A
     val LightBadgeInk = Color(0xFFFFFFFF)          // #FFFFFF
 
+    // Urgenza azioni (DESIGN.md front-matter, tema chiaro).
+    val LightUrgencyUrgentBg = Color(0xFFFEF3C7)       // #FEF3C7
+    val LightUrgencyUrgentInk = Color(0xFF92400E)      // #92400E
+    val LightUrgencyUrgentBorder = Color(0xFFB45309)   // #B45309
+    val LightUrgencyRelaxedBg = Color(0xFFF1F5F9)      // #F1F5F9
+    val LightUrgencyRelaxedInk = Color(0xFF334155)     // #334155
+    val LightUrgencyRelaxedBorder = Color(0xFFCBD5E1)  // #CBD5E1
+    val LightUrgencyExceptionalBg = Color(0xFFDBEAFE)  // #DBEAFE
+    val LightUrgencyExceptionalInk = Color(0xFF1E40AF) // #1E40AF
+    val LightUrgencyExceptionalBorder = Color(0xFF2563EB) // #2563EB
+
     // --- Dark Mode ---
     val DarkSurfaceBase = Color(0xFF0B0F17)        // #0B0F17
     val DarkSurfaceCard = Color(0xFF131B2E)        // #131B2E
@@ -49,6 +60,17 @@ object TogoColorTokens {
 
     /** Testo di successo in dark: il verde condiviso #15803D dà ~3,4:1 su surfaceCard. */
     val DarkSuccessInk = Color(0xFF4ADE80)         // #4ADE80 (WCAG >=9:1 su surfaceCard dark)
+
+    // Urgenza azioni (DESIGN.md front-matter, tema scuro).
+    val DarkUrgencyUrgentBg = Color(0xFF422006)        // #422006
+    val DarkUrgencyUrgentInk = Color(0xFFFDE68A)       // #FDE68A
+    val DarkUrgencyUrgentBorder = Color(0xFFB45309)    // #B45309
+    val DarkUrgencyRelaxedBg = Color(0xFF1E293B)       // #1E293B
+    val DarkUrgencyRelaxedInk = Color(0xFFCBD5E1)      // #CBD5E1
+    val DarkUrgencyRelaxedBorder = Color(0xFF475569)   // #475569
+    val DarkUrgencyExceptionalBg = Color(0xFF172554)   // #172554
+    val DarkUrgencyExceptionalInk = Color(0xFFBFDBFE)  // #BFDBFE
+    val DarkUrgencyExceptionalBorder = Color(0xFF2563EB) // #2563EB
 
     // Token condivisi (identici in entrambi i temi)
     val AccentSuccess = LightAccentSuccess
@@ -153,6 +175,17 @@ sealed interface TogoColorScheme {
     val badgeBg: Color
     val badgeInk: Color
 
+    // Urgenza delle azioni "Cose da fare" (badge e accento verticale).
+    val urgencyUrgentBg: Color
+    val urgencyUrgentInk: Color
+    val urgencyUrgentBorder: Color
+    val urgencyRelaxedBg: Color
+    val urgencyRelaxedInk: Color
+    val urgencyRelaxedBorder: Color
+    val urgencyExceptionalBg: Color
+    val urgencyExceptionalInk: Color
+    val urgencyExceptionalBorder: Color
+
     // Alias legacy mantenuti per i consumer UI già esistenti.
     val surface: Color get() = surfaceCard
     val surfaceVariant: Color get() = surfaceSubtle
@@ -194,6 +227,15 @@ data class LightTogoColorSchemeImpl(
     override val accentWarning: Color = TogoColorTokens.AccentWarning,
     override val badgeBg: Color = TogoColorTokens.BadgeBg,
     override val badgeInk: Color = TogoColorTokens.BadgeInk,
+    override val urgencyUrgentBg: Color = TogoColorTokens.LightUrgencyUrgentBg,
+    override val urgencyUrgentInk: Color = TogoColorTokens.LightUrgencyUrgentInk,
+    override val urgencyUrgentBorder: Color = TogoColorTokens.LightUrgencyUrgentBorder,
+    override val urgencyRelaxedBg: Color = TogoColorTokens.LightUrgencyRelaxedBg,
+    override val urgencyRelaxedInk: Color = TogoColorTokens.LightUrgencyRelaxedInk,
+    override val urgencyRelaxedBorder: Color = TogoColorTokens.LightUrgencyRelaxedBorder,
+    override val urgencyExceptionalBg: Color = TogoColorTokens.LightUrgencyExceptionalBg,
+    override val urgencyExceptionalInk: Color = TogoColorTokens.LightUrgencyExceptionalInk,
+    override val urgencyExceptionalBorder: Color = TogoColorTokens.LightUrgencyExceptionalBorder,
 ) : TogoColorScheme
 
 /** Implementazione Dark. */
@@ -214,6 +256,15 @@ data class DarkTogoColorSchemeImpl(
     override val accentWarning: Color = TogoColorTokens.AccentWarning,
     override val badgeBg: Color = TogoColorTokens.BadgeBg,
     override val badgeInk: Color = TogoColorTokens.BadgeInk,
+    override val urgencyUrgentBg: Color = TogoColorTokens.DarkUrgencyUrgentBg,
+    override val urgencyUrgentInk: Color = TogoColorTokens.DarkUrgencyUrgentInk,
+    override val urgencyUrgentBorder: Color = TogoColorTokens.DarkUrgencyUrgentBorder,
+    override val urgencyRelaxedBg: Color = TogoColorTokens.DarkUrgencyRelaxedBg,
+    override val urgencyRelaxedInk: Color = TogoColorTokens.DarkUrgencyRelaxedInk,
+    override val urgencyRelaxedBorder: Color = TogoColorTokens.DarkUrgencyRelaxedBorder,
+    override val urgencyExceptionalBg: Color = TogoColorTokens.DarkUrgencyExceptionalBg,
+    override val urgencyExceptionalInk: Color = TogoColorTokens.DarkUrgencyExceptionalInk,
+    override val urgencyExceptionalBorder: Color = TogoColorTokens.DarkUrgencyExceptionalBorder,
 ) : TogoColorScheme {
     // Lo scrim dei bottom sheet deve essere scuro anche in dark mode:
     // surfaceInverse in dark è bianco e produrrebbe un velo chiaro.
