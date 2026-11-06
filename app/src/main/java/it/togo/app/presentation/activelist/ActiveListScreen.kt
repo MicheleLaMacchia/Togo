@@ -69,6 +69,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import it.togo.app.core.TogoLog
+import it.togo.app.domain.action.ActionMutationResult
 import it.togo.app.domain.model.ActionItem
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.parser.ParsedCommand
@@ -114,18 +115,12 @@ fun ActiveListScreen(
     // Un solo punto di visualizzazione per il checkout: la snackbar passa
     // dall'host Material invece di essere composta nel contenuto. Evita due
     // testi sovrapposti nella stessa posizione (vedi segnalazione 22/10).
-    LaunchedEffect(uiState.checkoutSnackbarMessage, uiState.actionSnackbarMessage) {
-        val checkoutMessage = uiState.checkoutSnackbarMessage
-        val actionMessage = uiState.actionSnackbarMessage
-        val message = checkoutMessage ?: actionMessage ?: return@LaunchedEffect
-        val isCheckout = checkoutMessage != null
+    LaunchedEffect(uiState.checkoutSnackbarMessage) {
+        val checkoutMessage = uiState.checkoutSnackbarMessage ?: return@LaunchedEffect
         val result = snackbarHostState.showSnackbar(
-            message = message,
-            actionLabel = if (isCheckout && uiState.checkedItemsForUndo.isNotEmpty()) "Annulla" else null,
-            // Il timer dei 5 s del checkout resta nel ViewModel; quando azzera
-            // il messaggio questo effetto viene cancellato e la snackbar si
-            // chiude. I messaggi del foglio azione hanno durata breve.
-            duration = if (isCheckout) SnackbarDuration.Indefinite else SnackbarDuration.Short,
+            message = checkoutMessage,
+            actionLabel = if (uiState.checkedItemsForUndo.isNotEmpty()) "Annulla" else null,
+            duration = SnackbarDuration.Indefinite,
         )
         if (result == SnackbarResult.ActionPerformed) {
             onEvent(UiEvent.UndoCheckout)
@@ -192,6 +187,9 @@ fun ActiveListScreen(
     // pagina Da fare; lo stato è locale perché il foglio è legato alla UI.
     var showActionSheet by remember { mutableStateOf(false) }
     var editingAction by remember { mutableStateOf<ActionItem?>(null) }
+    // Errore inline mostrato nel foglio (es. "Azione già presente"). Il foglio
+    // resta aperto e i valori inseriti dall'utente sono conservati.
+    var sheetError by remember { mutableStateOf<String?>(null) }
 
     // Se il comando confermato non è univoco, il ViewModel chiede di aprire la
     // scheda di aggiunta precompilata. I comandi univoci vengono invece inseriti
@@ -270,17 +268,34 @@ fun ActiveListScreen(
             onDismiss = {
                 showActionSheet = false
                 editingAction = null
+                sheetError = null
             },
             editingAction = editingAction,
-            onConfirm = { text, scope, urgency ->
-                val action = editingAction
-                if (action != null) {
-                    viewModel.updateAction(action, text, scope, urgency)
-                } else {
-                    viewModel.addAction(text, scope, urgency)
+            errorMessage = sheetError,
+            onConfirm = { text, actionScope, urgency ->
+                scope.launch {
+                    val action = editingAction
+                    val result = if (action != null) {
+                        viewModel.updateAction(action, text, actionScope, urgency)
+                    } else {
+                        viewModel.addAction(text, actionScope, urgency)
+                    }
+                    when (result) {
+                        is ActionMutationResult.Success -> {
+                            showActionSheet = false
+                            editingAction = null
+                        }
+                        ActionMutationResult.Duplicate -> {
+                            sheetError = "Azione già presente"
+                        }
+                        is ActionMutationResult.Invalid -> {
+                            sheetError = result.message
+                        }
+                        ActionMutationResult.NotEditable -> {
+                            sheetError = "Le azioni completate non sono modificabili."
+                        }
+                    }
                 }
-                showActionSheet = false
-                editingAction = null
             },
         )
     }
@@ -444,6 +459,7 @@ fun ActiveListScreen(
                 ActiveListPage.ACTIONS -> FloatingActionButton(
                     onClick = {
                         voicePrefill = null
+                        sheetError = null
                         showActionSheet = true
                     },
                     containerColor = colors.accentAction,
@@ -544,6 +560,8 @@ fun ActiveListScreen(
                         pagerSwipeModifier = pagerSwipeModifier,
                         onEvent = onEvent,
                         onEditAction = { action ->
+                            voicePrefill = null
+                            sheetError = null
                             editingAction = action
                             showActionSheet = true
                         },

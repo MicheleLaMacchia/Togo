@@ -47,6 +47,8 @@ import it.togo.app.ui.theme.togoTypography
 fun ActionSheet(
     onDismiss: () -> Unit,
     editingAction: ActionItem? = null,
+    /** Errore inline mostrato sotto il campo testo (es. "Azione già presente"). */
+    errorMessage: String? = null,
     onConfirm: (text: String, scope: ActionScope, urgency: ActionUrgency) -> Unit = { _, _, _ -> },
 ) {
     val colors = togoColors()
@@ -80,13 +82,24 @@ fun ActionSheet(
                 color = colors.inkPrimary,
             )
 
-            // Campo testo a una riga.
+            // Campo testo a una riga. L'errore inline (es. "Azione già presente")
+            // viene mostrato sotto il campo senza chiudere il foglio: i valori
+            // scelti dall'utente restano conservati nello stato locale.
             TextField(
                 value = textState.value,
                 onValueChange = { newText: String -> textState.value = newText },
                 label = { Text("Testo") },
+                isError = errorMessage != null,
                 modifier = Modifier.fillMaxWidth(),
             )
+            if (errorMessage != null) {
+                Text(
+                    text = errorMessage,
+                    style = typography.itemMeta,
+                    color = colors.warningInk,
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                )
+            }
 
             // Selettore urgenza: tre opzioni (Urgente, A tempo perso, Eccezionale).
             Text(

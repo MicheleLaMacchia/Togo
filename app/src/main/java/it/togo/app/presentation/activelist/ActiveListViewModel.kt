@@ -117,7 +117,6 @@ class ActiveListViewModel(
                         currentPage = current.currentPage,
                         checkoutSnackbarMessage = current.checkoutSnackbarMessage,
                         checkedItemsForUndo = current.checkedItemsForUndo,
-                        actionSnackbarMessage = current.actionSnackbarMessage,
                         actionDeleteUndoMessage = current.actionDeleteUndoMessage,
                     )
                 }
@@ -341,59 +340,33 @@ class ActiveListViewModel(
      * Aggiunge una nuova azione dalla pagina "Da fare" (Story 8.5).
      *
      * La scrittura è delegata al repository, che la esegue in modo atomico
-     * sul thread IO. Se testo, ambito e urgenza coincidono con un'azione
-     * esistente — anche spuntata — l'operazione è bloccata e viene mostrato
-     * "Azione già presente".
+     * sul thread IO. Restituisce l'esito della mutazione affinché la UI possa
+     * mostrare l'errore inline "Azione già presente" e tenere il foglio aperto
+     * in caso di duplicato, senza perdere i valori inseriti.
      */
-    fun addAction(text: String, scope: ActionScope, urgency: ActionUrgency) {
-        viewModelScope.launch {
-            val result = withContext(Dispatchers.IO) {
-                addActionUseCase(text, scope, urgency)
-            }
-            onActionMutationResult(result)
+    suspend fun addAction(text: String, scope: ActionScope, urgency: ActionUrgency): ActionMutationResult =
+        withContext(Dispatchers.IO) {
+            addActionUseCase(text, scope, urgency)
         }
-    }
 
     /**
      * Modifica testo, ambito e urgenza di un'azione esistente (Story 8.5,
      * modalità modifica del foglio azione).
      *
      * Le azioni in Fatte non sono modificabili: il use case restituisce
-     * [ActionMutationResult.NotEditable].
+     * [ActionMutationResult.NotEditable]. Il controllo di deduplica esclude
+     * l'azione stessa, quindi salvare senza cambiare la chiave non è un
+     * duplicato.
      */
-    fun updateAction(
+    suspend fun updateAction(
         action: ActionItem,
         text: String,
         scope: ActionScope,
         urgency: ActionUrgency,
-    ) {
-        viewModelScope.launch {
-            val result = withContext(Dispatchers.IO) {
-                updateActionUseCase(action, text, scope, urgency)
-            }
-            onActionMutationResult(result)
+    ): ActionMutationResult =
+        withContext(Dispatchers.IO) {
+            updateActionUseCase(action, text, scope, urgency)
         }
-    }
-
-    private fun onActionMutationResult(result: ActionMutationResult) {
-        when (result) {
-            is ActionMutationResult.Success -> Unit // il flusso getActions() aggiorna la UI
-            ActionMutationResult.Duplicate -> showActionMessage("Azione già presente")
-            is ActionMutationResult.Invalid -> showActionMessage(result.message)
-            ActionMutationResult.NotEditable ->
-                showActionMessage("Le azioni completate non sono modificabili.")
-        }
-    }
-
-    private fun showActionMessage(message: String) {
-        _uiState.value = _uiState.value.copy(actionSnackbarMessage = message)
-        viewModelScope.launch {
-            delay(5000)
-            if (_uiState.value.actionSnackbarMessage == message) {
-                _uiState.value = _uiState.value.copy(actionSnackbarMessage = null)
-            }
-        }
-    }
 
     private fun supportsUnit(product: CanonicalProduct, unit: StandardUnit): Boolean {
         val compatible = product.compatibleUnits

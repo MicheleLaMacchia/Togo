@@ -57,8 +57,6 @@ data class ActiveListUiState(
     val pendingCheckOffItemId: String? = null,  // Item in attesa di check-off (300ms delay)
     val checkoutSnackbarMessage: String? = null, // Messaggio snackbar per checkout undo
     val checkedItemsForUndo: List<ShoppingItem> = emptyList(), // Item per undo checkout
-    /** Messaggio transitorio del foglio azione (es. "Azione già presente"). */
-    val actionSnackbarMessage: String? = null,
     /**
      * Messaggio dello snackbar undo dopo l'eliminazione di una singola azione
      * (Story 8.8). Mostra "Annulla" per almeno 10 s.
