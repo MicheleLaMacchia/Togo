@@ -64,7 +64,9 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.AccessibilityLiveRegion
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -150,7 +152,7 @@ fun ActiveListScreen(
             }
             if (!finished) {
                 finished = true
-                snackbarHostState.dismissCurrentSnackbar()
+                snackbarHostState.currentSnackbarData?.dismiss()
                 viewModel.clearActionUndoSnackbar()
             }
         }
@@ -480,11 +482,10 @@ fun ActiveListScreen(
                 val actionLabel = data.visuals.actionLabel
                 Box(
                     modifier = Modifier
-                        .semantics {
+                        .semantics(mergeDescendants = true) {
                             // Live region educata: l'annuncio non interrompe
                             // l'utente, viene letto al prossimo passaggio.
-                            accessibilityLiveRegion = AccessibilityLiveRegion.Polite
-                            mergeDescendants = true
+                            liveRegion = LiveRegionMode.Polite
                         }
                         .onFocusChanged { snackbarFocused = it.isFocused },
                 ) {
@@ -764,7 +765,7 @@ private fun ActionsPage(
                     // ordinamento e vive nel badge della riga.
                     item(key = "action_scope_${group.scope.name}") {
                         Text(
-                            text = group.scope.label,
+                            text = "${group.scope.label} (${group.actions.size})",
                             style = typography.sectionHeader,
                             color = colors.inkPrimary,
                             modifier = Modifier

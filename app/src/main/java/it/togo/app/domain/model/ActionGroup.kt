@@ -1,8 +1,5 @@
-package it.togo.app.presentation.activelist
+package it.togo.app.domain.model
 
-import it.togo.app.domain.model.ActionItem
-import it.togo.app.domain.model.ActionScope
-import it.togo.app.domain.model.ActionUrgency
 import java.util.Locale
 
 /**
@@ -22,6 +19,11 @@ data class ActionGroup(
  *
  * Il confronto alfabetico ignora maiuscole/minuscole ma non gli accenti: è
  * solo un criterio di visualizzazione, non la deduplica delle azioni.
+ *
+ * Questa logica vive nel domain layer (AD-1): è puro Kotlin, senza dipendenze
+ * da Android, ed è indipendente dalla persistenza Room. Il repository espone
+ * la lista così come è persistita; l'ordinamento per ambito → urgenza →
+ * alfabetico è responsabilità del domain.
  */
 fun groupActionsByScope(actions: List<ActionItem>): List<ActionGroup> {
     val scopeRank = ActionScope.ordered

@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
  * Lettura reattiva di tutte le azioni (attive e spuntate).
  *
  * Il raggruppamento per ambito/urgenza e l'ordinamento alfabetico sono
- * responsabilità della presentazione (Story 8.10); il repository espone la
+ * responsabilità del domain layer (Story 8.10, AD-1); il repository espone la
  * lista così come è persistita, come unico flusso di verità.
  */
 class GetActionsUseCase(

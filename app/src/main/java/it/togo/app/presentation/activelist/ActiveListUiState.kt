@@ -1,8 +1,10 @@
 package it.togo.app.presentation.activelist
 
+import it.togo.app.domain.model.ActionGroup
 import it.togo.app.domain.model.ActionItem
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.TaxonomyLevel
+import it.togo.app.domain.model.groupActionsByScope
 
 /**
  * Pagina mostrata dal pager orizzontale della Lista Attiva (AD-8).

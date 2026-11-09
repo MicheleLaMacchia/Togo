@@ -19,10 +19,17 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,7 +43,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.customAccessibilityAction
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextDecoration
 import kotlinx.coroutines.Job
@@ -51,6 +57,7 @@ import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
 import java.util.Locale
+import kotlin.math.roundToInt
 
 /**
  * Riga di un'azione nella pagina "Da fare" (Story 8.4, DESIGN.md §7.7).
@@ -189,7 +196,7 @@ fun ActionRow(
                         .background(colors.error, shape = actionTokens.radius),
                 ) {
                     Icon(
-                        imageVector = Delete,
+                        imageVector = Icons.Filled.Delete,
                         contentDescription = "Elimina ${action.text}",
                         tint = colors.inkInverse,
                     )
@@ -271,15 +278,7 @@ fun ActionRow(
                     }
                 )
                 .semantics(mergeDescendants = true) {
-                    contentDescription = rowDescription
-                    // Azione accessibile "Elimina" (menu contestuale TalkBack):
-                    // stessa snackbar di undo dello swipe a sinistra.
-                    onDelete?.let {
-                        customAccessibilityAction("Elimina") {
-                            it.invoke()
-                            true
-                        }
-                    }
+                    contentDescription = rowDescription + (if (onDelete != null) ". Tocca due volte per modificare. Azione disponibile: Elimina." else ".")
                 },
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -341,6 +340,7 @@ fun ActionRow(
             checkboxBgColor = if (isChecked) colors.accentAction else Color.Transparent,
         )
     }
+}
 }
 
 /** Badge compatto con testo esplicito; il colore è solo un rinforzo. */
