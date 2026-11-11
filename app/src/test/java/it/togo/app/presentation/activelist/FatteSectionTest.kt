@@ -4,11 +4,15 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHasClickAction
+import androidx.compose.ui.test.assertHeightIsAtLeast
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertWidthIsAtLeast
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.dp
 import it.togo.app.domain.model.ActionItem
 import it.togo.app.domain.model.ActionScope
 import it.togo.app.domain.model.ActionUrgency
@@ -57,12 +61,14 @@ class FatteSectionTest {
     private fun render(
         items: List<ActionItem>,
         onUncheck: (String) -> Unit = {},
+        onConclude: () -> Unit = {},
     ) {
         composeTestRule.setContent {
             TogoTheme(darkTheme = false) {
                 FatteSection(
                     items = items,
                     onUncheck = onUncheck,
+                    onConclude = onConclude,
                     colors = togoColors(),
                     typography = togoTypography(),
                     spacing = togoSpacing(),
@@ -156,9 +162,10 @@ class FatteSectionTest {
     @Test
     fun `checkbox unchecks the action`() {
         var uncheckedId: String? = null
-        render(listOf(action(id = "a", text = "Pagare la bolletta"))) { id ->
-            uncheckedId = id
-        }
+        render(
+            items = listOf(action(id = "a", text = "Pagare la bolletta")),
+            onUncheck = { id -> uncheckedId = id },
+        )
 
         composeTestRule
             .onNodeWithContentDescription("Deseleziona Pagare la bolletta.")
@@ -166,5 +173,98 @@ class FatteSectionTest {
             .performClick()
 
         assertEquals("a", uncheckedId)
+    }
+
+    // --- Pulsante "Concludi attività" e dialog (Story 9.2) ---
+
+    @Test
+    fun `conclude button is visible and at least 48dp when there are checked actions`() {
+        render(listOf(action(id = "a", text = "Pagare la bolletta")))
+
+        composeTestRule
+            .onNodeWithTag("conclude_actions_button")
+            .assertIsDisplayed()
+            .assertHasClickAction()
+            .assertHeightIsAtLeast(48.dp)
+            .assertWidthIsAtLeast(200.dp)
+    }
+
+    @Test
+    fun `conclude button opens confirmation dialog with count and irreversibility`() {
+        render(
+            listOf(
+                action(id = "a", text = "Pagare la bolletta"),
+                action(id = "b", text = "Chiamare l'idraulico"),
+            )
+        )
+
+        composeTestRule.onNodeWithTag("conclude_actions_dialog").assertDoesNotExist()
+
+        composeTestRule.onNodeWithTag("conclude_actions_button").performClick()
+
+        composeTestRule.onNodeWithTag("conclude_actions_dialog").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Concludere le attività?").assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText(
+                "Verranno eliminate 2 attività spuntate. " +
+                    "L'operazione non si può annullare."
+            )
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun `confirming the dialog invokes onConclude once and closes it`() {
+        var concluded = 0
+        render(
+            items = listOf(action(id = "a", text = "Pagare la bolletta")),
+            onConclude = { concluded++ },
+        )
+
+        composeTestRule.onNodeWithTag("conclude_actions_button").performClick()
+        composeTestRule.onNodeWithTag("conclude_actions_confirm_button").performClick()
+
+        assertEquals(1, concluded)
+        composeTestRule.onNodeWithTag("conclude_actions_dialog").assertDoesNotExist()
+    }
+
+    @Test
+    fun `cancel closes the dialog without concluding`() {
+        var concluded = 0
+        render(
+            items = listOf(action(id = "a", text = "Pagare la bolletta")),
+            onConclude = { concluded++ },
+        )
+
+        composeTestRule.onNodeWithTag("conclude_actions_button").performClick()
+        composeTestRule.onNodeWithTag("conclude_actions_cancel_button").performClick()
+
+        assertEquals(0, concluded)
+        composeTestRule.onNodeWithTag("conclude_actions_dialog").assertDoesNotExist()
+    }
+
+    @Test
+    fun `collapsing the section hides the conclude button and expanding restores it`() {
+        render(listOf(action(id = "a", text = "Pagare la bolletta")))
+
+        composeTestRule.onNodeWithTag("conclude_actions_button").assertIsDisplayed()
+
+        composeTestRule
+            .onNodeWithContentDescription("Fatte, 1 azione. Doppio tocco per collassare.")
+            .performClick()
+
+        composeTestRule.onNodeWithTag("conclude_actions_button").assertDoesNotExist()
+
+        composeTestRule
+            .onNodeWithContentDescription("Fatte, 1 azione. Doppio tocco per espandere.")
+            .performClick()
+
+        composeTestRule.onNodeWithTag("conclude_actions_button").assertIsDisplayed()
+    }
+
+    @Test
+    fun `empty section emits no conclude button`() {
+        render(emptyList())
+
+        composeTestRule.onNodeWithTag("conclude_actions_button").assertDoesNotExist()
     }
 }

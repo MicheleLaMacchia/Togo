@@ -236,6 +236,9 @@ class ActiveListViewModel(
             is UiEvent.DeleteItem -> handleDeleteItem(event.itemId)
             // Elimina una singola azione con cestino + undo (Story 8.8).
             is UiEvent.DeleteAction -> handleDeleteAction(event.actionId)
+            // Conferma del dialog "Concludi attività" (Story 9.2): in questa
+            // storia si registra l'intento, la cancellazione è la Story 9.3.
+            is UiEvent.ConcludeActions -> handleConcludeActions()
             is UiEvent.UndoDeleteAction -> handleUndoDeleteAction()
             // Apre il foglio vocale: gestito direttamente dalla UI.
             is UiEvent.NavigateToVoice -> { }
@@ -670,6 +673,21 @@ class ActiveListViewModel(
                 )
             }
         }
+    }
+
+    /**
+     * L'utente ha confermato "Concludi attività" nel dialog della sezione
+     * Fatte (Story 9.2).
+     *
+     * La conferma è già esplicita e irreversibile nella UI. L'eliminazione
+     * delle azioni spuntate, senza undo e senza storico, arriva con la Story
+     * 9.3: qui non si scrive nulla per non anticipare quel perimetro.
+     */
+    private fun handleConcludeActions() {
+        TogoLog.i(
+            "Concludi attività confermato: " +
+                "${_uiState.value.checkedActions.size} azioni spuntate",
+        )
     }
 
     /** Ripristina l'azione eliminata (undo) e chiude lo snackbar. */

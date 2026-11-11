@@ -100,6 +100,27 @@ class ActiveListViewModelActionOrderingTest {
             )
         }
 
+    @Test
+    fun `conclude actions event does not delete checked actions (9.2 boundary)`() =
+        runTest(testDispatcher) {
+            val oldest = checked("a", createdAt = 1L, updatedAt = 10L)
+            val newest = checked("b", createdAt = 2L, updatedAt = 20L)
+            val repo = OrderedActionsRepository(listOf(oldest, newest))
+            val viewModel = ActiveListViewModel(repo, FakeCatalogRepository())
+
+            viewModel.uiState.first { it.checkedActions.size == 2 }
+
+            viewModel.onEvent(UiEvent.ConcludeActions)
+
+            // In 9.2 la conferma registra solo l'intento: nulla viene eliminato.
+            val state = viewModel.uiState.first { it.checkedActions.size == 2 }
+            assertEquals(
+                "le azioni spuntate non devono essere eliminate in 9.2",
+                listOf("b", "a"),
+                state.checkedActions.map { it.id },
+            )
+        }
+
     private fun checked(
         id: String,
         createdAt: Long,

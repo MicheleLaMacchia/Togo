@@ -804,6 +804,9 @@ private fun ActionsPage(
                         onUncheck = { actionId ->
                             onEvent(UiEvent.CheckOff(actionId, false))
                         },
+                        // La conferma del dialog arriva al ViewModel come
+                        // intento; l'eliminazione delle spuntate è la 9.3.
+                        onConclude = { onEvent(UiEvent.ConcludeActions) },
                         colors = colors,
                         typography = typography,
                         spacing = spacing,

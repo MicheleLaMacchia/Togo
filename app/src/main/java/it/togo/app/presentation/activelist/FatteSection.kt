@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
@@ -51,10 +53,11 @@ import it.togo.app.ui.theme.togoTypography
  * - Righe spuntate: testo barrato, checkbox spuntata, badge urgenza e ambito
  *   attenuati, nell'ordine ricevuto (dalla più recente, deciso dal ViewModel).
  * - Nessun tap-edit ([rowActionDescription] = null) e nessun cestino.
- * - L'unica azione è la checkbox: deselezionando, l'azione torna nel gruppo
- *   del suo ambito e della sua urgenza (spunta invertita).
- *
- * Il pulsante "Concludi attività" non è qui: arriva con la storia 9.2.
+ * - L'unica azione sulle righe è la checkbox: deselezionando, l'azione torna
+ *   nel gruppo del suo ambito e della sua urgenza (spunta invertita).
+ * - In fondo al contenuto espanso c'è il pulsante largo "Concludi attività"
+ *   (storia 9.2). Apre [ConcludeActionsDialog]; la conferma invoca
+ *   [onConclude], che la schermata inoltra al ViewModel.
  *
  * [onUncheck] invoca l'evento di spunta invertita ([UiEvent.CheckOff(id, false)]),
  * gestito dal [ActiveListViewModel] che riporta l'azione nel gruppo attivo.
@@ -64,6 +67,7 @@ import it.togo.app.ui.theme.togoTypography
 fun FatteSection(
     items: List<ActionItem>,
     onUncheck: (String) -> Unit,
+    onConclude: () -> Unit,
     colors: it.togo.app.ui.theme.TogoColorScheme,
     typography: it.togo.app.ui.theme.TogoTypography,
     spacing: it.togo.app.ui.theme.TogoSpacing,
@@ -73,8 +77,14 @@ fun FatteSection(
     // poi ricompare, la sezione riparte espansa come richiesto ("default
     // espansa se N > 0"), senza ereditare un collapse precedente.
     var expanded by rememberSaveable { mutableStateOf(true) }
+    // Dialog di conferma locale alla sezione: se N torna a 0 la sezione esce
+    // dalla composizione e il dialog non deve riaprirsi alla ricomparsa.
+    var showConcludeDialog by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(items.isEmpty()) {
-        if (items.isEmpty()) expanded = true
+        if (items.isEmpty()) {
+            expanded = true
+            showConcludeDialog = false
+        }
     }
 
     // Contratto 9.1: con N = 0 la sezione non emette alcun nodo.
@@ -172,7 +182,38 @@ fun FatteSection(
                         badgesMuted = true,
                     )
                 }
+
+                // Pulsante largo in fondo alla sezione espansa (Story 9.2).
+                Button(
+                    onClick = { showConcludeDialog = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = spacing.space2)
+                        .heightIn(min = spacing.touchTargetMin)
+                        .testTag("conclude_actions_button"),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = colors.accentAction,
+                        contentColor = colors.inkInverse,
+                    ),
+                    shape = tokens.bottomSheet.radiusTop,
+                ) {
+                    Text(
+                        text = "Concludi attività",
+                        style = typography.sectionHeader,
+                    )
+                }
             }
         }
+    }
+
+    if (showConcludeDialog) {
+        ConcludeActionsDialog(
+            count = count,
+            onConfirm = {
+                showConcludeDialog = false
+                onConclude()
+            },
+            onDismiss = { showConcludeDialog = false },
+        )
     }
 }

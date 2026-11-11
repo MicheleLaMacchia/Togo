@@ -177,6 +177,14 @@ sealed interface UiEvent {
     /** Elimina azione (swipe cestino o azione accessibile "Elimina"). */
     data class DeleteAction(val actionId: String) : UiEvent
 
+    /**
+     * Conferma del dialog "Concludi attività" (Story 9.2).
+     *
+     * L'eliminazione delle azioni spuntate è la Story 9.3: in 9.2 l'evento
+     * rappresenta solo l'intento confermato dall'utente.
+     */
+    object ConcludeActions : UiEvent
+
     /** Annulla eliminazione azione (Snackbar undo). */
     object UndoDeleteAction : UiEvent
 
