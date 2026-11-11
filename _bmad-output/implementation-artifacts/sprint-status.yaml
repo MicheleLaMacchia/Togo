@@ -87,21 +87,21 @@ development_status:
   7-2-proposta-nuovo-livello-3-sotto-un-livello-2-esistente: done
   epic-7-retrospective: optional
 
-  epic-8: backlog
-  8-1-tabella-action_item-e-migrazione-room-5-6: backlog
-  8-2-repository-e-use-case-per-le-azioni: backlog
-  8-3-pagina-da-fare-con-pager-e-intestazione: backlog
-  8-4-riga-azione-con-checkbox-badge-urgenza-e-badge-ambito: backlog
-  8-5-foglio-azione-aggiungi-modifica-con-testo-urgenza-e-ambito: backlog
-  8-6-spunta-azione-e-spostamento-in-fatte: backlog
-  8-7-modifica-azione-da-foglio: backlog
-  8-8-eliminazione-azione-con-cestino-e-undo: backlog
-  8-9-deduplica-azioni-per-testo-ambito-urgenza: backlog
-  8-10-raggruppamento-azioni-per-ambito-urgenza-alfabetico: backlog
+  epic-8: done
+  8-1-tabella-action_item-e-migrazione-room-5-6: done
+  8-2-repository-e-use-case-per-le-azioni: done
+  8-3-pagina-da-fare-con-pager-e-intestazione: done
+  8-4-riga-azione-con-checkbox-badge-urgenza-e-badge-ambito: done
+  8-5-foglio-azione-aggiungi-modifica-con-testo-urgenza-e-ambito: done
+  8-6-spunta-azione-e-spostamento-in-fatte: done
+  8-7-modifica-azione-da-foglio: done
+  8-8-eliminazione-azione-con-cestino-e-undo: done
+  8-9-deduplica-azioni-per-testo-ambito-urgenza: done
+  8-10-raggruppamento-azioni-per-ambito-urgenza-alfabetico: done
   epic-8-retrospective: optional
 
-  epic-9: backlog
-  9-1-sezione-fatte-collassabile-con-conteggio: backlog
+  epic-9: in-progress
+  9-1-sezione-fatte-collassabile-con-conteggio: done
   9-2-pulsante-concludi-attività-e-dialog-di-conferma: backlog
   9-3-eliminazione-azioni-spuntate-senza-undo-e-senza-storico: backlog
   9-4-deselezione-azione-da-fatte: backlog
@@ -140,4 +140,4 @@ development_status:
   13-4-semantica-talkback-per-checkbox-chip-sezioni-e-dialog: backlog
   13-5-mockup-allineati-badge-urgenza-target-48dp-stato-focus-dark: backlog
   epic-13-retrospective: optional
-last_updated: 11-05-2026 14:00
+last_updated: 11-09-2026 13:00

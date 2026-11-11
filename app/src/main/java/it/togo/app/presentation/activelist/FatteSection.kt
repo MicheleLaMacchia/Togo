@@ -18,9 +18,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -29,6 +29,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
@@ -39,11 +40,16 @@ import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
 
 /**
- * Sezione collassabile "Fatte (N)" in fondo alla pagina "Da fare" (CAP-3, Story 8.6).
+ * Sezione collassabile "Fatte (N)" in fondo alla pagina "Da fare"
+ * (CAP-3, storie 8.6 e 9.1).
  *
- * - Header collassabile "Fatte (N)" con espandi/collassa; default espansa.
+ * - Header collassabile "Fatte (N)" con espandi/collassa; default espansa
+ *   alla prima composizione con N > 0.
+ * - Se [items] è vuota la sezione non emette alcun nodo: niente "Fatte (0)"
+ *   e nessun placeholder (Story 9.1).
  * - Animazione expand/collapse spring (stesso pattern di [PresiSection]).
- * - Righe spuntate: testo barrato, checkbox spuntata, badge urgenza e ambito attenuati.
+ * - Righe spuntate: testo barrato, checkbox spuntata, badge urgenza e ambito
+ *   attenuati, nell'ordine ricevuto (dalla più recente, deciso dal ViewModel).
  * - Nessun tap-edit ([rowActionDescription] = null) e nessun cestino.
  * - L'unica azione è la checkbox: deselezionando, l'azione torna nel gruppo
  *   del suo ambito e della sua urgenza (spunta invertita).
@@ -63,7 +69,16 @@ fun FatteSection(
     spacing: it.togo.app.ui.theme.TogoSpacing,
     tokens: it.togo.app.ui.theme.TogoComponentTokens,
 ) {
+    // Lo stato resta vivo anche mentre la sezione è vuota: se N torna a 0 e
+    // poi ricompare, la sezione riparte espansa come richiesto ("default
+    // espansa se N > 0"), senza ereditare un collapse precedente.
     var expanded by rememberSaveable { mutableStateOf(true) }
+    LaunchedEffect(items.isEmpty()) {
+        if (items.isEmpty()) expanded = true
+    }
+
+    // Contratto 9.1: con N = 0 la sezione non emette alcun nodo.
+    if (items.isEmpty()) return
 
     val count = items.size
     val stateText = if (expanded) "espansa" else "collassata"
@@ -103,6 +118,7 @@ fun FatteSection(
                     role = Role.Button,
                 )
                 .semantics {
+                    heading()
                     contentDescription = headerDescription
                     stateDescription = stateText
                 },
@@ -110,7 +126,7 @@ fun FatteSection(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "Fatte (${items.size})",
+                text = "Fatte ($count)",
                 style = typography.sectionHeader,
                 color = colors.inkPrimary,
                 modifier = Modifier.weight(1f),

@@ -796,19 +796,19 @@ private fun ActionsPage(
 
                 // Sezione "Fatte" in fondo: le azioni spuntate restano visibili
                 // e barrate, dalla più recente; si possono solo deselezionare.
-                if (uiState.checkedActions.isNotEmpty()) {
-                    item(key = "fatto_section") {
-                        FatteSection(
-                            items = uiState.checkedActions,
-                            onUncheck = { actionId ->
-                                onEvent(UiEvent.CheckOff(actionId, false))
-                            },
-                            colors = colors,
-                            typography = typography,
-                            spacing = spacing,
-                            tokens = tokens,
-                        )
-                    }
+                // L'item resta composto anche con N = 0 (senza emettere nodi):
+                // così la sezione può ripartire espansa quando ricompare.
+                item(key = "fatto_section") {
+                    FatteSection(
+                        items = uiState.checkedActions,
+                        onUncheck = { actionId ->
+                            onEvent(UiEvent.CheckOff(actionId, false))
+                        },
+                        colors = colors,
+                        typography = typography,
+                        spacing = spacing,
+                        tokens = tokens,
+                    )
                 }
             }
         }

@@ -186,9 +186,11 @@ class ActiveListViewModel(
         }
 
         // Le azioni non passano dal catalogo: una sola partizione per
-        // alimentare il conteggio "Da fare (N)" e la futura sezione "Fatte".
+        // alimentare il conteggio "Da fare (N)" e la sezione "Fatte".
+        // Le spuntate sono ordinate dalla più recente in cima (Story 9.1):
+        // la query Room le restituisce per created_at, non per spunta.
         val activeActions = actions.filterNot { it.isChecked }
-        val checkedActions = actions.filter { it.isChecked }
+        val checkedActions = actions.filter { it.isChecked }.mostRecentFirst()
 
         return ActiveListUiState(
             activeGroups = groups,
@@ -414,6 +416,14 @@ class ActiveListViewModel(
      */
     private fun handleActionCheckOff(action: ActionItem, checked: Boolean) {
         if (checked) {
+            // Un secondo tap entro i 300 ms di animazione non deve schedulare
+            // una seconda spunta: l'azione comparirebbe due volte in Fatte.
+            if (_uiState.value.pendingCheckOffItemId == action.id ||
+                _uiState.value.checkedActions.any { it.id == action.id }
+            ) {
+                return
+            }
+
             _uiState.value = _uiState.value.copy(pendingCheckOffItemId = action.id)
 
             viewModelScope.launch {
@@ -423,7 +433,7 @@ class ActiveListViewModel(
                     checkedActions = (_uiState.value.checkedActions + action.copy(
                         isChecked = true,
                         updatedAt = System.currentTimeMillis(),
-                    )).sortedByDescending { it.createdAt },
+                    )).mostRecentFirst(),
                     pendingCheckOffItemId = null,
                     checkingOffItemId = action.id,
                 )

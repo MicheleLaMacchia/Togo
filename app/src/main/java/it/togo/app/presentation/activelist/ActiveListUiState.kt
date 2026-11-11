@@ -33,7 +33,7 @@ enum class ActiveListPage {
  * - [activeGroups]: gruppi di voci per categoria L1→L2→L3 ordinati per sortOrder
  * - [checkedItems]: voci spuntate (per sezione "Presi")
  * - [actions]: azioni non spuntate della pagina "Da fare"
- * - [checkedActions]: azioni spuntate (sezione "Fatte", resa in una storia successiva)
+ * - [checkedActions]: azioni spuntate (sezione "Fatte", dalla più recente)
  * - [currentPage]: pagina corrente del pager (AD-8)
  * - [error]: messaggio errore se repository fallisce
  */
@@ -50,7 +50,11 @@ data class ActiveListUiState(
     val categoryLabels: Map<Long, String> = emptyMap(),
     /** Azioni non spuntate: alimentano il conteggio del titolo "Da fare (N)". */
     val actions: List<ActionItem> = emptyList(),
-    /** Azioni spuntate: non contribuiscono al conteggio della pagina. */
+    /**
+     * Azioni spuntate: non contribuiscono al conteggio della pagina.
+     * Sono ordinate dalla più recente ([mostRecentFirst]) e alimentano la
+     * sezione "Fatte (N)".
+     */
     val checkedActions: List<ActionItem> = emptyList(),
     /** Pagina corrente del pager. A freddo è sempre [ActiveListPage.SHOPPING]. */
     val currentPage: ActiveListPage = ActiveListPage.SHOPPING,
@@ -89,6 +93,22 @@ data class ActiveListUiState(
     /** Se c'è un'animazione in corso */
     val isAnimating: Boolean = checkingOffItemId != null || pendingCheckOffItemId != null
 }
+
+/**
+ * Ordina le azioni dalla più recente in cima (Story 9.1).
+ *
+ * La sezione "Fatte" mostra per prima l'azione completata più di recente:
+ * `updatedAt` è valorizzato al momento della spunta, quindi è il criterio
+ * corretto; a parità si usa `createdAt` come tie-break stabile.
+ *
+ * La funzione non filtra: la selezione delle sole azioni spuntate resta a
+ * monte ([ActiveListUiState.checkedActions]).
+ */
+internal fun List<ActionItem>.mostRecentFirst(): List<ActionItem> =
+    sortedWith(
+        compareByDescending<ActionItem> { it.updatedAt }
+            .thenByDescending { it.createdAt }
+    )
 
 /**
  * Gruppo di voci per categoria canonica Level1.

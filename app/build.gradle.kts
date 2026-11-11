@@ -82,6 +82,22 @@ tasks.withType<Test>().configureEach {
         layout.buildDirectory.dir("robolectric-dependencies").get().asFile.absolutePath,
     )
     systemProperty("robolectric.offline", "true")
+    // MockK installa un agent ByteBuddy nella JVM dei test via Attach API.
+    // - `jdk.attach.allowAttachSelf=true` abilita il self-attach diretto: da
+    //   JDK 9 è disabilitato per default e ByteBuddy ricadrebbe su un processo
+    //   esterno che in Docker fallisce.
+    // - `-XX:+StartAttachListener` crea il socket di attach all'avvio della
+    //   JVM. Senza questo flag l'attach listener parte solo su SIGQUIT, dopo
+    //   che il client ha creato il file di trigger `.attach_pid<pid>` nella
+    //   working directory del processo. Qui i test girano da root dentro Docker
+    //   con la working directory su un bind mount Windows, dove i file
+    //   risultano di un altro utente: HotSpot scarta il file di trigger
+    //   (owner != euid), l'attach listener non parte mai e mockk fallisce con
+    //   "Unable to open socket file /tmp/.java_pid<pid>".
+    jvmArgs(
+        "-Djdk.attach.allowAttachSelf=true",
+        "-XX:+StartAttachListener",
+    )
 }
 
 dependencies {
