@@ -102,6 +102,82 @@ class ActiveListViewModelActionOrderingTest {
         }
 
     @Test
+    fun `unchecking a completed action restores it to active groups in scope urgency alphabetical order`() =
+        runTest(testDispatcher) {
+            val restored = checked(
+                id = "restored",
+                createdAt = 1L,
+                updatedAt = 10L,
+                text = "Zeta",
+                scope = ActionScope.CASA,
+                urgency = ActionUrgency.URGENTE,
+            )
+            val casaUrgentAlpha = checked(
+                id = "casa-alpha",
+                createdAt = 2L,
+                updatedAt = 20L,
+                isChecked = false,
+                text = "Alfa",
+                scope = ActionScope.CASA,
+                urgency = ActionUrgency.URGENTE,
+            )
+            val casaRelaxed = checked(
+                id = "casa-relaxed",
+                createdAt = 3L,
+                updatedAt = 30L,
+                isChecked = false,
+                text = "Commissione",
+                scope = ActionScope.CASA,
+                urgency = ActionUrgency.A_TEMPO_PERSO,
+            )
+            val praticheUrgent = checked(
+                id = "pratiche-urgent",
+                createdAt = 4L,
+                updatedAt = 40L,
+                isChecked = false,
+                text = "Documento",
+                scope = ActionScope.PRATICHE,
+                urgency = ActionUrgency.URGENTE,
+            )
+            val repo = OrderedActionsRepository(
+                listOf(restored, casaRelaxed, praticheUrgent, casaUrgentAlpha),
+            )
+            val viewModel = ActiveListViewModel(repo, FakeCatalogRepository())
+
+            viewModel.uiState.first {
+                it.checkedActions.any { action -> action.id == "restored" }
+            }
+
+            viewModel.onEvent(UiEvent.CheckOff("restored", false))
+
+            // Aspetta anche la mutazione del repository: lo stato UI è ottimistico,
+            // mentre questa emissione dimostra che la deselezione è stata persistita.
+            repo.actions.first { actions ->
+                actions.any { action -> action.id == "restored" && !action.isChecked }
+            }
+
+            val state = viewModel.uiState.first {
+                it.checkedActions.none { action -> action.id == "restored" } &&
+                    it.actions.any { action -> action.id == "restored" && !action.isChecked }
+            }
+            val restoredAction = state.actions.single { it.id == "restored" }
+
+            assertEquals(ActionScope.CASA, restoredAction.scope)
+            assertEquals(ActionUrgency.URGENTE, restoredAction.urgency)
+            assertEquals(
+                listOf(
+                    ActionScope.CASA to "casa-alpha",
+                    ActionScope.CASA to "restored",
+                    ActionScope.CASA to "casa-relaxed",
+                    ActionScope.PRATICHE to "pratiche-urgent",
+                ),
+                state.actionGroups.flatMap { group ->
+                    group.actions.map { action -> group.scope to action.id }
+                },
+            )
+        }
+
+    @Test
     fun `conclude actions deletes checked actions and preserves active actions`() =
         runTest(testDispatcher) {
             val finished = checked("done", createdAt = 1L, updatedAt = 10L)
@@ -135,11 +211,14 @@ class ActiveListViewModelActionOrderingTest {
         createdAt: Long,
         updatedAt: Long,
         isChecked: Boolean = true,
+        text: String = "Azione $id",
+        scope: ActionScope = ActionScope.CASA,
+        urgency: ActionUrgency = ActionUrgency.A_TEMPO_PERSO,
     ) = ActionItem(
         id = id,
-        text = "Azione $id",
-        scope = ActionScope.CASA,
-        urgency = ActionUrgency.A_TEMPO_PERSO,
+        text = text,
+        scope = scope,
+        urgency = urgency,
         isChecked = isChecked,
         createdAt = createdAt,
         updatedAt = updatedAt,
@@ -148,7 +227,7 @@ class ActiveListViewModelActionOrderingTest {
     private class OrderedActionsRepository(
         actions: List<ActionItem>,
     ) : ShoppingListRepository {
-        private val actions = MutableStateFlow(actions)
+        val actions = MutableStateFlow(actions)
         var deleteCheckedActionsCalls = 0
         var checkoutCalls = 0
         var addActionCalls = 0
@@ -173,7 +252,15 @@ class ActiveListViewModelActionOrderingTest {
         }
         override suspend fun updateAction(action: ActionItem) = Unit
         override suspend fun deleteAction(actionId: String) = Unit
-        override suspend fun checkOffAction(actionId: String, checked: Boolean) = Unit
+        override suspend fun checkOffAction(actionId: String, checked: Boolean) {
+            actions.value = actions.value.map { action ->
+                if (action.id == actionId) {
+                    action.copy(isChecked = checked, updatedAt = System.currentTimeMillis())
+                } else {
+                    action
+                }
+            }
+        }
         override suspend fun deleteCheckedActions(): Int {
             deleteCheckedActionsCalls++
             val checked = actions.value.count { it.isChecked }

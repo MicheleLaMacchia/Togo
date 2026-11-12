@@ -2,8 +2,8 @@
 title: '9.3 Eliminazione azioni spuntate senza undo e senza storico'
 type: 'feature'
 created: '2026-11-11'
-updated: '2026-11-11'
-status: 'in-progress'
+updated: '2026-11-12'
+status: 'done'
 route: 'dispatch'
 review_loop_iteration: 0
 baseline_commit: 'dbae80a2df11d2e7eb243c0961572051bb811883'
@@ -62,6 +62,7 @@ context:
 
 ## Implementation Notes
 
+- Stato della storia riallineato a `done` il 2026-11-12 su indicazione esplicita dell'utente; build e test restano non eseguiti e sono indicati nella sezione Verification.
 - Implementata `deleteCheckedActions()` nel repository, delegando a `ActionItemDao.deleteChecked()` su `Dispatchers.IO`; la query elimina esclusivamente righe checked in `ACTION_ITEM`.
 - `ConcludeActions` ora invalida l'undo singolo pendente, chiude lo snackbar di cancellazione singola e avvia la cancellazione senza snackbar/undo del bulk. Le cancellazioni singole ancora in corso non possono riattivare un undo dopo la conferma.
 - Aggiornati i test ViewModel e repository Room per azioni checked/active, undo pendente e invarianti di lista spesa/storico.

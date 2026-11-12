@@ -1,10 +1,12 @@
 package it.togo.app.presentation.activelist
 
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertHeightIsAtLeast
+import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertWidthIsAtLeast
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -161,11 +163,24 @@ class FatteSectionTest {
 
     @Test
     fun `checkbox unchecks the action`() {
+        val actionState = mutableStateOf(action(id = "a", text = "Pagare la bolletta"))
         var uncheckedId: String? = null
-        render(
-            items = listOf(action(id = "a", text = "Pagare la bolletta")),
-            onUncheck = { id -> uncheckedId = id },
-        )
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                FatteSection(
+                    items = listOf(actionState.value),
+                    onUncheck = { id ->
+                        uncheckedId = id
+                        actionState.value = actionState.value.copy(isChecked = false)
+                    },
+                    onConclude = {},
+                    colors = togoColors(),
+                    typography = togoTypography(),
+                    spacing = togoSpacing(),
+                    tokens = componentTokens(),
+                )
+            }
+        }
 
         composeTestRule
             .onNodeWithContentDescription("Deseleziona Pagare la bolletta.")
@@ -173,6 +188,9 @@ class FatteSectionTest {
             .performClick()
 
         assertEquals("a", uncheckedId)
+        composeTestRule
+            .onNodeWithContentDescription("Spunta Pagare la bolletta.")
+            .assertIsOff()
     }
 
     // --- Pulsante "Concludi attività" e dialog (Story 9.2) ---
