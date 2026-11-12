@@ -16,6 +16,11 @@ enum class ActiveListPage {
     SHOPPING,
     ACTIONS;
 
+    companion object {
+        /** Pagine previste dalla schermata principale, nell'ordine di visualizzazione. */
+        val pagerPages: List<ActiveListPage> = listOf(SHOPPING, ACTIONS)
+    }
+
     /** L'altra pagina rispetto a questa. */
     fun other(): ActiveListPage = if (this == SHOPPING) ACTIONS else SHOPPING
 

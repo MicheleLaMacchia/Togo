@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -345,13 +346,7 @@ fun ActiveListScreen(
 
     // La pagina corrente vive nel ViewModel: qui la si riflette solo sul pager.
     val page = uiState.currentPage
-    val pagerState = rememberPagerState(
-        initialPage = page.ordinal,
-        pageCount = { ActiveListPage.entries.size },
-    )
-    LaunchedEffect(page) {
-        pagerState.animateScrollToPage(page.ordinal)
-    }
+    val pagerState = rememberActiveListPagerState(page)
 
     // Lo swipe non è gestito dal pager (userScrollEnabled = false): viene
     // riconosciuto solo dalle zone che possono cambiare pagina. Con due sole
@@ -529,18 +524,13 @@ fun ActiveListScreen(
             }
         },
         content = { innerPadding ->
-            HorizontalPager(
+            ActiveListPager(
                 state = pagerState,
                 modifier = Modifier
                     .padding(innerPadding)
                     .fillMaxSize(),
-                // Le righe consumano il drag orizzontale per il cestino: il
-                // pager non deve mai contenderselo. Lo swipe di pagina passa
-                // da pagerSwipeModifier, applicato solo alle zone consentite.
-                userScrollEnabled = false,
-                key = { index -> ActiveListPage.entries[index].name },
-            ) { index ->
-                when (ActiveListPage.entries[index]) {
+            ) { page ->
+                when (page) {
                     ActiveListPage.SHOPPING -> ShoppingPage(
                         uiState = uiState,
                         pagerSwipeModifier = pagerSwipeModifier,
@@ -571,6 +561,38 @@ fun ActiveListScreen(
             }
         },
     )
+}
+
+@Composable
+internal fun rememberActiveListPagerState(currentPage: ActiveListPage): PagerState {
+    val currentPageIndex = ActiveListPage.pagerPages.indexOf(currentPage)
+    val pagerState = rememberPagerState(
+        initialPage = currentPageIndex,
+        pageCount = { ActiveListPage.pagerPages.size },
+    )
+    LaunchedEffect(currentPageIndex) {
+        pagerState.animateScrollToPage(currentPageIndex)
+    }
+    return pagerState
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+internal fun ActiveListPager(
+    state: PagerState,
+    modifier: Modifier = Modifier,
+    pageContent: @Composable (ActiveListPage) -> Unit,
+) {
+    HorizontalPager(
+        state = state,
+        modifier = modifier,
+        // Lo swipe di pagina è gestito dalle zone abilitate; sulle righe il
+        // gesto orizzontale conserva l'azione di eliminazione.
+        userScrollEnabled = false,
+        key = { index -> ActiveListPage.pagerPages[index].name },
+    ) { index ->
+        pageContent(ActiveListPage.pagerPages[index])
+    }
 }
 
 /** Intestazione fissa: titolo dinamico, frecce e azioni globali. */

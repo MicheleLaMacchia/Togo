@@ -100,15 +100,15 @@ development_status:
   8-10-raggruppamento-azioni-per-ambito-urgenza-alfabetico: done
   epic-8-retrospective: optional
 
-  epic-9: in-progress
+  epic-9: done
   9-1-sezione-fatte-collassabile-con-conteggio: done
   9-2-pulsante-concludi-attività-e-dialog-di-conferma: done
   9-3-eliminazione-azioni-spuntate-senza-undo-e-senza-storico: done
-  9-4-deselezione-azione-da-fatte: review
+  9-4-deselezione-azione-da-fatte: done
   epic-9-retrospective: optional
 
-  epic-10: backlog
-  10-1-horizontalpager-con-due-pagine: backlog
+  epic-10: in-progress
+  10-1-horizontalpager-con-due-pagine: review
   10-2-intestazione-fissa-con-titolo-frecce-e-azioni-globali: backlog
   10-3-swipe-solo-su-intestazione-gruppi-spazi-vuoti-non-su-righe: backlog
   10-4-frecce-pager-focusabili-con-talkback: backlog
