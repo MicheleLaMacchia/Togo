@@ -32,6 +32,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -73,6 +74,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -656,27 +658,49 @@ internal fun ActiveListHeader(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(
-                onClick = { onEvent(UiEvent.SelectPage(ActiveListPage.SHOPPING)) },
-                enabled = page == ActiveListPage.ACTIONS,
+                onClick = {
+                    if (page == ActiveListPage.ACTIONS) {
+                        onEvent(UiEvent.SelectPage(ActiveListPage.SHOPPING))
+                    }
+                },
+                modifier = if (page == ActiveListPage.SHOPPING) {
+                    Modifier
+                        .alpha(0.38f)
+                        .semantics { disabled() }
+                } else {
+                    Modifier
+                },
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Pagina precedente",
+                    contentDescription = "Torna a Spesa",
                 )
             }
             Text(
                 text = "${page.label} ($count)",
                 style = togoTypography().pageTitle,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .semantics { liveRegion = LiveRegionMode.Polite },
             )
             IconButton(
-                onClick = { onEvent(UiEvent.SelectPage(ActiveListPage.ACTIONS)) },
-                enabled = page == ActiveListPage.SHOPPING,
+                onClick = {
+                    if (page == ActiveListPage.SHOPPING) {
+                        onEvent(UiEvent.SelectPage(ActiveListPage.ACTIONS))
+                    }
+                },
+                modifier = if (page == ActiveListPage.ACTIONS) {
+                    Modifier
+                        .alpha(0.38f)
+                        .semantics { disabled() }
+                } else {
+                    Modifier
+                },
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = "Pagina successiva",
+                    contentDescription = "Vai a Da fare",
                 )
             }
         }

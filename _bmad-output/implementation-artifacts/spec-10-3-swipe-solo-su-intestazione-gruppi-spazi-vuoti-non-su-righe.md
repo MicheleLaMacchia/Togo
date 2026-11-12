@@ -2,7 +2,7 @@
 title: '10.3 Swipe solo su intestazione, gruppi e spazi vuoti'
 type: 'feature'
 created: '2026-11-12'
-status: 'review'
+status: 'done'
 route: 'oneshot'
 review_loop_iteration: 0
 context:
@@ -32,7 +32,7 @@ context:
 - L’ispezione statica ha rilevato che le righe spesa non eliminabili non consumavano il drag e potevano propagare lo swipe al pager. Ora consumano il drag; il test usa lo stesso modificatore pager per coprire header, gruppo, spazio vuoto e righe attive/non eliminabili.
 - Resi `rememberPagerSwipeModifier`, `ShoppingPage` e `ActionsPage` `internal` per verificare nei test Compose il wiring effettivo delle pagine. Aggiunti test per swipe in entrambe le direzioni sull’header con controllo del pager renderizzato, intestazioni e spazi vuoti delle due pagine (incluse le liste vuote), cestino sulle righe attive anche partendo dalle checkbox o dall’area cestino, nessuna eliminazione, stabilità dell’espansione categoria, righe non eliminabili della spesa e della sezione Fatte, e scorrimento verticale della lista.
 - `git diff --check` non ha segnalato errori. Su successiva autorizzazione esplicita dell'utente, `test-build-android.ps1` è stato eseguito: prima i test segnalavano tre casi di gesture, poi il tentativo più recente si è fermato per un errore Kotlin (`Restricted suspending functions`) nel helper del pass iniziale.
-- Corretto il helper per usare direttamente lo scope ristretto fornito da `awaitEachGesture`. La correzione non è stata compilata dopo l'ultima modifica; la Story resta in `review` in attesa che l'utente riesegua `test-build-android.ps1`.
+- Corretto il helper per usare direttamente lo scope ristretto fornito da `awaitEachGesture`. La correzione non venne compilata dopo l'ultima modifica; in quel momento la Story restava in `review` in attesa di verifica utente, stato poi riconciliato a `done` come documentato in fondo a questa spec.
 - Il controllo aggiuntivo di scroll verticale su Spesa è stato rimosso perché non fa parte dei criteri 10.3 e falliva nei precedenti tentativi. Restano i controlli verticali sulla pagina Da fare.
 - Worktree inizialmente pulito sul branch `dev`; preservate le modifiche introdotte per questa Story senza stage o commit.
 
@@ -55,3 +55,5 @@ context:
 - medium — L’area cestino di `ActionRow` era fuori dal contenuto trascinabile e poteva propagare il drag; ora consuma il drag e il test verifica che pager ed eliminazione restino inattivi.
 - medium — La suite aggiunta non includeva l’import di `swipeUp`; aggiunto l’import necessario nei test di scroll.
 - medium — Le righe non eliminabili della spesa lasciavano propagare il drag; ora consumano il gesto e i test sulle checkbox confermano che il pager non parte.
+
+- Riconciliazione 2026-11-12: su indicazione esplicita dell'utente, la Story 10.3 è stata considerata completata e lo stato della spec è stato allineato a `done`. Il commit `63ae6f7` contiene il lavoro; la nota precedente documenta che l'ultimo tentativo di compilazione si era fermato prima della correzione dell'helper. Questa riconciliazione non dichiara build o test superati.

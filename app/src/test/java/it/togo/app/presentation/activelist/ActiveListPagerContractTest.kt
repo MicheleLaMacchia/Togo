@@ -9,8 +9,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.isFocusable
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -463,6 +470,7 @@ class ActiveListPagerContractTest {
 
     @Test
     fun `fixed header shows page counts arrows and contextual global actions`() {
+        var pageSelectionEvents = 0
         composeTestRule.setContent {
             val selectedPage = remember { mutableStateOf(ActiveListPage.SHOPPING) }
             TogoTheme(darkTheme = false) {
@@ -472,7 +480,10 @@ class ActiveListPagerContractTest {
                     activeActionsCount = 3,
                     swipeModifier = Modifier,
                     onEvent = { event ->
-                        if (event is UiEvent.SelectPage) selectedPage.value = event.page
+                        if (event is UiEvent.SelectPage) {
+                            pageSelectionEvents++
+                            selectedPage.value = event.page
+                        }
                     },
                     onShare = {},
                 )
@@ -480,22 +491,54 @@ class ActiveListPagerContractTest {
         }
 
         composeTestRule.onNodeWithText("Spesa (2)").assertIsDisplayed()
-        composeTestRule.onNodeWithContentDescription("Pagina precedente").assertExists()
-        composeTestRule.onNodeWithContentDescription("Pagina successiva").assertExists()
+        val previousArrow = composeTestRule.onNodeWithContentDescription("Torna a Spesa")
+        previousArrow.assertExists()
+        previousArrow.assertIsNotEnabled()
+        previousArrow.assertHasClickAction()
+        previousArrow.assert(isFocusable())
+        composeTestRule.onNodeWithContentDescription("Vai a Da fare")
+            .assertHasClickAction()
+        composeTestRule.onNodeWithText("Spesa (2)").assert(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.LiveRegion,
+                LiveRegionMode.Polite,
+            ),
+        )
         composeTestRule.onNodeWithContentDescription("Storico").assertExists()
         composeTestRule.onNodeWithContentDescription("Condividi lista").assertExists()
         composeTestRule.onNodeWithContentDescription("Impostazioni").assertExists()
 
-        composeTestRule.onNodeWithContentDescription("Pagina successiva").performClick()
+        previousArrow.performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Spesa (2)").assertIsDisplayed()
+        assertEquals(0, pageSelectionEvents)
+
+        composeTestRule.onNodeWithContentDescription("Vai a Da fare").performClick()
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Da fare (3)").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Da fare (3)").assert(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.LiveRegion,
+                LiveRegionMode.Polite,
+            ),
+        )
+        composeTestRule.onNodeWithContentDescription("Torna a Spesa").assertHasClickAction()
+        val nextArrow = composeTestRule.onNodeWithContentDescription("Vai a Da fare")
+        nextArrow.assertIsNotEnabled()
+        nextArrow.assertHasClickAction()
+        nextArrow.assert(isFocusable())
+        nextArrow.performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Da fare (3)").assertIsDisplayed()
+        assertEquals(1, pageSelectionEvents)
         composeTestRule.onNodeWithContentDescription("Storico").assertDoesNotExist()
         composeTestRule.onNodeWithContentDescription("Condividi lista").assertExists()
         composeTestRule.onNodeWithContentDescription("Impostazioni").assertExists()
 
-        composeTestRule.onNodeWithContentDescription("Pagina precedente").performClick()
+        composeTestRule.onNodeWithContentDescription("Torna a Spesa").performClick()
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Spesa (2)").assertIsDisplayed()
+        assertEquals(2, pageSelectionEvents)
         composeTestRule.onNodeWithContentDescription("Storico").assertExists()
     }
 
