@@ -11,6 +11,7 @@ import it.togo.app.domain.repository.ShoppingListRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -101,24 +102,32 @@ class ActiveListViewModelActionOrderingTest {
         }
 
     @Test
-    fun `conclude actions event does not delete checked actions (9.2 boundary)`() =
+    fun `conclude actions deletes checked actions and preserves active actions`() =
         runTest(testDispatcher) {
-            val oldest = checked("a", createdAt = 1L, updatedAt = 10L)
-            val newest = checked("b", createdAt = 2L, updatedAt = 20L)
-            val repo = OrderedActionsRepository(listOf(oldest, newest))
+            val finished = checked("done", createdAt = 1L, updatedAt = 10L)
+            val active = checked("active", createdAt = 2L, updatedAt = 20L, isChecked = false)
+            val repo = OrderedActionsRepository(listOf(finished, active))
             val viewModel = ActiveListViewModel(repo, FakeCatalogRepository())
 
-            viewModel.uiState.first { it.checkedActions.size == 2 }
+            viewModel.uiState.first { it.checkedActions.size == 1 && it.actions.size == 1 }
+            viewModel.onEvent(UiEvent.DeleteAction("active"))
+            viewModel.uiState.first { it.actionDeleteUndoMessage != null }
 
             viewModel.onEvent(UiEvent.ConcludeActions)
 
-            // In 9.2 la conferma registra solo l'intento: nulla viene eliminato.
-            val state = viewModel.uiState.first { it.checkedActions.size == 2 }
+            val state = viewModel.uiState.first {
+                it.checkedActions.isEmpty() && it.actionDeleteUndoMessage == null
+            }
             assertEquals(
-                "le azioni spuntate non devono essere eliminate in 9.2",
-                listOf("b", "a"),
-                state.checkedActions.map { it.id },
+                "le azioni attive devono restare disponibili",
+                listOf("active"),
+                state.actions.map { it.id },
             )
+            assertEquals(1, repo.deleteCheckedActionsCalls)
+            assertEquals(0, repo.checkoutCalls)
+
+            viewModel.onEvent(UiEvent.UndoDeleteAction)
+            assertEquals(0, repo.addActionCalls)
         }
 
     private fun checked(
@@ -137,12 +146,16 @@ class ActiveListViewModelActionOrderingTest {
     )
 
     private class OrderedActionsRepository(
-        private val actions: List<ActionItem>,
+        actions: List<ActionItem>,
     ) : ShoppingListRepository {
+        private val actions = MutableStateFlow(actions)
+        var deleteCheckedActionsCalls = 0
+        var checkoutCalls = 0
+        var addActionCalls = 0
         // getAllItems restituisce solo azioni (nessun prodotto), come farebbe
         // Room dopo la migrazione Epic 8.
         override fun getAllItems(): Flow<List<ShoppingItem>> = flowOf(emptyList())
-        override fun getActions(): Flow<List<ActionItem>> = flowOf(actions)
+        override fun getActions(): Flow<List<ActionItem>> = actions
         override fun getActiveItems(): Flow<List<ShoppingItem>> = flowOf(emptyList())
         override fun getCheckedItems(): Flow<List<ShoppingItem>> = flowOf(emptyList())
 
@@ -150,12 +163,23 @@ class ActiveListViewModelActionOrderingTest {
         override suspend fun update(item: ShoppingItem) = Unit
         override suspend fun delete(itemId: String) = Unit
         override suspend fun getByProductId(productId: Long): ShoppingItem? = null
-        override suspend fun checkout(checkedItemIds: List<String>): Boolean = true
+        override suspend fun checkout(checkedItemIds: List<String>): Boolean {
+            checkoutCalls++
+            return true
+        }
 
-        override suspend fun addAction(action: ActionItem) = Unit
+        override suspend fun addAction(action: ActionItem) {
+            addActionCalls++
+        }
         override suspend fun updateAction(action: ActionItem) = Unit
         override suspend fun deleteAction(actionId: String) = Unit
         override suspend fun checkOffAction(actionId: String, checked: Boolean) = Unit
+        override suspend fun deleteCheckedActions(): Int {
+            deleteCheckedActionsCalls++
+            val checked = actions.value.count { it.isChecked }
+            actions.value = actions.value.filterNot { it.isChecked }
+            return checked
+        }
         override suspend fun checkDuplicateAction(
             normalizedText: String,
             scope: ActionScope,

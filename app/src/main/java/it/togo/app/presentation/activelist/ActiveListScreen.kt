@@ -136,7 +136,7 @@ fun ActiveListScreen(
      * ha il focus di accessibilità), live region educata e tasto "Annulla"
      * con touch target ≥48dp.
      */
-    LaunchedEffect(uiState.actionDeleteUndoCounter) {
+    LaunchedEffect(uiState.actionDeleteUndoCounter, uiState.actionDeleteUndoMessage) {
         val message = uiState.actionDeleteUndoMessage ?: return@LaunchedEffect
         var finished = false
 
@@ -144,7 +144,7 @@ fun ActiveListScreen(
         // snackbar ha il focus di accessibilità (TalkBack esplora il
         // messaggio o il tasto Annulla), così l'utente ha sempre almeno
         // 10 s per annullare l'eliminazione.
-        scope.launch {
+        launch {
             var elapsed = 0L
             while (!finished && elapsed < 10000) {
                 delay(200)
@@ -804,8 +804,7 @@ private fun ActionsPage(
                         onUncheck = { actionId ->
                             onEvent(UiEvent.CheckOff(actionId, false))
                         },
-                        // La conferma del dialog arriva al ViewModel come
-                        // intento; l'eliminazione delle spuntate è la 9.3.
+                        // La conferma attiva la cancellazione definitiva nel repository.
                         onConclude = { onEvent(UiEvent.ConcludeActions) },
                         colors = colors,
                         typography = typography,

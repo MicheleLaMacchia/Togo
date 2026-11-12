@@ -4,6 +4,7 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import it.togo.app.data.database.TogoDatabase
+import it.togo.app.data.database.entity.ActionItemEntity
 import it.togo.app.data.database.entity.HistoricalItemEntity
 import it.togo.app.data.database.entity.ShoppingItemEntity
 import it.togo.app.domain.model.StandardUnit
@@ -116,6 +117,49 @@ class RoomShoppingListRepositoryCheckoutTest {
         assertEquals(2.0, stored.lastQuantity, 0.0)
         assertTrue(stored.brand == "Coop" && stored.variant == "Intero")
     }
+
+    @Test
+    fun `eliminazione azioni spuntate preserva attive spesa e storico`() = runBlocking {
+        val now = System.currentTimeMillis()
+        db.actionItemDao().insert(action("checked", checked = true, now = now))
+        db.actionItemDao().insert(action("active", checked = false, now = now))
+        db.shoppingItemDao().insert(shoppingItem("shopping", null, null, 1.0, now))
+        db.historyDao().insert(
+            HistoricalItemEntity(
+                id = "history",
+                productId = 1L,
+                lastQuantity = 2.0,
+                lastUnit = StandardUnit.LITER,
+                purchasedAt = now,
+                purchaseCount = 3,
+            ),
+        )
+
+        val deleted = repository.deleteCheckedActions()
+
+        assertEquals(1, deleted)
+        assertEquals(listOf("active"), db.actionItemDao().getAll().first().map { it.id })
+        assertEquals(listOf("shopping"), db.shoppingItemDao().getAll().first().map { it.id })
+        val history = db.historyDao().getAll().first().single()
+        assertEquals("history", history.id)
+        assertEquals(3, history.purchaseCount)
+    }
+
+    @Test
+    fun `eliminazione azioni spuntate senza righe e innocua`() = runBlocking {
+        db.actionItemDao().insert(action("active", checked = false, now = 1L))
+
+        assertEquals(0, repository.deleteCheckedActions())
+        assertEquals(listOf("active"), db.actionItemDao().getAll().first().map { it.id })
+    }
+
+    private fun action(id: String, checked: Boolean, now: Long) = ActionItemEntity(
+        id = id,
+        testo = "Azione $id",
+        statoSpunta = checked,
+        createdAt = now,
+        updatedAt = now,
+    )
 
     private fun shoppingItem(
         id: String,

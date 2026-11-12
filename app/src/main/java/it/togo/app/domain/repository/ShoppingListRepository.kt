@@ -40,6 +40,9 @@ interface ShoppingListRepository {
     /** Spunta o deseleziona un'azione senza eliminarla. */
     suspend fun checkOffAction(actionId: String, checked: Boolean) = Unit
 
+    /** Elimina definitivamente le sole azioni spuntate. */
+    suspend fun deleteCheckedActions(): Int = 0
+
     /**
      * Deduplica azioni: testo normalizzato + ambito + urgenza.
      *

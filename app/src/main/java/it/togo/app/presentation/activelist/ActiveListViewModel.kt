@@ -77,8 +77,8 @@ class ActiveListViewModel(
 
     // Undo eliminazione singola azione (Story 8.8).
     private val _deletedActionForUndo = MutableStateFlow<ActionItem?>(null)
-    private val _actionUndoMessage = MutableStateFlow<String?>(null)
     private val _actionUndoCounter = AtomicInteger(0)
+    private val _actionDeleteGeneration = AtomicInteger(0)
 
     init {
         loadTaxonomy()
@@ -118,6 +118,7 @@ class ActiveListViewModel(
                         checkoutSnackbarMessage = current.checkoutSnackbarMessage,
                         checkedItemsForUndo = current.checkedItemsForUndo,
                         actionDeleteUndoMessage = current.actionDeleteUndoMessage,
+                        actionDeleteUndoCounter = current.actionDeleteUndoCounter,
                     )
                 }
                 .launchIn(viewModelScope)
@@ -236,8 +237,7 @@ class ActiveListViewModel(
             is UiEvent.DeleteItem -> handleDeleteItem(event.itemId)
             // Elimina una singola azione con cestino + undo (Story 8.8).
             is UiEvent.DeleteAction -> handleDeleteAction(event.actionId)
-            // Conferma del dialog "Concludi attività" (Story 9.2): in questa
-            // storia si registra l'intento, la cancellazione è la Story 9.3.
+            // Conferma irreversibile: la mutazione elimina le sole azioni spuntate.
             is UiEvent.ConcludeActions -> handleConcludeActions()
             is UiEvent.UndoDeleteAction -> handleUndoDeleteAction()
             // Apre il foglio vocale: gestito direttamente dalla UI.
@@ -658,6 +658,7 @@ class ActiveListViewModel(
      */
     private fun handleDeleteAction(actionId: String) {
         val action = _uiState.value.actions.find { it.id == actionId } ?: return
+        val deleteGeneration = _actionDeleteGeneration.get()
         _deletedActionForUndo.value = action
 
         viewModelScope.launch {
@@ -665,9 +666,15 @@ class ActiveListViewModel(
                 withContext(Dispatchers.IO) {
                     deleteActionUseCase(action.id.trim())
                 }
-                showActionUndoSnackbar("Azione eliminata")
+                if (_actionDeleteGeneration.get() == deleteGeneration) {
+                    showActionUndoSnackbar("Azione eliminata")
+                } else if (_deletedActionForUndo.value?.id == action.id) {
+                    _deletedActionForUndo.value = null
+                }
             } catch (e: Exception) {
-                _deletedActionForUndo.value = null
+                if (_deletedActionForUndo.value?.id == action.id) {
+                    _deletedActionForUndo.value = null
+                }
                 _uiState.value = _uiState.value.copy(
                     error = "Eliminazione azione fallita: ${e.message}",
                 )
@@ -675,19 +682,30 @@ class ActiveListViewModel(
         }
     }
 
-    /**
-     * L'utente ha confermato "Concludi attività" nel dialog della sezione
-     * Fatte (Story 9.2).
-     *
-     * La conferma è già esplicita e irreversibile nella UI. L'eliminazione
-     * delle azioni spuntate, senza undo e senza storico, arriva con la Story
-     * 9.3: qui non si scrive nulla per non anticipare quel perimetro.
-     */
+    /** Conferma la conclusione, cancella le azioni spuntate e invalida l'undo singolo pendente. */
     private fun handleConcludeActions() {
+        _actionDeleteGeneration.incrementAndGet()
+        _deletedActionForUndo.value = null
+        clearActionUndoSnackbar()
+
         TogoLog.i(
             "Concludi attività confermato: " +
                 "${_uiState.value.checkedActions.size} azioni spuntate",
         )
+
+        viewModelScope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    shoppingRepository.deleteCheckedActions()
+                }
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                TogoLog.e("Conclusione fallita", e)
+                _uiState.value = _uiState.value.copy(
+                    error = "Conclusione fallita: ${e.message}",
+                )
+            }
+        }
     }
 
     /** Ripristina l'azione eliminata (undo) e chiude lo snackbar. */
@@ -706,12 +724,15 @@ class ActiveListViewModel(
     /** Segnala alla UI di mostrare lo snackbar undo per l'eliminazione azione. */
     fun showActionUndoSnackbar(message: String) {
         val currentCount = _actionUndoCounter.incrementAndGet()
-        _actionUndoMessage.value = message
+        _uiState.value = _uiState.value.copy(
+            actionDeleteUndoMessage = message,
+            actionDeleteUndoCounter = currentCount,
+        )
     }
 
     /** Chiude lo snackbar undo dell'eliminazione azione. */
     fun clearActionUndoSnackbar() {
-        _actionUndoMessage.value = null
+        _uiState.value = _uiState.value.copy(actionDeleteUndoMessage = null)
     }
 
     private data class TaxonomyCache(

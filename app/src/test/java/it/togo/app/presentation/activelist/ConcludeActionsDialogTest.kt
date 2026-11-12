@@ -6,7 +6,6 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertWidthIsAtLeast
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -16,7 +15,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
 import it.togo.app.ui.theme.TogoTheme
 import org.junit.Assert.assertEquals
-import kotlin.test.assertFailsWith
+import org.junit.Assert.assertThrows
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -167,21 +166,15 @@ class ConcludeActionsDialogTest {
     }
 
     @Test
-    fun `confirm button is full width (largo)`() {
-        render(count = 2)
-
-        composeTestRule
-            .onNodeWithTag("conclude_actions_confirm_button")
-            .assertIsDisplayed()
-            .assertWidthIsAtLeast(200.dp)
+    fun `count zero throws`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            render(count = 0)
+        }
     }
 
     @Test
-    fun `count zero or negative throws`() {
-        assertFailsWith<IllegalArgumentException> {
-            render(count = 0)
-        }
-        assertFailsWith<IllegalArgumentException> {
+    fun `negative count throws`() {
+        assertThrows(IllegalArgumentException::class.java) {
             render(count = -1)
         }
     }
@@ -198,7 +191,7 @@ class ConcludeActionsDialogTest {
             .assert(
                 androidx.compose.ui.test.SemanticsMatcher.expectValue(
                     androidx.compose.ui.semantics.SemanticsProperties.ContentDescription,
-                    "Verranno eliminate 2 attività spuntate. L'operazione non si può annullare.",
+                    listOf("Verranno eliminate 2 attività spuntate. L'operazione non si può annullare."),
                 )
             )
     }

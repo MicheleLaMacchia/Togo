@@ -121,6 +121,10 @@ class RoomShoppingListRepository(
         }
     }
 
+    override suspend fun deleteCheckedActions(): Int = withContext(Dispatchers.IO) {
+        actionItemDao.deleteChecked()
+    }
+
     override suspend fun checkDuplicateAction(
         normalizedText: String,
         scope: ActionScope,

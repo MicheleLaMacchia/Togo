@@ -103,7 +103,7 @@ development_status:
   epic-9: in-progress
   9-1-sezione-fatte-collassabile-con-conteggio: done
   9-2-pulsante-concludi-attività-e-dialog-di-conferma: done
-  9-3-eliminazione-azioni-spuntate-senza-undo-e-senza-storico: backlog
+  9-3-eliminazione-azioni-spuntate-senza-undo-e-senza-storico: in-progress
   9-4-deselezione-azione-da-fatte: backlog
   epic-9-retrospective: optional
 
