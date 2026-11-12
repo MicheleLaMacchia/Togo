@@ -3,8 +3,10 @@ package it.togo.app.presentation.activelist
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,7 +38,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -185,7 +186,14 @@ fun ActionRow(
         // quando la riga si sposta a sinistra. Touch target ≥48dp.
         if (canDelete) {
             Box(
-                modifier = Modifier.matchParentSize(),
+                modifier = Modifier
+                    .matchParentSize()
+                    // Anche l'area cestino esposta fa parte della riga: il suo
+                    // drag non deve propagarsi al pager.
+                    .draggable(
+                        orientation = Orientation.Horizontal,
+                        state = rememberDraggableState { },
+                    ),
                 contentAlignment = Alignment.CenterEnd,
             ) {
                 IconButton(
@@ -225,32 +233,31 @@ fun ActionRow(
             }
 
         val swipeModifier = if (canDelete) {
-            contentModifier.pointerInput(action.id) {
-                detectHorizontalDragGestures(
-                    onDragStart = { settleJob?.cancel() },
-                    onHorizontalDrag = { change, dragAmount ->
-                        change.consume()
-                        horizontalDrag = (horizontalDrag + dragAmount)
-                            .coerceIn(-revealWidthPx, 0f)
-                    },
-                    onDragEnd = {
-                        settleTo(
-                            if (horizontalDrag <= -settleThresholdPx) -revealWidthPx else 0f
-                        )
-                    },
-                    onDragCancel = { settleTo(0f) },
-                )
-            }
+            contentModifier.draggable(
+                orientation = Orientation.Horizontal,
+                state = rememberDraggableState { dragAmount ->
+                    horizontalDrag = (horizontalDrag + dragAmount)
+                        .coerceIn(-revealWidthPx, 0f)
+                },
+                onDragStarted = {
+                    settleJob?.cancel()
+                },
+                onDragStopped = {
+                    settleTo(
+                        if (horizontalDrag <= -settleThresholdPx) -revealWidthPx else 0f
+                    )
+                },
+            )
         } else {
-            contentModifier.pointerInput(action.id) {
-                detectHorizontalDragGestures { change, _ ->
-                    change.consume()
-                }
-            }
+            contentModifier.draggable(
+                orientation = Orientation.Horizontal,
+                state = rememberDraggableState { },
+            )
         }
 
         Box(
             modifier = swipeModifier
+                .testTag("action_row_swipe_content")
         ) {
             Row(
             modifier = Modifier
@@ -279,7 +286,8 @@ fun ActionRow(
                 )
                 .semantics(mergeDescendants = true) {
                     contentDescription = rowDescription + (if (onDelete != null) ". Tocca due volte per modificare. Azione disponibile: Elimina." else ".")
-                },
+                }
+                .testTag("action_row_foreground"),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(

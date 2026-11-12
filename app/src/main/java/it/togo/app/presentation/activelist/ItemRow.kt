@@ -8,10 +8,12 @@ import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
@@ -28,7 +30,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -183,7 +184,12 @@ fun ItemRow(
         // sinistra. È un vero bottone, apribile con TalkBack, non solo un'icona.
         if (rowActionDescription != null) {
             Box(
-                modifier = Modifier.matchParentSize(),
+                modifier = Modifier
+                    .matchParentSize()
+                    .draggable(
+                        orientation = Orientation.Horizontal,
+                        state = rememberDraggableState { },
+                    ),
                 contentAlignment = Alignment.CenterEnd,
             ) {
                 IconButton(
@@ -212,30 +218,30 @@ fun ItemRow(
         // funzionare. Le righe attive restano cliccabili → modifica e
         // trascinabili → rivelano il bottone elimina (poi tap per confermare).
         val swipeModifier = if (rowActionDescription != null) {
-            baseModifier.pointerInput(item.id, onDelete) {
-                detectHorizontalDragGestures(
-                    onDragStart = {
-                        // Cancella il timer di auto-chiusura mentre l'utente
-                        // trascina: la riga non deve richiudersi sotto il dito.
-                        settleJob?.cancel()
-                    },
-                    onHorizontalDrag = { change, dragAmount ->
-                        change.consume()
-                        horizontalDrag = (horizontalDrag + dragAmount)
-                            .coerceIn(-revealWidthPx, 0f)
-                    },
-                    onDragEnd = {
-                        // Lo swipe non elimina più: apre (e la riga resta
-                        // aperta) oppure richiude se non ha superato la metà.
-                        settleTo(
-                            if (horizontalDrag <= -settleThresholdPx) -revealWidthPx else 0f
-                        )
-                    },
-                    onDragCancel = { settleTo(0f) },
-                )
-            }
+            baseModifier.draggable(
+                orientation = Orientation.Horizontal,
+                state = rememberDraggableState { dragAmount ->
+                    horizontalDrag = (horizontalDrag + dragAmount)
+                        .coerceIn(-revealWidthPx, 0f)
+                },
+                onDragStarted = {
+                    // Cancella il timer di auto-chiusura mentre l'utente
+                    // trascina: la riga non deve richiudersi sotto il dito.
+                    settleJob?.cancel()
+                },
+                onDragStopped = {
+                    // Lo swipe non elimina: apre o richiude in base alla soglia.
+                    settleTo(
+                        if (horizontalDrag <= -settleThresholdPx) -revealWidthPx else 0f
+                    )
+                },
+            )
         } else {
-            baseModifier
+            // Le righe non eliminabili restano fuori dalla zona swipe del pager.
+            baseModifier.draggable(
+                orientation = Orientation.Horizontal,
+                state = rememberDraggableState { },
+            )
         }
 
         val rowClickModifier = if (rowActionDescription != null) {

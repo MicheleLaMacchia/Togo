@@ -630,6 +630,7 @@ internal fun ActiveListHeader(
             }
             .windowInsetsPadding(WindowInsets.statusBars)
             .heightIn(min = tokens.appBar.height)
+            .testTag("active_list_header")
             .then(swipeModifier)
             .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -697,7 +698,7 @@ internal fun ActiveListHeader(
 
 /** Pagina Spesa: contenuto invariato rispetto alla lista a pagina singola. */
 @Composable
-private fun ShoppingPage(
+internal fun ShoppingPage(
     uiState: ActiveListUiState,
     pagerSwipeModifier: Modifier,
     onEvent: (UiEvent) -> Unit,
@@ -734,7 +735,8 @@ private fun ShoppingPage(
             )
         } else {
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(spacing.space2),
             ) {
                 items(uiState.activeGroups, key = { group -> group.level1.id.toString() }) { group ->
@@ -782,7 +784,7 @@ private fun ShoppingPage(
  * non sono prodotti: nessun badge quantità, marca, variante o unità.
  */
 @Composable
-private fun ActionsPage(
+internal fun ActionsPage(
     uiState: ActiveListUiState,
     pagerSwipeModifier: Modifier,
     onEvent: (UiEvent) -> Unit,
@@ -881,7 +883,7 @@ private fun ActionsPage(
  * swipe resta il gesto del cestino (AD-8).
  */
 @Composable
-private fun rememberPagerSwipeModifier(onSwipe: () -> Unit): Modifier {
+internal fun rememberPagerSwipeModifier(onSwipe: () -> Unit): Modifier {
     // La lambda viene aggiornata senza riavviare il gesto: una ricomposizione
     // durante il drag non deve cancellare lo swipe in corso.
     val currentOnSwipe by rememberUpdatedState(onSwipe)
