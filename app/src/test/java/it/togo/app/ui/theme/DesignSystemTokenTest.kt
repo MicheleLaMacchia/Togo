@@ -71,6 +71,10 @@ class DesignSystemTokenTest {
         assertEquals(24f, typo.titleScreen.fontSize?.value)
         assertEquals(androidx.compose.ui.text.font.FontWeight.SemiBold, typo.titleScreen.fontWeight)
 
+        // page-title: 20sp Bold
+        assertEquals(20f, typo.pageTitle.fontSize?.value)
+        assertEquals(androidx.compose.ui.text.font.FontWeight.Bold, typo.pageTitle.fontWeight)
+
         // section-header: 16sp Bold
         assertEquals(16f, typo.sectionHeader.fontSize?.value)
         assertEquals(androidx.compose.ui.text.font.FontWeight.Bold, typo.sectionHeader.fontWeight)

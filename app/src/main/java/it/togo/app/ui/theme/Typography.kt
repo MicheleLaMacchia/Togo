@@ -12,8 +12,9 @@ import androidx.compose.ui.unit.sp
 /**
  * Data class contenente i token tipografici TOGO.
  *
- * Definisce 5 ruoli di testo ottimizzati per la lista della spesa:
+ * Definisce i ruoli di testo TOGO ottimizzati per la lista della spesa:
  * - titleScreen: titoli principali
+ * - pageTitle: titolo della pagina corrente nel pager
  * - sectionHeader: intestazioni di sezione/categoria
  * - itemName: nomi dei prodotti
  * - itemMeta: quantità e unità di misura
@@ -25,6 +26,12 @@ data class TogoTypographyTokens(
         fontWeight = FontWeight.SemiBold,
         fontSize = 24.sp,
         lineHeight = 32.sp
+    ),
+    val pageTitle: TextStyle = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Bold,
+        fontSize = 20.sp,
+        lineHeight = 28.sp,
     ),
     val sectionHeader: TextStyle = TextStyle(
         fontFamily = FontFamily.Default,

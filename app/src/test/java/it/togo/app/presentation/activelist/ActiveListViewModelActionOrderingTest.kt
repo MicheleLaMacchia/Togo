@@ -5,6 +5,7 @@ import it.togo.app.domain.model.ActionScope
 import it.togo.app.domain.model.ActionUrgency
 import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.ShoppingItem
+import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.ShoppingListRepository
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -206,6 +208,58 @@ class ActiveListViewModelActionOrderingTest {
             assertEquals(0, repo.addActionCalls)
         }
 
+    @Test
+    fun `shopping count includes active items without a catalog category`() =
+        runTest(testDispatcher) {
+            val active = ShoppingItem(
+                id = "uncategorized-active",
+                productId = 99L,
+                quantity = 1.0,
+                unit = StandardUnit.PIECE,
+            )
+            val repo = OrderedActionsRepository(actions = emptyList(), items = listOf(active))
+            val viewModel = ActiveListViewModel(repo, FakeCatalogRepository())
+
+            val initial = viewModel.uiState.first { it.activeCount == 1 }
+            assertEquals(1, initial.activeCount)
+            assertEquals(emptyList<CategoryGroup>(), initial.activeGroups)
+        }
+
+    @Test
+    fun `shopping count tracks check and uncheck transitions`() = runTest(testDispatcher) {
+        val active = ShoppingItem(
+            id = "categorized-active",
+            productId = 99L,
+            quantity = 1.0,
+            unit = StandardUnit.PIECE,
+        )
+        val taxonomy = listOf(
+            TaxonomyLevel.Level1(id = 1L, name = "Alimentari", sortOrder = 1),
+            TaxonomyLevel.Level2(id = 2L, name = "Pane", sortOrder = 1, level1Id = 1L),
+            TaxonomyLevel.Level3(id = 3L, name = "Forno", sortOrder = 1, level2Id = 2L),
+        )
+        val repo = OrderedActionsRepository(actions = emptyList(), items = listOf(active))
+        val catalog = FakeCatalogRepository(
+            products = mapOf(99L to CanonicalProduct(id = 99L, name = "Pagnotta", level3Id = 3L)),
+            taxonomy = taxonomy,
+        )
+        val viewModel = ActiveListViewModel(repo, catalog)
+
+        viewModel.uiState.first { it.activeCount == 1 && it.activeGroups.isNotEmpty() }
+
+        viewModel.onEvent(UiEvent.CheckOff(active.id, true))
+        val checked = viewModel.uiState.first { it.activeCount == 0 }
+        assertEquals(0, checked.activeCount)
+        advanceUntilIdle()
+
+        viewModel.onEvent(UiEvent.CheckOff(active.id, false))
+        val restored = viewModel.uiState.first {
+            it.activeCount == 1 && it.activeGroups.isNotEmpty()
+        }
+        assertEquals(1, restored.activeCount)
+        advanceUntilIdle()
+    }
+
     private fun checked(
         id: String,
         createdAt: Long,
@@ -226,20 +280,26 @@ class ActiveListViewModelActionOrderingTest {
 
     private class OrderedActionsRepository(
         actions: List<ActionItem>,
+        items: List<ShoppingItem> = emptyList(),
     ) : ShoppingListRepository {
         val actions = MutableStateFlow(actions)
+        private val shoppingItems = MutableStateFlow(items)
         var deleteCheckedActionsCalls = 0
         var checkoutCalls = 0
         var addActionCalls = 0
-        // getAllItems restituisce solo azioni (nessun prodotto), come farebbe
-        // Room dopo la migrazione Epic 8.
-        override fun getAllItems(): Flow<List<ShoppingItem>> = flowOf(emptyList())
+        // Per i test sulle azioni non ci sono prodotti; il parametro items
+        // permette anche di verificare conteggi lista con categorie mancanti.
+        override fun getAllItems(): Flow<List<ShoppingItem>> = shoppingItems
         override fun getActions(): Flow<List<ActionItem>> = actions
         override fun getActiveItems(): Flow<List<ShoppingItem>> = flowOf(emptyList())
         override fun getCheckedItems(): Flow<List<ShoppingItem>> = flowOf(emptyList())
 
         override suspend fun insert(item: ShoppingItem) = Unit
-        override suspend fun update(item: ShoppingItem) = Unit
+        override suspend fun update(item: ShoppingItem) {
+            shoppingItems.value = shoppingItems.value.map { current ->
+                if (current.id == item.id) item else current
+            }
+        }
         override suspend fun delete(itemId: String) = Unit
         override suspend fun getByProductId(productId: Long): ShoppingItem? = null
         override suspend fun checkout(checkedItemIds: List<String>): Boolean {
@@ -275,11 +335,14 @@ class ActiveListViewModelActionOrderingTest {
         ): Boolean = false
     }
 
-    private class FakeCatalogRepository : CatalogRepository {
+    private class FakeCatalogRepository(
+        private val products: Map<Long, CanonicalProduct> = emptyMap(),
+        private val taxonomy: List<TaxonomyLevel> = emptyList(),
+    ) : CatalogRepository {
         override fun search(query: String): Flow<List<CanonicalProduct>> =
-            flowOf<List<CanonicalProduct>>(emptyList())
-        override suspend fun getById(id: Long): CanonicalProduct? = null
+            flowOf(products.values.filter { it.name.contains(query, ignoreCase = true) })
+        override suspend fun getById(id: Long): CanonicalProduct? = products[id]
         override fun getTaxonomy(): Flow<List<TaxonomyLevel>> =
-            flowOf<List<TaxonomyLevel>>(emptyList())
+            flowOf(taxonomy)
     }
 }

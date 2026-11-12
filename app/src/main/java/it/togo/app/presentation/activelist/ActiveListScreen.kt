@@ -11,20 +11,28 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -46,8 +54,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -61,6 +67,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -596,9 +603,8 @@ internal fun ActiveListPager(
 }
 
 /** Intestazione fissa: titolo dinamico, frecce e azioni globali. */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ActiveListHeader(
+internal fun ActiveListHeader(
     page: ActiveListPage,
     activeCount: Int,
     activeActionsCount: Int,
@@ -606,19 +612,48 @@ private fun ActiveListHeader(
     onEvent: (UiEvent) -> Unit,
     onShare: () -> Unit,
 ) {
-    val colors = togoColors()
-    val typography = togoTypography()
+    val tokens = componentTokens()
     val count = if (page == ActiveListPage.SHOPPING) activeCount else activeActionsCount
 
-    TopAppBar(
-        modifier = swipeModifier,
-        title = {
-            Text(
-                text = "${page.label} ($count)",
-                style = typography.sectionHeader,
-            )
-        },
-        navigationIcon = {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(tokens.appBar.background)
+            .drawBehind {
+                val borderWidth = tokens.appBar.borderBottomWidth.toPx()
+                drawLine(
+                    color = tokens.appBar.borderBottomColor,
+                    start = androidx.compose.ui.geometry.Offset(0f, size.height - borderWidth / 2),
+                    end = androidx.compose.ui.geometry.Offset(size.width, size.height - borderWidth / 2),
+                    strokeWidth = borderWidth,
+                )
+            }
+            .windowInsetsPadding(WindowInsets.statusBars)
+            .heightIn(min = tokens.appBar.height)
+            .then(swipeModifier)
+            .padding(horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier.width(96.dp),
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            if (page == ActiveListPage.SHOPPING) {
+                IconButton(
+                    onClick = {
+                        TogoLog.d("TopBar: tap su Cronologia")
+                        onEvent(UiEvent.NavigateToHistory)
+                    },
+                ) {
+                    Icon(Icons.Filled.History, contentDescription = "Storico")
+                }
+            }
+        }
+
+        Row(
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             IconButton(
                 onClick = { onEvent(UiEvent.SelectPage(ActiveListPage.SHOPPING)) },
                 enabled = page == ActiveListPage.ACTIONS,
@@ -628,8 +663,12 @@ private fun ActiveListHeader(
                     contentDescription = "Pagina precedente",
                 )
             }
-        },
-        actions = {
+            Text(
+                text = "${page.label} ($count)",
+                style = togoTypography().pageTitle,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.weight(1f),
+            )
             IconButton(
                 onClick = { onEvent(UiEvent.SelectPage(ActiveListPage.ACTIONS)) },
                 enabled = page == ActiveListPage.SHOPPING,
@@ -639,27 +678,21 @@ private fun ActiveListHeader(
                     contentDescription = "Pagina successiva",
                 )
             }
-            // Storico resta solo sulla pagina Spesa.
-            if (page == ActiveListPage.SHOPPING) {
-                IconButton(onClick = {
-                    TogoLog.d("TopBar: tap su Cronologia")
-                    onEvent(UiEvent.NavigateToHistory)
-                }) {
-                    Icon(Icons.Filled.History, contentDescription = "Storico")
-                }
-            }
+        }
+
+        Row(
+            modifier = Modifier.width(96.dp),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             IconButton(onClick = onShare) {
                 Icon(Icons.Filled.Share, contentDescription = "Condividi lista")
             }
             IconButton(onClick = { onEvent(UiEvent.NavigateToSettings) }) {
                 Icon(Icons.Filled.Settings, contentDescription = "Impostazioni")
             }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = colors.surface,
-            titleContentColor = colors.inkPrimary,
-        ),
-    )
+        }
+    }
 }
 
 /** Pagina Spesa: contenuto invariato rispetto alla lista a pagina singola. */

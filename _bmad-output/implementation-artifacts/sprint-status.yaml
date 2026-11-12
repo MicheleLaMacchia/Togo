@@ -108,8 +108,9 @@ development_status:
   epic-9-retrospective: optional
 
   epic-10: in-progress
-  10-1-horizontalpager-con-due-pagine: review
-  10-2-intestazione-fissa-con-titolo-frecce-e-azioni-globali: backlog
+  # Story 10.1: allineata a done il 2026-11-12 su indicazione esplicita dell'utente e spec di implementazione gia' done; nessuna build o test dichiarati.
+  10-1-horizontalpager-con-due-pagine: done
+  10-2-intestazione-fissa-con-titolo-frecce-e-azioni-globali: review
   10-3-swipe-solo-su-intestazione-gruppi-spazi-vuoti-non-su-righe: backlog
   10-4-frecce-pager-focusabili-con-talkback: backlog
   10-5-back-da-da-fare-torna-a-spesa: backlog

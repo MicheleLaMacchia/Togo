@@ -61,6 +61,8 @@ data class ActiveListUiState(
      * sezione "Fatte (N)".
      */
     val checkedActions: List<ActionItem> = emptyList(),
+    /** Totale delle voci prodotto non spuntate, anche se manca il gruppo categoria. */
+    val activeCount: Int = activeGroups.sumOf { it.items.size },
     /** Pagina corrente del pager. A freddo è sempre [ActiveListPage.SHOPPING]. */
     val currentPage: ActiveListPage = ActiveListPage.SHOPPING,
     val error: String? = null,
@@ -79,9 +81,6 @@ data class ActiveListUiState(
      */
     val actionDeleteUndoCounter: Int = 0,
 ) {
-    /** Totale prodotti attivi (non spuntati) mostrato nel titolo "Spesa (N)". */
-    val activeCount: Int = activeGroups.sumOf { it.items.size }
-
     /** Totale azioni attive (non spuntate) mostrato nel titolo "Da fare (N)". */
     val activeActionsCount: Int = actions.size
 

@@ -200,6 +200,7 @@ class ActiveListViewModel(
             categoryLabels = categoryLabels,
             actions = activeActions,
             checkedActions = checkedActions,
+            activeCount = activeOnly.size,
             error = null
         )
     }
@@ -486,6 +487,7 @@ class ActiveListViewModel(
                             }.filter { it.level3Groups.isNotEmpty() }
                         )
                     },
+                    activeCount = (_uiState.value.activeCount - 1).coerceAtLeast(0),
                     pendingCheckOffItemId = null,
                     checkingOffItemId = item.id
                 )
@@ -514,6 +516,7 @@ class ActiveListViewModel(
                         }.filter { it.level3Groups.isNotEmpty() }
                     )
                 },
+                activeCount = _uiState.value.activeCount + 1,
                 checkedItems = _uiState.value.checkedItems.filter { it.id != item.id }
             )
 
