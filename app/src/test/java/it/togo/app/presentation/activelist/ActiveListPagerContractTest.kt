@@ -29,6 +29,7 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
 import androidx.compose.ui.test.swipeUp
+import it.togo.app.domain.action.buildSharedActionsText
 import it.togo.app.domain.model.ActionItem
 import it.togo.app.domain.model.ActionScope
 import it.togo.app.domain.model.ShoppingItem
@@ -52,30 +53,37 @@ class ActiveListPagerContractTest {
 
     @Test
     fun `share intent contains only the selected content`() {
+        val actionsText = buildSharedActionsText(
+            listOf(
+                ActionItem(text = "Chiamare papà", scope = ActionScope.CASA),
+                ActionItem(text = "Già fatta", scope = ActionScope.CASA, isChecked = true),
+            ),
+        )
+        val expectedActionsText = "[DA FARE]\n+ CASA\n- A TEMPO PERSO\n  Chiamare papà"
         val shoppingOnly = buildShareIntent(
             selection = ShareSelection.SHOPPING,
             shoppingText = "Prodotti",
-            actionsText = "Azioni",
+            actionsText = actionsText,
             subject = "Oggetto",
         )
         val actionsOnly = buildShareIntent(
             selection = ShareSelection.ACTIONS,
             shoppingText = "Prodotti",
-            actionsText = "Azioni",
+            actionsText = actionsText,
             subject = "Oggetto",
         )
         val both = buildShareIntent(
             selection = ShareSelection.BOTH,
             shoppingText = "Prodotti",
-            actionsText = "Azioni",
+            actionsText = actionsText,
             subject = "Oggetto",
         )
 
         assertEquals(Intent.ACTION_SEND, both.action)
         assertEquals("text/plain", both.type)
         assertEquals("Prodotti", shoppingOnly.getStringExtra(Intent.EXTRA_TEXT))
-        assertEquals("Azioni", actionsOnly.getStringExtra(Intent.EXTRA_TEXT))
-        assertEquals("Prodotti\n\nAzioni", both.getStringExtra(Intent.EXTRA_TEXT))
+        assertEquals(expectedActionsText, actionsOnly.getStringExtra(Intent.EXTRA_TEXT))
+        assertEquals("Prodotti\n\n$expectedActionsText", both.getStringExtra(Intent.EXTRA_TEXT))
         assertEquals("Oggetto", both.getStringExtra(Intent.EXTRA_SUBJECT))
     }
 

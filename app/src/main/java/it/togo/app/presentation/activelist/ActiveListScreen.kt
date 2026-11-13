@@ -89,6 +89,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import it.togo.app.core.TogoLog
 import it.togo.app.domain.action.ActionMutationResult
+import it.togo.app.domain.action.buildSharedActionsText
 import it.togo.app.domain.model.ActionItem
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.parser.ParsedCommand
@@ -488,7 +489,7 @@ fun ActiveListScreen(
                         viewModel.shareListIntent()
                     } else null
                     val shoppingText = shoppingIntent?.getStringExtra(Intent.EXTRA_TEXT).orEmpty()
-                    val actionsText = uiState.actions.joinToString("\n") { it.text }
+                    val actionsText = buildSharedActionsText(uiState.actions)
                     val intent = buildShareIntent(
                         selection = selection,
                         shoppingText = shoppingText,

@@ -1,6 +1,7 @@
 package it.togo.app.presentation.activelist
 
 import android.Manifest
+import android.content.Intent
 import android.provider.Settings
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
@@ -29,6 +30,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import it.togo.app.AppNavigator
 import it.togo.app.data.voice.AndroidVoiceRecognitionGateway
+import it.togo.app.domain.model.ActionItem
+import it.togo.app.domain.model.ActionScope
 import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.StandardUnit
@@ -818,6 +821,63 @@ class ActiveListAccessibilityTest {
     }
 
     @Test
+    fun `conferma condivisione invia blocco azioni nello sharesheet per solo azioni ed entrambe`() {
+        val viewModel = ActiveListViewModel(
+            shoppingRepository = FakeShoppingListRepository(
+                items = listOf(uncheckedItem),
+                actions = listOf(
+                    ActionItem(text = "Chiamare papà", scope = ActionScope.CASA),
+                    ActionItem(text = "Già fatta", scope = ActionScope.CASA, isChecked = true),
+                ),
+            ),
+            catalogRepository = FakeCatalogRepository(
+                taxonomy = listOf(
+                    TaxonomyLevel.Level1(id = 1L, name = "Latticini", sortOrder = 1),
+                    TaxonomyLevel.Level2(id = 2L, name = "Formaggi", sortOrder = 1, level1Id = 1L),
+                    TaxonomyLevel.Level3(id = 3L, name = "Mozzarella", sortOrder = 1, level2Id = 2L),
+                ),
+                products = mapOf(1L to CanonicalProduct(id = 1L, name = "Mozzarella", level3Id = 3L)),
+            ),
+        )
+        val voiceViewModel = VoiceBottomSheetViewModel(FakeVoiceGateway())
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                ActiveListScreen(
+                    viewModel = viewModel,
+                    voiceViewModel = voiceViewModel,
+                    voiceConfirmationViewModel = voiceConfirmationViewModel,
+                    voiceGateway = AndroidVoiceRecognitionGateway(),
+                    onEvent = {},
+                )
+            }
+        }
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            viewModel.uiState.value.activeCount == 1 && viewModel.uiState.value.activeActionsCount == 1
+        }
+
+        val expectedActions = "[DA FARE]\n+ CASA\n- A TEMPO PERSO\n  Chiamare papà"
+        val expectedShopping = "[LATTICINI]\n+ FORMAGGI\n- MOZZARELLA\n  Mozzarella 2 pz"
+        val application = shadowOf(RuntimeEnvironment.getApplication())
+        listOf(
+            "Solo azioni (1)" to expectedActions,
+            "Entrambe (2)" to "$expectedShopping\n\n$expectedActions",
+        ).forEach { (choice, expectedText) ->
+            composeTestRule.onNodeWithContentDescription("Condividi lista").performClick()
+            composeTestRule.onNodeWithText(choice).performClick()
+            composeTestRule.onNodeWithTag("share_dialog_confirm").performClick()
+            composeTestRule.waitUntil(timeoutMillis = 5_000) {
+                application.peekNextStartedActivity() != null
+            }
+            val chooser = requireNotNull(application.nextStartedActivity)
+            assertEquals(Intent.ACTION_CHOOSER, chooser.action)
+            val payload = requireNotNull(chooser.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java))
+            assertEquals(Intent.ACTION_SEND, payload.action)
+            assertEquals("text/plain", payload.type)
+            assertEquals(expectedText, payload.getStringExtra(Intent.EXTRA_TEXT))
+        }
+    }
+
+    @Test
     fun `view model maps checked item to canonical category label`() {
         val taxonomy = listOf(
             TaxonomyLevel.Level1(id = 1L, name = "Latticini", sortOrder = 1),
@@ -920,7 +980,9 @@ class ActiveListAccessibilityTest {
 
     private class FakeShoppingListRepository(
         private val items: List<ShoppingItem> = emptyList(),
+        private val actions: List<ActionItem> = emptyList(),
     ) : ShoppingListRepository {
+        override fun getActions(): Flow<List<ActionItem>> = flowOf(actions)
         override fun getAllItems(): Flow<List<ShoppingItem>> = flowOf(items)
         override fun getActiveItems(): Flow<List<ShoppingItem>> =
             flowOf(items.filter { !it.isChecked })
