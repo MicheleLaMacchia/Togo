@@ -1,6 +1,7 @@
 package it.togo.app
 
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -13,6 +14,7 @@ import it.togo.app.presentation.activelist.ActiveListPage
 import it.togo.app.presentation.activelist.UiEvent
 import it.togo.app.presentation.settings.AboutScreen
 import it.togo.app.presentation.settings.SettingsScreen
+import kotlinx.coroutines.flow.collect
 
 /**
  * Schermate disponibili nell'app.
@@ -108,10 +110,12 @@ fun AppNavigator(
 
     when (currentScreen) {
         Screen.ActiveList -> stateHolder.SaveableStateProvider(Screen.ActiveList.saveKey) {
-            // Il back dalla pagina Da fare torna a Spesa: il pager è uno stato
-            // della Lista Attiva, non una destinazione del navigator.
-            BackHandler(enabled = activeListPage == ActiveListPage.ACTIONS) {
-                TogoLog.d("Navigazione: back da Da fare -> Spesa")
+            // Il back predittivo è attivo solo su Da fare. Consumiamo il flusso
+            // fino al completamento: un gesto annullato non cambia pagina, mentre
+            // quello confermato aggiorna il ViewModel e anima il pager verso Spesa.
+            PredictiveBackHandler(enabled = activeListPage == ActiveListPage.ACTIONS) { progress ->
+                progress.collect { }
+                TogoLog.d("Navigazione: back predittivo da Da fare -> Spesa")
                 onActiveListEvent(UiEvent.SelectPage(ActiveListPage.SHOPPING))
             }
             activeListContent { event ->

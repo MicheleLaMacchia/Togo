@@ -1,6 +1,7 @@
 package it.togo.app
 
 import androidx.activity.ComponentActivity
+import androidx.activity.BackEventCompat
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -20,7 +21,10 @@ import io.mockk.mockk
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.LearnedRulesRepository
 import it.togo.app.domain.usecase.LearnedRuleManager
+import it.togo.app.presentation.activelist.ActiveListPage
+import it.togo.app.presentation.activelist.ActiveListPager
 import it.togo.app.presentation.activelist.UiEvent
+import it.togo.app.presentation.activelist.rememberActiveListPagerState
 import it.togo.app.presentation.rules.LearnedRulesScreen
 import it.togo.app.presentation.rules.LearnedRulesViewModel
 import it.togo.app.ui.theme.TogoTheme
@@ -335,6 +339,76 @@ class AppNavigatorTest {
         }
 
         composeTestRule.onNodeWithText("Impostazioni").assertExists()
+    }
+
+    @Test
+    fun `system back from actions selects shopping without leaving active list`() {
+        val selectedPage = mutableStateOf(ActiveListPage.ACTIONS)
+        val received = mutableListOf<UiEvent>()
+
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                AppNavigator(
+                    onActiveListEvent = { event ->
+                        received += event
+                        if (event is UiEvent.SelectPage) selectedPage.value = event.page
+                    },
+                    activeListContent = {
+                        val pagerState = rememberActiveListPagerState(selectedPage.value)
+                        ActiveListPager(state = pagerState) { page ->
+                            Text(if (page == ActiveListPage.ACTIONS) "Da fare" else "Spesa")
+                        }
+                    },
+                    learnedRulesContent = { onBack -> Button(onClick = onBack) { Text("Indietro") } },
+                    historyContent = { onBack -> Button(onClick = onBack) { Text("Indietro") } },
+                    activeListPage = selectedPage.value,
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Da fare").assertExists()
+        composeTestRule.runOnUiThread {
+            composeTestRule.activity.onBackPressedDispatcher.onBackPressed()
+        }
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Spesa").assertExists()
+        assertTrue(received.contains(UiEvent.SelectPage(ActiveListPage.SHOPPING)))
+        assertTrue(!composeTestRule.activity.isFinishing)
+    }
+
+    @Test
+    fun `cancelled predictive back keeps actions page selected`() {
+        val selectedPage = mutableStateOf(ActiveListPage.ACTIONS)
+        val received = mutableListOf<UiEvent>()
+
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                AppNavigator(
+                    onActiveListEvent = { received += it },
+                    activeListContent = {},
+                    learnedRulesContent = { onBack -> Button(onClick = onBack) { Text("Indietro") } },
+                    historyContent = { onBack -> Button(onClick = onBack) { Text("Indietro") } },
+                    activeListPage = selectedPage.value,
+                )
+            }
+        }
+
+        composeTestRule.runOnUiThread {
+            val dispatcher = composeTestRule.activity.onBackPressedDispatcher
+            dispatcher.dispatchOnBackStarted(
+                BackEventCompat(0f, 0f, 0f, BackEventCompat.EDGE_LEFT),
+            )
+            dispatcher.dispatchOnBackProgressed(
+                BackEventCompat(80f, 0f, 0.5f, BackEventCompat.EDGE_LEFT),
+            )
+            dispatcher.dispatchOnBackCancelled()
+        }
+        composeTestRule.waitForIdle()
+
+        assertTrue(selectedPage.value == ActiveListPage.ACTIONS)
+        assertTrue(received.none { it == UiEvent.SelectPage(ActiveListPage.SHOPPING) })
+        assertTrue(!composeTestRule.activity.isFinishing)
     }
 
     @Test

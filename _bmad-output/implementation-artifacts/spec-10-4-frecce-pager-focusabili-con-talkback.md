@@ -2,7 +2,7 @@
 title: '10.4 Frecce pager focusabili con TalkBack'
 type: 'feature'
 created: '2026-11-12'
-status: 'in-progress'
+status: 'done'
 baseline_commit: '63ae6f76f28b8eda317145d86e7047626383005c'
 route: 'oneshot'
 review_loop_iteration: 0
@@ -34,6 +34,7 @@ context:
 - Il titolo e conteggio sono esposti come regione live polite. Il test Compose dell'intestazione copre etichette, stato ai due bordi, callback senza cambio pagina, focusability dei nodi e semantica live anche dopo il cambio pagina.
 - Non sono state eseguite build né test. L'agente riferisce `git diff --check` pulito sui file applicativi; l'utente dovrà eseguire i comandi di verifica.
 - Riprova utente 2026-11-12: `test-build-android.ps1` ha compilato il codice principale e assemblato l'APK, ma `compileDebugUnitTestKotlin` è fallito con quattro riferimenti irrisolti a `assert`; aggiunto l'import `androidx.compose.ui.test.assert`. L'agente non ha rilanciato build o test.
+- Riconciliazione 2026-11-12: su indicazione esplicita dell'utente la Story è considerata completata e lo stato della spec è allineato a `done`. L'errore di compilazione precedente resta documentato; questa decisione non attesta build o test superati.
 
 ## Review Triage Log
 

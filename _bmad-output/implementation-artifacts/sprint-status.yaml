@@ -115,9 +115,10 @@ development_status:
   # Story 10.3: l'utente la considera completata; allineata a done per indicazione esplicita. Nessuna build/test dichiarati superati (ultimo tentativo noto fermato in compilazione prima della correzione dell'helper).
 
   10-3-swipe-solo-su-intestazione-gruppi-spazi-vuoti-non-su-righe: done
-  # Story 10.4: errore utente in compileDebugUnitTestKotlin (4 riferimenti assert non risolti); aggiunto import, attesa riesecuzione utente.
-  10-4-frecce-pager-focusabili-con-talkback: in-progress
-  10-5-back-da-da-fare-torna-a-spesa: backlog
+  # Story 10.4: allineata a done il 2026-11-12 su indicazione esplicita dell'utente; la nota storica dell'errore compileDebugUnitTestKotlin resta nello spec e non implica build/test superati.
+  10-4-frecce-pager-focusabili-con-talkback: done
+  # Story 10.5: in review. Il tentativo utente si è fermato in compileDebugKotlin su ExperimentalActivityApi; rimosso l'opt-in non disponibile, in attesa di nuova verifica utente.
+  10-5-back-da-da-fare-torna-a-spesa: review
   10-6-persistenza-pagina-corrente-e-posizione-di-scroll: backlog
   epic-10-retrospective: optional
 
