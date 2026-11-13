@@ -45,10 +45,12 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
@@ -57,6 +59,8 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -76,6 +80,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -98,6 +103,103 @@ import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
 import kotlinx.coroutines.launch
 import kotlin.math.abs
+
+internal enum class ShareSelection {
+    SHOPPING,
+    ACTIONS,
+    BOTH,
+}
+
+internal fun buildShareIntent(
+    selection: ShareSelection,
+    shoppingText: String,
+    actionsText: String,
+    subject: String,
+): Intent {
+    val sharedText = when (selection) {
+        ShareSelection.SHOPPING -> shoppingText
+        ShareSelection.ACTIONS -> actionsText
+        ShareSelection.BOTH -> listOf(shoppingText, actionsText)
+            .filter { it.isNotBlank() }
+            .joinToString("\n\n")
+    }
+    return Intent(Intent.ACTION_SEND)
+        .setType("text/plain")
+        .putExtra(Intent.EXTRA_TEXT, sharedText)
+        .putExtra(Intent.EXTRA_SUBJECT, subject)
+}
+
+@Composable
+internal fun ShareSelectionDialog(
+    page: ActiveListPage,
+    shoppingCount: Int,
+    actionsCount: Int,
+    onDismiss: () -> Unit,
+    onShare: (ShareSelection) -> Unit,
+) {
+    var selected by remember(page) {
+        mutableStateOf(
+            if (page == ActiveListPage.SHOPPING) ShareSelection.SHOPPING else ShareSelection.ACTIONS,
+        )
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Condividi") },
+        text = {
+            Column(Modifier.selectableGroup()) {
+                ShareSelectionOption(
+                    text = "Solo spesa ($shoppingCount)",
+                    selected = selected == ShareSelection.SHOPPING,
+                    onClick = { selected = ShareSelection.SHOPPING },
+                )
+                ShareSelectionOption(
+                    text = "Solo azioni ($actionsCount)",
+                    selected = selected == ShareSelection.ACTIONS,
+                    onClick = { selected = ShareSelection.ACTIONS },
+                )
+                ShareSelectionOption(
+                    text = "Entrambe (${shoppingCount + actionsCount})",
+                    selected = selected == ShareSelection.BOTH,
+                    onClick = { selected = ShareSelection.BOTH },
+                )
+            }
+        },
+        confirmButton = {
+            androidx.compose.material3.Button(
+                onClick = { onShare(selected) },
+                modifier = Modifier.testTag("share_dialog_confirm"),
+            ) {
+                Text("Condividi")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Annulla") }
+        },
+    )
+}
+
+@Composable
+private fun ShareSelectionOption(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .selectable(
+                selected = selected,
+                role = Role.RadioButton,
+                onClick = onClick,
+            )
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        RadioButton(selected = selected, onClick = null)
+        Text(text, modifier = Modifier.padding(start = 8.dp))
+    }
+}
 
 /**
  * Lista Attiva con due pagine: Spesa (sinistra) e Da fare (destra).
@@ -204,6 +306,7 @@ fun ActiveListScreen(
     // Errore inline mostrato nel foglio (es. "Azione già presente"). Il foglio
     // resta aperto e i valori inseriti dall'utente sono conservati.
     var sheetError by remember { mutableStateOf<String?>(null) }
+    var showShareDialog by remember { mutableStateOf(false) }
 
     // Se il comando confermato non è univoco, il ViewModel chiede di aprire la
     // scheda di aggiunta precompilata. I comandi univoci vengono invece inseriti
@@ -369,40 +472,55 @@ fun ActiveListScreen(
 
     val shareList: () -> Unit = {
         TogoLog.d("TopBar: tap su Condividi")
-        scope.launch {
-            val intent = viewModel.shareListIntent()
-            val activity = context.findActivity()
-            when {
-                intent == null -> {
-                    TogoLog.w(
-                        "Condividi: nessun articolo attivo da condividere",
-                    )
-                    snackbarHostState.showSnackbar(
-                        "Nessun articolo da condividere: " +
-                            "la lista attiva è vuota"
-                    )
-                }
+        showShareDialog = true
+    }
 
-                activity == null -> {
-                    TogoLog.w(
-                        "Condividi: context senza Activity, chooser non avviato",
+    if (showShareDialog) {
+        ShareSelectionDialog(
+            page = page,
+            shoppingCount = uiState.activeCount,
+            actionsCount = uiState.activeActionsCount,
+            onDismiss = { showShareDialog = false },
+            onShare = { selection ->
+                showShareDialog = false
+                scope.launch {
+                    val shoppingIntent = if (selection != ShareSelection.ACTIONS) {
+                        viewModel.shareListIntent()
+                    } else null
+                    val shoppingText = shoppingIntent?.getStringExtra(Intent.EXTRA_TEXT).orEmpty()
+                    val actionsText = uiState.actions.joinToString("\n") { it.text }
+                    val intent = buildShareIntent(
+                        selection = selection,
+                        shoppingText = shoppingText,
+                        actionsText = actionsText,
+                        subject = shoppingIntent?.getStringExtra(Intent.EXTRA_SUBJECT)
+                            ?: "Condividi lista TOGO",
                     )
-                    snackbarHostState.showSnackbar(
-                        "Impossibile aprire la condivisione"
-                    )
-                }
+                    val activity = context.findActivity()
+                    when {
+                        intent.getStringExtra(Intent.EXTRA_TEXT).isNullOrBlank() -> {
+                            TogoLog.w("Condividi: nessun contenuto attivo da condividere")
+                            snackbarHostState.showSnackbar("Nessun contenuto da condividere")
+                        }
 
-                else -> {
-                    TogoLog.d("Condividi: apertura chooser di sistema")
-                    activity.startActivity(
-                        Intent.createChooser(
-                            intent,
-                            "Condividi lista spesa",
-                        )
-                    )
+                        activity == null -> {
+                            TogoLog.w("Condividi: context senza Activity, chooser non avviato")
+                            snackbarHostState.showSnackbar("Impossibile aprire la condivisione")
+                        }
+
+                        else -> {
+                            TogoLog.d("Condividi: apertura chooser di sistema")
+                            activity.startActivity(
+                                Intent.createChooser(
+                                    intent,
+                                    "Condividi lista spesa",
+                                )
+                            )
+                        }
+                    }
                 }
-            }
-        }
+            },
+        )
     }
 
     Scaffold(

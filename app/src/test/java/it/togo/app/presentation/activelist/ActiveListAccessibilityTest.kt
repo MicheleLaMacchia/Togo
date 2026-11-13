@@ -11,6 +11,7 @@ import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -18,6 +19,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.material3.Button
@@ -799,6 +801,20 @@ class ActiveListAccessibilityTest {
         composeTestRule
             .onNodeWithContentDescription("Aggiungi prodotto con la voce. Pulsante.")
             .assertExists()
+
+        composeTestRule.onNodeWithContentDescription("Condividi lista").performClick()
+        composeTestRule.onNodeWithText("Solo spesa (0)").assertExists()
+        composeTestRule.onNodeWithText("Solo azioni (0)").assertExists()
+        composeTestRule.onNodeWithText("Entrambe (0)").assertExists()
+        composeTestRule.onNodeWithText("Annulla").performClick()
+
+        composeTestRule.runOnIdle {
+            viewModel.onEvent(UiEvent.SelectPage(ActiveListPage.ACTIONS))
+        }
+        composeTestRule.onNodeWithContentDescription("Condividi lista").performClick()
+        composeTestRule.onNodeWithText("Solo azioni (0)").assertIsSelected()
+        composeTestRule.onNodeWithTag("share_dialog_confirm").performClick()
+        composeTestRule.onNodeWithText("Solo azioni (0)").assertDoesNotExist()
     }
 
     @Test

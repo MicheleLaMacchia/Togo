@@ -1,5 +1,6 @@
 package it.togo.app.presentation.activelist
 
+import android.content.Intent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.PagerState
@@ -16,6 +17,7 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.isFocusable
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -47,6 +49,83 @@ class ActiveListPagerContractTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
+
+    @Test
+    fun `share intent contains only the selected content`() {
+        val shoppingOnly = buildShareIntent(
+            selection = ShareSelection.SHOPPING,
+            shoppingText = "Prodotti",
+            actionsText = "Azioni",
+            subject = "Oggetto",
+        )
+        val actionsOnly = buildShareIntent(
+            selection = ShareSelection.ACTIONS,
+            shoppingText = "Prodotti",
+            actionsText = "Azioni",
+            subject = "Oggetto",
+        )
+        val both = buildShareIntent(
+            selection = ShareSelection.BOTH,
+            shoppingText = "Prodotti",
+            actionsText = "Azioni",
+            subject = "Oggetto",
+        )
+
+        assertEquals(Intent.ACTION_SEND, both.action)
+        assertEquals("text/plain", both.type)
+        assertEquals("Prodotti", shoppingOnly.getStringExtra(Intent.EXTRA_TEXT))
+        assertEquals("Azioni", actionsOnly.getStringExtra(Intent.EXTRA_TEXT))
+        assertEquals("Prodotti\n\nAzioni", both.getStringExtra(Intent.EXTRA_TEXT))
+        assertEquals("Oggetto", both.getStringExtra(Intent.EXTRA_SUBJECT))
+    }
+
+    @Test
+    fun `share dialog shows counts buttons and defaults to shopping on shopping page`() {
+        var sharedSelection: ShareSelection? = null
+        var dismissed = false
+
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                ShareSelectionDialog(
+                    page = ActiveListPage.SHOPPING,
+                    shoppingCount = 2,
+                    actionsCount = 3,
+                    onDismiss = { dismissed = true },
+                    onShare = { sharedSelection = it },
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Solo spesa (2)").assertIsDisplayed().assertIsSelected()
+        composeTestRule.onNodeWithText("Solo azioni (3)").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Entrambe (5)").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("share_dialog_confirm").assertIsDisplayed().performClick()
+        composeTestRule.runOnIdle { assertEquals(ShareSelection.SHOPPING, sharedSelection) }
+        composeTestRule.onNodeWithText("Annulla").performClick()
+        composeTestRule.runOnIdle { assertTrue(dismissed) }
+    }
+
+    @Test
+    fun `share dialog defaults to actions on actions page and allows selecting both`() {
+        var sharedSelection: ShareSelection? = null
+
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                ShareSelectionDialog(
+                    page = ActiveListPage.ACTIONS,
+                    shoppingCount = 4,
+                    actionsCount = 2,
+                    onDismiss = {},
+                    onShare = { sharedSelection = it },
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Solo azioni (2)").assertIsSelected()
+        composeTestRule.onNodeWithText("Entrambe (6)").performClick()
+        composeTestRule.onNodeWithTag("share_dialog_confirm").performClick()
+        composeTestRule.runOnIdle { assertEquals(ShareSelection.BOTH, sharedSelection) }
+    }
 
     @Test
     fun `pager contains exactly shopping then actions`() {
