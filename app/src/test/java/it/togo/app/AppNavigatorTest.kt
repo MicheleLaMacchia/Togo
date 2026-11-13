@@ -2,19 +2,25 @@ package it.togo.app
 
 import androidx.activity.ComponentActivity
 import androidx.activity.BackEventCompat
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.dp
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -24,6 +30,7 @@ import it.togo.app.domain.usecase.LearnedRuleManager
 import it.togo.app.presentation.activelist.ActiveListPage
 import it.togo.app.presentation.activelist.ActiveListPager
 import it.togo.app.presentation.activelist.UiEvent
+import it.togo.app.presentation.activelist.rememberActiveListScrollStates
 import it.togo.app.presentation.activelist.rememberActiveListPagerState
 import it.togo.app.presentation.rules.LearnedRulesScreen
 import it.togo.app.presentation.rules.LearnedRulesViewModel
@@ -470,6 +477,70 @@ class AppNavigatorTest {
         restorationTester.emulateSavedInstanceStateRestore()
 
         composeTestRule.onNodeWithText("Storico").assertExists()
+    }
+
+    @Test
+    fun `independent active list scroll positions survive internal navigation and recreation`() {
+        val restorationTester = StateRestorationTester(composeTestRule)
+        restorationTester.setContent {
+            TogoTheme(darkTheme = false) {
+                AppNavigator(
+                    onActiveListEvent = {},
+                    activeListContent = { onEvent ->
+                        val scrollStates = rememberActiveListScrollStates()
+                        var initialScrollApplied by rememberSaveable { mutableStateOf(false) }
+                        LaunchedEffect(Unit) {
+                            if (!initialScrollApplied) {
+                                scrollStates.shopping.scrollToItem(20)
+                                scrollStates.actions.scrollToItem(30)
+                                initialScrollApplied = true
+                            }
+                        }
+                        Column {
+                            Button(onClick = { onEvent(UiEvent.NavigateToHistory) }) {
+                                Text("Apri storico da liste")
+                            }
+                            LazyColumn(
+                                state = scrollStates.shopping,
+                                modifier = Modifier.height(120.dp),
+                            ) {
+                                items((0..40).toList()) { Text("Spesa $it") }
+                            }
+                            LazyColumn(
+                                state = scrollStates.actions,
+                                modifier = Modifier.height(120.dp),
+                            ) {
+                                items((0..40).toList()) { Text("Azioni $it") }
+                            }
+                        }
+                    },
+                    settingsContent = { _, _, onBack ->
+                        Button(onClick = onBack) { Text("Indietro") }
+                    },
+                    learnedRulesContent = { onBack ->
+                        Button(onClick = onBack) { Text("Indietro") }
+                    },
+                    historyContent = { onBack ->
+                        Column {
+                            Text("Storico")
+                            Button(onClick = onBack) { Text("Torna alle liste") }
+                        }
+                    },
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Spesa 20").assertExists()
+        composeTestRule.onNodeWithText("Azioni 30").assertExists()
+        composeTestRule.onNodeWithText("Apri storico da liste").performClick()
+        composeTestRule.onNodeWithText("Torna alle liste").performClick()
+        composeTestRule.onNodeWithText("Spesa 20").assertExists()
+        composeTestRule.onNodeWithText("Azioni 30").assertExists()
+
+        restorationTester.emulateSavedInstanceStateRestore()
+
+        composeTestRule.onNodeWithText("Spesa 20").assertExists()
+        composeTestRule.onNodeWithText("Azioni 30").assertExists()
     }
 
     @Test

@@ -117,9 +117,9 @@ development_status:
   10-3-swipe-solo-su-intestazione-gruppi-spazi-vuoti-non-su-righe: done
   # Story 10.4: allineata a done il 2026-11-12 su indicazione esplicita dell'utente; la nota storica dell'errore compileDebugUnitTestKotlin resta nello spec e non implica build/test superati.
   10-4-frecce-pager-focusabili-con-talkback: done
-  # Story 10.5: in review. Il tentativo utente si è fermato in compileDebugKotlin su ExperimentalActivityApi; rimosso l'opt-in non disponibile, in attesa di nuova verifica utente.
-  10-5-back-da-da-fare-torna-a-spesa: review
-  10-6-persistenza-pagina-corrente-e-posizione-di-scroll: backlog
+  # Story 10.5: allineata a done il 2026-11-13 su indicazione esplicita dell'utente; la precedente nota di compileDebugKotlin resta contesto storico e done non attesta build o test superati.
+  10-5-back-da-da-fare-torna-a-spesa: done
+  10-6-persistenza-pagina-corrente-e-posizione-di-scroll: review
   epic-10-retrospective: optional
 
   epic-11: backlog
@@ -146,4 +146,4 @@ development_status:
   13-4-semantica-talkback-per-checkbox-chip-sezioni-e-dialog: backlog
   13-5-mockup-allineati-badge-urgenza-target-48dp-stato-focus-dark: backlog
   epic-13-retrospective: optional
-last_updated: 11-12-2026
+last_updated: 11-13-2026

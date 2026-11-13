@@ -18,12 +18,13 @@ import it.togo.app.presentation.voice.VoiceBottomSheetViewModel
 import it.togo.app.presentation.voice.VoiceConfirmationViewModel
 import it.togo.app.ui.theme.TogoTheme
 import it.togo.app.ui.theme.isSystemDarkTheme
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class MainActivity : ComponentActivity(), KoinComponent {
 
-    private val viewModel: ActiveListViewModel by inject()
+    private val viewModel: ActiveListViewModel by viewModel()
     private val voiceViewModel: VoiceBottomSheetViewModel by inject()
     private val voiceConfirmationViewModel: VoiceConfirmationViewModel by inject()
     private val learnedRulesViewModel: LearnedRulesViewModel by inject()

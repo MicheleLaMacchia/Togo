@@ -28,7 +28,9 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -356,6 +358,7 @@ fun ActiveListScreen(
     // La pagina corrente vive nel ViewModel: qui la si riflette solo sul pager.
     val page = uiState.currentPage
     val pagerState = rememberActiveListPagerState(page)
+    val scrollStates = rememberActiveListScrollStates()
 
     // Lo swipe non è gestito dal pager (userScrollEnabled = false): viene
     // riconosciuto solo dalle zone che possono cambiare pagina. Con due sole
@@ -542,6 +545,7 @@ fun ActiveListScreen(
                 when (page) {
                     ActiveListPage.SHOPPING -> ShoppingPage(
                         uiState = uiState,
+                        listState = scrollStates.shopping,
                         pagerSwipeModifier = pagerSwipeModifier,
                         onEvent = onEvent,
                         onAddManual = {
@@ -557,6 +561,7 @@ fun ActiveListScreen(
 
                     ActiveListPage.ACTIONS -> ActionsPage(
                         uiState = uiState,
+                        listState = scrollStates.actions,
                         pagerSwipeModifier = pagerSwipeModifier,
                         onEvent = onEvent,
                         onEditAction = { action ->
@@ -571,6 +576,17 @@ fun ActiveListScreen(
         },
     )
 }
+
+internal data class ActiveListScrollStates(
+    val shopping: LazyListState,
+    val actions: LazyListState,
+)
+
+@Composable
+internal fun rememberActiveListScrollStates(): ActiveListScrollStates = ActiveListScrollStates(
+    shopping = rememberLazyListState(),
+    actions = rememberLazyListState(),
+)
 
 @Composable
 internal fun rememberActiveListPagerState(currentPage: ActiveListPage): PagerState {
@@ -724,6 +740,7 @@ internal fun ActiveListHeader(
 @Composable
 internal fun ShoppingPage(
     uiState: ActiveListUiState,
+    listState: LazyListState = rememberLazyListState(),
     pagerSwipeModifier: Modifier,
     onEvent: (UiEvent) -> Unit,
     onAddManual: () -> Unit,
@@ -759,6 +776,7 @@ internal fun ShoppingPage(
             )
         } else {
             LazyColumn(
+                state = listState,
                 modifier = Modifier
                     .fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(spacing.space2),
@@ -810,6 +828,7 @@ internal fun ShoppingPage(
 @Composable
 internal fun ActionsPage(
     uiState: ActiveListUiState,
+    listState: LazyListState = rememberLazyListState(),
     pagerSwipeModifier: Modifier,
     onEvent: (UiEvent) -> Unit,
     onEditAction: (ActionItem) -> Unit,
@@ -835,6 +854,7 @@ internal fun ActionsPage(
             )
         } else {
             LazyColumn(
+                state = listState,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(vertical = spacing.space2)
