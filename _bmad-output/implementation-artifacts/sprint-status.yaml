@@ -134,11 +134,13 @@ development_status:
   # Story 11.4: considerata completata il 2026-11-16 su dichiarazione esplicita dell'utente; la spec è done, ma build/test NON eseguiti.
   11-4-matrice-scelta-parti-vuote: done
   # Story 11.5: il test Docker dell'utente ha rilevato il caso Entrambe senza testo spesa; corretto il ramo UI, in attesa di riesecuzione.
-  11-5-sharelistusecase-non-restituisce-null-su-spesa-vuota-con-azi: review
+  # Riconciliata il 2026-11-16 a done su dichiarazione esplicita dell'utente. Il test Docker precedente riportava un fallimento poi corretto; non è stato rieseguito e la dichiarazione non certifica test superati.
+  11-5-sharelistusecase-non-restituisce-null-su-spesa-vuota-con-azi: done
   epic-11-retrospective: optional
 
-  epic-12: backlog
-  12-1-parser-riconosce-blocco-da-fare: backlog
+  epic-12: in-progress
+  # Story 12.1: implementazione e review statica completate; test scritti, build/test non eseguiti per vincolo utente.
+  12-1-parser-riconosce-blocco-da-fare: review
   12-2-import-di-sole-azioni-valido-0-prodotti: backlog
   12-3-deduplica-azioni-per-testo-ambito-urgenza-con-accenti-signif: backlog
   12-4-validazione-ambito-e-urgenza-nell-import: backlog

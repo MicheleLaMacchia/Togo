@@ -6,18 +6,19 @@ import java.util.Locale
 /**
  * Risultato della lettura di un testo esportato da TOGO.
  *
- * Il parser valida solo la struttura e le righe; la corrispondenza con la
- * tassonomia del catalogo è responsabilità di
- * [it.togo.app.domain.usecase.ImportShoppingListUseCase].
+ * Il parser valida la struttura delle righe prodotto e conserva opacamente il
+ * blocco azioni; la corrispondenza con la tassonomia del catalogo è
+ * responsabilità di [it.togo.app.domain.usecase.ImportShoppingListUseCase].
  */
 sealed interface ImportParseResult {
     data class Success(val list: ParsedShoppingList) : ImportParseResult
     data class Error(val message: String) : ImportParseResult
 }
 
-/** Lista completa letta dal testo, già divisa in categorie. */
+/** Risultato strutturale con le sezioni prodotto e l'eventuale sezione azioni grezza. */
 data class ParsedShoppingList(
     val sections: List<ParsedSection>,
+    val actionSection: ParsedActionSection? = null,
 ) {
     val itemCount: Int
         get() = sections.sumOf { section ->
@@ -26,6 +27,18 @@ data class ParsedShoppingList(
             }
         }
 }
+
+/** Sezione azioni riconosciuta strutturalmente, senza validarne o importarne i campi. */
+data class ParsedActionSection(
+    val lineNumber: Int,
+    val lines: List<ParsedActionLine>,
+)
+
+/** Riga grezza del blocco azioni; la linea sorgente serve alle fasi successive di validazione. */
+data class ParsedActionLine(
+    val lineNumber: Int,
+    val rawLine: String,
+)
 
 data class ParsedSection(
     val name: String,
@@ -68,6 +81,7 @@ data class ParsedItem(
  * Le categorie sono accettate in qualunque combinazione di maiuscole/minuscole:
  * il confronto con il catalogo ignora accenti e case. La struttura invece deve
  * essere quella dell'export: intestazioni a inizio riga, voci con due spazi.
+ * Il blocco `[DA FARE]` è conservato come righe grezze, senza validazione azioni.
  */
 object ShoppingListImportParser {
 
@@ -83,6 +97,9 @@ object ShoppingListImportParser {
 
         val normalizedText = rawText.replace("\r\n", "\n").replace('\r', '\n')
         val sections = mutableListOf<MutableSection>()
+        var actionLines: MutableList<ParsedActionLine>? = null
+        var actionSectionLineNumber: Int? = null
+        var readingActionSection = false
         var currentSection: MutableSection? = null
         var currentLevel2: MutableLevel2? = null
         var currentLevel3: MutableLevel3? = null
@@ -105,9 +122,25 @@ object ShoppingListImportParser {
                     if (name.isEmpty()) {
                         return error(lineNumber, "il nome della categoria è vuoto.")
                     }
-                    currentSection = MutableSection(name, lineNumber).also { sections += it }
-                    currentLevel2 = null
-                    currentLevel3 = null
+                    if (name.equals("DA FARE", ignoreCase = true)) {
+                        if (actionLines == null) {
+                            actionLines = mutableListOf()
+                            actionSectionLineNumber = lineNumber
+                        }
+                        readingActionSection = true
+                        currentSection = null
+                        currentLevel2 = null
+                        currentLevel3 = null
+                    } else {
+                        readingActionSection = false
+                        currentSection = MutableSection(name, lineNumber).also { sections += it }
+                        currentLevel2 = null
+                        currentLevel3 = null
+                    }
+                }
+
+                readingActionSection -> {
+                    actionLines?.add(ParsedActionLine(lineNumber, rawLine))
                 }
 
                 rawLine.startsWith("+ ") -> {
@@ -161,7 +194,7 @@ object ShoppingListImportParser {
             }
         }
 
-        if (sections.isEmpty()) {
+        if (sections.isEmpty() && actionLines == null) {
             return ImportParseResult.Error(
                 "Il testo non contiene categorie. Incolla la lista esportata da TOGO."
             )
@@ -198,8 +231,14 @@ object ShoppingListImportParser {
             parsedSections += ParsedSection(section.name, parsedLevel2s)
         }
 
-        val list = ParsedShoppingList(parsedSections)
-        if (list.itemCount == 0) {
+        val parsedActionSection = actionLines?.let { lines ->
+            ParsedActionSection(
+                lineNumber = requireNotNull(actionSectionLineNumber),
+                lines = lines.toList(),
+            )
+        }
+        val list = ParsedShoppingList(parsedSections, parsedActionSection)
+        if (list.itemCount == 0 && list.actionSection == null) {
             return ImportParseResult.Error(
                 "Il testo non contiene prodotti da importare."
             )

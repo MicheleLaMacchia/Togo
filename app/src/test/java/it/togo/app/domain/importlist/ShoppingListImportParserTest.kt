@@ -27,6 +27,7 @@ class ShoppingListImportParserTest {
         val list = (result as ImportParseResult.Success).list
         assertEquals(2, list.sections.size)
         assertEquals(2, list.itemCount)
+        assertEquals(null, list.actionSection)
 
         val mele = list.sections[0].level2s[0].level3s[0].items[0]
         assertEquals("Golden Delicious", mele.description)
@@ -37,6 +38,80 @@ class ShoppingListImportParserTest {
         assertEquals("Spaghetti Barilla integrale", spaghetti.description)
         assertEquals(2.0, spaghetti.quantity, 0.0)
         assertEquals(StandardUnit.PIECE, spaghetti.unit)
+    }
+
+    @Test
+    fun `riconosce da fare come sezione azioni distinta dalla tassonomia`() {
+        val text = """
+            [FRUTTA E VERDURA]
+            + FRUTTA FRESCA
+            - MELE
+              Golden Delicious 2 pz
+
+            [DA FARE]
+            + CASA
+            - URGENTE
+              Chiamare il medico
+        """.trimIndent()
+
+        val result = ShoppingListImportParser.parse(text)
+
+        assertTrue(result is ImportParseResult.Success)
+        val list = (result as ImportParseResult.Success).list
+        assertEquals(listOf("FRUTTA E VERDURA"), list.sections.map { it.name })
+        assertEquals(
+            listOf(
+                ParsedActionLine(7, "+ CASA"),
+                ParsedActionLine(8, "- URGENTE"),
+                ParsedActionLine(9, "  Chiamare il medico"),
+            ),
+            list.actionSection?.lines,
+        )
+        assertEquals(6, list.actionSection?.lineNumber)
+    }
+
+    @Test
+    fun `riconosce strutturalmente il solo blocco da fare`() {
+        val result = ShoppingListImportParser.parse(
+            "[DA FARE]\n+ CASA\n- URGENTE\n  Chiamare il medico",
+        )
+
+        assertTrue(result is ImportParseResult.Success)
+        val list = (result as ImportParseResult.Success).list
+        assertTrue(list.sections.isEmpty())
+        assertEquals(0, list.itemCount)
+        assertEquals(
+            listOf(
+                ParsedActionLine(2, "+ CASA"),
+                ParsedActionLine(3, "- URGENTE"),
+                ParsedActionLine(4, "  Chiamare il medico"),
+            ),
+            list.actionSection?.lines,
+        )
+        assertEquals(1, list.actionSection?.lineNumber)
+    }
+
+    @Test
+    fun `riprende il parsing delle categorie dopo il blocco da fare`() {
+        val text = """
+            [DA FARE]
+            + CASA
+            - URGENTE
+              Chiamare il medico
+
+            [FRUTTA E VERDURA]
+            + FRUTTA FRESCA
+            - MELE
+              Golden Delicious 2 pz
+        """.trimIndent()
+
+        val result = ShoppingListImportParser.parse(text)
+
+        assertTrue(result is ImportParseResult.Success)
+        val list = (result as ImportParseResult.Success).list
+        assertEquals(listOf("FRUTTA E VERDURA"), list.sections.map { it.name })
+        assertEquals(1, list.actionSection?.lineNumber)
+        assertEquals(1, list.itemCount)
     }
 
     @Test
