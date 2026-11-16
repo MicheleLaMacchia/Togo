@@ -49,7 +49,7 @@ private const val FORMAT_EXAMPLE = """[FRUTTA E VERDURA]
  *
  * L'utente incolla il testo prodotto dall'export di TOGO. Il pulsante analizza
  * il testo: se il formato non è valido compare una modale con il motivo, se è
- * valido compare la conferma con il numero di prodotti da importare.
+ * valido compare la conferma con il numero di prodotti e azioni da importare.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -91,10 +91,22 @@ fun ImportListScreen(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(spacing.space2)) {
                     Text(
-                        text = if (plan.productCount == 1) {
+                        text = if (plan.actionCount == 0 && plan.productCount == 1) {
                             "Verrà importato 1 prodotto."
-                        } else {
+                        } else if (plan.actionCount == 0) {
                             "Verranno importati ${plan.productCount} prodotti."
+                        } else {
+                            val productCount = if (plan.productCount == 1) {
+                                "1 prodotto"
+                            } else {
+                                "${plan.productCount} prodotti"
+                            }
+                            val actionCount = if (plan.actionCount == 1) {
+                                "1 azione"
+                            } else {
+                                "${plan.actionCount} azioni"
+                            }
+                            "Verranno importati $productCount e $actionCount."
                         },
                         style = typography.itemMeta,
                     )
@@ -120,11 +132,13 @@ fun ImportListScreen(
                             color = colors.inkSecondary,
                         )
                     }
-                    Text(
-                        text = "I prodotti già presenti nella lista attiva verranno aggiornati.",
-                        style = typography.caption,
-                        color = colors.inkSecondary,
-                    )
+                    if (plan.productCount > 0) {
+                        Text(
+                            text = "I prodotti già presenti nella lista attiva verranno aggiornati.",
+                            style = typography.caption,
+                            color = colors.inkSecondary,
+                        )
+                    }
                 }
             },
             confirmButton = {

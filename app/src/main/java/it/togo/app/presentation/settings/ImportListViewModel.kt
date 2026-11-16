@@ -155,12 +155,26 @@ class ImportListViewModel(
 
     private fun buildSuccessMessage(result: ImportExecutionResult.Success): String =
         buildString {
-            if (result.imported == 1) {
-                append("Importato 1 prodotto")
+            val productPart = if (result.imported == 1) {
+                "1 prodotto"
             } else {
-                append("Importati ")
-                append(result.imported)
-                append(" prodotti")
+                "${result.imported} prodotti"
+            }
+            val actionPart = if (result.importedActions == 1) {
+                "1 azione"
+            } else {
+                "${result.importedActions} azioni"
+            }
+            when {
+                result.importedActions == 0 -> {
+                    if (result.imported == 1) {
+                        append("Importato $productPart")
+                    } else {
+                        append("Importati $productPart")
+                    }
+                }
+                result.imported == 0 -> append("Importate $actionPart")
+                else -> append("Importati $productPart e $actionPart")
             }
             if (result.updatedExisting > 0) {
                 append(", ")

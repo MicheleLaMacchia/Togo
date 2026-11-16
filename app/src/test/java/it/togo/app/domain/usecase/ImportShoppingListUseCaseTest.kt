@@ -2,6 +2,9 @@
 
 import it.togo.app.domain.model.AttributeSuggestions
 import it.togo.app.domain.model.CanonicalProduct
+import it.togo.app.domain.model.ActionItem
+import it.togo.app.domain.model.ActionScope
+import it.togo.app.domain.model.ActionUrgency
 import it.togo.app.domain.model.ProductAttribute
 import it.togo.app.domain.model.RenameUserAttributeResult
 import it.togo.app.domain.model.ShoppingItem
@@ -77,6 +80,39 @@ class ImportShoppingListUseCaseTest {
         assertEquals("Barilla", plan.items.single().brand)
         assertEquals("Integrale", plan.items.single().variant)
         assertEquals(StandardUnit.PIECE, plan.items.single().unit)
+    }
+
+    @Test
+    fun `importa un blocco solo da fare senza creare prodotti o categorie`() = runTest {
+        val catalog = FakeCatalogRepository()
+        val shopping = FakeShoppingListRepository()
+        val text = """
+            [DA FARE]
+            + CASA
+            - URGENTE
+              Chiamare il medico
+        """.trimIndent()
+        val useCase = createUseCase(catalog = catalog, shopping = shopping)
+
+        val preview = useCase.preview(text) as ImportPreviewResult.Ready
+
+        assertEquals(0, preview.plan.productCount)
+        assertEquals(1, preview.plan.actionCount)
+        assertTrue(preview.plan.items.isEmpty())
+        assertEquals("Chiamare il medico", preview.plan.actions.single().text)
+        assertEquals(ActionScope.CASA, preview.plan.actions.single().scope)
+        assertEquals(ActionUrgency.URGENTE, preview.plan.actions.single().urgency)
+
+        val result = useCase.execute(preview.plan) as ImportExecutionResult.Success
+
+        assertEquals(0, result.imported)
+        assertEquals(1, result.importedActions)
+        assertEquals(0, result.createdProducts)
+        assertEquals(0, result.createdCategories)
+        assertTrue(catalog.products.isEmpty())
+        assertEquals(1, catalog.level3s.size)
+        assertTrue(shopping.items.isEmpty())
+        assertEquals(preview.plan.actions, shopping.actions)
     }
 
     @Test
@@ -270,6 +306,7 @@ class ImportShoppingListUseCaseTest {
     ) : ShoppingListRepository {
 
         val items = initialItems
+        val actions = mutableListOf<ActionItem>()
 
         override fun getAllItems(): Flow<List<ShoppingItem>> = flowOf(items.toList())
 
@@ -298,6 +335,10 @@ class ImportShoppingListUseCaseTest {
         override suspend fun checkout(checkedItemIds: List<String>): Boolean {
             items.removeAll { it.id in checkedItemIds }
             return true
+        }
+
+        override suspend fun addAction(action: ActionItem) {
+            actions += action
         }
 
         override fun getAttributeSuggestions(): Flow<AttributeSuggestions> =

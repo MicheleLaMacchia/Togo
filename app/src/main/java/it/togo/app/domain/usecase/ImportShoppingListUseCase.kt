@@ -4,6 +4,9 @@ import it.togo.app.domain.catalog.ProductNameNormalizer
 import it.togo.app.domain.importlist.ImportParseResult
 import it.togo.app.domain.importlist.ParsedItem
 import it.togo.app.domain.importlist.ShoppingListImportParser
+import it.togo.app.domain.model.ActionItem
+import it.togo.app.domain.model.ActionScope
+import it.togo.app.domain.model.ActionUrgency
 import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.ProductAttribute
 import it.togo.app.domain.model.ShoppingItem
@@ -43,9 +46,13 @@ data class PlannedImportItem(
  */
 data class ImportPlan(
     val items: List<PlannedImportItem>,
+    val actions: List<ActionItem> = emptyList(),
 ) {
     val productCount: Int
         get() = items.size
+
+    val actionCount: Int
+        get() = actions.size
 
     val newLevel3Count: Int
         get() = items.asSequence()
@@ -76,6 +83,7 @@ sealed interface ImportPreviewResult {
 sealed interface ImportExecutionResult {
     data class Success(
         val imported: Int,
+        val importedActions: Int,
         val updatedExisting: Int,
         val createdProducts: Int,
         val createdCategories: Int,
@@ -110,6 +118,34 @@ class ImportShoppingListUseCase(
         val parsed = when (val result = ShoppingListImportParser.parse(rawText)) {
             is ImportParseResult.Success -> result.list
             is ImportParseResult.Error -> return ImportPreviewResult.Error(result.message)
+        }
+
+        val actions = mutableListOf<ActionItem>()
+        var actionScope = ActionScope.ALTRO
+        var actionUrgency = ActionUrgency.A_TEMPO_PERSO
+        parsed.actionSection?.lines.orEmpty().forEach { line ->
+            when {
+                line.rawLine.startsWith("+ ") -> {
+                    actionScope = ActionScope.fromLabel(line.rawLine.removePrefix("+ "))
+                    actionUrgency = ActionUrgency.A_TEMPO_PERSO
+                }
+                line.rawLine.startsWith("- ") -> {
+                    actionUrgency = ActionUrgency.fromLabel(line.rawLine.removePrefix("- "))
+                }
+                line.rawLine.startsWith("  ") && line.rawLine.trim().isNotEmpty() ->
+                    actions += ActionItem(
+                        text = line.rawLine.trim(),
+                        scope = actionScope,
+                        urgency = actionUrgency,
+                    )
+            }
+        }
+
+        if (parsed.sections.isEmpty()) {
+            if (actions.isEmpty()) {
+                return ImportPreviewResult.Error("Il testo non contiene prodotti da importare.")
+            }
+            return ImportPreviewResult.Ready(ImportPlan(items = emptyList(), actions = actions))
         }
 
         val taxonomy = catalogRepository.getTaxonomy().first()
@@ -175,10 +211,10 @@ class ImportShoppingListUseCase(
             }
         }
 
-        if (planned.isEmpty()) {
+        if (planned.isEmpty() && actions.isEmpty()) {
             return ImportPreviewResult.Error("Il testo non contiene prodotti da importare.")
         }
-        return ImportPreviewResult.Ready(ImportPlan(planned))
+        return ImportPreviewResult.Ready(ImportPlan(items = planned, actions = actions))
     }
 
     /**
@@ -238,6 +274,9 @@ class ImportShoppingListUseCase(
                     )
                 }
             }
+            for (action in plan.actions) {
+                shoppingListRepository.addAction(action)
+            }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -248,6 +287,7 @@ class ImportShoppingListUseCase(
 
         ImportExecutionResult.Success(
             imported = plan.productCount,
+            importedActions = plan.actionCount,
             updatedExisting = updatedExisting,
             createdProducts = createdProducts,
             createdCategories = createdCategories,
