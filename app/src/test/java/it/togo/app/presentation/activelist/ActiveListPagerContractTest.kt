@@ -16,9 +16,12 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isFocusable
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -103,9 +106,10 @@ class ActiveListPagerContractTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Solo spesa (2)").assertIsDisplayed().assertIsSelected()
-        composeTestRule.onNodeWithText("Solo azioni (3)").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Entrambe (5)").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Solo spesa (2)").assertIsDisplayed().assertIsSelected().assertIsEnabled()
+        composeTestRule.onNodeWithText("Solo azioni (3)").assertIsDisplayed().assertIsEnabled()
+        composeTestRule.onNodeWithText("Entrambe (5)").assertIsDisplayed().assertIsEnabled()
+        composeTestRule.onNodeWithText("Nessuna voce").assertDoesNotExist()
         composeTestRule.onNodeWithTag("share_dialog_confirm").assertIsDisplayed().performClick()
         composeTestRule.runOnIdle { assertEquals(ShareSelection.SHOPPING, sharedSelection) }
         composeTestRule.onNodeWithText("Annulla").performClick()
@@ -132,6 +136,153 @@ class ActiveListPagerContractTest {
         composeTestRule.onNodeWithText("Entrambe (6)").performClick()
         composeTestRule.onNodeWithTag("share_dialog_confirm").performClick()
         composeTestRule.runOnIdle { assertEquals(ShareSelection.BOTH, sharedSelection) }
+    }
+
+    @Test
+    fun `empty shopping disables shopping and both from shopping page`() {
+        assertSinglePartShareDialog(ActiveListPage.SHOPPING, shoppingCount = 0, actionsCount = 3)
+    }
+
+    @Test
+    fun `empty shopping keeps actions default available from actions page`() {
+        assertSinglePartShareDialog(ActiveListPage.ACTIONS, shoppingCount = 0, actionsCount = 3)
+    }
+
+    @Test
+    fun `empty actions disables actions and both from actions page`() {
+        assertSinglePartShareDialog(ActiveListPage.ACTIONS, shoppingCount = 2, actionsCount = 0)
+    }
+
+    @Test
+    fun `empty actions keeps shopping default available from shopping page`() {
+        assertSinglePartShareDialog(ActiveListPage.SHOPPING, shoppingCount = 2, actionsCount = 0)
+    }
+
+    private fun assertSinglePartShareDialog(page: ActiveListPage, shoppingCount: Int, actionsCount: Int) {
+        var sharedSelection: ShareSelection? = null
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                ShareSelectionDialog(
+                    page = page,
+                    shoppingCount = shoppingCount,
+                    actionsCount = actionsCount,
+                    onDismiss = {},
+                    onShare = { sharedSelection = it },
+                )
+            }
+        }
+        val shoppingAvailable = shoppingCount > 0
+        val availableLabel = if (shoppingAvailable) "Solo spesa ($shoppingCount)" else "Solo azioni ($actionsCount)"
+        val unavailableLabel = if (shoppingAvailable) "Solo azioni (0)" else "Solo spesa (0)"
+        val defaultAvailable = (page == ActiveListPage.SHOPPING) == shoppingAvailable
+        val defaultLabel = if (defaultAvailable) availableLabel else unavailableLabel
+        val confirm = composeTestRule.onNodeWithTag("share_dialog_confirm")
+
+        composeTestRule.onNodeWithText(defaultLabel).assertIsSelected()
+        composeTestRule.onNodeWithText(availableLabel).assertIsEnabled()
+            .assert(hasText("Nessuna voce").not())
+        composeTestRule.onNodeWithText(unavailableLabel).assertIsNotEnabled()
+            .assert(hasText("Nessuna voce"))
+        composeTestRule.onNodeWithText("Entrambe (${shoppingCount + actionsCount})").assertIsNotEnabled()
+            .assert(hasText("Nessuna voce"))
+        if (defaultAvailable) {
+            confirm.assertIsEnabled()
+        } else {
+            confirm.assertIsNotEnabled().performClick()
+            composeTestRule.runOnIdle { assertEquals(null, sharedSelection) }
+        }
+
+        composeTestRule.onNodeWithText(availableLabel).performClick().assertIsSelected()
+        // Anche un'azione semantica diretta su una scelta disabilitata non la seleziona.
+        composeTestRule.onNodeWithText(unavailableLabel).performClick().assertIsNotSelected()
+        composeTestRule.onNodeWithText("Entrambe (${shoppingCount + actionsCount})")
+            .performClick().assertIsNotSelected()
+        composeTestRule.onNodeWithText(availableLabel).assertIsSelected()
+        confirm.assertIsEnabled().performClick()
+        composeTestRule.runOnIdle {
+            assertEquals(if (shoppingAvailable) ShareSelection.SHOPPING else ShareSelection.ACTIONS, sharedSelection)
+        }
+    }
+
+    @Test
+    fun `share availability follows changed counts without resetting selection`() {
+        val counts = mutableStateOf(2 to 3)
+        var sharedSelection: ShareSelection? = null
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                ShareSelectionDialog(
+                    page = ActiveListPage.SHOPPING,
+                    shoppingCount = counts.value.first,
+                    actionsCount = counts.value.second,
+                    onDismiss = {},
+                    onShare = { sharedSelection = it },
+                )
+            }
+        }
+        composeTestRule.onNodeWithText("Entrambe (5)").performClick()
+        composeTestRule.runOnIdle { counts.value = 0 to 3 }
+        composeTestRule.onNodeWithText("Entrambe (3)").assertIsSelected().assertIsNotEnabled()
+        composeTestRule.onNodeWithTag("share_dialog_confirm").assertIsNotEnabled().performClick()
+        composeTestRule.runOnIdle {
+            assertEquals(null, sharedSelection)
+            counts.value = 0 to 0
+        }
+        composeTestRule.onNodeWithText("Solo spesa (0)").assertIsNotEnabled()
+        composeTestRule.onNodeWithText("Solo azioni (0)").assertIsNotEnabled()
+        composeTestRule.onNodeWithText("Entrambe (0)").assertIsNotEnabled()
+        composeTestRule.onNodeWithTag("share_dialog_confirm").assertIsNotEnabled().performClick()
+        composeTestRule.runOnIdle {
+            assertEquals(null, sharedSelection)
+            counts.value = 1 to 1
+        }
+        composeTestRule.onNodeWithText("Entrambe (2)").assertIsSelected().assertIsEnabled()
+        composeTestRule.onNodeWithText("Nessuna voce").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("share_dialog_confirm").assertIsEnabled().performClick()
+        composeTestRule.runOnIdle { assertEquals(ShareSelection.BOTH, sharedSelection) }
+    }
+
+    @Test
+    fun `shopping confirmation follows shopping count independently of actions count`() {
+        assertSingleSelectionCountChanges(ActiveListPage.SHOPPING)
+    }
+
+    @Test
+    fun `actions confirmation follows actions count independently of shopping count`() {
+        assertSingleSelectionCountChanges(ActiveListPage.ACTIONS)
+    }
+
+    private fun assertSingleSelectionCountChanges(page: ActiveListPage) {
+        val counts = mutableStateOf(2 to 3)
+        var sharedSelection: ShareSelection? = null
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                ShareSelectionDialog(
+                    page = page,
+                    shoppingCount = counts.value.first,
+                    actionsCount = counts.value.second,
+                    onDismiss = {},
+                    onShare = { sharedSelection = it },
+                )
+            }
+        }
+        val shoppingSelected = page == ActiveListPage.SHOPPING
+        val selectedLabel = if (shoppingSelected) "Solo spesa (2)" else "Solo azioni (3)"
+        composeTestRule.runOnIdle { counts.value = if (shoppingSelected) 2 to 0 else 0 to 3 }
+        composeTestRule.onNodeWithText(selectedLabel).assertIsSelected().assertIsEnabled()
+        composeTestRule.onNodeWithTag("share_dialog_confirm").assertIsEnabled()
+        composeTestRule.runOnIdle { counts.value = 0 to 0 }
+        composeTestRule.onNodeWithText(if (shoppingSelected) "Solo spesa (0)" else "Solo azioni (0)")
+            .assertIsSelected().assertIsNotEnabled()
+        composeTestRule.onNodeWithTag("share_dialog_confirm").assertIsNotEnabled().performClick()
+        composeTestRule.runOnIdle {
+            assertEquals(null, sharedSelection)
+            counts.value = 2 to 3
+        }
+        composeTestRule.onNodeWithText(selectedLabel).assertIsSelected().assertIsEnabled()
+        composeTestRule.onNodeWithTag("share_dialog_confirm").assertIsEnabled().performClick()
+        composeTestRule.runOnIdle {
+            assertEquals(if (shoppingSelected) ShareSelection.SHOPPING else ShareSelection.ACTIONS, sharedSelection)
+        }
     }
 
     @Test

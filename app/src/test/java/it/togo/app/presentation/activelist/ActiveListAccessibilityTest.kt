@@ -9,6 +9,7 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertHasNoClickAction
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOn
@@ -63,6 +64,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
+import org.robolectric.shadows.ShadowToast
 import org.robolectric.annotation.Config
 import org.robolectric.RobolectricTestRunner
 
@@ -805,19 +807,151 @@ class ActiveListAccessibilityTest {
             .onNodeWithContentDescription("Aggiungi prodotto con la voce. Pulsante.")
             .assertExists()
 
-        composeTestRule.onNodeWithContentDescription("Condividi lista").performClick()
-        composeTestRule.onNodeWithText("Solo spesa (0)").assertExists()
-        composeTestRule.onNodeWithText("Solo azioni (0)").assertExists()
-        composeTestRule.onNodeWithText("Entrambe (0)").assertExists()
-        composeTestRule.onNodeWithText("Annulla").performClick()
+        assertEmptyShareOnBothPages(viewModel)
+    }
 
-        composeTestRule.runOnIdle {
-            viewModel.onEvent(UiEvent.SelectPage(ActiveListPage.ACTIONS))
+    @Test
+    fun `condivisione con sole voci spuntate mostra feedback senza dialog da entrambe le pagine`() {
+        val viewModel = setShareScreen(
+            items = listOf(checkedItem),
+            actions = listOf(ActionItem(text = "Già fatta", scope = ActionScope.CASA, isChecked = true)),
+        )
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            viewModel.uiState.value.checkedItems.size == 1 && viewModel.uiState.value.checkedActions.size == 1
         }
-        composeTestRule.onNodeWithContentDescription("Condividi lista").performClick()
-        composeTestRule.onNodeWithText("Solo azioni (0)").assertIsSelected()
-        composeTestRule.onNodeWithTag("share_dialog_confirm").performClick()
-        composeTestRule.onNodeWithText("Solo azioni (0)").assertDoesNotExist()
+        assertEmptyShareOnBothPages(viewModel)
+    }
+
+    private fun assertEmptyShareOnBothPages(viewModel: ActiveListViewModel) {
+        val application = shadowOf(RuntimeEnvironment.getApplication())
+        for (page in ActiveListPage.pagerPages) {
+            composeTestRule.runOnIdle {
+                viewModel.onEvent(UiEvent.SelectPage(page))
+                // Ogni pagina deve produrre il proprio feedback, senza riusare quello precedente.
+                ShadowToast.reset()
+            }
+            composeTestRule.onNodeWithContentDescription("Condividi lista").assertIsEnabled().performClick()
+            composeTestRule.onNodeWithTag("share_dialog_confirm").assertDoesNotExist()
+            composeTestRule.onNodeWithText("Solo spesa (0)").assertDoesNotExist()
+            composeTestRule.onNodeWithText("Solo azioni (0)").assertDoesNotExist()
+            composeTestRule.onNodeWithText("Entrambe (0)").assertDoesNotExist()
+            composeTestRule.runOnIdle {
+                assertEquals("Non c'è nulla da condividere", ShadowToast.getTextOfLatestToast())
+                assertEquals(null, application.peekNextStartedActivity())
+            }
+        }
+    }
+
+    @Test
+    fun `feedback condivisione vuota resta immediato con snackbar checkout e tap ripetuti`() {
+        val viewModel = setShareScreen(items = listOf(checkedItem), actions = emptyList())
+        composeTestRule.waitUntil(timeoutMillis = 5_000) { viewModel.uiState.value.checkedItems.size == 1 }
+        composeTestRule.runOnIdle { viewModel.onEvent(UiEvent.Checkout) }
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            composeTestRule.onAllNodesWithText("Spesa conclusa (1 voci)")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        composeTestRule.onNodeWithText("Spesa conclusa (1 voci)").assertExists()
+        repeat(2) {
+            composeTestRule.runOnIdle { ShadowToast.reset() }
+            composeTestRule.onNodeWithContentDescription("Condividi lista").performClick()
+            composeTestRule.runOnIdle {
+                assertEquals("Non c'è nulla da condividere", ShadowToast.getTextOfLatestToast())
+                assertEquals(null, shadowOf(RuntimeEnvironment.getApplication()).peekNextStartedActivity())
+            }
+            composeTestRule.onNodeWithTag("share_dialog_confirm").assertDoesNotExist()
+            // Il feedback non elimina la possibilità di annullare il checkout.
+            composeTestRule.onNodeWithText("Spesa conclusa (1 voci)").assertExists()
+            composeTestRule.onNodeWithText("Annulla").assertExists()
+        }
+    }
+
+    @Test
+    fun `condivisione con sola spesa consente solo prodotti da entrambe le pagine`() {
+        assertSinglePartShareFromBothPages(shoppingAvailable = true)
+    }
+
+    @Test
+    fun `condivisione con sole azioni consente solo azioni da entrambe le pagine`() {
+        assertSinglePartShareFromBothPages(shoppingAvailable = false)
+    }
+
+    private fun assertSinglePartShareFromBothPages(shoppingAvailable: Boolean) {
+        val items = if (shoppingAvailable) listOf(uncheckedItem, checkedItem) else listOf(checkedItem)
+        val checkedAction = ActionItem(text = "Già fatta", scope = ActionScope.CASA, isChecked = true)
+        val actions = if (shoppingAvailable) listOf(checkedAction) else listOf(
+            ActionItem(text = "Chiamare papà", scope = ActionScope.CASA), checkedAction,
+        )
+        val viewModel = setShareScreen(items, actions)
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            viewModel.uiState.value.activeCount == (if (shoppingAvailable) 1 else 0) &&
+                viewModel.uiState.value.activeActionsCount == (if (shoppingAvailable) 0 else 1)
+        }
+        val availableLabel = if (shoppingAvailable) "Solo spesa (1)" else "Solo azioni (1)"
+        val unavailableLabel = if (shoppingAvailable) "Solo azioni (0)" else "Solo spesa (0)"
+        val expectedText = if (shoppingAvailable) {
+            "[LATTICINI]\n+ FORMAGGI\n- MOZZARELLA\n  Mozzarella 2 pz"
+        } else {
+            "[DA FARE]\n+ CASA\n- A TEMPO PERSO\n  Chiamare papà"
+        }
+        val expectedSubject = if (shoppingAvailable) "Lista spesa TOGO" else "Cose da fare TOGO"
+        val application = shadowOf(RuntimeEnvironment.getApplication())
+        for (page in ActiveListPage.pagerPages) {
+            composeTestRule.runOnIdle { viewModel.onEvent(UiEvent.SelectPage(page)) }
+            composeTestRule.onNodeWithContentDescription("Condividi lista").performClick()
+            val defaultAvailable = (page == ActiveListPage.SHOPPING) == shoppingAvailable
+            composeTestRule.onNodeWithText(if (defaultAvailable) availableLabel else unavailableLabel)
+                .assertIsSelected()
+            if (defaultAvailable) {
+                composeTestRule.onNodeWithTag("share_dialog_confirm").assertIsEnabled()
+            } else {
+                composeTestRule.onNodeWithTag("share_dialog_confirm").assertIsNotEnabled()
+            }
+            composeTestRule.onNodeWithText(unavailableLabel).assertIsNotEnabled()
+                .assert(hasText("Nessuna voce"))
+            composeTestRule.onNodeWithText("Entrambe (1)").assertIsNotEnabled()
+                .assert(hasText("Nessuna voce"))
+            composeTestRule.onNodeWithText(availableLabel).assertIsEnabled().performClick()
+            composeTestRule.onNodeWithTag("share_dialog_confirm").assertIsEnabled().performClick()
+            composeTestRule.onNodeWithTag("share_dialog_confirm").assertDoesNotExist()
+            composeTestRule.waitUntil(timeoutMillis = 5_000) {
+                application.peekNextStartedActivity() != null
+            }
+            val chooser = requireNotNull(application.nextStartedActivity)
+            assertEquals(Intent.ACTION_CHOOSER, chooser.action)
+            val payload = requireNotNull(chooser.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java))
+            assertEquals(Intent.ACTION_SEND, payload.action)
+            assertEquals("text/plain", payload.type)
+            assertEquals(expectedText, payload.getStringExtra(Intent.EXTRA_TEXT))
+            assertEquals(expectedSubject, payload.getStringExtra(Intent.EXTRA_SUBJECT))
+        }
+    }
+
+    private fun setShareScreen(items: List<ShoppingItem>, actions: List<ActionItem>): ActiveListViewModel {
+        val viewModel = ActiveListViewModel(
+            shoppingRepository = FakeShoppingListRepository(items, actions),
+            catalogRepository = FakeCatalogRepository(
+                taxonomy = listOf(
+                    TaxonomyLevel.Level1(id = 1L, name = "Latticini", sortOrder = 1),
+                    TaxonomyLevel.Level2(id = 2L, name = "Formaggi", sortOrder = 1, level1Id = 1L),
+                    TaxonomyLevel.Level3(id = 3L, name = "Mozzarella", sortOrder = 1, level2Id = 2L),
+                ),
+                products = mapOf(1L to CanonicalProduct(id = 1L, name = "Mozzarella", level3Id = 3L)),
+            ),
+        )
+        val voiceViewModel = VoiceBottomSheetViewModel(FakeVoiceGateway())
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                ActiveListScreen(
+                    viewModel = viewModel,
+                    voiceViewModel = voiceViewModel,
+                    voiceConfirmationViewModel = voiceConfirmationViewModel,
+                    voiceGateway = AndroidVoiceRecognitionGateway(),
+                    onEvent = {},
+                )
+            }
+        }
+        return viewModel
     }
 
     @Test

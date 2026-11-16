@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -147,6 +148,16 @@ internal fun ShareSelectionDialog(
             if (page == ActiveListPage.SHOPPING) ShareSelection.SHOPPING else ShareSelection.ACTIONS,
         )
     }
+    val shoppingEnabled = shoppingCount > 0
+    val actionsEnabled = actionsCount > 0
+    val bothEnabled = shoppingEnabled && actionsEnabled
+    // Il default resta la pagina corrente, anche se vuota. La conferma richiede
+    // una scelta disponibile, ricalcolata a ogni aggiornamento dei conteggi.
+    val selectedEnabled = when (selected) {
+        ShareSelection.SHOPPING -> shoppingEnabled
+        ShareSelection.ACTIONS -> actionsEnabled
+        ShareSelection.BOTH -> bothEnabled
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -156,23 +167,27 @@ internal fun ShareSelectionDialog(
                 ShareSelectionOption(
                     text = "Solo spesa ($shoppingCount)",
                     selected = selected == ShareSelection.SHOPPING,
+                    enabled = shoppingEnabled,
                     onClick = { selected = ShareSelection.SHOPPING },
                 )
                 ShareSelectionOption(
                     text = "Solo azioni ($actionsCount)",
                     selected = selected == ShareSelection.ACTIONS,
+                    enabled = actionsEnabled,
                     onClick = { selected = ShareSelection.ACTIONS },
                 )
                 ShareSelectionOption(
                     text = "Entrambe (${shoppingCount + actionsCount})",
                     selected = selected == ShareSelection.BOTH,
+                    enabled = bothEnabled,
                     onClick = { selected = ShareSelection.BOTH },
                 )
             }
         },
         confirmButton = {
             androidx.compose.material3.Button(
-                onClick = { onShare(selected) },
+                onClick = { if (selectedEnabled) onShare(selected) },
+                enabled = selectedEnabled,
                 modifier = Modifier.testTag("share_dialog_confirm"),
             ) {
                 Text("Condividi")
@@ -188,21 +203,29 @@ internal fun ShareSelectionDialog(
 private fun ShareSelectionOption(
     text: String,
     selected: Boolean,
+    enabled: Boolean,
     onClick: () -> Unit,
 ) {
+    val colors = togoColors()
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .selectable(
                 selected = selected,
+                enabled = enabled,
                 role = Role.RadioButton,
-                onClick = onClick,
+                onClick = { if (enabled) onClick() },
             )
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        RadioButton(selected = selected, onClick = null)
-        Text(text, modifier = Modifier.padding(start = 8.dp))
+        RadioButton(selected = selected, onClick = null, enabled = enabled)
+        Column(Modifier.padding(start = 8.dp)) {
+            Text(text, color = if (enabled) colors.inkPrimary else colors.inkMuted)
+            if (!enabled) {
+                Text("Nessuna voce", style = togoTypography().caption, color = colors.inkMuted)
+            }
+        }
     }
 }
 
@@ -298,6 +321,10 @@ fun ActiveListScreen(
     val voicePrefillRequest by viewModel.voicePrefillRequest.collectAsState()
 
     val context = LocalContext.current
+    var emptyShareToast by remember { mutableStateOf<Toast?>(null) }
+    DisposableEffect(Unit) {
+        onDispose { emptyShareToast?.cancel() }
+    }
     var showAddItemSheet by remember { mutableStateOf(false) }
     var editingItem by remember { mutableStateOf<ShoppingItem?>(null) }
     // Comando vocale da precompilare nella sheet di aggiunta. Null per
@@ -477,7 +504,17 @@ fun ActiveListScreen(
 
     val shareList: () -> Unit = {
         TogoLog.d("TopBar: tap su Condividi")
-        showShareDialog = true
+        // Feedback immediato senza accodarsi agli snackbar di undo o rimuoverli.
+        // Tap ripetuti sostituiscono il Toast precedente.
+        emptyShareToast?.cancel()
+        emptyShareToast = null
+        if (uiState.activeCount == 0 && uiState.activeActionsCount == 0) {
+            emptyShareToast = Toast.makeText(context, "Non c'è nulla da condividere", Toast.LENGTH_SHORT).also {
+                it.show()
+            }
+        } else {
+            showShareDialog = true
+        }
     }
 
     if (showShareDialog) {

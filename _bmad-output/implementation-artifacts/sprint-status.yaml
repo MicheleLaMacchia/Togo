@@ -129,8 +129,10 @@ development_status:
   # Story 11.2: allineata a done il 2026-11-13 su dichiarazione dell'utente; spec gia' done. Il precedente review era una discrepanza di tracking, non un'evidenza di build/test superati.
   11-2-formato-testo-da-fare-per-condivisione-azioni: done
   # Story 11.3: implementazione e controllo statico completati; test aggiornati ma build/test non eseguiti per vincolo utente.
-  11-3-oggetto-dinamico-in-base-alla-scelta-di-condivisione: review
-  11-4-matrice-scelta-parti-vuote: backlog
+  # Riconciliazione 2026-11-16: 11.3 done su dichiarazione utente; spec gia' done. Il precedente review era tracking in attesa di verifica e non attesta build/test superati.
+  11-3-oggetto-dinamico-in-base-alla-scelta-di-condivisione: done
+  # Story 11.4: matrice implementata e review statica completata; test scritti, build/test NON eseguiti. Limite del caricamento iniziale documentato nella spec e nei deferred.
+  11-4-matrice-scelta-parti-vuote: review
   11-5-sharelistusecase-non-restituisce-null-su-spesa-vuota-con-azi: backlog
   epic-11-retrospective: optional
 
@@ -150,4 +152,4 @@ development_status:
   13-4-semantica-talkback-per-checkbox-chip-sezioni-e-dialog: backlog
   13-5-mockup-allineati-badge-urgenza-target-48dp-stato-focus-dark: backlog
   epic-13-retrospective: optional
-last_updated: 11-13-2026
+last_updated: 11-16-2026

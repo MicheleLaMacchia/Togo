@@ -156,3 +156,6 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-7-2-proposta-nuovo-livello-3.md`
   summary: Aggiungere un indice composto e un tie-breaker per `sortOrder` dei L3.
   evidence: `getLevel3`/`getLevel3ByLevel2` ordinano solo per `sortOrder` e non esiste un indice `(level2_id, sortOrder)`; con creazioni concorrenti `MAX+1` può produrre pareggi. Stessa radice del defer sul calcolo non transazionale.
+- source_spec: `_bmad-output/implementation-artifacts/spec-11-4-matrice-scelta-parti-vuote.md`
+  summary: Distinguere il caricamento iniziale dalla lista effettivamente vuota prima di consentire Condividi.
+  evidence: `ActiveListViewModel` parte con `ActiveListUiState()` a conteggi zero e aggiorna dopo le emissioni combinate di prodotti, azioni e tassonomia. Un tap precedente può mostrare il feedback vuoto anche con dati persistiti; non esiste oggi uno stato di caricamento esplicito. La 11.4 applica la matrice ai conteggi pubblicati; il contratto generale di caricamento resta rinviato. Rilievo statico low, nessuna prova runtime eseguita.
