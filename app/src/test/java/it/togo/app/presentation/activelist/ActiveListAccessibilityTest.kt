@@ -821,7 +821,7 @@ class ActiveListAccessibilityTest {
     }
 
     @Test
-    fun `conferma condivisione invia blocco azioni nello sharesheet per solo azioni ed entrambe`() {
+    fun `conferma condivisione invia testo e oggetto corretti nello sharesheet per ogni scelta`() {
         val viewModel = ActiveListViewModel(
             shoppingRepository = FakeShoppingListRepository(
                 items = listOf(uncheckedItem),
@@ -859,9 +859,10 @@ class ActiveListAccessibilityTest {
         val expectedShopping = "[LATTICINI]\n+ FORMAGGI\n- MOZZARELLA\n  Mozzarella 2 pz"
         val application = shadowOf(RuntimeEnvironment.getApplication())
         listOf(
-            "Solo azioni (1)" to expectedActions,
-            "Entrambe (2)" to "$expectedShopping\n\n$expectedActions",
-        ).forEach { (choice, expectedText) ->
+            Triple("Solo spesa (1)", expectedShopping, "Lista spesa TOGO"),
+            Triple("Solo azioni (1)", expectedActions, "Cose da fare TOGO"),
+            Triple("Entrambe (2)", "$expectedShopping\n\n$expectedActions", "Lista spesa e cose da fare TOGO"),
+        ).forEach { (choice, expectedText, expectedSubject) ->
             composeTestRule.onNodeWithContentDescription("Condividi lista").performClick()
             composeTestRule.onNodeWithText(choice).performClick()
             composeTestRule.onNodeWithTag("share_dialog_confirm").performClick()
@@ -874,6 +875,7 @@ class ActiveListAccessibilityTest {
             assertEquals(Intent.ACTION_SEND, payload.action)
             assertEquals("text/plain", payload.type)
             assertEquals(expectedText, payload.getStringExtra(Intent.EXTRA_TEXT))
+            assertEquals(expectedSubject, payload.getStringExtra(Intent.EXTRA_SUBJECT))
         }
     }
 

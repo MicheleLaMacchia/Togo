@@ -52,7 +52,7 @@ class ActiveListPagerContractTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `share intent contains only the selected content`() {
+    fun `share intent contains selected content and matching subject`() {
         val actionsText = buildSharedActionsText(
             listOf(
                 ActionItem(text = "Chiamare papà", scope = ActionScope.CASA),
@@ -64,19 +64,16 @@ class ActiveListPagerContractTest {
             selection = ShareSelection.SHOPPING,
             shoppingText = "Prodotti",
             actionsText = actionsText,
-            subject = "Oggetto",
         )
         val actionsOnly = buildShareIntent(
             selection = ShareSelection.ACTIONS,
             shoppingText = "Prodotti",
             actionsText = actionsText,
-            subject = "Oggetto",
         )
         val both = buildShareIntent(
             selection = ShareSelection.BOTH,
             shoppingText = "Prodotti",
             actionsText = actionsText,
-            subject = "Oggetto",
         )
 
         assertEquals(Intent.ACTION_SEND, both.action)
@@ -84,7 +81,9 @@ class ActiveListPagerContractTest {
         assertEquals("Prodotti", shoppingOnly.getStringExtra(Intent.EXTRA_TEXT))
         assertEquals(expectedActionsText, actionsOnly.getStringExtra(Intent.EXTRA_TEXT))
         assertEquals("Prodotti\n\n$expectedActionsText", both.getStringExtra(Intent.EXTRA_TEXT))
-        assertEquals("Oggetto", both.getStringExtra(Intent.EXTRA_SUBJECT))
+        assertEquals("Lista spesa TOGO", shoppingOnly.getStringExtra(Intent.EXTRA_SUBJECT))
+        assertEquals("Cose da fare TOGO", actionsOnly.getStringExtra(Intent.EXTRA_SUBJECT))
+        assertEquals("Lista spesa e cose da fare TOGO", both.getStringExtra(Intent.EXTRA_SUBJECT))
     }
 
     @Test

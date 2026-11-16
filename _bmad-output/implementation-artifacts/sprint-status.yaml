@@ -126,9 +126,10 @@ development_status:
   epic-11: in-progress
   # Story 11.1: allineata a done il 2026-11-13 su dichiarazione dell'utente; spec gia' done. Il precedente review era una discrepanza di tracking, non un'evidenza di build/test superati.
   11-1-dialog-a-tre-scelte-con-conteggi: done
-  # Story 11.2: implementazione e review statica completate; test scritti ma build/test non eseguiti, come richiesto dall'utente.
-  11-2-formato-testo-da-fare-per-condivisione-azioni: review
-  11-3-oggetto-dinamico-in-base-alla-scelta-di-condivisione: backlog
+  # Story 11.2: allineata a done il 2026-11-13 su dichiarazione dell'utente; spec gia' done. Il precedente review era una discrepanza di tracking, non un'evidenza di build/test superati.
+  11-2-formato-testo-da-fare-per-condivisione-azioni: done
+  # Story 11.3: implementazione e controllo statico completati; test aggiornati ma build/test non eseguiti per vincolo utente.
+  11-3-oggetto-dinamico-in-base-alla-scelta-di-condivisione: review
   11-4-matrice-scelta-parti-vuote: backlog
   11-5-sharelistusecase-non-restituisce-null-su-spesa-vuota-con-azi: backlog
   epic-11-retrospective: optional

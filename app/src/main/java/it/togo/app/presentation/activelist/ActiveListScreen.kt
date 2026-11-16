@@ -115,8 +115,12 @@ internal fun buildShareIntent(
     selection: ShareSelection,
     shoppingText: String,
     actionsText: String,
-    subject: String,
 ): Intent {
+    val subject = when (selection) {
+        ShareSelection.SHOPPING -> "Lista spesa TOGO"
+        ShareSelection.ACTIONS -> "Cose da fare TOGO"
+        ShareSelection.BOTH -> "Lista spesa e cose da fare TOGO"
+    }
     val sharedText = when (selection) {
         ShareSelection.SHOPPING -> shoppingText
         ShareSelection.ACTIONS -> actionsText
@@ -494,8 +498,6 @@ fun ActiveListScreen(
                         selection = selection,
                         shoppingText = shoppingText,
                         actionsText = actionsText,
-                        subject = shoppingIntent?.getStringExtra(Intent.EXTRA_SUBJECT)
-                            ?: "Condividi lista TOGO",
                     )
                     val activity = context.findActivity()
                     when {
