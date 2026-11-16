@@ -141,9 +141,10 @@ development_status:
   epic-12: in-progress
   # Story 12.1: allineata a done il 2026-11-16 su dichiarazione dell'utente; test scritti, build/test non eseguiti per vincolo utente.
   12-1-parser-riconosce-blocco-da-fare: done
-  # Story 12.2: implementazione e revisione statica concluse; test aggiunto, build/test non eseguiti per vincolo utente.
-  12-2-import-di-sole-azioni-valido-0-prodotti: review
-  12-3-deduplica-azioni-per-testo-ambito-urgenza-con-accenti-signif: backlog
+  # Story 12.2: la spec la riporta done e l'utente la considera completata; il precedente review era una discrepanza di tracking. Build/test non eseguiti.
+  12-2-import-di-sole-azioni-valido-0-prodotti: done
+  # Story 12.3: implementazione e revisione statica concluse; git diff --check eseguito; build/test non eseguiti per vincolo utente.
+  12-3-deduplica-azioni-per-testo-ambito-urgenza-con-accenti-signif: review
   12-4-validazione-ambito-e-urgenza-nell-import: backlog
   12-5-import-tutto-o-niente-transazionale-room: backlog
   12-6-anteprima-e-messaggio-esito-import: backlog

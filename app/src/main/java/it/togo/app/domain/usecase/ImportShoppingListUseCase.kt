@@ -121,6 +121,8 @@ class ImportShoppingListUseCase(
         }
 
         val actions = mutableListOf<ActionItem>()
+        val seenActionKeys = mutableSetOf<Triple<String, ActionScope, ActionUrgency>>()
+        var parsedActionCount = 0
         var actionScope = ActionScope.ALTRO
         var actionUrgency = ActionUrgency.A_TEMPO_PERSO
         parsed.actionSection?.lines.orEmpty().forEach { line ->
@@ -132,17 +134,28 @@ class ImportShoppingListUseCase(
                 line.rawLine.startsWith("- ") -> {
                     actionUrgency = ActionUrgency.fromLabel(line.rawLine.removePrefix("- "))
                 }
-                line.rawLine.startsWith("  ") && line.rawLine.trim().isNotEmpty() ->
-                    actions += ActionItem(
+                line.rawLine.startsWith("  ") && line.rawLine.trim().isNotEmpty() -> {
+                    parsedActionCount++
+                    val action = ActionItem(
                         text = line.rawLine.trim(),
                         scope = actionScope,
                         urgency = actionUrgency,
                     )
+                    val key = Triple(action.normalizedText, action.scope, action.urgency)
+                    if (seenActionKeys.add(key) && !shoppingListRepository.checkDuplicateAction(
+                            normalizedText = action.normalizedText,
+                            scope = action.scope,
+                            urgency = action.urgency,
+                        )
+                    ) {
+                        actions += action
+                    }
+                }
             }
         }
 
         if (parsed.sections.isEmpty()) {
-            if (actions.isEmpty()) {
+            if (parsedActionCount == 0) {
                 return ImportPreviewResult.Error("Il testo non contiene prodotti da importare.")
             }
             return ImportPreviewResult.Ready(ImportPlan(items = emptyList(), actions = actions))
@@ -211,7 +224,7 @@ class ImportShoppingListUseCase(
             }
         }
 
-        if (planned.isEmpty() && actions.isEmpty()) {
+        if (planned.isEmpty() && parsedActionCount == 0) {
             return ImportPreviewResult.Error("Il testo non contiene prodotti da importare.")
         }
         return ImportPreviewResult.Ready(ImportPlan(items = planned, actions = actions))
@@ -225,9 +238,11 @@ class ImportShoppingListUseCase(
         var createdCategories = 0
         var createdProducts = 0
         var updatedExisting = 0
+        var importedActions = 0
 
         val level3Ids = mutableMapOf<Pair<Long, String>, Long>()
         val products = mutableMapOf<Pair<Long, String>, CanonicalProduct>()
+        val seenActionKeys = mutableSetOf<Triple<String, ActionScope, ActionUrgency>>()
 
         try {
             for (item in plan.items) {
@@ -275,7 +290,16 @@ class ImportShoppingListUseCase(
                 }
             }
             for (action in plan.actions) {
-                shoppingListRepository.addAction(action)
+                val key = Triple(action.normalizedText, action.scope, action.urgency)
+                if (seenActionKeys.add(key) && !shoppingListRepository.checkDuplicateAction(
+                        normalizedText = action.normalizedText,
+                        scope = action.scope,
+                        urgency = action.urgency,
+                    )
+                ) {
+                    shoppingListRepository.addAction(action)
+                    importedActions++
+                }
             }
         } catch (e: CancellationException) {
             throw e
@@ -287,7 +311,7 @@ class ImportShoppingListUseCase(
 
         ImportExecutionResult.Success(
             imported = plan.productCount,
-            importedActions = plan.actionCount,
+            importedActions = importedActions,
             updatedExisting = updatedExisting,
             createdProducts = createdProducts,
             createdCategories = createdCategories,

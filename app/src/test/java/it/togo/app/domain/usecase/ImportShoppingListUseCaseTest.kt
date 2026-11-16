@@ -116,6 +116,97 @@ class ImportShoppingListUseCaseTest {
     }
 
     @Test
+    fun `preview salta duplicati spuntati ma conserva accenti ambito e urgenza distinti`() = runTest {
+        val existing = ActionItem(
+            text = "Chiamare il medico",
+            scope = ActionScope.CASA,
+            urgency = ActionUrgency.URGENTE,
+            isChecked = true,
+        )
+        val shopping = FakeShoppingListRepository(initialActions = listOf(existing))
+        val text = """
+            [DA FARE]
+            + CASA
+            - URGENTE
+              chiamare   IL medico
+              CHIAMARE il MEDICO
+              Chiamare il médicò
+              Acquistare il pane
+              ACQUISTARE   IL pane
+            + SALUTE
+            - URGENTE
+              Chiamare il medico
+            + CASA
+            - ECCEZIONALE
+              Chiamare il medico
+        """.trimIndent()
+
+        val useCase = createUseCase(shopping = shopping)
+        val preview = useCase.preview(text) as ImportPreviewResult.Ready
+
+        assertEquals(4, preview.plan.actionCount)
+        assertEquals("Chiamare il médicò", preview.plan.actions[0].text)
+        assertEquals("Acquistare il pane", preview.plan.actions[1].text)
+        assertEquals(ActionScope.SALUTE, preview.plan.actions[2].scope)
+        assertEquals(ActionUrgency.ECCEZIONALE, preview.plan.actions[3].urgency)
+        assertTrue(preview.plan.actions.none { it.text.equals("chiamare   IL medico", ignoreCase = true) })
+
+        val result = useCase.execute(preview.plan) as ImportExecutionResult.Success
+
+        assertEquals(4, result.importedActions)
+        assertEquals(5, shopping.actions.size)
+        assertTrue(shopping.actions.first().isChecked)
+        assertTrue(existing.isChecked)
+    }
+
+    @Test
+    fun `preview solo azioni resta valido quando tutte sono gia presenti`() = runTest {
+        val existing = ActionItem(
+            text = "Pagare bolletta",
+            scope = ActionScope.PRATICHE,
+            urgency = ActionUrgency.URGENTE,
+        )
+        val shopping = FakeShoppingListRepository(initialActions = listOf(existing))
+        val text = """
+            [DA FARE]
+            + PRATICHE
+            - URGENTE
+              Pagare bolletta
+        """.trimIndent()
+
+        val result = createUseCase(shopping = shopping).preview(text)
+
+        assertTrue(result is ImportPreviewResult.Ready)
+        assertEquals(0, (result as ImportPreviewResult.Ready).plan.actionCount)
+    }
+
+    @Test
+    fun `execute ricontrolla i duplicati aggiunti dopo l anteprima`() = runTest {
+        val shopping = FakeShoppingListRepository()
+        val text = """
+            [DA FARE]
+            + CASA
+            - URGENTE
+              Portare fuori la spazzatura
+        """.trimIndent()
+        val useCase = createUseCase(shopping = shopping)
+        val plan = (useCase.preview(text) as ImportPreviewResult.Ready).plan
+        val existing = ActionItem(
+            text = "Portare fuori la spazzatura",
+            scope = ActionScope.CASA,
+            urgency = ActionUrgency.URGENTE,
+            isChecked = true,
+        )
+        shopping.actions += existing
+
+        val result = useCase.execute(plan) as ImportExecutionResult.Success
+
+        assertEquals(0, result.importedActions)
+        assertEquals(listOf(existing), shopping.actions)
+        assertTrue(shopping.actions.single().isChecked)
+    }
+
+    @Test
     fun `categoria di primo livello sconosciuta viene rifiutata`() = runTest {
         val text = """
             [CATEGORIA INESISTENTE]
@@ -303,10 +394,11 @@ class ImportShoppingListUseCaseTest {
 
     private class FakeShoppingListRepository(
         initialItems: MutableList<ShoppingItem> = mutableListOf(),
+        initialActions: List<ActionItem> = emptyList(),
     ) : ShoppingListRepository {
 
         val items = initialItems
-        val actions = mutableListOf<ActionItem>()
+        val actions = initialActions.toMutableList()
 
         override fun getAllItems(): Flow<List<ShoppingItem>> = flowOf(items.toList())
 
@@ -339,6 +431,18 @@ class ImportShoppingListUseCaseTest {
 
         override suspend fun addAction(action: ActionItem) {
             actions += action
+        }
+
+        override suspend fun checkDuplicateAction(
+            normalizedText: String,
+            scope: ActionScope,
+            urgency: ActionUrgency,
+            excludeActionId: String?,
+        ): Boolean = actions.any { existing ->
+            existing.id != excludeActionId &&
+                existing.normalizedText == normalizedText &&
+                existing.scope == scope &&
+                existing.urgency == urgency
         }
 
         override fun getAttributeSuggestions(): Flow<AttributeSuggestions> =
