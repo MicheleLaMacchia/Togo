@@ -268,11 +268,12 @@ class ActiveListViewModel(
         _uiState.value = _uiState.value.copy(currentPage = page)
     }
 
-    suspend fun shareListIntent(): android.content.Intent? {
-        val intent = shareListUseCase()
+    suspend fun shareListIntent(part: ShareListUseCase.Part = ShareListUseCase.Part.SHOPPING): android.content.Intent? {
+        val intent = shareListUseCase(part)
         TogoLog.d(
             if (intent == null) {
-                "ShareList: nessun articolo non spuntato, intent nullo"
+                if (part == ShareListUseCase.Part.ACTIONS) "ShareList: nessuna azione attiva, intent nullo"
+                else "ShareList: nessun articolo non spuntato, intent nullo"
             } else {
                 "ShareList: intent pronto"
             }

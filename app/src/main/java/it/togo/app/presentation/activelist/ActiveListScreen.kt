@@ -91,6 +91,7 @@ import androidx.core.content.ContextCompat
 import it.togo.app.core.TogoLog
 import it.togo.app.domain.action.ActionMutationResult
 import it.togo.app.domain.action.buildSharedActionsText
+import it.togo.app.domain.usecase.ShareListUseCase
 import it.togo.app.domain.model.ActionItem
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.parser.ParsedCommand
@@ -526,11 +527,18 @@ fun ActiveListScreen(
             onShare = { selection ->
                 showShareDialog = false
                 scope.launch {
-                    val shoppingIntent = if (selection != ShareSelection.ACTIONS) {
-                        viewModel.shareListIntent()
-                    } else null
-                    val shoppingText = shoppingIntent?.getStringExtra(Intent.EXTRA_TEXT).orEmpty()
-                    val actionsText = buildSharedActionsText(uiState.actions)
+                    val selectedPartIntent = when (selection) {
+                        ShareSelection.SHOPPING -> viewModel.shareListIntent()
+                        ShareSelection.ACTIONS -> viewModel.shareListIntent(ShareListUseCase.Part.ACTIONS)
+                        ShareSelection.BOTH -> viewModel.shareListIntent()
+                    }
+                    val selectedPartText = selectedPartIntent?.getStringExtra(Intent.EXTRA_TEXT).orEmpty()
+                    val shoppingText = if (selection == ShareSelection.ACTIONS) "" else selectedPartText
+                    val actionsText = if (selection == ShareSelection.ACTIONS) {
+                        selectedPartText
+                    } else {
+                        buildSharedActionsText(uiState.actions)
+                    }
                     val intent = buildShareIntent(
                         selection = selection,
                         shoppingText = shoppingText,

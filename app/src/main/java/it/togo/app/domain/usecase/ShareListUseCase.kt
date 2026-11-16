@@ -1,5 +1,6 @@
 package it.togo.app.domain.usecase
 
+import it.togo.app.domain.action.buildSharedActionsText
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.repository.CatalogRepository
@@ -13,7 +14,22 @@ class ShareListUseCase(
     private val catalogRepository: CatalogRepository
 ) {
 
-    suspend operator fun invoke(): android.content.Intent? = withContext(Dispatchers.IO) {
+    enum class Part {
+        SHOPPING,
+        ACTIONS,
+    }
+
+    suspend operator fun invoke(part: Part = Part.SHOPPING): android.content.Intent? = withContext(Dispatchers.IO) {
+        if (part == Part.ACTIONS) {
+            val actionsText = buildSharedActionsText(shoppingListRepository.getActions().first())
+            if (actionsText.isBlank()) return@withContext null
+
+            return@withContext android.content.Intent(android.content.Intent.ACTION_SEND)
+                .setType("text/plain")
+                .putExtra(android.content.Intent.EXTRA_TEXT, actionsText)
+                .putExtra(android.content.Intent.EXTRA_SUBJECT, "Cose da fare TOGO")
+        }
+
         val activeItems = shoppingListRepository.getActiveItems().first()
             .filter { !it.isChecked }
 
