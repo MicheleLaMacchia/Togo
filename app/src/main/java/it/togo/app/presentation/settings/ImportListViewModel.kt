@@ -113,7 +113,7 @@ class ImportListViewModel(
                             isImporting = false,
                             confirmation = null,
                             text = "",
-                            successMessage = buildSuccessMessage(result),
+                            successMessage = buildImportSuccessMessage(result),
                         )
                     }
 
@@ -153,38 +153,21 @@ class ImportListViewModel(
         _uiState.update { it.copy(successMessage = null) }
     }
 
-    private fun buildSuccessMessage(result: ImportExecutionResult.Success): String =
-        buildString {
-            val productPart = if (result.imported == 1) {
-                "1 prodotto"
-            } else {
-                "${result.imported} prodotti"
-            }
-            val actionPart = if (result.importedActions == 1) {
-                "1 azione"
-            } else {
-                "${result.importedActions} azioni"
-            }
-            when {
-                result.importedActions == 0 -> {
-                    if (result.imported == 1) {
-                        append("Importato $productPart")
-                    } else {
-                        append("Importati $productPart")
-                    }
-                }
-                result.imported == 0 -> append("Importate $actionPart")
-                else -> append("Importati $productPart e $actionPart")
-            }
-            if (result.updatedExisting > 0) {
-                append(", ")
-                if (result.updatedExisting == 1) {
-                    append("1 voce già presente aggiornata")
-                } else {
-                    append(result.updatedExisting)
-                    append(" voci già presenti aggiornate")
-                }
-            }
-            append(".")
-        }
 }
+
+internal fun buildImportSuccessMessage(result: ImportExecutionResult.Success): String =
+    listOf(
+        countMessage(result.imported, "Prodotto importato", "Prodotti importati"),
+        countMessage(result.importedActions, "Azione importata", "Azioni importate"),
+        countMessage(
+            result.skippedDuplicateActions,
+            "Azione duplicata saltata",
+            "Azioni duplicate saltate",
+        ),
+        countMessage(result.updatedExisting, "Voce aggiornata", "Voci aggiornate"),
+        countMessage(result.createdCategories, "Categoria creata", "Categorie create"),
+        countMessage(result.createdProducts, "Prodotto creato", "Prodotti creati"),
+    ).joinToString(separator = ". ", prefix = "Importazione completata. ", postfix = ".")
+
+private fun countMessage(count: Int, singular: String, plural: String): String =
+    "${if (count == 1) singular else plural}: $count"

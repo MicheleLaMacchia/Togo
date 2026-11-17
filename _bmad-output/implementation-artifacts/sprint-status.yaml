@@ -148,9 +148,10 @@ development_status:
   # La 12.3 resta review nel tracking, anche se l'utente la considera completata; vedi spec 12.4.
   # Riconciliazione 2026-11-17: 12.4 done su dichiarazione dell'utente e spec gia' done; il precedente review era una discrepanza di tracking, non evidenza tecnica. Build/test non dichiarati superati.
   12-4-validazione-ambito-e-urgenza-nell-import: done
-  # 12.5 implementata e in review; test aggiornati ma non eseguiti per vincolo utente.
-  12-5-import-tutto-o-niente-transazionale-room: review
-  12-6-anteprima-e-messaggio-esito-import: backlog
+  # Riconciliazione 2026-11-17: 12.5 done su dichiarazione esplicita dell'utente e spec gia' done; la discrepanza review era tracking, non evidenza tecnica. Build/test non dichiarati superati.
+  12-5-import-tutto-o-niente-transazionale-room: done
+  # Story 12.6 in review: il test-build-android.ps1 dell'utente ha compilato app, test e APK; 1 test è fallito per query generica su due PaneTitle. Test ora cerca il valore anteprima specifico; rerun utente in attesa.
+  12-6-anteprima-e-messaggio-esito-import: review
   epic-12-retrospective: optional
 
   epic-13: backlog

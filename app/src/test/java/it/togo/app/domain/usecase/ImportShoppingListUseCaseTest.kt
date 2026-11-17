@@ -269,6 +269,7 @@ class ImportShoppingListUseCaseTest {
         val preview = useCase.preview(text) as ImportPreviewResult.Ready
 
         assertEquals(4, preview.plan.actionCount)
+        assertEquals(3, preview.plan.skippedDuplicateActions)
         assertEquals("Chiamare il médicò", preview.plan.actions[0].text)
         assertEquals("Acquistare il pane", preview.plan.actions[1].text)
         assertEquals(ActionScope.SALUTE, preview.plan.actions[2].scope)
@@ -278,6 +279,7 @@ class ImportShoppingListUseCaseTest {
         val result = useCase.execute(preview.plan) as ImportExecutionResult.Success
 
         assertEquals(4, result.importedActions)
+        assertEquals(3, result.skippedDuplicateActions)
         assertEquals(5, shopping.actions.size)
         assertTrue(shopping.actions.first().isChecked)
         assertTrue(existing.isChecked)
@@ -302,6 +304,7 @@ class ImportShoppingListUseCaseTest {
 
         assertTrue(result is ImportPreviewResult.Ready)
         assertEquals(0, (result as ImportPreviewResult.Ready).plan.actionCount)
+        assertEquals(1, result.plan.skippedDuplicateActions)
     }
 
     @Test
@@ -315,6 +318,7 @@ class ImportShoppingListUseCaseTest {
         """.trimIndent()
         val useCase = createUseCase(shopping = shopping)
         val plan = (useCase.preview(text) as ImportPreviewResult.Ready).plan
+        assertEquals(0, plan.skippedDuplicateActions)
         val existing = ActionItem(
             text = "Portare fuori la spazzatura",
             scope = ActionScope.CASA,
@@ -326,6 +330,7 @@ class ImportShoppingListUseCaseTest {
         val result = useCase.execute(plan) as ImportExecutionResult.Success
 
         assertEquals(0, result.importedActions)
+        assertEquals(1, result.skippedDuplicateActions)
         assertEquals(listOf(existing), shopping.actions)
         assertTrue(shopping.actions.single().isChecked)
     }

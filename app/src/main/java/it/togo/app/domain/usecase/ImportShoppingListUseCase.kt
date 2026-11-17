@@ -47,6 +47,8 @@ data class PlannedImportItem(
 data class ImportPlan(
     val items: List<PlannedImportItem>,
     val actions: List<ActionItem> = emptyList(),
+    /** Duplicate action entries omitted from the parsed input during preview. */
+    val skippedDuplicateActions: Int = 0,
 ) {
     val productCount: Int
         get() = items.size
@@ -87,6 +89,8 @@ sealed interface ImportExecutionResult {
         val updatedExisting: Int,
         val createdProducts: Int,
         val createdCategories: Int,
+        /** Total duplicate action entries omitted during preview or execution. */
+        val skippedDuplicateActions: Int = 0,
     ) : ImportExecutionResult
 
     data class Error(val message: String) : ImportExecutionResult
@@ -124,6 +128,7 @@ class ImportShoppingListUseCase(
 
         val actions = mutableListOf<ActionItem>()
         val seenActionKeys = mutableSetOf<Triple<String, ActionScope, ActionUrgency>>()
+        var skippedDuplicateActions = 0
         var parsedActionCount = 0
         var actionScope = ActionScope.ALTRO
         var actionUrgency: ActionUrgency? = null
@@ -170,12 +175,16 @@ class ImportShoppingListUseCase(
                         urgency = urgency,
                     )
                     val key = Triple(action.normalizedText, action.scope, action.urgency)
-                    if (seenActionKeys.add(key) && !shoppingListRepository.checkDuplicateAction(
+                    if (!seenActionKeys.add(key)) {
+                        skippedDuplicateActions++
+                    } else if (shoppingListRepository.checkDuplicateAction(
                             normalizedText = action.normalizedText,
                             scope = action.scope,
                             urgency = action.urgency,
                         )
                     ) {
+                        skippedDuplicateActions++
+                    } else {
                         actions += action
                     }
                 }
@@ -190,7 +199,13 @@ class ImportShoppingListUseCase(
             if (parsedActionCount == 0) {
                 return ImportPreviewResult.Error("Il testo non contiene prodotti da importare.")
             }
-            return ImportPreviewResult.Ready(ImportPlan(items = emptyList(), actions = actions))
+            return ImportPreviewResult.Ready(
+                ImportPlan(
+                    items = emptyList(),
+                    actions = actions,
+                    skippedDuplicateActions = skippedDuplicateActions,
+                ),
+            )
         }
 
         val taxonomy = catalogRepository.getTaxonomy().first()
@@ -259,7 +274,13 @@ class ImportShoppingListUseCase(
         if (planned.isEmpty() && parsedActionCount == 0) {
             return ImportPreviewResult.Error("Il testo non contiene prodotti da importare.")
         }
-        return ImportPreviewResult.Ready(ImportPlan(items = planned, actions = actions))
+        return ImportPreviewResult.Ready(
+            ImportPlan(
+                items = planned,
+                actions = actions,
+                skippedDuplicateActions = skippedDuplicateActions,
+            ),
+        )
     }
 
     /**
@@ -271,6 +292,7 @@ class ImportShoppingListUseCase(
         var createdProducts = 0
         var updatedExisting = 0
         var importedActions = 0
+        var skippedDuplicateActions = plan.skippedDuplicateActions
 
         val level3Ids = mutableMapOf<Pair<Long, String>, Long>()
         val products = mutableMapOf<Pair<Long, String>, CanonicalProduct>()
@@ -324,12 +346,16 @@ class ImportShoppingListUseCase(
                 }
                 for (action in plan.actions) {
                     val key = Triple(action.normalizedText, action.scope, action.urgency)
-                    if (seenActionKeys.add(key) && !shoppingListRepository.checkDuplicateAction(
+                    if (!seenActionKeys.add(key)) {
+                        skippedDuplicateActions++
+                    } else if (shoppingListRepository.checkDuplicateAction(
                             normalizedText = action.normalizedText,
                             scope = action.scope,
                             urgency = action.urgency,
                         )
                     ) {
+                        skippedDuplicateActions++
+                    } else {
                         shoppingListRepository.addAction(action)
                         importedActions++
                     }
@@ -349,6 +375,7 @@ class ImportShoppingListUseCase(
             updatedExisting = updatedExisting,
             createdProducts = createdProducts,
             createdCategories = createdCategories,
+            skippedDuplicateActions = skippedDuplicateActions,
         )
     }
 

@@ -34,7 +34,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.paneTitle
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import it.togo.app.domain.usecase.ImportPlan
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
@@ -83,88 +87,11 @@ fun ImportListScreen(
     }
 
     uiState.confirmation?.let { plan ->
-        AlertDialog(
-            onDismissRequest = {
-                if (!uiState.isImporting) viewModel.cancelImport()
-            },
-            title = { Text("Conferma importazione", style = typography.itemTitle) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(spacing.space2)) {
-                    Text(
-                        text = if (plan.actionCount == 0 && plan.productCount == 1) {
-                            "Verrà importato 1 prodotto."
-                        } else if (plan.actionCount == 0) {
-                            "Verranno importati ${plan.productCount} prodotti."
-                        } else {
-                            val productCount = if (plan.productCount == 1) {
-                                "1 prodotto"
-                            } else {
-                                "${plan.productCount} prodotti"
-                            }
-                            val actionCount = if (plan.actionCount == 1) {
-                                "1 azione"
-                            } else {
-                                "${plan.actionCount} azioni"
-                            }
-                            "Verranno importati $productCount e $actionCount."
-                        },
-                        style = typography.itemMeta,
-                    )
-                    val creationParts = buildList {
-                        if (plan.newProductCount > 0) {
-                            add(
-                                if (plan.newProductCount == 1) "1 prodotto"
-                                else "${plan.newProductCount} prodotti"
-                            )
-                        }
-                        if (plan.newLevel3Count > 0) {
-                            add(
-                                if (plan.newLevel3Count == 1) "1 categoria"
-                                else "${plan.newLevel3Count} categorie"
-                            )
-                        }
-                    }
-                    if (creationParts.isNotEmpty()) {
-                        Text(
-                            text = "Nel catalogo verranno creati " +
-                                creationParts.joinToString(" e ") + ".",
-                            style = typography.caption,
-                            color = colors.inkSecondary,
-                        )
-                    }
-                    if (plan.productCount > 0) {
-                        Text(
-                            text = "I prodotti già presenti nella lista attiva verranno aggiornati.",
-                            style = typography.caption,
-                            color = colors.inkSecondary,
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = viewModel::confirmImport,
-                    enabled = !uiState.isImporting,
-                ) {
-                    if (uiState.isImporting) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(18.dp),
-                            strokeWidth = 2.dp,
-                            color = colors.accentAction,
-                        )
-                    } else {
-                        Text("Accetta")
-                    }
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = viewModel::cancelImport,
-                    enabled = !uiState.isImporting,
-                ) {
-                    Text("Annulla")
-                }
-            },
+        ImportPreviewDialog(
+            plan = plan,
+            isImporting = uiState.isImporting,
+            onConfirm = viewModel::confirmImport,
+            onDismiss = viewModel::cancelImport,
         )
     }
 
@@ -263,4 +190,91 @@ fun ImportListScreen(
             }
         }
     }
+}
+
+@Composable
+internal fun ImportPreviewDialog(
+    plan: ImportPlan,
+    isImporting: Boolean,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val colors = togoColors()
+    val typography = togoTypography()
+    val spacing = togoSpacing()
+
+    AlertDialog(
+        onDismissRequest = { if (!isImporting) onDismiss() },
+        title = {
+            Text(
+                "Anteprima importazione",
+                modifier = Modifier.semantics { heading() },
+                style = typography.itemTitle,
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier.semantics {
+                    paneTitle = "Anteprima importazione"
+                },
+                verticalArrangement = Arrangement.spacedBy(spacing.space2),
+            ) {
+                Text(
+                    text = "Prodotti da importare: ${plan.productCount}.",
+                    style = typography.itemMeta,
+                )
+                Text(
+                    text = "Azioni da importare: ${plan.actionCount}.",
+                    style = typography.itemMeta,
+                )
+                Text(
+                    text = "Azioni duplicate saltate: ${plan.skippedDuplicateActions}.",
+                    style = typography.itemMeta,
+                )
+                Text(
+                    text = "Categorie da creare: ${plan.newLevel3Count}.",
+                    style = typography.caption,
+                    color = colors.inkSecondary,
+                )
+                Text(
+                    text = "Prodotti da creare: ${plan.newProductCount}.",
+                    style = typography.caption,
+                    color = colors.inkSecondary,
+                )
+                if (plan.productCount > 0) {
+                    Text(
+                        text = "I prodotti già presenti nella lista attiva verranno aggiornati.",
+                        style = typography.caption,
+                        color = colors.inkSecondary,
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm,
+                enabled = !isImporting,
+            ) {
+                if (isImporting) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp,
+                        color = colors.accentAction,
+                    )
+                } else {
+                    val products = if (plan.productCount == 1) "prodotto" else "prodotti"
+                    val actions = if (plan.actionCount == 1) "azione" else "azioni"
+                    Text("Importa ${plan.productCount} $products e ${plan.actionCount} $actions")
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                enabled = !isImporting,
+            ) {
+                Text("Annulla")
+            }
+        },
+    )
 }
