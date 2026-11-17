@@ -116,6 +116,110 @@ class ImportShoppingListUseCaseTest {
     }
 
     @Test
+    fun `ambito omesso viene impostato ad altro`() = runTest {
+        val text = """
+            [DA FARE]
+            - URGENTE
+              Chiamare il medico
+        """.trimIndent()
+
+        val result = createUseCase().preview(text)
+
+        assertTrue(result is ImportPreviewResult.Ready)
+        val action = (result as ImportPreviewResult.Ready).plan.actions.single()
+        assertEquals(ActionScope.ALTRO, action.scope)
+    }
+
+    @Test
+    fun `urgenza omessa restituisce il messaggio di validazione richiesto`() = runTest {
+        val text = """
+            [DA FARE]
+            + CASA
+              Chiamare il medico
+        """.trimIndent()
+
+        val result = createUseCase().preview(text)
+
+        assertTrue(result is ImportPreviewResult.Error)
+        assertEquals(
+            "Urgenza non valida: usa Urgente, A tempo perso o Eccezionale.",
+            (result as ImportPreviewResult.Error).message,
+        )
+    }
+
+    @Test
+    fun `urgenza non valida restituisce il messaggio di validazione richiesto`() = runTest {
+        val text = """
+            [DA FARE]
+            + CASA
+            - PRIORITARIA
+              Chiamare il medico
+        """.trimIndent()
+
+        val result = createUseCase().preview(text)
+
+        assertTrue(result is ImportPreviewResult.Error)
+        assertEquals(
+            "Urgenza non valida: usa Urgente, A tempo perso o Eccezionale.",
+            (result as ImportPreviewResult.Error).message,
+        )
+    }
+
+    @Test
+    fun `urgenza non valida viene rifiutata anche in un import misto`() = runTest {
+        val text = "$textWithSpaghetti\n\n[DA FARE]\n+ CASA\n- PRIORITARIA\n  Chiamare il medico"
+
+        val result = createUseCase().preview(text)
+
+        assertTrue(result is ImportPreviewResult.Error)
+        assertEquals(
+            "Urgenza non valida: usa Urgente, A tempo perso o Eccezionale.",
+            (result as ImportPreviewResult.Error).message,
+        )
+    }
+
+    @Test
+    fun `urgenza si reimposta quando cambia ambito`() = runTest {
+        val text = """
+            [DA FARE]
+            + CASA
+            - URGENTE
+              Chiamare il medico
+            + LAVORO
+              Inviare il documento
+        """.trimIndent()
+
+        val result = createUseCase().preview(text)
+
+        assertTrue(result is ImportPreviewResult.Error)
+        assertEquals(
+            "Urgenza non valida: usa Urgente, A tempo perso o Eccezionale.",
+            (result as ImportPreviewResult.Error).message,
+        )
+    }
+
+    @Test
+    fun `blocco da fare senza azioni restituisce errore anche insieme ai prodotti`() = runTest {
+        val emptyActionBlock = "[DA FARE]"
+        val headersOnlyActionBlock = """
+            [DA FARE]
+            + CASA
+            - URGENTE
+        """.trimIndent()
+        val mixedText = "$textWithSpaghetti\n\n$emptyActionBlock"
+
+        for (text in listOf(emptyActionBlock, headersOnlyActionBlock, mixedText)) {
+            val result = createUseCase().preview(text)
+
+            assertTrue(result is ImportPreviewResult.Error)
+            assertEquals(
+                "Il blocco [DA FARE] è vuoto.",
+                (result as ImportPreviewResult.Error).message,
+            )
+        }
+    }
+
+    @Test
     fun `preview salta duplicati spuntati ma conserva accenti ambito e urgenza distinti`() = runTest {
         val existing = ActionItem(
             text = "Chiamare il medico",

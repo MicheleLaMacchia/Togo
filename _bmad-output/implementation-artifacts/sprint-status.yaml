@@ -145,7 +145,9 @@ development_status:
   12-2-import-di-sole-azioni-valido-0-prodotti: done
   # Story 12.3: implementazione e revisione statica concluse; git diff --check eseguito; build/test non eseguiti per vincolo utente.
   12-3-deduplica-azioni-per-testo-ambito-urgenza-con-accenti-signif: review
-  12-4-validazione-ambito-e-urgenza-nell-import: backlog
+  # La 12.3 resta review nel tracking, anche se l'utente la considera completata; vedi spec 12.4.
+  # Story 12.4 implementata e in review; test aggiornati ma non eseguiti per vincolo utente.
+  12-4-validazione-ambito-e-urgenza-nell-import: review
   12-5-import-tutto-o-niente-transazionale-room: backlog
   12-6-anteprima-e-messaggio-esito-import: backlog
   epic-12-retrospective: optional
@@ -157,4 +159,4 @@ development_status:
   13-4-semantica-talkback-per-checkbox-chip-sezioni-e-dialog: backlog
   13-5-mockup-allineati-badge-urgenza-target-48dp-stato-focus-dark: backlog
   epic-13-retrospective: optional
-last_updated: 11-16-2026
+last_updated: 11-17-2026

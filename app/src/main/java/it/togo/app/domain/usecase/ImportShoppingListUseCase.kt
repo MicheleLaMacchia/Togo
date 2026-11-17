@@ -109,6 +109,8 @@ class ImportShoppingListUseCase(
 ) {
 
     private val whitespace = Regex("\\s+")
+    private val invalidUrgencyMessage =
+        "Urgenza non valida: usa Urgente, A tempo perso o Eccezionale."
 
     /**
      * Legge il testo e prepara il piano senza modificare il database.
@@ -124,22 +126,34 @@ class ImportShoppingListUseCase(
         val seenActionKeys = mutableSetOf<Triple<String, ActionScope, ActionUrgency>>()
         var parsedActionCount = 0
         var actionScope = ActionScope.ALTRO
-        var actionUrgency = ActionUrgency.A_TEMPO_PERSO
-        parsed.actionSection?.lines.orEmpty().forEach { line ->
+        var actionUrgency: ActionUrgency? = null
+        val actionLines = parsed.actionSection?.lines.orEmpty()
+        if (parsed.actionSection != null && actionLines.none {
+                it.rawLine.startsWith("  ") && it.rawLine.trim().isNotEmpty()
+            }
+        ) {
+            return ImportPreviewResult.Error("Il blocco [DA FARE] è vuoto.")
+        }
+        actionLines.forEach { line ->
             when {
                 line.rawLine.startsWith("+ ") -> {
                     actionScope = ActionScope.fromLabel(line.rawLine.removePrefix("+ "))
-                    actionUrgency = ActionUrgency.A_TEMPO_PERSO
+                    actionUrgency = null
                 }
                 line.rawLine.startsWith("- ") -> {
-                    actionUrgency = ActionUrgency.fromLabel(line.rawLine.removePrefix("- "))
+                    val label = line.rawLine.removePrefix("- ").trim()
+                    actionUrgency = ActionUrgency.entries.firstOrNull {
+                        it.label.equals(label, ignoreCase = true)
+                    } ?: return ImportPreviewResult.Error(invalidUrgencyMessage)
                 }
                 line.rawLine.startsWith("  ") && line.rawLine.trim().isNotEmpty() -> {
+                    val urgency = actionUrgency
+                        ?: return ImportPreviewResult.Error(invalidUrgencyMessage)
                     parsedActionCount++
                     val action = ActionItem(
                         text = line.rawLine.trim(),
                         scope = actionScope,
-                        urgency = actionUrgency,
+                        urgency = urgency,
                     )
                     val key = Triple(action.normalizedText, action.scope, action.urgency)
                     if (seenActionKeys.add(key) && !shoppingListRepository.checkDuplicateAction(
