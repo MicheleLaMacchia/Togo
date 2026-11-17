@@ -155,9 +155,10 @@ development_status:
   epic-12-retrospective: optional
 
   epic-13: in-progress
-  # Story 13.1: implementazione e revisione statica concluse; test/build non eseguiti per vincolo utente.
-  13-1-token-dark-mode-coppie-dark: review
-  13-2-token-ink-struck-per-righe-spuntate: backlog
+  # Riconciliazione 2026-11-17: 13.1 done su indicazione esplicita dell'utente e spec gia' done; il precedente review era tracking non allineato, non evidenza di build/test superati.
+  13-1-token-dark-mode-coppie-dark: done
+  # Story 13.2: implementazione e revisione statica concluse; test/build non eseguiti per vincolo esplicito dell'utente.
+  13-2-token-ink-struck-per-righe-spuntate: review
   13-3-token-focus-ring-e-ordine-traversal: backlog
   13-4-semantica-talkback-per-checkbox-chip-sezioni-e-dialog: backlog
   13-5-mockup-allineati-badge-urgenza-target-48dp-stato-focus-dark: backlog

@@ -53,6 +53,7 @@ import it.togo.app.domain.model.ActionItem
 import it.togo.app.domain.model.ActionUrgency
 import it.togo.app.ui.theme.ActionRowTokens
 import it.togo.app.ui.theme.TogoColorScheme
+import it.togo.app.ui.theme.checkedRowTextColor
 import it.togo.app.ui.theme.componentTokens
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
@@ -297,7 +298,7 @@ fun ActionRow(
                 Text(
                     text = action.text,
                     style = typography.itemName,
-                    color = colors.inkPrimary,
+                    color = colors.checkedRowTextColor(isChecked),
                     textDecoration = if (isChecked) {
                         TextDecoration.LineThrough
                     } else {

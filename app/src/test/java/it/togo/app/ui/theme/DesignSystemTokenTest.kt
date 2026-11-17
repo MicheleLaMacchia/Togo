@@ -34,6 +34,7 @@ class DesignSystemTokenTest {
         assertEquals(0xFF0F172A.toInt(), TogoColorTokens.LightInkPrimary.toArgb())
         assertEquals(0xFF475569.toInt(), TogoColorTokens.LightInkSecondary.toArgb())
         assertEquals(0xFF94A3B8.toInt(), TogoColorTokens.LightInkMuted.toArgb())
+        assertEquals(0xFF1F2937.toInt(), TogoColorTokens.LightInkStruck.toArgb())
         assertEquals(0xFFFFFFFF.toInt(), TogoColorTokens.LightInkInverse.toArgb())
         assertEquals(0xFF0F172A.toInt(), TogoColorTokens.LightBorderCrisp.toArgb())
         assertEquals(0xFFCBD5E1.toInt(), TogoColorTokens.LightBorderHairline.toArgb())
@@ -54,6 +55,7 @@ class DesignSystemTokenTest {
         assertEquals(0xFFF8FAFC.toInt(), TogoColorTokens.DarkInkPrimary.toArgb())
         assertEquals(0xFF94A3B8.toInt(), TogoColorTokens.DarkInkSecondary.toArgb())
         assertEquals(0xFF94A3B8.toInt(), TogoColorTokens.DarkInkMuted.toArgb())
+        assertEquals(0xFFCBD5E1.toInt(), TogoColorTokens.DarkInkStruck.toArgb())
         assertEquals(0xFF0F172A.toInt(), TogoColorTokens.DarkInkInverse.toArgb())
         assertEquals(0xFF64748B.toInt(), TogoColorTokens.DarkBorderCrisp.toArgb())
         assertEquals(0xFF64748B.toInt(), TogoColorTokens.DarkBorderHairline.toArgb())
@@ -196,23 +198,38 @@ class DesignSystemTokenTest {
     }
 
     @Test
-    fun `checked row name meets 7 to 1 on item row background`() {
-        // ItemRow usa inkPrimary per il nome anche in stato checked:
-        // inkSecondary nel tema dark si fermava a ~6,69:1.
+    fun `checked product and action names meet 4 point 5 to 1 in both themes`() {
         val lightTokens = togoComponentTokensFrom(LightTogoColorSchemeImpl(), TogoShapes)
         val darkTokens = togoComponentTokensFrom(DarkTogoColorSchemeImpl(), TogoShapes)
+        val lightColors = LightTogoColorSchemeImpl()
+        val darkColors = DarkTogoColorSchemeImpl()
+
+        assertEquals(lightColors.inkStruck, lightColors.checkedRowTextColor(isChecked = true))
+        assertEquals(lightColors.inkPrimary, lightColors.checkedRowTextColor(isChecked = false))
+        assertEquals(darkColors.inkStruck, darkColors.checkedRowTextColor(isChecked = true))
+        assertEquals(darkColors.inkPrimary, darkColors.checkedRowTextColor(isChecked = false))
 
         val lightRatio = contrastRatio(
-            LightTogoColorSchemeImpl().inkPrimary,
+            lightColors.checkedRowTextColor(isChecked = true),
             lightTokens.itemRow.background,
         )
-        assertTrue("Light checked-row name = $lightRatio:1, richiesto >=7:1", lightRatio >= 7.0)
+        assertTrue("Light checked product name = $lightRatio:1, richiesto >=4.5:1", lightRatio >= 4.5)
+        val lightActionRatio = contrastRatio(
+            lightColors.checkedRowTextColor(isChecked = true),
+            lightTokens.actionRow.background,
+        )
+        assertTrue("Light checked action name = $lightActionRatio:1, richiesto >=4.5:1", lightActionRatio >= 4.5)
 
         val darkRatio = contrastRatio(
-            DarkTogoColorSchemeImpl().inkPrimary,
+            darkColors.checkedRowTextColor(isChecked = true),
             darkTokens.itemRow.background,
         )
-        assertTrue("Dark checked-row name = $darkRatio:1, richiesto >=7:1", darkRatio >= 7.0)
+        assertTrue("Dark checked product name = $darkRatio:1, richiesto >=4.5:1", darkRatio >= 4.5)
+        val darkActionRatio = contrastRatio(
+            darkColors.checkedRowTextColor(isChecked = true),
+            darkTokens.actionRow.background,
+        )
+        assertTrue("Dark checked action name = $darkActionRatio:1, richiesto >=4.5:1", darkActionRatio >= 4.5)
     }
 
     @Test

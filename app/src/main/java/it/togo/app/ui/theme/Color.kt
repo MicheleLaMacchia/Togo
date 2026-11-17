@@ -27,6 +27,7 @@ object TogoColorTokens {
     val LightInkPrimary = Color(0xFF0F172A)        // #0F172A
     val LightInkSecondary = Color(0xFF475569)      // #475569
     val LightInkMuted = Color(0xFF94A3B8)          // #94A3B8
+    val LightInkStruck = Color(0xFF1F2937)         // #1F2937
     val LightInkInverse = Color(0xFFFFFFFF)        // #FFFFFF
     val LightBorderCrisp = Color(0xFF0F172A)       // #0F172A
     val LightBorderHairline = Color(0xFFCBD5E1)    // #CBD5E1
@@ -56,6 +57,7 @@ object TogoColorTokens {
     val DarkInkPrimary = Color(0xFFF8FAFC)         // #F8FAFC
     val DarkInkSecondary = Color(0xFF94A3B8)       // #94A3B8
     val DarkInkMuted = Color(0xFF94A3B8)           // #94A3B8
+    val DarkInkStruck = Color(0xFFCBD5E1)          // #CBD5E1
     val DarkInkInverse = Color(0xFF0F172A)         // #0F172A
     val DarkBorderCrisp = Color(0xFF64748B)        // #64748B (WCAG >=3:1 su surfaceBase dark)
     val DarkAccentHighlight = Color(0xFF60A5FA)    // #60A5FA
@@ -176,6 +178,7 @@ sealed interface TogoColorScheme {
     val inkPrimary: Color
     val inkSecondary: Color
     val inkMuted: Color
+    val inkStruck: Color
     val inkInverse: Color
     val borderCrisp: Color
     val borderHairline: Color
@@ -220,6 +223,10 @@ sealed interface TogoColorScheme {
 
 typealias TogoColors = TogoColorScheme
 
+/** Colore del nome riga: ink-struck per lo stato spuntato, ink-primary altrimenti. */
+internal fun TogoColorScheme.checkedRowTextColor(isChecked: Boolean): Color =
+    if (isChecked) inkStruck else inkPrimary
+
 /** Implementazione Light. */
 data class LightTogoColorSchemeImpl(
     override val surfaceBase: Color = TogoColorTokens.LightSurfaceBase,
@@ -229,6 +236,7 @@ data class LightTogoColorSchemeImpl(
     override val inkPrimary: Color = TogoColorTokens.LightInkPrimary,
     override val inkSecondary: Color = TogoColorTokens.LightInkSecondary,
     override val inkMuted: Color = TogoColorTokens.LightInkMuted,
+    override val inkStruck: Color = TogoColorTokens.LightInkStruck,
     override val inkInverse: Color = TogoColorTokens.LightInkInverse,
     override val borderCrisp: Color = TogoColorTokens.LightBorderCrisp,
     override val borderHairline: Color = TogoColorTokens.LightBorderHairline,
@@ -258,6 +266,7 @@ data class DarkTogoColorSchemeImpl(
     override val inkPrimary: Color = TogoColorTokens.DarkInkPrimary,
     override val inkSecondary: Color = TogoColorTokens.DarkInkSecondary,
     override val inkMuted: Color = TogoColorTokens.DarkInkMuted,
+    override val inkStruck: Color = TogoColorTokens.DarkInkStruck,
     override val inkInverse: Color = TogoColorTokens.DarkInkInverse,
     override val borderCrisp: Color = TogoColorTokens.DarkBorderCrisp,
     override val borderHairline: Color = TogoColorTokens.DarkBorderHairline,

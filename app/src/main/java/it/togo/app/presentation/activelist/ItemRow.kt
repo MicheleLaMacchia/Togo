@@ -56,6 +56,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.StandardUnit
+import it.togo.app.ui.theme.checkedRowTextColor
 import it.togo.app.ui.theme.componentTokens
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
@@ -141,9 +142,7 @@ fun ItemRow(
     }
 
     val isChecked = item.isChecked
-    // Il testo barrato resta inkPrimary: inkMuted/inkSecondary non raggiungono
-    // il rapporto 7:1 richiesto su entrambi i temi.
-    val textColor = colors.inkPrimary
+    val textColor = colors.checkedRowTextColor(isChecked)
     val borderColor = if (isChecked) colors.accentSuccess else colors.borderCrisp
     val checkboxBorderColor = if (isChecked) colors.accentSuccess else colors.borderCrisp
     val checkboxBgColor = if (isChecked) colors.accentAction else Color.Transparent
