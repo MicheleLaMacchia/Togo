@@ -128,14 +128,24 @@ class ImportShoppingListUseCase(
         var actionScope = ActionScope.ALTRO
         var actionUrgency: ActionUrgency? = null
         val actionLines = parsed.actionSection?.lines.orEmpty()
-        if (parsed.actionSection != null && actionLines.none {
-                it.rawLine.startsWith("  ") && it.rawLine.trim().isNotEmpty()
+        if (parsed.actionSection != null &&
+            actionLines.none { it.rawLine.startsWith("  ") && it.rawLine.trim().isNotEmpty() } &&
+            actionLines.all {
+                it.rawLine.isBlank() ||
+                    it.rawLine.startsWith("+ ") ||
+                    (it.rawLine.startsWith("- ") && ActionUrgency.entries.any { urgency ->
+                        urgency.label.equals(
+                            it.rawLine.removePrefix("- ").trim(),
+                            ignoreCase = true,
+                        )
+                    })
             }
         ) {
             return ImportPreviewResult.Error("Il blocco [DA FARE] è vuoto.")
         }
         actionLines.forEach { line ->
             when {
+                line.rawLine.isBlank() -> Unit
                 line.rawLine.startsWith("+ ") -> {
                     actionScope = ActionScope.fromLabel(line.rawLine.removePrefix("+ "))
                     actionUrgency = null
@@ -144,11 +154,15 @@ class ImportShoppingListUseCase(
                     val label = line.rawLine.removePrefix("- ").trim()
                     actionUrgency = ActionUrgency.entries.firstOrNull {
                         it.label.equals(label, ignoreCase = true)
-                    } ?: return ImportPreviewResult.Error(invalidUrgencyMessage)
+                    } ?: return ImportPreviewResult.Error(
+                        "Riga ${line.lineNumber}: $invalidUrgencyMessage"
+                    )
                 }
                 line.rawLine.startsWith("  ") && line.rawLine.trim().isNotEmpty() -> {
                     val urgency = actionUrgency
-                        ?: return ImportPreviewResult.Error(invalidUrgencyMessage)
+                        ?: return ImportPreviewResult.Error(
+                            "Riga ${line.lineNumber}: $invalidUrgencyMessage"
+                        )
                     parsedActionCount++
                     val action = ActionItem(
                         text = line.rawLine.trim(),
@@ -165,6 +179,10 @@ class ImportShoppingListUseCase(
                         actions += action
                     }
                 }
+                else -> return ImportPreviewResult.Error(
+                    "Riga ${line.lineNumber}: formato non valido nel blocco [DA FARE]. " +
+                        "Attesi + AMBITO, - URGENZA o un'azione indentata con due spazi."
+                )
             }
         }
 
@@ -259,60 +277,62 @@ class ImportShoppingListUseCase(
         val seenActionKeys = mutableSetOf<Triple<String, ActionScope, ActionUrgency>>()
 
         try {
-            for (item in plan.items) {
-                val level3Id = resolveLevel3Id(
-                    item = item,
-                    cache = level3Ids,
-                    onCreated = { createdCategories++ },
-                )
-
-                val product = item.productId
-                    ?.let { catalogRepository.getById(it) }
-                    ?.takeIf { it.level3Id == level3Id }
-                    ?: resolveProduct(
+            shoppingListRepository.withImportTransaction {
+                for (item in plan.items) {
+                    val level3Id = resolveLevel3Id(
                         item = item,
-                        level3Id = level3Id,
-                        cache = products,
-                        onCreated = { createdProducts++ },
+                        cache = level3Ids,
+                        onCreated = { createdCategories++ },
                     )
 
-                val existingItem = shoppingListRepository.getByProductId(product.id)
-                if (existingItem != null) {
-                    shoppingListRepository.update(
-                        existingItem.copy(
-                            quantity = item.quantity,
-                            unit = item.unit,
-                            updatedAt = System.currentTimeMillis(),
+                    val product = item.productId
+                        ?.let { catalogRepository.getById(it) }
+                        ?.takeIf { it.level3Id == level3Id }
+                        ?: resolveProduct(
+                            item = item,
+                            level3Id = level3Id,
+                            cache = products,
+                            onCreated = { createdProducts++ },
                         )
-                    )
-                    updatedExisting++
-                } else {
-                    val now = System.currentTimeMillis()
-                    shoppingListRepository.insert(
-                        ShoppingItem(
-                            id = UUID.randomUUID().toString(),
-                            productId = product.id,
-                            quantity = item.quantity,
-                            unit = item.unit,
-                            brand = item.brand,
-                            variant = item.variant,
-                            isChecked = false,
-                            createdAt = now,
-                            updatedAt = now,
+
+                    val existingItem = shoppingListRepository.getByProductId(product.id)
+                    if (existingItem != null) {
+                        shoppingListRepository.update(
+                            existingItem.copy(
+                                quantity = item.quantity,
+                                unit = item.unit,
+                                updatedAt = System.currentTimeMillis(),
+                            )
                         )
-                    )
+                        updatedExisting++
+                    } else {
+                        val now = System.currentTimeMillis()
+                        shoppingListRepository.insert(
+                            ShoppingItem(
+                                id = UUID.randomUUID().toString(),
+                                productId = product.id,
+                                quantity = item.quantity,
+                                unit = item.unit,
+                                brand = item.brand,
+                                variant = item.variant,
+                                isChecked = false,
+                                createdAt = now,
+                                updatedAt = now,
+                            )
+                        )
+                    }
                 }
-            }
-            for (action in plan.actions) {
-                val key = Triple(action.normalizedText, action.scope, action.urgency)
-                if (seenActionKeys.add(key) && !shoppingListRepository.checkDuplicateAction(
-                        normalizedText = action.normalizedText,
-                        scope = action.scope,
-                        urgency = action.urgency,
-                    )
-                ) {
-                    shoppingListRepository.addAction(action)
-                    importedActions++
+                for (action in plan.actions) {
+                    val key = Triple(action.normalizedText, action.scope, action.urgency)
+                    if (seenActionKeys.add(key) && !shoppingListRepository.checkDuplicateAction(
+                            normalizedText = action.normalizedText,
+                            scope = action.scope,
+                            urgency = action.urgency,
+                        )
+                    ) {
+                        shoppingListRepository.addAction(action)
+                        importedActions++
+                    }
                 }
             }
         } catch (e: CancellationException) {

@@ -142,7 +142,7 @@ class ImportShoppingListUseCaseTest {
 
         assertTrue(result is ImportPreviewResult.Error)
         assertEquals(
-            "Urgenza non valida: usa Urgente, A tempo perso o Eccezionale.",
+            "Riga 3: Urgenza non valida: usa Urgente, A tempo perso o Eccezionale.",
             (result as ImportPreviewResult.Error).message,
         )
     }
@@ -160,7 +160,7 @@ class ImportShoppingListUseCaseTest {
 
         assertTrue(result is ImportPreviewResult.Error)
         assertEquals(
-            "Urgenza non valida: usa Urgente, A tempo perso o Eccezionale.",
+            "Riga 3: Urgenza non valida: usa Urgente, A tempo perso o Eccezionale.",
             (result as ImportPreviewResult.Error).message,
         )
     }
@@ -173,7 +173,7 @@ class ImportShoppingListUseCaseTest {
 
         assertTrue(result is ImportPreviewResult.Error)
         assertEquals(
-            "Urgenza non valida: usa Urgente, A tempo perso o Eccezionale.",
+            "Riga 8: Urgenza non valida: usa Urgente, A tempo perso o Eccezionale.",
             (result as ImportPreviewResult.Error).message,
         )
     }
@@ -193,9 +193,29 @@ class ImportShoppingListUseCaseTest {
 
         assertTrue(result is ImportPreviewResult.Error)
         assertEquals(
-            "Urgenza non valida: usa Urgente, A tempo perso o Eccezionale.",
+            "Riga 6: Urgenza non valida: usa Urgente, A tempo perso o Eccezionale.",
             (result as ImportPreviewResult.Error).message,
         )
+    }
+
+    @Test
+    fun `riga non valida da fare in import misto segnala riga e non scrive`() = runTest {
+        val catalog = FakeCatalogRepository()
+        val shopping = FakeShoppingListRepository()
+        val text = "$textWithSpaghetti\n\n[DA FARE]\n+ CASA\n- URGENTE\nazione senza indentazione"
+
+        val result = createUseCase(catalog = catalog, shopping = shopping).preview(text)
+
+        assertTrue(result is ImportPreviewResult.Error)
+        assertEquals(
+            "Riga 9: formato non valido nel blocco [DA FARE]. " +
+                "Attesi + AMBITO, - URGENZA o un'azione indentata con due spazi.",
+            (result as ImportPreviewResult.Error).message,
+        )
+        assertTrue(catalog.products.isEmpty())
+        assertEquals(listOf(level3), catalog.level3s)
+        assertTrue(shopping.items.isEmpty())
+        assertTrue(shopping.actions.isEmpty())
     }
 
     @Test

@@ -20,6 +20,9 @@ interface ShoppingListRepository {
     suspend fun getByProductId(productId: Long): ShoppingItem?
     suspend fun checkout(checkedItemIds: List<String>): Boolean
 
+    /** Esegue insieme le scritture di un import; i fake mantengono un default senza transazione. */
+    suspend fun <T> withImportTransaction(block: suspend () -> T): T = block()
+
     // --- Azioni "Cose da fare" (Epic 8) ---
 
     /**

@@ -3,6 +3,7 @@ package it.togo.app.data.repository
 import it.togo.app.data.database.dao.ActionItemDao
 import it.togo.app.data.database.dao.ShoppingItemDao
 import it.togo.app.data.database.dao.HistoryDao
+import it.togo.app.data.database.TogoDatabase
 import it.togo.app.data.database.entity.ActionItemEntity
 import it.togo.app.data.database.entity.ShoppingItemEntity
 import it.togo.app.domain.action.ActionTextNormalizer
@@ -21,11 +22,13 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.util.Locale
 import androidx.room.Transaction
+import androidx.room.withTransaction
 
 class RoomShoppingListRepository(
     private val shoppingItemDao: ShoppingItemDao,
     private val historyDao: HistoryDao,
     private val actionItemDao: ActionItemDao,
+    private val database: TogoDatabase,
 ) : ShoppingListRepository {
 
     override fun getAllItems(): Flow<List<ShoppingItem>> =
@@ -61,6 +64,9 @@ class RoomShoppingListRepository(
         withContext(Dispatchers.IO) {
             shoppingItemDao.getActiveByProductId(productId)?.toDomain()
         }
+
+    override suspend fun <T> withImportTransaction(block: suspend () -> T): T =
+        database.withTransaction { block() }
 
     override fun getAttributeSuggestions(): Flow<AttributeSuggestions> =
         combine(
