@@ -48,11 +48,21 @@ class DesignSystemTokenTest {
     @Test
     fun `dark color tokens match DESIGN_MD`() {
         assertEquals(0xFF0B0F17.toInt(), TogoColorTokens.DarkSurfaceBase.toArgb())
+        assertEquals(0xFF131B2E.toInt(), TogoColorTokens.DarkSurfaceSubtle.toArgb())
         assertEquals(0xFF131B2E.toInt(), TogoColorTokens.DarkSurfaceCard.toArgb())
+        assertEquals(0xFFFFFFFF.toInt(), TogoColorTokens.DarkSurfaceInverse.toArgb())
         assertEquals(0xFFF8FAFC.toInt(), TogoColorTokens.DarkInkPrimary.toArgb())
         assertEquals(0xFF94A3B8.toInt(), TogoColorTokens.DarkInkSecondary.toArgb())
+        assertEquals(0xFF94A3B8.toInt(), TogoColorTokens.DarkInkMuted.toArgb())
+        assertEquals(0xFF0F172A.toInt(), TogoColorTokens.DarkInkInverse.toArgb())
         assertEquals(0xFF64748B.toInt(), TogoColorTokens.DarkBorderCrisp.toArgb())
+        assertEquals(0xFF64748B.toInt(), TogoColorTokens.DarkBorderHairline.toArgb())
+        assertEquals(0xFFF8FAFC.toInt(), TogoColorTokens.DarkAccentAction.toArgb())
         assertEquals(0xFF60A5FA.toInt(), TogoColorTokens.DarkAccentHighlight.toArgb())
+        assertEquals(0xFF15803D.toInt(), TogoColorTokens.DarkAccentSuccess.toArgb())
+        assertEquals(0xFFB45309.toInt(), TogoColorTokens.DarkAccentWarning.toArgb())
+        assertEquals(0xFFF8FAFC.toInt(), TogoColorTokens.DarkBadgeBg.toArgb())
+        assertEquals(0xFF0B0F17.toInt(), TogoColorTokens.DarkBadgeInk.toArgb())
     }
 
     @Test
@@ -142,8 +152,9 @@ class DesignSystemTokenTest {
         assertEquals(0xFF64748B.toInt(), tokens.itemRow.borderColor.toArgb())
         assertEquals(0xFF64748B.toInt(), tokens.checkboxUtility.borderColor.toArgb())
         assertEquals(0xFF131B2E.toInt(), tokens.categoryHeader.background.toArgb())
-        assertEquals(0xFF0F172A.toInt(), tokens.quantityBadge.background.toArgb())
-        assertEquals(0xFFF8FAFC.toInt(), tokens.voiceFab.background.toArgb()) // accentAction = DarkInkPrimary
+        assertEquals(0xFFF8FAFC.toInt(), tokens.quantityBadge.background.toArgb())
+        assertEquals(0xFF0B0F17.toInt(), tokens.quantityBadge.textColor.toArgb())
+        assertEquals(0xFFF8FAFC.toInt(), tokens.voiceFab.background.toArgb()) // DarkAccentAction
         assertEquals(0xFF0B0F17.toInt(), tokens.bottomSheet.background.toArgb())
         assertEquals(0xFF0B0F17.toInt(), tokens.duplicateDialog.background.toArgb())
     }

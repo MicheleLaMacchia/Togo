@@ -50,11 +50,22 @@ object TogoColorTokens {
 
     // --- Dark Mode ---
     val DarkSurfaceBase = Color(0xFF0B0F17)        // #0B0F17
+    val DarkSurfaceSubtle = Color(0xFF131B2E)      // #131B2E
+    val DarkSurfaceInverse = Color(0xFFFFFFFF)     // #FFFFFF
     val DarkSurfaceCard = Color(0xFF131B2E)        // #131B2E
     val DarkInkPrimary = Color(0xFFF8FAFC)         // #F8FAFC
     val DarkInkSecondary = Color(0xFF94A3B8)       // #94A3B8
+    val DarkInkMuted = Color(0xFF94A3B8)           // #94A3B8
+    val DarkInkInverse = Color(0xFF0F172A)         // #0F172A
     val DarkBorderCrisp = Color(0xFF64748B)        // #64748B (WCAG >=3:1 su surfaceBase dark)
     val DarkAccentHighlight = Color(0xFF60A5FA)    // #60A5FA
+    val DarkBorderHairline = Color(0xFF64748B)     // #64748B
+    val DarkAccentAction = Color(0xFFF8FAFC)       // #F8FAFC
+    val DarkAccentSuccess = Color(0xFF15803D)      // #15803D
+    val DarkAccentWarning = Color(0xFFB45309)      // #B45309
+    val DarkBadgeBg = Color(0xFFF8FAFC)            // #F8FAFC
+    val DarkBadgeInk = Color(0xFF0B0F17)           // #0B0F17
+    val DarkScrim = Color(0xFF0F172A)              // #0F172A
     /** Testo di warning/errore in dark: l'ambra condivisa #B45309 non raggiunge 4,5:1. */
     val DarkWarningInk = Color(0xFFF59E0B)         // #F59E0B (WCAG >=8:1 su surfaceBase dark)
 
@@ -125,7 +136,7 @@ private val LightTogoColorScheme: ColorScheme = lightColorScheme(
 
 /** Costruisce la [ColorScheme] Material3 Dark per TOGO. */
 private val DarkTogoColorScheme: ColorScheme = darkColorScheme(
-    primary = TogoColorTokens.DarkInkPrimary,
+    primary = TogoColorTokens.DarkAccentAction,
     onPrimary = TogoColorTokens.DarkSurfaceBase,
     primaryContainer = TogoColorTokens.DarkBorderCrisp,
     onPrimaryContainer = TogoColorTokens.DarkInkPrimary,
@@ -133,14 +144,14 @@ private val DarkTogoColorScheme: ColorScheme = darkColorScheme(
     onSecondary = TogoColorTokens.DarkSurfaceBase,
     secondaryContainer = TogoColorTokens.DarkBorderCrisp,
     onSecondaryContainer = TogoColorTokens.DarkInkPrimary,
-    tertiary = TogoColorTokens.AccentSuccess,
+    tertiary = TogoColorTokens.DarkSuccessInk,
     onTertiary = TogoColorTokens.DarkSurfaceBase,
-    tertiaryContainer = TogoColorTokens.DarkBorderCrisp,
-    onTertiaryContainer = TogoColorTokens.DarkInkPrimary,
-    error = TogoColorTokens.AccentWarning,
+    tertiaryContainer = TogoColorTokens.DarkAccentSuccess,
+    onTertiaryContainer = TogoColorTokens.OnAccent,
+    error = TogoColorTokens.DarkWarningInk,
     onError = TogoColorTokens.DarkSurfaceBase,
-    errorContainer = TogoColorTokens.DarkBorderCrisp,
-    onErrorContainer = TogoColorTokens.DarkInkPrimary,
+    errorContainer = TogoColorTokens.DarkAccentWarning,
+    onErrorContainer = TogoColorTokens.OnAccent,
     background = TogoColorTokens.DarkSurfaceBase,
     onBackground = TogoColorTokens.DarkInkPrimary,
     surface = TogoColorTokens.DarkSurfaceCard,
@@ -149,7 +160,7 @@ private val DarkTogoColorScheme: ColorScheme = darkColorScheme(
     onSurfaceVariant = TogoColorTokens.DarkInkSecondary,
     outline = TogoColorTokens.DarkBorderCrisp,
     outlineVariant = TogoColorTokens.DarkBorderCrisp,
-    scrim = TogoColorTokens.LightSurfaceInverse,
+    scrim = TogoColorTokens.DarkScrim,
     // Snackbar e tooltip in dark: superficie scura con testo chiaro, non bianca.
     inverseSurface = TogoColorTokens.DarkSurfaceCard,
     inverseOnSurface = TogoColorTokens.DarkInkPrimary,
@@ -241,21 +252,21 @@ data class LightTogoColorSchemeImpl(
 /** Implementazione Dark. */
 data class DarkTogoColorSchemeImpl(
     override val surfaceBase: Color = TogoColorTokens.DarkSurfaceBase,
-    override val surfaceSubtle: Color = Color(0xFF131B2E),   // Dark surfaceSubtle (#131B2E)
+    override val surfaceSubtle: Color = TogoColorTokens.DarkSurfaceSubtle,
     override val surfaceCard: Color = TogoColorTokens.DarkSurfaceCard,
-    override val surfaceInverse: Color = TogoColorTokens.LightSurfaceBase, // #FFFFFF
+    override val surfaceInverse: Color = TogoColorTokens.DarkSurfaceInverse,
     override val inkPrimary: Color = TogoColorTokens.DarkInkPrimary,
     override val inkSecondary: Color = TogoColorTokens.DarkInkSecondary,
-    override val inkMuted: Color = Color(0xFF64748B),         // Dark inkMuted (slate 500)
-    override val inkInverse: Color = TogoColorTokens.LightInkPrimary,     // #0F172A per testo su inverse
+    override val inkMuted: Color = TogoColorTokens.DarkInkMuted,
+    override val inkInverse: Color = TogoColorTokens.DarkInkInverse,
     override val borderCrisp: Color = TogoColorTokens.DarkBorderCrisp,
-    override val borderHairline: Color = Color(0xFF64748B),   // Dark hairline (slate 500)
-    override val accentAction: Color = TogoColorTokens.DarkInkPrimary,    // #F8FAFC per action su dark
-    override val accentSuccess: Color = TogoColorTokens.AccentSuccess,
+    override val borderHairline: Color = TogoColorTokens.DarkBorderHairline,
+    override val accentAction: Color = TogoColorTokens.DarkAccentAction,
+    override val accentSuccess: Color = TogoColorTokens.DarkAccentSuccess,
     override val accentHighlight: Color = TogoColorTokens.DarkAccentHighlight,
-    override val accentWarning: Color = TogoColorTokens.AccentWarning,
-    override val badgeBg: Color = TogoColorTokens.BadgeBg,
-    override val badgeInk: Color = TogoColorTokens.BadgeInk,
+    override val accentWarning: Color = TogoColorTokens.DarkAccentWarning,
+    override val badgeBg: Color = TogoColorTokens.DarkBadgeBg,
+    override val badgeInk: Color = TogoColorTokens.DarkBadgeInk,
     override val urgencyUrgentBg: Color = TogoColorTokens.DarkUrgencyUrgentBg,
     override val urgencyUrgentInk: Color = TogoColorTokens.DarkUrgencyUrgentInk,
     override val urgencyUrgentBorder: Color = TogoColorTokens.DarkUrgencyUrgentBorder,
@@ -268,7 +279,7 @@ data class DarkTogoColorSchemeImpl(
 ) : TogoColorScheme {
     // Lo scrim dei bottom sheet deve essere scuro anche in dark mode:
     // surfaceInverse in dark è bianco e produrrebbe un velo chiaro.
-    override val scrim: Color get() = TogoColorTokens.LightSurfaceInverse
+    override val scrim: Color get() = TogoColorTokens.DarkScrim
 
     // L'ambra condivisa #B45309 su #0B0F17 dà 3,82:1: per il testo serve una variante chiara.
     override val warningInk: Color get() = TogoColorTokens.DarkWarningInk

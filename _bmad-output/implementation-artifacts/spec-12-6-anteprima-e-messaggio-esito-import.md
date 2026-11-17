@@ -2,7 +2,7 @@
 title: '12.6 Anteprima e messaggio esito import'
 type: 'feature'
 created: '2026-11-17'
-status: 'review'
+status: 'done'
 route: 'oneshot'
 review_loop_iteration: 0
 context:
@@ -26,6 +26,7 @@ context:
 
 ## Implementation Notes
 
+- Allineata a `done` il 2026-11-17 su dichiarazione esplicita dell'utente. La documentazione disponibile registra una compilazione riuscita ma un test Compose fallito prima della correzione; non risulta un rerun e questa riconciliazione non certifica i test.
 - `ImportPlan` già espone prodotti/azioni e categorie/prodotti nuovi previsti; completare il conteggio delle azioni duplicate (già presenti o ripetute nel testo) durante l'anteprima. In esecuzione restituire il numero realmente saltato, incluso un duplicato introdotto tra anteprima e conferma.
 - La schermata usa già un `AlertDialog` e uno snackbar. Rendere il contenuto dell'anteprima una regione semantica con heading annunciato, aggiungervi tutti i conteggi e creazioni previste, ed etichettare la conferma «Importa N prodotti e M azioni» con plurali corretti.
 - Il messaggio di esito riporta prodotti/azioni importati, duplicati saltati, categorie e prodotti creati (incluse quantità zero). Aggiungere copertura mirata al caso d'uso e alla presentazione dove il repository offre fixture adatte; non eseguire alcun test/build per vincolo dell'utente.

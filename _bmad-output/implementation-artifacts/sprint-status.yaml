@@ -138,24 +138,25 @@ development_status:
   11-5-sharelistusecase-non-restituisce-null-su-spesa-vuota-con-azi: done
   epic-11-retrospective: optional
 
+  # Epic 12 resta in-progress: la 12.3 è ancora review nel tracking; la 12.6 è stata allineata a done su dichiarazione utente.
   epic-12: in-progress
   # Story 12.1: allineata a done il 2026-11-16 su dichiarazione dell'utente; test scritti, build/test non eseguiti per vincolo utente.
   12-1-parser-riconosce-blocco-da-fare: done
   # Story 12.2: la spec la riporta done e l'utente la considera completata; il precedente review era una discrepanza di tracking. Build/test non eseguiti.
   12-2-import-di-sole-azioni-valido-0-prodotti: done
-  # Story 12.3: implementazione e revisione statica concluse; git diff --check eseguito; build/test non eseguiti per vincolo utente.
+  # Discrepanza 12.3: spec done, sprint status review. La spec documenta implementazione e git diff --check; build/test non eseguiti. Stato review mantenuto senza riprendere la storia.
   12-3-deduplica-azioni-per-testo-ambito-urgenza-con-accenti-signif: review
-  # La 12.3 resta review nel tracking, anche se l'utente la considera completata; vedi spec 12.4.
   # Riconciliazione 2026-11-17: 12.4 done su dichiarazione dell'utente e spec gia' done; il precedente review era una discrepanza di tracking, non evidenza tecnica. Build/test non dichiarati superati.
   12-4-validazione-ambito-e-urgenza-nell-import: done
   # Riconciliazione 2026-11-17: 12.5 done su dichiarazione esplicita dell'utente e spec gia' done; la discrepanza review era tracking, non evidenza tecnica. Build/test non dichiarati superati.
   12-5-import-tutto-o-niente-transazionale-room: done
-  # Story 12.6 in review: il test-build-android.ps1 dell'utente ha compilato app, test e APK; 1 test è fallito per query generica su due PaneTitle. Test ora cerca il valore anteprima specifico; rerun utente in attesa.
-  12-6-anteprima-e-messaggio-esito-import: review
+  # Riconciliazione 2026-11-17: 12.6 done su dichiarazione esplicita utente. La spec registra compilazione app/test/APK e un test Compose fallito prima della correzione; rerun non documentato, quindi done non attesta test superati.
+  12-6-anteprima-e-messaggio-esito-import: done
   epic-12-retrospective: optional
 
-  epic-13: backlog
-  13-1-token-dark-mode-coppie-dark: backlog
+  epic-13: in-progress
+  # Story 13.1: implementazione e revisione statica concluse; test/build non eseguiti per vincolo utente.
+  13-1-token-dark-mode-coppie-dark: review
   13-2-token-ink-struck-per-righe-spuntate: backlog
   13-3-token-focus-ring-e-ordine-traversal: backlog
   13-4-semantica-talkback-per-checkbox-chip-sezioni-e-dialog: backlog

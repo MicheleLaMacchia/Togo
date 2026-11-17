@@ -37,12 +37,37 @@ class DarkModeContrastTest {
         assertEquals(0xFF131B2E.toInt(), dark.surfaceCard.toArgb())
         assertEquals(0xFFF8FAFC.toInt(), dark.inkPrimary.toArgb())
         assertEquals(0xFF94A3B8.toInt(), dark.inkSecondary.toArgb())
+        assertEquals(0xFF94A3B8.toInt(), dark.inkMuted.toArgb())
         assertEquals(0xFF64748B.toInt(), dark.borderCrisp.toArgb())
         assertEquals(0xFF60A5FA.toInt(), dark.accentHighlight.toArgb())
         assertEquals(0xFFF59E0B.toInt(), dark.warningInk.toArgb())
         assertEquals(0xFF4ADE80.toInt(), dark.successInk.toArgb())
         assertTrue(dark.isDark)
         assertTrue(!LightTogoColorSchemeImpl().isDark)
+    }
+
+    @Test
+    fun `dark Material3 semantic colors map to readable dark token pairs`() {
+        val scheme = Material3DarkColorScheme
+
+        assertEquals(TogoColorTokens.DarkAccentAction.toArgb(), scheme.primary.toArgb())
+        assertEquals(TogoColorTokens.DarkSurfaceBase.toArgb(), scheme.onPrimary.toArgb())
+        assertEquals(TogoColorTokens.DarkSuccessInk.toArgb(), scheme.tertiary.toArgb())
+        assertEquals(TogoColorTokens.DarkWarningInk.toArgb(), scheme.error.toArgb())
+        assertEquals(TogoColorTokens.DarkAccentSuccess.toArgb(), scheme.tertiaryContainer.toArgb())
+        assertEquals(TogoColorTokens.DarkAccentWarning.toArgb(), scheme.errorContainer.toArgb())
+
+        assertTrue(contrastRatio(scheme.onPrimary, scheme.primary) >= 4.5)
+        assertTrue(contrastRatio(scheme.tertiary, scheme.surface) >= 4.5)
+        assertTrue(contrastRatio(scheme.error, scheme.surface) >= 4.5)
+        assertTrue(contrastRatio(scheme.onTertiary, scheme.tertiary) >= 4.5)
+        assertTrue(contrastRatio(scheme.onError, scheme.error) >= 4.5)
+        assertTrue(contrastRatio(scheme.onTertiaryContainer, scheme.tertiaryContainer) >= 4.5)
+        assertTrue(contrastRatio(scheme.onErrorContainer, scheme.errorContainer) >= 4.5)
+
+        val colors = DarkTogoColorSchemeImpl()
+        assertEquals(TogoColorTokens.DarkSurfaceInverse.toArgb(), colors.surfaceInverse.toArgb())
+        assertEquals(TogoColorTokens.DarkInkInverse.toArgb(), colors.inkInverse.toArgb())
     }
 
     @Test
@@ -260,6 +285,14 @@ class DarkModeContrastTest {
 
         assertTrue("Disabilitato (light) = $lightRatio:1, richiesto >=4.5:1", lightRatio >= 4.5)
         assertTrue("Disabilitato (dark) = $darkRatio:1, richiesto >=4.5:1", darkRatio >= 4.5)
+    }
+
+    @Test
+    fun `muted ink remains readable on the dark subtle surface`() {
+        val dark = DarkTogoColorSchemeImpl()
+        val ratio = contrastRatio(dark.inkMuted, dark.surfaceSubtle)
+
+        assertTrue("Dark inkMuted su surfaceSubtle = $ratio:1, richiesto >=4.5:1", ratio >= 4.5)
     }
 
     @Test
