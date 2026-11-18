@@ -27,6 +27,7 @@ import it.togo.app.domain.model.StandardUnit
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
+import it.togo.app.ui.theme.togoFocusRing
 
 /**
  * Campo quantità modificabile con tastiera + selettore delle unità compatibili.
@@ -86,7 +87,8 @@ fun QuantityUnitPicker(
                     onValueChange = onQuantityChange,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                        .togoFocusRing(),
                     singleLine = true,
                     textStyle = togoTypography().itemName,
                     colors = androidx.compose.material3.TextFieldDefaults.colors(

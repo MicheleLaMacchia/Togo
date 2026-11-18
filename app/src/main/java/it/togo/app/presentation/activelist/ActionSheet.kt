@@ -1,4 +1,5 @@
 package it.togo.app.presentation.activelist
+import it.togo.app.ui.theme.togoFocusRing
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -90,7 +91,7 @@ fun ActionSheet(
                 onValueChange = { newText: String -> textState.value = newText },
                 label = { Text("Testo") },
                 isError = errorMessage != null,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().togoFocusRing(),
             )
             if (errorMessage != null) {
                 Text(

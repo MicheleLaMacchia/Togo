@@ -1,4 +1,5 @@
 package it.togo.app.presentation.settings
+import it.togo.app.ui.theme.togoFocusRing
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -271,7 +272,7 @@ private fun EditProductDialog(
                     onValueChange = { name = it },
                     label = { Text("Nome", style = typography.caption) },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().togoFocusRing(),
                 )
 
                 Text(
@@ -287,7 +288,7 @@ private fun EditProductDialog(
                     onValueChange = { query = it },
                     label = { Text("Cerca categoria", style = typography.caption) },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().togoFocusRing(),
                 )
 
                 LazyColumn(

@@ -1,4 +1,5 @@
 package it.togo.app.presentation.settings
+import it.togo.app.ui.theme.togoFocusRing
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -260,7 +261,7 @@ private fun EditAttributeDialog(
                     )
                 },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().togoFocusRing(),
             )
         },
         confirmButton = {

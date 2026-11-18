@@ -1,4 +1,5 @@
 package it.togo.app.presentation.additem
+import it.togo.app.ui.theme.togoFocusRing
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -93,7 +94,7 @@ fun NewProductForm(
             // non marcare il nome come invalido se è già stato compilato.
             isError = error != null && name.isBlank(),
             enabled = !busy,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().togoFocusRing(),
         )
 
         TaxonomyDropdown(
@@ -153,7 +154,7 @@ fun NewProductForm(
                         singleLine = true,
                         enabled = !busy,
                         isError = level3ProposalError != null && newLevel3Name.isBlank(),
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().togoFocusRing(),
                     )
 
                     if (level3ProposalError != null) {
@@ -265,7 +266,7 @@ private fun TaxonomyDropdown(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = spacing.touchTargetMin)
-                .menuAnchor(),
+                .menuAnchor().togoFocusRing(),
         )
 
         ExposedDropdownMenu(

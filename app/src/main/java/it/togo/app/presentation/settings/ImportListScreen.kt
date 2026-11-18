@@ -1,4 +1,5 @@
 package it.togo.app.presentation.settings
+import it.togo.app.ui.theme.togoFocusRing
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -147,7 +148,7 @@ fun ImportListScreen(
                 onValueChange = viewModel::onTextChange,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 220.dp),
+                    .heightIn(min = 220.dp).togoFocusRing(),
                 label = { Text("Testo della lista") },
                 placeholder = { Text("Incolla qui il testo esportato...") },
                 minLines = 8,

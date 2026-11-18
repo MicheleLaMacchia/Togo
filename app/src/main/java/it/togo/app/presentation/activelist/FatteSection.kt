@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.focusGroup
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.semantics.Role
@@ -34,6 +35,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.unit.dp
 import it.togo.app.domain.model.ActionItem
 import it.togo.app.ui.theme.componentTokens
@@ -99,6 +101,8 @@ fun FatteSection(
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .focusGroup()
+            .semantics { isTraversalGroup = true }
             .testTag("fatto_section")
             .animateContentSize(
                 animationSpec = spring(dampingRatio = 0.9f, stiffness = 200.0f)

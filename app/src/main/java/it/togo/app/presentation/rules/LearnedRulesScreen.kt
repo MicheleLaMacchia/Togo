@@ -1,4 +1,5 @@
 package it.togo.app.presentation.rules
+import it.togo.app.ui.theme.togoFocusRing
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -137,7 +138,7 @@ fun LearnedRulesScreen(
                 label = { Text("Cerca per espressione, prodotto o categoria", style = typography.caption) },
                 leadingIcon = { Icon(imageVector = Icons.Filled.Search, contentDescription = null) },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().togoFocusRing(),
                 shape = RoundedCornerShape(8.dp)
             )
 

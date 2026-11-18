@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -84,6 +85,9 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.isTraversalGroup
+import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
@@ -592,6 +596,12 @@ fun ActiveListScreen(
                             .padding(16.dp),
                     ) {
                         Column(
+                            modifier = Modifier
+                                .focusGroup()
+                                .semantics {
+                                    isTraversalGroup = true
+                                    traversalIndex = 2f
+                                },
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                             horizontalAlignment = Alignment.End,
                         ) {
@@ -620,6 +630,7 @@ fun ActiveListScreen(
                                 containerColor = colors.accentAction,
                                 contentColor = colors.inkInverse,
                                 shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                                modifier = Modifier.focusGroup(),
                             ) {
                                 Icon(
                                     imageVector = Icons.Filled.Add,
@@ -640,6 +651,12 @@ fun ActiveListScreen(
                     containerColor = colors.accentAction,
                     contentColor = colors.inkInverse,
                     shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                    modifier = Modifier
+                        .focusGroup()
+                        .semantics {
+                            isTraversalGroup = true
+                            traversalIndex = 2f
+                        },
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Add,
@@ -815,6 +832,11 @@ internal fun ActiveListHeader(
             .windowInsetsPadding(WindowInsets.statusBars)
             .heightIn(min = tokens.appBar.height)
             .testTag("active_list_header")
+            .focusGroup()
+            .semantics {
+                isTraversalGroup = true
+                traversalIndex = 0f
+            }
             .then(swipeModifier)
             .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -848,9 +870,12 @@ internal fun ActiveListHeader(
                 modifier = if (page == ActiveListPage.SHOPPING) {
                     Modifier
                         .alpha(0.38f)
-                        .semantics { disabled() }
+                        .semantics {
+                            disabled()
+                            stateDescription = "Non disponibile"
+                        }
                 } else {
-                    Modifier
+                    Modifier.semantics { stateDescription = "Disponibile" }
                 },
             ) {
                 Icon(
@@ -875,9 +900,12 @@ internal fun ActiveListHeader(
                 modifier = if (page == ActiveListPage.ACTIONS) {
                     Modifier
                         .alpha(0.38f)
-                        .semantics { disabled() }
+                        .semantics {
+                            disabled()
+                            stateDescription = "Non disponibile"
+                        }
                 } else {
-                    Modifier
+                    Modifier.semantics { stateDescription = "Disponibile" }
                 },
             ) {
                 Icon(
@@ -921,6 +949,11 @@ internal fun ShoppingPage(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .focusGroup()
+            .semantics {
+                isTraversalGroup = true
+                traversalIndex = 1f
+            }
             .testTag("shopping_page")
             .then(pagerSwipeModifier),
         verticalArrangement = Arrangement.spacedBy(spacing.space2),
@@ -944,7 +977,14 @@ internal fun ShoppingPage(
             LazyColumn(
                 state = listState,
                 modifier = Modifier
-                    .fillMaxSize(),
+                    .fillMaxSize()
+                    // Un solo gruppo di traversal: contenuto attivo, sezione Presi
+                    // e relativi controlli restano prima del FAB.
+                    .focusGroup()
+                    .semantics {
+                        isTraversalGroup = true
+                        traversalIndex = 0f
+                    },
                 verticalArrangement = Arrangement.spacedBy(spacing.space2),
             ) {
                 items(uiState.activeGroups, key = { group -> group.level1.id.toString() }) { group ->
@@ -1007,6 +1047,11 @@ internal fun ActionsPage(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .focusGroup()
+            .semantics {
+                isTraversalGroup = true
+                traversalIndex = 1f
+            }
             .testTag("actions_page")
             .then(pagerSwipeModifier),
         contentAlignment = Alignment.Center,
@@ -1024,6 +1069,11 @@ internal fun ActionsPage(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(vertical = spacing.space2)
+                    .focusGroup()
+                    .semantics {
+                        isTraversalGroup = true
+                        traversalIndex = 0f
+                    }
                     .testTag("actions_list"),
                 verticalArrangement = Arrangement.spacedBy(spacing.space2),
             ) {

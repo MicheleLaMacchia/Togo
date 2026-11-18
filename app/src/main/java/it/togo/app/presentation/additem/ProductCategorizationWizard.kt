@@ -1,4 +1,5 @@
 package it.togo.app.presentation.additem
+import it.togo.app.ui.theme.togoFocusRing
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
@@ -262,7 +263,7 @@ private fun StepContent(
                     onValueChange = { onNewLevel3NameChange?.invoke(it) },
                     label = { Text("Nome nuova categoria", style = typography.caption) },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().togoFocusRing(),
                 )
 
                 if (newLevel3Name.isNotBlank()) {
@@ -361,7 +362,7 @@ private fun EnterDetailsStep(
                 { Text(error, color = colors.warningInk) }
             },
             singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().togoFocusRing(),
         )
 
         // Quantità + Unità
@@ -384,7 +385,7 @@ private fun EnterDetailsStep(
                 },
                 label = { Text("Quantità *", style = typography.caption) },
                 singleLine = true,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).togoFocusRing(),
             )
 
             // Unità: dropdown interattivo
@@ -402,7 +403,7 @@ private fun EnterDetailsStep(
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = unitExpanded) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor(),
+                            .menuAnchor().togoFocusRing(),
                     )
 
                     ExposedDropdownMenu(
@@ -441,7 +442,7 @@ private fun EnterDetailsStep(
                         label = { Text("Marca", style = typography.caption) },
                         placeholder = { Text("Seleziona o digita…", style = typography.itemMeta) },
                         singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().togoFocusRing(),
                     )
                 }
 
@@ -452,7 +453,7 @@ private fun EnterDetailsStep(
                         label = { Text("Variante", style = typography.caption) },
                         placeholder = { Text("Es. integrale, biologico…", style = typography.itemMeta) },
                         singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().togoFocusRing(),
                     )
                 }
 
@@ -471,7 +472,7 @@ private fun EnterDetailsStep(
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = conditionExpanded) },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .menuAnchor(),
+                                .menuAnchor().togoFocusRing(),
                         )
 
                         ExposedDropdownMenu(

@@ -41,6 +41,7 @@ import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoComponentTokens
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypographyTokens
+import it.togo.app.ui.theme.togoFocusRing
 import kotlinx.coroutines.delay
 
 /**
@@ -108,7 +109,8 @@ fun SearchScreen(onEvent: (SearchUiEvent) -> Unit) {
                         horizontal = spacing[3],
                         vertical = spacing[2],
                     )
-                    .focusRequester(textFieldFocusRequester),
+                    .focusRequester(textFieldFocusRequester)
+                    .togoFocusRing(),
                 placeholder = {
                     Text(
                         "Cerca prodotto...",

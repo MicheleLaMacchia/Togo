@@ -1,4 +1,5 @@
 package it.togo.app.presentation.additem
+import it.togo.app.ui.theme.togoFocusRing
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -140,7 +141,7 @@ private fun SuggestionTextField(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .menuAnchor(),
+                .menuAnchor().togoFocusRing(),
         )
 
         if (hasSuggestions) {
@@ -186,7 +187,7 @@ private fun ConditionDropdown(
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier = Modifier
                 .fillMaxWidth()
-                .menuAnchor(),
+                .menuAnchor().togoFocusRing(),
         )
 
         ExposedDropdownMenu(

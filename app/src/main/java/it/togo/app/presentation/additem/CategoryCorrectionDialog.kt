@@ -1,4 +1,5 @@
 package it.togo.app.presentation.additem
+import it.togo.app.ui.theme.togoFocusRing
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -117,7 +118,7 @@ fun CategoryCorrectionDialog(
                     label = { Text("Espressione da ricordare", style = typography.caption) },
                     singleLine = true,
                     enabled = !isSaving,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().togoFocusRing(),
                 )
                 Text(
                     text = "La regola userà questa espressione per applicare la categoria scelta.",

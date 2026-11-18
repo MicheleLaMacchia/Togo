@@ -1,4 +1,5 @@
 package it.togo.app.presentation.voice
+import it.togo.app.ui.theme.togoFocusRing
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -163,7 +164,7 @@ private fun ReadyContent(
                 onValueChange = { editText = it },
                 label = { Text("Modifica comando", style = typography.caption) },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().togoFocusRing(),
             )
 
             // Pulsante "Fine modifica" → re-parsing con testo corrente

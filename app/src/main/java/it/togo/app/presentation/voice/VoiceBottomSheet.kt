@@ -1,4 +1,5 @@
 package it.togo.app.presentation.voice
+import it.togo.app.ui.theme.togoFocusRing
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.RepeatMode
@@ -263,7 +264,7 @@ private fun ReadyContent(
                 onValueChange = onEdit,
                 label = { Text("Modifica testo", style = typography.caption) },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().togoFocusRing(),
             )
         } else {
             Surface(

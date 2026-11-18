@@ -4,7 +4,11 @@ import android.Manifest
 import android.content.Intent
 import android.provider.Settings
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasClickAction
@@ -24,6 +28,10 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.pressKey
+import androidx.compose.ui.input.key.Key
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
@@ -76,6 +84,7 @@ import org.robolectric.RobolectricTestRunner
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
+@OptIn(ExperimentalTestApi::class)
 class ActiveListAccessibilityTest {
 
     @get:Rule
@@ -713,6 +722,50 @@ class ActiveListAccessibilityTest {
         composeTestRule
             .onAllNodesWithText("Spesa conclusa (1 voci)")
             .assertCountEquals(1)
+    }
+
+    @Test
+    fun `production active list advances through Tab order and skips collapsed items`() {
+        val viewModel = ActiveListViewModel(
+            shoppingRepository = FakeShoppingListRepository(items = listOf(checkedItem)),
+            catalogRepository = FakeCatalogRepository(),
+        )
+        val voiceViewModel = VoiceBottomSheetViewModel(FakeVoiceGateway())
+
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                ActiveListScreen(
+                    viewModel = viewModel,
+                    voiceViewModel = voiceViewModel,
+                    voiceConfirmationViewModel = voiceConfirmationViewModel,
+                    voiceGateway = AndroidVoiceRecognitionGateway(),
+                    onEvent = viewModel::onEvent,
+                )
+            }
+        }
+
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            composeTestRule.onAllNodesWithText("Concludi spesa").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeTestRule
+            .onNodeWithContentDescription("Presi, 1 voce. Doppio tocco per collassare.")
+            .performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Concludi spesa").assertDoesNotExist()
+        composeTestRule.onNodeWithContentDescription("Latte").assertDoesNotExist()
+
+        val history = composeTestRule.onNodeWithContentDescription("Storico")
+        history.performSemanticsAction(SemanticsActions.RequestFocus)
+        history.assertIsFocused()
+        history.performKeyInput { pressKey(Key.Tab) }
+        composeTestRule.onNodeWithContentDescription("Torna a Spesa").assertIsFocused()
+        history.assertIsNotFocused()
+        composeTestRule.onNodeWithContentDescription("Torna a Spesa")
+            .performKeyInput { pressKey(Key.Tab) }
+        composeTestRule.onNodeWithContentDescription("Vai a Da fare").assertIsFocused()
+        composeTestRule.onNodeWithContentDescription("Vai a Da fare")
+            .performKeyInput { pressKey(Key.DirectionRight) }
+        composeTestRule.onNodeWithContentDescription("Vai a Da fare").assertIsNotFocused()
     }
 
     @Test

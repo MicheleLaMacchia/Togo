@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import it.togo.app.core.TogoLog
 import it.togo.app.domain.model.HistoricalItem
 import it.togo.app.ui.theme.togoColors
+import it.togo.app.ui.theme.togoFocusRing
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
 import java.text.SimpleDateFormat
@@ -113,7 +114,7 @@ fun HistoryScreen(
                     )
                 },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().togoFocusRing(),
                 shape = RoundedCornerShape(8.dp)
             )
 

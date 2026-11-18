@@ -3,6 +3,7 @@ package it.togo.app.ui.theme
 import android.content.res.Configuration
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
@@ -41,6 +42,7 @@ fun TogoTheme(
     val togoComponentTokens = remember(togoColorScheme, togoShapes) {
         togoComponentTokensFrom(togoColorScheme, togoShapes)
     }
+    val focusRingIndication = rememberTogoFocusRingIndication(togoColorScheme, darkTheme)
 
     // Typography Material3 derivata dai token TOGO
     val materialTypography = Typography(
@@ -71,8 +73,12 @@ fun TogoTheme(
             colorScheme = materialColorScheme,
             typography = materialTypography,
             shapes = materialShapes,
-            content = content,
-        )
+        ) {
+            CompositionLocalProvider(
+                LocalIndication provides focusRingIndication,
+                content = content,
+            )
+        }
     }
 }
 

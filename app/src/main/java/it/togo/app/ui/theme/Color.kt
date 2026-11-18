@@ -34,6 +34,7 @@ object TogoColorTokens {
     val LightAccentAction = Color(0xFF0F172A)      // #0F172A
     val LightAccentSuccess = Color(0xFF15803D)     // #15803D
     val LightAccentHighlight = Color(0xFF2563EB)   // #2563EB
+    val LightFocusRing = Color(0xFF2563EB)          // #2563EB
     val LightAccentWarning = Color(0xFFB45309)     // #B45309
     val LightBadgeBg = Color(0xFF0F172A)           // #0F172A
     val LightBadgeInk = Color(0xFFFFFFFF)          // #FFFFFF
@@ -61,6 +62,7 @@ object TogoColorTokens {
     val DarkInkInverse = Color(0xFF0F172A)         // #0F172A
     val DarkBorderCrisp = Color(0xFF64748B)        // #64748B (WCAG >=3:1 su surfaceBase dark)
     val DarkAccentHighlight = Color(0xFF60A5FA)    // #60A5FA
+    val DarkFocusRing = Color(0xFF60A5FA)          // #60A5FA
     val DarkBorderHairline = Color(0xFF64748B)     // #64748B
     val DarkAccentAction = Color(0xFFF8FAFC)       // #F8FAFC
     val DarkAccentSuccess = Color(0xFF15803D)      // #15803D
@@ -185,6 +187,7 @@ sealed interface TogoColorScheme {
     val accentAction: Color
     val accentSuccess: Color
     val accentHighlight: Color
+    val focusRing: Color
     val accentWarning: Color
     val badgeBg: Color
     val badgeInk: Color
@@ -243,6 +246,7 @@ data class LightTogoColorSchemeImpl(
     override val accentAction: Color = TogoColorTokens.LightAccentAction,
     override val accentSuccess: Color = TogoColorTokens.AccentSuccess,
     override val accentHighlight: Color = TogoColorTokens.LightAccentHighlight,
+    override val focusRing: Color = TogoColorTokens.LightFocusRing,
     override val accentWarning: Color = TogoColorTokens.AccentWarning,
     override val badgeBg: Color = TogoColorTokens.BadgeBg,
     override val badgeInk: Color = TogoColorTokens.BadgeInk,
@@ -273,6 +277,7 @@ data class DarkTogoColorSchemeImpl(
     override val accentAction: Color = TogoColorTokens.DarkAccentAction,
     override val accentSuccess: Color = TogoColorTokens.DarkAccentSuccess,
     override val accentHighlight: Color = TogoColorTokens.DarkAccentHighlight,
+    override val focusRing: Color = TogoColorTokens.DarkFocusRing,
     override val accentWarning: Color = TogoColorTokens.DarkAccentWarning,
     override val badgeBg: Color = TogoColorTokens.DarkBadgeBg,
     override val badgeInk: Color = TogoColorTokens.DarkBadgeInk,

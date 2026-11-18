@@ -68,6 +68,28 @@ class DesignSystemTokenTest {
     }
 
     @Test
+    fun `focus ring tokens meet three to one on light and dark adjacent surfaces`() {
+        assertEquals(0xFF2563EB.toInt(), TogoColorTokens.LightFocusRing.toArgb())
+        assertEquals(0xFF60A5FA.toInt(), TogoColorTokens.DarkFocusRing.toArgb())
+
+        val light = LightTogoColorSchemeImpl()
+        val dark = DarkTogoColorSchemeImpl()
+        listOf(light.surfaceBase, light.surfaceSubtle, light.surfaceCard).forEach { surface ->
+            val ratio = contrastRatio(light.focusRing, surface)
+            assertTrue("Light focus ring on $surface = $ratio:1, richiesto >=3:1", ratio >= 3.0)
+        }
+        listOf(dark.surfaceBase, dark.surfaceSubtle, dark.surfaceCard).forEach { surface ->
+            val ratio = contrastRatio(dark.focusRing, surface)
+            assertTrue("Dark focus ring on $surface = $ratio:1, richiesto >=3:1", ratio >= 3.0)
+        }
+
+        // Il bordo esterno distingue il ring dalle superfici inverse dei FAB:
+        // bianco sul primary scuro in chiaro, surface scura sul FAB chiaro in dark.
+        assertTrue(contrastRatio(TogoColorTokens.LightInkInverse, TogoColorTokens.LightAccentAction) >= 3.0)
+        assertTrue(contrastRatio(TogoColorTokens.DarkSurfaceBase, TogoColorTokens.DarkAccentAction) >= 3.0)
+    }
+
+    @Test
     fun `shared tokens are identical`() {
         assertEquals(TogoColorTokens.LightAccentSuccess, TogoColorTokens.AccentSuccess)
         assertEquals(TogoColorTokens.LightAccentWarning, TogoColorTokens.AccentWarning)

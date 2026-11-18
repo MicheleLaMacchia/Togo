@@ -4,7 +4,9 @@ import android.content.Intent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.focusGroup
 import androidx.compose.material3.Button
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -12,6 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.isTraversalGroup
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHasClickAction
@@ -731,10 +736,16 @@ class ActiveListPagerContractTest {
         val previousArrow = composeTestRule.onNodeWithContentDescription("Torna a Spesa")
         previousArrow.assertExists()
         previousArrow.assertIsNotEnabled()
+        previousArrow.assert(
+            SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Non disponibile"),
+        )
         previousArrow.assertHasClickAction()
         previousArrow.assert(isFocusable())
-        composeTestRule.onNodeWithContentDescription("Vai a Da fare")
-            .assertHasClickAction()
+        val nextArrow = composeTestRule.onNodeWithContentDescription("Vai a Da fare")
+        nextArrow.assertHasClickAction()
+        nextArrow.assert(
+            SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Disponibile"),
+        )
         composeTestRule.onNodeWithText("Spesa (2)").assert(
             SemanticsMatcher.expectValue(
                 SemanticsProperties.LiveRegion,
@@ -759,12 +770,19 @@ class ActiveListPagerContractTest {
                 LiveRegionMode.Polite,
             ),
         )
-        composeTestRule.onNodeWithContentDescription("Torna a Spesa").assertHasClickAction()
-        val nextArrow = composeTestRule.onNodeWithContentDescription("Vai a Da fare")
-        nextArrow.assertIsNotEnabled()
-        nextArrow.assertHasClickAction()
-        nextArrow.assert(isFocusable())
-        nextArrow.performClick()
+        val availablePreviousArrow = composeTestRule.onNodeWithContentDescription("Torna a Spesa")
+        availablePreviousArrow.assertHasClickAction()
+        availablePreviousArrow.assert(
+            SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Disponibile"),
+        )
+        val unavailableNextArrow = composeTestRule.onNodeWithContentDescription("Vai a Da fare")
+        unavailableNextArrow.assertIsNotEnabled()
+        unavailableNextArrow.assertHasClickAction()
+        unavailableNextArrow.assert(isFocusable())
+        unavailableNextArrow.assert(
+            SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Non disponibile"),
+        )
+        unavailableNextArrow.performClick()
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Da fare (3)").assertIsDisplayed()
         assertEquals(1, pageSelectionEvents)

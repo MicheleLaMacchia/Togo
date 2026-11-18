@@ -6,6 +6,8 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,6 +37,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.unit.dp
 import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.model.ShoppingItem
@@ -142,6 +145,7 @@ private fun CategoryCountBadge(
  * visibile anche quando la sezione è collassata.
  */
 @Composable
+@OptIn(ExperimentalFoundationApi::class)
 fun CategorySection(
     group: CategoryGroup,
     productNames: Map<Long, String> = emptyMap(),
@@ -157,7 +161,10 @@ fun CategorySection(
     var expanded by rememberSaveable(group.level1.id) { mutableStateOf(true) }
 
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .focusGroup()
+            .semantics { isTraversalGroup = true },
         verticalArrangement = Arrangement.spacedBy(spacing.space1),
     ) {
         Level1Header(

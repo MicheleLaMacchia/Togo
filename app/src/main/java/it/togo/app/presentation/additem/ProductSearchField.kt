@@ -44,6 +44,7 @@ import it.togo.app.ui.theme.componentTokens
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
+import it.togo.app.ui.theme.togoFocusRing
 import java.util.Locale
 
 /**
@@ -114,7 +115,8 @@ fun ProductSearchField(
                         vertical = spacing.space2,
                     )
                     .focusRequester(textFieldFocusRequester)
-                    .onFocusChanged { isFocused = it.isFocused },
+                    .onFocusChanged { isFocused = it.isFocused }
+                    .togoFocusRing(),
                 placeholder = {
                     Text(
                         "Cerca prodotto...",
