@@ -48,6 +48,7 @@ import it.togo.app.ui.theme.componentTokens
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
+import it.togo.app.presentation.components.dialogAccessibilityModifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
@@ -159,6 +160,7 @@ fun AddItemBottomSheet(
     ) {
             Column(
                 modifier = Modifier
+                    .then(dialogAccessibilityModifier("Inserimento prodotto"))
                     .fillMaxSize()
                     .background(colors.surfaceBase)
                     // Il Dialog è full-screen: applichiamo esplicitamente gli

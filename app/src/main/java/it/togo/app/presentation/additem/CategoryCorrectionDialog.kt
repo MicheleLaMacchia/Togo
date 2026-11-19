@@ -27,6 +27,7 @@ import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
+import it.togo.app.presentation.components.dialogAccessibilityModifier
 
 /**
  * Dialog per correggere la categoria canonica di un prodotto.
@@ -75,6 +76,7 @@ fun CategoryCorrectionDialog(
     }
 
     AlertDialog(
+        modifier = dialogAccessibilityModifier("Correggi categoria"),
         onDismissRequest = { if (!isSaving) onDismiss() },
         title = { Text("Correggi categoria", style = typography.itemTitle) },
         text = {
@@ -212,6 +214,7 @@ fun RememberCategoryDialog(
     val typography = togoTypography()
 
     AlertDialog(
+        modifier = dialogAccessibilityModifier("Ricorda questa scelta?"),
         onDismissRequest = { if (!isSaving) onDismiss() },
         title = { Text("Ricorda questa scelta?", style = typography.itemTitle) },
         text = {

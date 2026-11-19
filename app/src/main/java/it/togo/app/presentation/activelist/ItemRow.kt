@@ -50,6 +50,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -388,7 +389,10 @@ internal fun CheckboxUtility(
                 role = Role.Checkbox,
                 onValueChange = onCheckedChange,
             )
-            .semantics(mergeDescendants = true) { this.contentDescription = contentDescription },
+            .semantics(mergeDescendants = true) {
+                this.contentDescription = contentDescription
+                stateDescription = if (checked) "selezionata" else "non selezionata"
+            },
         contentAlignment = Alignment.Center,
     ) {
         Box(

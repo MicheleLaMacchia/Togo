@@ -6,19 +6,29 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import it.togo.app.domain.model.ActionItem
 import it.togo.app.domain.model.ActionScope
@@ -26,6 +36,7 @@ import it.togo.app.domain.model.ActionUrgency
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
+import it.togo.app.presentation.components.dialogAccessibilityModifier
 
 /**
  * Foglio azione "Aggiungi/Modifica azione" per la pagina "Da fare" (Story 8.5).
@@ -60,18 +71,35 @@ fun ActionSheet(
 
     // Stato locale del foglio: si resetta a ogni apertura, precompilato in
     // modalità modifica. Default: ambito Altro, urgenza A tempo perso (CAP-7/CAP-8).
-    val textState = remember(editingAction?.id) { mutableStateOf(editingAction?.text ?: "") }
-    val scopeState = remember(editingAction?.id) { mutableStateOf(editingAction?.scope ?: ActionScope.ALTRO) }
-    val urgencyState = remember(editingAction?.id) { mutableStateOf(editingAction?.urgency ?: ActionUrgency.A_TEMPO_PERSO) }
-
+    var scope by remember(editingAction?.id) {
+        mutableStateOf(editingAction?.scope ?: ActionScope.ALTRO)
+    }
+    var urgency by remember(editingAction?.id) {
+        mutableStateOf(editingAction?.urgency ?: ActionUrgency.A_TEMPO_PERSO)
+    }
+    // Leggere qui lo stato fa invalidare il composable che ospita il foglio;
+    // la selezione aggiornata viene così ripassata al contenuto della sheet.
+    val selectedScope = scope
+    val selectedUrgency = urgency
     val primaryLabel = if (isEditMode) "Modifica cosa da fare" else "Aggiungi"
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         containerColor = colors.surfaceBase,
     ) {
+        // Questi stati appartengono alla composizione del contenuto modale,
+        // dove vengono letti e modificati dai controlli del foglio.
+        val textState = remember(editingAction?.id) {
+            mutableStateOf(editingAction?.text ?: "")
+        }
         Column(
             modifier = Modifier
+                .then(
+                    dialogAccessibilityModifier(
+                        if (isEditMode) "Modifica cosa da fare" else "Nuova azione"
+                    )
+                )
+                .testTag("action_sheet_pane")
                 .padding(horizontal = 16.dp, vertical = 12.dp)
                 .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -109,15 +137,30 @@ fun ActionSheet(
                 color = colors.inkSecondary,
             )
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics { contentDescription = "Selezione urgenza" }
+                    .selectableGroup(),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 ActionUrgency.ordered.forEach { u ->
-                    val isSelected = urgencyState.value == u
-                    TextButton(
-                        onClick = { urgencyState.value = u },
-                        modifier = Modifier.fillMaxWidth(),
+                    val isSelected = selectedUrgency == u
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 48.dp)
+                            .selectable(
+                                selected = isSelected,
+                                role = Role.RadioButton,
+                                onClick = { urgency = u },
+                            ),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
                     ) {
+                        RadioButton(
+                            selected = isSelected,
+                            onClick = null,
+                        )
                         Text(
                             text = u.label,
                             style = typography.itemMeta,
@@ -134,15 +177,30 @@ fun ActionSheet(
                 color = colors.inkSecondary,
             )
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics { contentDescription = "Selezione ambito" }
+                    .selectableGroup(),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 ActionScope.ordered.forEach { s ->
-                    val isSelected = scopeState.value == s
-                    TextButton(
-                        onClick = { scopeState.value = s },
-                        modifier = Modifier.fillMaxWidth(),
+                    val isSelected = selectedScope == s
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 48.dp)
+                            .selectable(
+                                selected = isSelected,
+                                role = Role.RadioButton,
+                                onClick = { scope = s },
+                            ),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
                     ) {
+                        RadioButton(
+                            selected = isSelected,
+                            onClick = null,
+                        )
                         Text(
                             text = s.label,
                             style = typography.itemMeta,
@@ -170,7 +228,7 @@ fun ActionSheet(
                 Button(
                     onClick = {
                         if (textState.value.isNotBlank()) {
-                            onConfirm(textState.value, scopeState.value, urgencyState.value)
+                            onConfirm(textState.value, scope, urgency)
                         }
                     },
                     enabled = textState.value.isNotBlank(),

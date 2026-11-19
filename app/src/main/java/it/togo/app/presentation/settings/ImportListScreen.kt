@@ -43,6 +43,7 @@ import it.togo.app.domain.usecase.ImportPlan
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
+import it.togo.app.presentation.components.dialogAccessibilityModifier
 
 private const val FORMAT_EXAMPLE = """[FRUTTA E VERDURA]
 + FRUTTA FRESCA
@@ -76,6 +77,7 @@ fun ImportListScreen(
 
     uiState.errorMessage?.let { message ->
         AlertDialog(
+            modifier = dialogAccessibilityModifier("Impossibile importare"),
             onDismissRequest = viewModel::dismissError,
             title = { Text("Impossibile importare", style = typography.itemTitle) },
             text = { Text(message, style = typography.itemMeta) },
@@ -205,6 +207,7 @@ internal fun ImportPreviewDialog(
     val spacing = togoSpacing()
 
     AlertDialog(
+        modifier = dialogAccessibilityModifier("Importa lista"),
         onDismissRequest = { if (!isImporting) onDismiss() },
         title = {
             Text(

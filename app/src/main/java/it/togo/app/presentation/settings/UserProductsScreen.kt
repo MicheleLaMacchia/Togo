@@ -44,6 +44,7 @@ import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
+import it.togo.app.presentation.components.dialogAccessibilityModifier
 
 /**
  * Sezione "I miei prodotti": elenca SOLO i prodotti creati dall'utente
@@ -96,6 +97,7 @@ fun UserProductsScreen(
 
     deletingProduct?.let { product ->
         AlertDialog(
+            modifier = dialogAccessibilityModifier("Elimina prodotto"),
             onDismissRequest = { deletingProduct = null },
             title = { Text("Elimina prodotto", style = typography.itemTitle) },
             text = {
@@ -263,6 +265,7 @@ private fun EditProductDialog(
         ?: categoryPath(product)
 
     AlertDialog(
+        modifier = dialogAccessibilityModifier("Modifica prodotto"),
         onDismissRequest = onDismiss,
         title = { Text("Modifica prodotto", style = typography.itemTitle) },
         text = {

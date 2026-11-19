@@ -43,6 +43,7 @@ import it.togo.app.domain.model.UserAttributeType
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
+import it.togo.app.presentation.components.dialogAccessibilityModifier
 
 /**
  * Sezione "Le mie marche" / "Le mie varianti": elenca SOLO i valori aggiunti
@@ -111,6 +112,7 @@ fun UserAttributesScreen(
 
     deletingValue?.let { attribute ->
         AlertDialog(
+            modifier = dialogAccessibilityModifier("Elimina valore"),
             onDismissRequest = { deletingValue = null },
             title = { Text("Elimina valore", style = typography.itemTitle) },
             text = {
@@ -248,6 +250,7 @@ private fun EditAttributeDialog(
     var value by remember(attribute.id) { mutableStateOf(attribute.value) }
 
     AlertDialog(
+        modifier = dialogAccessibilityModifier("Modifica valore"),
         onDismissRequest = onDismiss,
         title = { Text("Modifica valore", style = typography.itemTitle) },
         text = {

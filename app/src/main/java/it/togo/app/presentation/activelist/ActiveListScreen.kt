@@ -106,6 +106,7 @@ import it.togo.app.presentation.voice.VoiceConfirmationSheet
 import it.togo.app.presentation.voice.VoiceConfirmationViewModel
 import it.togo.app.ui.theme.componentTokens
 import it.togo.app.ui.theme.togoColors
+import it.togo.app.presentation.components.dialogAccessibilityModifier
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
 import kotlinx.coroutines.launch
@@ -165,6 +166,7 @@ internal fun ShareSelectionDialog(
     }
 
     AlertDialog(
+        modifier = dialogAccessibilityModifier("Condividi"),
         onDismissRequest = onDismiss,
         title = { Text("Condividi") },
         text = {

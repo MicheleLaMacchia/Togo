@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Intent
 import android.provider.Settings
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotFocused
@@ -158,6 +159,15 @@ class ActiveListAccessibilityTest {
             .assertExists()
             .assertIsOn()
             .assertHasClickAction()
+            .assert(
+                SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Checkbox)
+            )
+            .assert(
+                SemanticsMatcher.expectValue(
+                    SemanticsProperties.StateDescription,
+                    "selezionata",
+                )
+            )
     }
 
     @Test
@@ -183,6 +193,15 @@ class ActiveListAccessibilityTest {
             .assertExists()
             .assertIsOff()
             .assertHasClickAction()
+            .assert(
+                SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Checkbox)
+            )
+            .assert(
+                SemanticsMatcher.expectValue(
+                    SemanticsProperties.StateDescription,
+                    "non selezionata",
+                )
+            )
             .performClick()
 
         assertEquals(true, checked)
@@ -327,9 +346,12 @@ class ActiveListAccessibilityTest {
                     "espansa",
                 )
             )
+            .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
 
         composeTestRule.onNodeWithText("LATTICINI").assertExists()
-        composeTestRule.onNodeWithText("FORMAGGI").assertExists()
+        composeTestRule.onNodeWithText("FORMAGGI")
+            .assertExists()
+            .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
         composeTestRule.onNodeWithText("Mozzarella").assertExists()
         // Un badge per il totale Level1 e uno per il totale Level2.
         composeTestRule.onAllNodesWithText("1").assertCountEquals(2)
@@ -387,6 +409,7 @@ class ActiveListAccessibilityTest {
                     "espansa",
                 )
             )
+            .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
 
         composeTestRule.onNodeWithText("Presi (1)").assertExists()
 
@@ -401,6 +424,51 @@ class ActiveListAccessibilityTest {
                     "collassata",
                 )
             )
+    }
+
+    @Test
+    fun `fatte header announces expanded and collapsed states and toggles rows`() {
+        val checkedAction = ActionItem(
+            text = "Telefonare al medico",
+            scope = ActionScope.SALUTE,
+            isChecked = true,
+        )
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                FatteSection(
+                    items = listOf(checkedAction),
+                    onUncheck = {},
+                    onConclude = {},
+                    colors = togoColors(),
+                    typography = togoTypography(),
+                    spacing = togoSpacing(),
+                    tokens = componentTokens(),
+                )
+            }
+        }
+
+        val expandedHeader = "Fatte, 1 azione. Doppio tocco per collassare."
+        composeTestRule.onNodeWithContentDescription(expandedHeader)
+            .assertExists()
+            .assertHasClickAction()
+            .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+            .assert(
+                SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "espansa")
+            )
+        composeTestRule.onNodeWithText("Telefonare al medico").assertExists()
+
+        composeTestRule.onNodeWithContentDescription(expandedHeader).performClick()
+        val collapsedHeader = "Fatte, 1 azione. Doppio tocco per espandere."
+        composeTestRule.onNodeWithContentDescription(collapsedHeader)
+            .assertHasClickAction()
+            .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+            .assert(
+                SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "collassata")
+            )
+        composeTestRule.onNodeWithText("Telefonare al medico").assertDoesNotExist()
+
+        composeTestRule.onNodeWithContentDescription(collapsedHeader).performClick()
+        composeTestRule.onNodeWithText("Telefonare al medico").assertExists()
     }
 
     @Test

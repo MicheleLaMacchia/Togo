@@ -25,6 +25,7 @@ import it.togo.app.domain.model.ResolutionOption
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoComponentTokens
 import it.togo.app.ui.theme.togoTypography
+import it.togo.app.presentation.components.dialogAccessibilityModifier
 
 /**
  * Dialog di risoluzione duplicati.
@@ -57,7 +58,7 @@ fun DuplicateResolutionDialog(
 
     Dialog(onDismissRequest = { onSelect(ResolutionOption.CANCEL) }) {
         Surface(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = dialogAccessibilityModifier(title).fillMaxWidth(),
             shape = tokens.duplicateDialog.radius,
             color = tokens.duplicateDialog.background,
             contentColor = colors.inkPrimary,

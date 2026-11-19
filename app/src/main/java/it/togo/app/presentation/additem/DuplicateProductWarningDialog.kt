@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
+import it.togo.app.presentation.components.dialogAccessibilityModifier
 
 /**
  * Avviso applicativo di possibile duplicato (Story 7.1).
@@ -30,6 +31,7 @@ fun DuplicateProductWarningDialog(
     val spacing = togoSpacing()
 
     AlertDialog(
+        modifier = dialogAccessibilityModifier("Possibile duplicato"),
         onDismissRequest = onDismiss,
         title = {
             Text(

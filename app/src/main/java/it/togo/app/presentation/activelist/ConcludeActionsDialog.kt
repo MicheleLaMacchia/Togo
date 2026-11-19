@@ -27,6 +27,7 @@ import it.togo.app.ui.theme.componentTokens
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
+import it.togo.app.presentation.components.dialogAccessibilityModifier
 
 /**
  * Dialog di conferma di "Concludi attività" (Story 9.2, DESIGN.md §7.10).
@@ -66,7 +67,7 @@ fun ConcludeActionsDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        modifier = Modifier
+        modifier = dialogAccessibilityModifier("Concludere le attività?")
             .testTag("conclude_actions_dialog")
             .border(
                 width = tokens.duplicateDialog.borderWidth,

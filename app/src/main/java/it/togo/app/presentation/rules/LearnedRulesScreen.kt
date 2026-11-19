@@ -45,6 +45,7 @@ import it.togo.app.domain.model.LearnedRule
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
+import it.togo.app.presentation.components.dialogAccessibilityModifier
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -79,6 +80,7 @@ fun LearnedRulesScreen(
     // Dialog conferma eliminazione
     if (uiState.isDeleteDialogOpen && uiState.ruleToDelete != null) {
         AlertDialog(
+            modifier = dialogAccessibilityModifier("Elimina regola"),
             onDismissRequest = { viewModel.cancelDelete() },
             title = { Text("Elimina regola", style = typography.itemTitle) },
             text = { Text("Eliminare la regola per '${uiState.ruleToDelete?.userExpression}'?", style = typography.itemMeta) },
@@ -198,6 +200,7 @@ private fun EditCategoryDialog(
     }
 
     AlertDialog(
+        modifier = dialogAccessibilityModifier("Modifica categoria"),
         onDismissRequest = onDismiss,
         title = { Text("Modifica categoria", style = typography.itemTitle) },
         text = {

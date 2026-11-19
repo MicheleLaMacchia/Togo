@@ -38,6 +38,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.isTraversalGroup
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.unit.dp
 import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.model.ShoppingItem
@@ -97,7 +98,7 @@ fun CategoryHeader(
                 color = colors.inkPrimary,
                 // A font grande il titolo va a capo invece di spingere il
                 // badge conteggio fuori schermo.
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).semantics { heading() },
             )
 
             // Badge count (dimensione intrinseca, resta visibile a destra)
@@ -267,6 +268,7 @@ private fun Level1Header(
             .heightIn(min = 48.dp)
             .clickable(role = Role.Button, onClick = onToggle)
             .semantics(mergeDescendants = true) {
+                heading()
                 contentDescription = headerDescription
                 stateDescription = stateText
             }

@@ -160,8 +160,11 @@ development_status:
   # Riconciliazione 2026-11-17: 13.2 done su dichiarazione esplicita dell'utente; il precedente review indicava una discrepanza di tracking, non evidenza tecnica. Build/test non eseguiti.
   13-2-token-ink-struck-per-righe-spuntate: done
   # Main e assembleDebug compilati; il Canvas proxy evita la bitmap ma CanvasDrawScope configura android.graphics.Paint. Ripristinati Robolectric/SDK 34 perché Paint.setStyle non è implementato nei test JVM Android non shadowati; suite da rieseguire.
-  13-3-token-focus-ring-e-ordine-traversal: in-progress
-  13-4-semantica-talkback-per-checkbox-chip-sezioni-e-dialog: backlog
+  # Riconciliazione 2026-11-18: 13.3 done su indicazione esplicita dell'utente; sprint status e spec storica erano in-progress. Done è un allineamento amministrativo, non certifica build/test (non eseguiti in questo flusso).
+  13-3-token-focus-ring-e-ordine-traversal: done
+  # Story 13.4 avviata su approvazione dell'utente; nessuna build o test eseguiti dall'agente.
+  # Semantiche TalkBack aggiornate e test aggiunti; la storia resta in-progress. Build/test non eseguiti; focus trap non verificato.
+  13-4-semantica-talkback-per-checkbox-chip-sezioni-e-dialog: in-progress
   13-5-mockup-allineati-badge-urgenza-target-48dp-stato-focus-dark: backlog
   epic-13-retrospective: optional
 last_updated: 11-18-2026

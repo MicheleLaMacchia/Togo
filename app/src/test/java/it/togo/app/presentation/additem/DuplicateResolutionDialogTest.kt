@@ -1,10 +1,21 @@
 package it.togo.app.presentation.additem
 
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.platform.testTag
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.runtime.mutableStateOf
 import it.togo.app.domain.model.ResolutionOption
 import it.togo.app.ui.theme.TogoTheme
 import org.junit.Assert.assertEquals
@@ -56,6 +67,52 @@ class DuplicateResolutionDialogTest {
         composeTestRule.onNodeWithText("Prodotto già in lista").assertExists()
         // Il nome è dentro il messaggio: "\"Latte UHT\" è già presente con ..."
         composeTestRule.onNodeWithText("Latte UHT", substring = true).assertExists()
+    }
+
+    @Test
+    fun `dialog exposes pane title and receives initial focus`() {
+        showDialog()
+
+        composeTestRule
+            .onNode(
+                SemanticsMatcher.expectValue(
+                    SemanticsProperties.PaneTitle,
+                    "Prodotto già in lista",
+                )
+            )
+            .assertIsFocused()
+    }
+
+    @Test
+    fun `closing dialog restores focus to its opener`() {
+        val isDialogOpen = mutableStateOf(false)
+        composeTestRule.setContent {
+            TogoTheme(darkTheme = false) {
+                Column {
+                    Button(
+                        onClick = { isDialogOpen.value = true },
+                        modifier = androidx.compose.ui.Modifier.testTag("open_duplicate_dialog"),
+                    ) {
+                        Text("Apri dialog duplicato")
+                    }
+                    if (isDialogOpen.value) {
+                        DuplicateResolutionDialog(
+                            productName = "Latte UHT",
+                            currentQuantity = 1.0,
+                            newQuantity = 2.0,
+                            canSum = true,
+                            onSelect = { isDialogOpen.value = false },
+                        )
+                    }
+                }
+            }
+        }
+
+        composeTestRule.onNodeWithTag("open_duplicate_dialog")
+            .performSemanticsAction(SemanticsActions.RequestFocus)
+            .performClick()
+        composeTestRule.onNodeWithText("Annulla").performClick()
+        composeTestRule.onNodeWithTag("open_duplicate_dialog").assertIsFocused()
     }
 
     @Test

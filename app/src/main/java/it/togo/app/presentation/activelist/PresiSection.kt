@@ -37,6 +37,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.isTraversalGroup
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
@@ -112,6 +113,7 @@ fun PresiSection(
                     role = Role.Button,
                 )
                 .semantics {
+                    heading()
                     contentDescription = headerDescription
                     stateDescription = stateText
                 },

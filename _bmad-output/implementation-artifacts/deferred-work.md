@@ -159,3 +159,6 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-11-4-matrice-scelta-parti-vuote.md`
   summary: Distinguere il caricamento iniziale dalla lista effettivamente vuota prima di consentire Condividi.
   evidence: `ActiveListViewModel` parte con `ActiveListUiState()` a conteggi zero e aggiorna dopo le emissioni combinate di prodotti, azioni e tassonomia. Un tap precedente può mostrare il feedback vuoto anche con dati persistiti; non esiste oggi uno stato di caricamento esplicito. La 11.4 applica la matrice ai conteggi pubblicati; il contratto generale di caricamento resta rinviato. Rilievo statico low, nessuna prova runtime eseguita.
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-4-semantica-talkback-checkbox-chip-sezioni-dialog.md`
+  summary: Confermare con TalkBack l'annuncio iniziale dei dialog e aggiungere una verifica mirata per il full-screen dialog AddItem.
+  evidence: I test Compose verificano focus e paneTitle, ma non accessibility focus/annuncio TalkBack; manca inoltre un test AddItemBottomSheet isolato e il suo harness dipende dal grafo Koin globale.
