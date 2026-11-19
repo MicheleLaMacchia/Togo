@@ -2,7 +2,7 @@
 title: '13.5 Mockup allineati'
 type: 'feature'
 created: '2026-11-19'
-status: 'done'
+status: 'in-review'
 route: 'oneshot'
 review_loop_iteration: 0
 baseline_commit: 'be43403e6c33706145ef0b208a1914d27470e83f'
@@ -30,4 +30,4 @@ Lavorare nel checkout corrente e limitare le modifiche ai mockup e agli artefatt
 - I mockup si aprono in tema chiaro. Aggiungendo `#scuro` all'indirizzo, ad esempio `todo-page.html#scuro` o `action-sheet.html#scuro`, si applica la palette scura senza duplicare il markup.
 - La rilettura del checkout ha portato a usare un contorno di focus interno per icone e intestazioni collassabili e a riservare spazio nello scorrimento sopra i controlli fissi delle due liste. Nello Storico il campo di ricerca occupa tutta l'area visibile, icona compresa. Su schermi stretti, titoli e sottotitoli possono andare a capo e i dialoghi di condivisione e conclusione si adattano alla larghezza disponibile.
 - La Story 13.4 è passata da `in-progress` a `done` nel solo sprint status, per dichiarazione dell'utente. La spec storica risultava `in-review`. Nessuna verifica tecnica della 13.4 è stata eseguita in questa sessione.
-- Rilettura statica del markup, del CSS e del diff nella sessione corrente. Restano da verificare nel browser il rendering, il contrasto e il focus con tastiera e D-pad. Build e test non eseguiti.
+- Review del 2026-11-19: controllo statico dei markup e del CSS. I badge testuali sono presenti nei mockup che mostrano azioni; il CSS dichiara target minimi da 48 px, `:focus-visible` e token chiari/scuri. Non ho potuto completare la review visiva manuale: il browser CUA ha restituito `The browser access host is unavailable` e le finestre browser locali risultavano minimizzate. Restano senza evidenza visiva il rendering dei badge, la misura effettiva dei target, la resa del focus e il contrasto della variante dark. La story resta `review` finché questi punti non sono verificati nel browser. Build e test non eseguiti.

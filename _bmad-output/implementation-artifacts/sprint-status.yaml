@@ -169,8 +169,10 @@ development_status:
   # Semantiche TalkBack aggiornate e test aggiunti; la storia resta in-progress. Build/test non eseguiti; focus trap non verificato.
   # Riconciliazione 2026-11-19: la 13.4 passa da in-progress a done su dichiarazione dell'utente. La spec storica resta in-review. Nessuna verifica tecnica eseguita per la 13.4.
   13-4-semantica-talkback-per-checkbox-chip-sezioni-e-dialog: done
-  # Audit 2026-11-19: otto mockup e CSS riletti staticamente. Review manuale in browser ancora necessaria
-  # per contrasto, target effettivi e focus in chiaro/scuro. Il commit baa31ca modifica artefatti 13.5.
+  # Review 2026-11-19: markup/CSS riletti staticamente; la review visiva manuale non e' riuscita,
+  # per browser CUA non disponibile e finestre locali minimizzate. Mancano evidenze visive su badge,
+  # target effettivi, focus e contrasto chiaro/scuro. Nessuna verifica tecnica dichiarata.
+  # Il commit baa31ca modifica artefatti 13.5.
   # I documenti di pianificazione e il tracking arrivano alla 13.5.
   13-5-mockup-allineati-badge-urgenza-target-48dp-stato-focus-dark: review
   epic-13-retrospective: optional
