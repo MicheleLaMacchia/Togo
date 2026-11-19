@@ -56,6 +56,13 @@ class ImportListViewModel(
         }
     }
 
+    fun clearText() {
+        if (_uiState.value.isAnalyzing || _uiState.value.isImporting) return
+        _uiState.update {
+            it.copy(text = "", errorMessage = null, confirmation = null)
+        }
+    }
+
     fun analyze() {
         val state = _uiState.value
         if (state.isAnalyzing || state.isImporting) return

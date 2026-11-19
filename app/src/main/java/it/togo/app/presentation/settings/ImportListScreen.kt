@@ -158,6 +158,16 @@ fun ImportListScreen(
                 enabled = !uiState.isAnalyzing && !uiState.isImporting,
             )
 
+            TextButton(
+                onClick = viewModel::clearText,
+                enabled = uiState.text.isNotEmpty() &&
+                    !uiState.isAnalyzing &&
+                    !uiState.isImporting,
+                modifier = Modifier.align(Alignment.End),
+            ) {
+                Text("Svuota")
+            }
+
             if (uiState.isAnalyzing) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,

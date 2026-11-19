@@ -3,6 +3,8 @@ import it.togo.app.ui.theme.togoFocusRing
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,6 +18,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -54,7 +57,7 @@ import it.togo.app.presentation.components.dialogAccessibilityModifier
  * @param onConfirm invocato con testo, ambito e urgenza quando l'utente
  *   conferma e il testo non è vuoto.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ActionSheet(
     onDismiss: () -> Unit,
@@ -136,35 +139,40 @@ fun ActionSheet(
                 style = typography.itemMeta,
                 color = colors.inkSecondary,
             )
-            Column(
+            FlowRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .semantics { contentDescription = "Selezione urgenza" }
                     .selectableGroup(),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 ActionUrgency.ordered.forEach { u ->
                     val isSelected = selectedUrgency == u
                     Row(
                         modifier = Modifier
-                            .fillMaxWidth()
                             .heightIn(min = 48.dp)
+                            .padding(horizontal = 4.dp)
                             .selectable(
                                 selected = isSelected,
                                 role = Role.RadioButton,
                                 onClick = { urgency = u },
                             ),
-                        horizontalArrangement = Arrangement.Center,
+                        horizontalArrangement = Arrangement.Start,
                         verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
                     ) {
                         RadioButton(
                             selected = isSelected,
                             onClick = null,
+                            colors = RadioButtonDefaults.colors(
+                                selectedColor = colors.accentAction,
+                                unselectedColor = colors.inkSecondary,
+                            ),
                         )
                         Text(
                             text = u.label,
                             style = typography.itemMeta,
-                            color = if (isSelected) colors.inkInverse else colors.inkPrimary,
+                            color = colors.inkPrimary,
                         )
                     }
                 }
@@ -176,35 +184,40 @@ fun ActionSheet(
                 style = typography.itemMeta,
                 color = colors.inkSecondary,
             )
-            Column(
+            FlowRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .semantics { contentDescription = "Selezione ambito" }
                     .selectableGroup(),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 ActionScope.ordered.forEach { s ->
                     val isSelected = selectedScope == s
                     Row(
                         modifier = Modifier
-                            .fillMaxWidth()
                             .heightIn(min = 48.dp)
+                            .padding(horizontal = 4.dp)
                             .selectable(
                                 selected = isSelected,
                                 role = Role.RadioButton,
                                 onClick = { scope = s },
                             ),
-                        horizontalArrangement = Arrangement.Center,
+                        horizontalArrangement = Arrangement.Start,
                         verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
                     ) {
                         RadioButton(
                             selected = isSelected,
                             onClick = null,
+                            colors = RadioButtonDefaults.colors(
+                                selectedColor = colors.accentAction,
+                                unselectedColor = colors.inkSecondary,
+                            ),
                         )
                         Text(
                             text = s.label,
                             style = typography.itemMeta,
-                            color = if (isSelected) colors.inkInverse else colors.inkPrimary,
+                            color = colors.inkPrimary,
                         )
                     }
                 }
