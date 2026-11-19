@@ -79,10 +79,36 @@
   flex-shrink: 0;
 }
 
-:is(button, summary, input[type="text"]):focus-visible,
+:where(button, summary, input[type="text"]):focus-visible,
 :is(.checkbox-touch, .chip, .choice):has(> input:focus-visible) {
   outline: 3px solid var(--focus-ring);
   outline-offset: 1px;
+}
+
+.icon-btn:focus-visible,
+summary:focus-visible {
+  outline-offset: -4px;
+}
+
+@media (max-width: 380px) {
+  body {
+    padding-inline: clamp(0px, (100% - 320px) / 2, 20px);
+  }
+
+  .app-bar:has(> .header-side) {
+    padding-inline: 4px;
+    gap: 0;
+  }
+
+  .app-title-group h1,
+  .app-title-group .subtitle {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .app-title-group .subtitle {
+    flex-wrap: wrap;
+  }
 }
 
 summary {
@@ -92,10 +118,6 @@ summary {
 
 summary::-webkit-details-marker {
   display: none;
-}
-
-summary:focus-visible {
-  outline-offset: -4px;
 }
 
 details:not([open]) > summary .section-chevron {
