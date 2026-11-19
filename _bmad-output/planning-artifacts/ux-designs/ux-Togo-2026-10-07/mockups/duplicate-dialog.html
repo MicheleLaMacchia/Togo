@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="it" id="scuro">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -25,20 +25,20 @@
     .device-frame {
       width: 412px;
       height: 915px;
-      background: #FFFFFF;
+      background: var(--surface-base);
       border-radius: 40px;
       box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45), 0 0 0 10px #1E293B;
       position: relative;
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      border: 3px solid #0F172A;
+      border: 3px solid var(--border-crisp);
     }
 
     /* Background Dimmed */
     .bg-list {
       flex: 1;
-      background: #F8FAFC;
+      background: var(--surface-subtle);
       opacity: 0.25;
       filter: blur(2px);
       pointer-events: none;
@@ -47,13 +47,13 @@
 
     .dummy-header {
       height: 50px;
-      border-bottom: 2px solid #0F172A;
+      border-bottom: 2px solid var(--border-crisp);
       margin-bottom: 16px;
     }
 
     .dummy-card {
-      background: #E2E8F0;
-      border: 2px solid #0F172A;
+      background: var(--surface-subtle);
+      border: 2px solid var(--border-crisp);
       border-radius: 12px;
       height: 80px;
       margin-bottom: 12px;
@@ -77,8 +77,8 @@
     /* High-contrast Modal Box */
     .dialog-card {
       width: 100%;
-      background: #FFFFFF;
-      border: 3px solid #0F172A;
+      background: var(--surface-base);
+      border: 3px solid var(--border-crisp);
       border-radius: 24px;
       box-shadow: 6px 6px 0px #0F172A;
       padding: 24px 20px;
@@ -97,13 +97,13 @@
     .icon-badge {
       width: 44px;
       height: 44px;
-      background: #FEF3C7;
-      border: 2px solid #D97706;
+      background: var(--urgency-urgent-bg);
+      border: 2px solid var(--urgency-urgent-border);
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #B45309;
+      color: var(--urgency-urgent-ink);
       flex-shrink: 0;
     }
 
@@ -116,7 +116,7 @@
     .dialog-title {
       font-size: 20px;
       font-weight: 900;
-      color: #0F172A;
+      color: var(--ink-primary);
       line-height: 1.2;
       letter-spacing: -0.3px;
     }
@@ -125,24 +125,24 @@
     .dialog-body {
       font-size: 14px;
       font-weight: 600;
-      color: #334155;
+      color: var(--ink-primary);
       line-height: 1.45;
       margin-bottom: 20px;
-      background: #F8FAFC;
-      border: 1.5px solid #CBD5E1;
+      background: var(--surface-subtle);
+      border: 1.5px solid var(--border-hairline);
       padding: 12px 14px;
       border-radius: 12px;
     }
 
     .highlight-product {
       font-weight: 800;
-      color: #0F172A;
+      color: var(--ink-primary);
     }
 
     .highlight-qty {
       display: inline-block;
-      background: #0F172A;
-      color: #FFFFFF;
+      background: var(--badge-bg);
+      color: var(--badge-ink);
       padding: 1px 6px;
       border-radius: 4px;
       font-size: 12px;
@@ -160,9 +160,9 @@
     /* Action 1: Recommended Primary */
     .action-btn-primary {
       min-height: 54px;
-      background: #0F172A;
-      color: #FFFFFF;
-      border: 2px solid #0F172A;
+      background: var(--accent-action);
+      color: var(--badge-ink);
+      border: 2px solid var(--border-crisp);
       border-radius: 12px;
       font-size: 15px;
       font-weight: 800;
@@ -176,8 +176,8 @@
     }
 
     .badge-recommended {
-      background: #16A34A;
-      color: #FFFFFF;
+      background: var(--accent-success);
+      color: var(--badge-ink);
       font-size: 10px;
       font-weight: 900;
       padding: 3px 6px;
@@ -189,9 +189,9 @@
     /* Action 2 & 3: Secondary Options */
     .action-btn-secondary {
       min-height: 50px;
-      background: #FFFFFF;
-      color: #0F172A;
-      border: 2px solid #0F172A;
+      background: var(--surface-base);
+      color: var(--ink-primary);
+      border: 2px solid var(--border-crisp);
       border-radius: 12px;
       font-size: 14px;
       font-weight: 800;
@@ -212,9 +212,9 @@
 
     /* Action 4: Cancel Text Button */
     .action-btn-cancel {
-      min-height: 44px;
+      min-height: var(--touch-target-min);
       background: transparent;
-      color: #64748B;
+      color: var(--ink-secondary);
       border: none;
       font-size: 14px;
       font-weight: 800;
@@ -225,6 +225,7 @@
       margin-top: 4px;
     }
   </style>
+  <link rel="stylesheet" href="mockups.css">
 </head>
 <body>
 

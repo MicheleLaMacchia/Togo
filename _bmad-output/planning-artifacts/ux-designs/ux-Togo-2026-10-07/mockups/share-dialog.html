@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="it" id="scuro">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -25,27 +25,27 @@
     .device-frame {
       width: 412px;
       height: 915px;
-      background: #FFFFFF;
+      background: var(--surface-base);
       border-radius: 40px;
       box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45), 0 0 0 10px #1E293B;
       position: relative;
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      border: 3px solid #0F172A;
+      border: 3px solid var(--border-crisp);
     }
 
     .status-bar {
       height: 38px;
-      background: #FFFFFF;
+      background: var(--surface-base);
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 0 24px;
       font-size: 13px;
       font-weight: 700;
-      color: #0F172A;
-      border-bottom: 1px solid #F1F5F9;
+      color: var(--ink-primary);
+      border-bottom: 1px solid var(--surface-subtle);
       z-index: 10;
     }
 
@@ -56,12 +56,12 @@
     }
 
     .app-bar {
-      background: #FFFFFF;
+      background: var(--surface-base);
       padding: 8px 12px;
       display: flex;
       align-items: center;
       gap: 2px;
-      border-bottom: 2px solid #0F172A;
+      border-bottom: 2px solid var(--border-crisp);
       z-index: 10;
       min-height: 64px;
     }
@@ -84,14 +84,14 @@
       font-size: 20px;
       font-weight: 900;
       letter-spacing: -0.3px;
-      color: #0F172A;
+      color: var(--ink-primary);
       line-height: 1.1;
     }
 
     .app-title-group .subtitle {
       font-size: 11px;
       font-weight: 800;
-      color: #475569;
+      color: var(--ink-secondary);
       margin-top: 2px;
       display: flex;
       align-items: center;
@@ -100,8 +100,8 @@
     }
 
     .badge-counter {
-      background: #0F172A;
-      color: #FFFFFF;
+      background: var(--badge-bg);
+      color: var(--badge-ink);
       font-size: 10px;
       font-weight: 800;
       padding: 1px 6px;
@@ -110,16 +110,16 @@
     }
 
     .icon-btn {
-      width: 44px;
-      height: 44px;
-      background: #F8FAFC;
-      border: 2px solid #0F172A;
+      width: var(--touch-target-min);
+      height: var(--touch-target-min);
+      background: var(--surface-subtle);
+      border: 2px solid var(--border-crisp);
       border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      color: #0F172A;
+      color: var(--ink-primary);
       font-weight: 700;
       box-shadow: 2px 2px 0px #0F172A;
     }
@@ -131,8 +131,8 @@
     }
 
     .icon-btn.disabled {
-      color: #94A3B8;
-      border-color: #CBD5E1;
+      color: var(--ink-muted);
+      border-color: var(--border-hairline);
       box-shadow: none;
       cursor: default;
     }
@@ -141,12 +141,12 @@
       flex: 1;
       overflow: hidden;
       padding: 16px 16px 104px 16px;
-      background: #F8FAFC;
+      background: var(--surface-subtle);
     }
 
     .category-group {
-      background: #FFFFFF;
-      border: 2px solid #0F172A;
+      background: var(--surface-card);
+      border: 2px solid var(--border-crisp);
       border-radius: 16px;
       margin-bottom: 14px;
       box-shadow: 3px 3px 0px #0F172A;
@@ -154,15 +154,15 @@
     }
 
     .category-header {
-      background: #F1F5F9;
+      background: var(--surface-subtle);
       padding: 10px 14px;
       font-size: 13px;
       font-weight: 800;
-      color: #0F172A;
+      color: var(--ink-primary);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 2px solid #0F172A;
+      border-bottom: 2px solid var(--border-crisp);
       text-transform: uppercase;
     }
 
@@ -176,74 +176,27 @@
       width: 10px;
       height: 10px;
       border-radius: 50%;
-      background: #0F172A;
+      background: var(--ink-primary);
     }
 
     .action-row {
       display: flex;
       align-items: flex-start;
       gap: 10px;
-      padding: 11px 14px;
+      padding: 11px 14px 11px 19px;
       min-height: 56px;
-      border-bottom: 1.5px solid #E2E8F0;
+      border-bottom: 1.5px solid var(--border-hairline);
     }
 
     .action-row:last-child {
       border-bottom: none;
     }
 
-    .custom-checkbox {
-      width: 23px;
-      height: 23px;
-      border: 2.2px solid #0F172A;
-      border-radius: 6px;
-      background: #FFFFFF;
-      flex-shrink: 0;
-      margin-top: 4px;
-    }
-
     .action-name {
       font-size: 15px;
       font-weight: 700;
-      color: #0F172A;
+      color: var(--ink-primary);
       line-height: 1.3;
-    }
-
-    .badge-row {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 5px;
-      margin-top: 6px;
-    }
-
-    .badge {
-      font-size: 10px;
-      font-weight: 800;
-      line-height: 1.2;
-      padding: 3px 7px;
-      border-radius: 4px;
-      letter-spacing: 0.2px;
-    }
-
-    .urgency-urgent {
-      background: #FEF3C7;
-      color: #92400E;
-      border: 1px solid #B45309;
-      text-transform: uppercase;
-    }
-
-    .urgency-relaxed {
-      background: #F1F5F9;
-      color: #334155;
-      border: 1px solid #CBD5E1;
-      text-transform: uppercase;
-    }
-
-    .area-badge {
-      background: #F8FAFC;
-      color: #475569;
-      border: 1px solid #CBD5E1;
     }
 
     .scrim {
@@ -259,8 +212,8 @@
       top: 50%;
       transform: translate(-50%, -50%);
       width: 348px;
-      background: #FFFFFF;
-      border: 3px solid #0F172A;
+      background: var(--surface-base);
+      border: 3px solid var(--border-crisp);
       border-radius: 20px;
       box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.35);
       padding: 20px;
@@ -271,14 +224,14 @@
       font-size: 22px;
       line-height: 1.15;
       font-weight: 900;
-      color: #0F172A;
+      color: var(--ink-primary);
       letter-spacing: -0.3px;
     }
 
     .dialog-subtitle {
       font-size: 13px;
       font-weight: 600;
-      color: #475569;
+      color: var(--ink-secondary);
       margin-top: 4px;
       line-height: 1.35;
     }
@@ -296,32 +249,32 @@
       gap: 10px;
       min-height: 62px;
       padding: 10px 12px;
-      border: 1.5px solid #CBD5E1;
+      border: 1.5px solid var(--border-hairline);
       border-radius: 12px;
-      background: #FFFFFF;
+      background: var(--surface-base);
       cursor: pointer;
     }
 
-    .choice.selected {
-      border: 2.5px solid #0F172A;
-      background: #F8FAFC;
+    .choice:has(> input:checked) {
+      border: 2.5px solid var(--border-crisp);
+      background: var(--surface-subtle);
       box-shadow: 2px 2px 0 #0F172A;
     }
 
     .radio {
       width: 21px;
       height: 21px;
-      border: 2px solid #0F172A;
+      border: 2px solid var(--border-crisp);
       border-radius: 50%;
-      background: #FFFFFF;
+      background: var(--surface-base);
       flex-shrink: 0;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
-    .choice.selected .radio {
-      background: #0F172A;
+    .choice:has(> input:checked) .radio {
+      background: var(--accent-action);
     }
 
     .radio::after {
@@ -329,11 +282,11 @@
       width: 7px;
       height: 7px;
       border-radius: 50%;
-      background: #FFFFFF;
+      background: var(--badge-ink);
       display: none;
     }
 
-    .choice.selected .radio::after {
+    .choice:has(> input:checked) .radio::after {
       display: block;
     }
 
@@ -343,16 +296,18 @@
     }
 
     .choice-title {
+      display: block;
       font-size: 14px;
       font-weight: 800;
-      color: #0F172A;
+      color: var(--ink-primary);
       line-height: 1.2;
     }
 
     .choice-desc {
+      display: block;
       font-size: 11px;
       font-weight: 600;
-      color: #64748B;
+      color: var(--ink-secondary);
       margin-top: 2px;
       line-height: 1.3;
     }
@@ -362,8 +317,8 @@
       height: 28px;
       padding: 0 8px;
       border-radius: 8px;
-      background: #0F172A;
-      color: #FFFFFF;
+      background: var(--badge-bg);
+      color: var(--badge-ink);
       font-size: 12px;
       font-weight: 800;
       display: flex;
@@ -375,10 +330,10 @@
     .dialog-note {
       margin-top: 12px;
       padding: 9px 11px;
-      border: 1.5px solid #CBD5E1;
+      border: 1.5px solid var(--border-hairline);
       border-radius: 8px;
-      background: #F8FAFC;
-      color: #475569;
+      background: var(--surface-subtle);
+      color: var(--ink-secondary);
       font-size: 11px;
       font-weight: 600;
       line-height: 1.35;
@@ -404,20 +359,21 @@
 
     .btn-primary {
       flex: 1;
-      background: #0F172A;
-      color: #FFFFFF;
-      border: 2px solid #0F172A;
+      background: var(--accent-action);
+      color: var(--badge-ink);
+      border: 2px solid var(--border-crisp);
       box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.25);
     }
 
     .btn-secondary {
       width: 108px;
-      background: #FFFFFF;
-      color: #0F172A;
-      border: 2px solid #0F172A;
+      background: var(--surface-base);
+      color: var(--ink-primary);
+      border: 2px solid var(--border-crisp);
       box-shadow: 2px 2px 0 #0F172A;
     }
   </style>
+  <link rel="stylesheet" href="mockups.css">
 </head>
 <body>
 
@@ -430,7 +386,7 @@
       </div>
     </div>
 
-    <div class="app-bar">
+    <div class="app-bar" inert>
       <div class="header-side">
         <button class="icon-btn" aria-label="Torna a Spesa" title="Torna a Spesa">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="15 18 9 12 15 6"/></svg>
@@ -440,7 +396,7 @@
         <h1>Da fare (4)</h1>
       </div>
       <div class="header-side">
-        <button class="icon-btn disabled" aria-label="Nessuna pagina a destra" title="Nessuna pagina a destra" disabled>
+        <button class="icon-btn disabled" aria-label="Nessuna pagina a destra" title="Nessuna pagina a destra" aria-disabled="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
         <button class="icon-btn" aria-label="Condividi" title="Condividi">
@@ -452,18 +408,24 @@
       </div>
     </div>
 
-    <div class="content-scroll">
+    <div class="content-scroll" inert>
       <div class="category-group">
         <div class="category-header">
           <div class="category-tag"><div class="category-dot"></div><span>Casa</span></div>
-          <span style="font-size: 11px; font-weight: 800; color: #475569;">2 AZIONI</span>
+          <span style="font-size: 11px; font-weight: 800; color: var(--ink-secondary);">2 AZIONI</span>
         </div>
-        <div class="action-row">
-          <div class="custom-checkbox"></div>
+        <div class="action-row urgency-relaxed">
+          <label class="checkbox-touch">
+            <input type="checkbox" aria-label="Comprare le lampadine">
+            <span class="custom-checkbox" aria-hidden="true"></span>
+          </label>
           <div><div class="action-name">Comprare le lampadine</div><div class="badge-row"><span class="badge urgency-relaxed">A tempo perso</span><span class="badge area-badge">Casa</span></div></div>
         </div>
-        <div class="action-row">
-          <div class="custom-checkbox"></div>
+        <div class="action-row urgency-exceptional">
+          <label class="checkbox-touch">
+            <input type="checkbox" aria-label="Riordinare il garage">
+            <span class="custom-checkbox" aria-hidden="true"></span>
+          </label>
           <div><div class="action-name">Riordinare il garage</div><div class="badge-row"><span class="badge urgency-exceptional">Eccezionale</span><span class="badge area-badge">Casa</span></div></div>
         </div>
       </div>
@@ -471,14 +433,20 @@
       <div class="category-group">
         <div class="category-header">
           <div class="category-tag"><div class="category-dot"></div><span>Salute</span></div>
-          <span style="font-size: 11px; font-weight: 800; color: #475569;">2 AZIONI</span>
+          <span style="font-size: 11px; font-weight: 800; color: var(--ink-secondary);">2 AZIONI</span>
         </div>
-        <div class="action-row">
-          <div class="custom-checkbox"></div>
+        <div class="action-row urgency-urgent">
+          <label class="checkbox-touch">
+            <input type="checkbox" aria-label="Chiamare il dentista">
+            <span class="custom-checkbox" aria-hidden="true"></span>
+          </label>
           <div><div class="action-name">Chiamare il dentista</div><div class="badge-row"><span class="badge urgency-urgent">Urgente</span><span class="badge area-badge">Salute</span></div></div>
         </div>
-        <div class="action-row">
-          <div class="custom-checkbox"></div>
+        <div class="action-row urgency-relaxed">
+          <label class="checkbox-touch">
+            <input type="checkbox" aria-label="Prenotare le analisi">
+            <span class="custom-checkbox" aria-hidden="true"></span>
+          </label>
           <div><div class="action-name">Prenotare le analisi</div><div class="badge-row"><span class="badge urgency-relaxed">A tempo perso</span><span class="badge area-badge">Salute</span></div></div>
         </div>
       </div>
@@ -486,37 +454,40 @@
 
     <div class="scrim"></div>
 
-    <div class="dialog">
-      <div class="dialog-title">Condividi</div>
-      <div class="dialog-subtitle">Cosa vuoi condividere?</div>
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="titolo-dialogo">
+      <div class="dialog-title" id="titolo-dialogo">Condividi</div>
+      <div class="dialog-subtitle" id="scelte-condivisione">Cosa vuoi condividere?</div>
 
-      <div class="choice-list">
-        <div class="choice">
-          <div class="radio"></div>
-          <div class="choice-copy">
-            <div class="choice-title">Solo spesa</div>
-            <div class="choice-desc">Prodotti non spuntati</div>
-          </div>
-          <div class="choice-count">4</div>
-        </div>
+      <div class="choice-list" role="radiogroup" aria-labelledby="scelte-condivisione">
+        <label class="choice">
+          <input type="radio" name="condivisione">
+          <span class="radio" aria-hidden="true"></span>
+          <span class="choice-copy">
+            <span class="choice-title">Solo spesa</span>
+            <span class="choice-desc">Prodotti non spuntati</span>
+          </span>
+          <span class="choice-count">4</span>
+        </label>
 
-        <div class="choice selected">
-          <div class="radio"></div>
-          <div class="choice-copy">
-            <div class="choice-title">Solo azioni</div>
-            <div class="choice-desc">Cose da fare non spuntate</div>
-          </div>
-          <div class="choice-count">5</div>
-        </div>
+        <label class="choice">
+          <input type="radio" name="condivisione" checked>
+          <span class="radio" aria-hidden="true"></span>
+          <span class="choice-copy">
+            <span class="choice-title">Solo azioni</span>
+            <span class="choice-desc">Cose da fare non spuntate</span>
+          </span>
+          <span class="choice-count">5</span>
+        </label>
 
-        <div class="choice">
-          <div class="radio"></div>
-          <div class="choice-copy">
-            <div class="choice-title">Entrambe</div>
-            <div class="choice-desc">Lista della spesa e cose da fare</div>
-          </div>
-          <div class="choice-count">9</div>
-        </div>
+        <label class="choice">
+          <input type="radio" name="condivisione">
+          <span class="radio" aria-hidden="true"></span>
+          <span class="choice-copy">
+            <span class="choice-title">Entrambe</span>
+            <span class="choice-desc">Lista della spesa e cose da fare</span>
+          </span>
+          <span class="choice-count">9</span>
+        </label>
       </div>
 
       <div class="dialog-note">Le azioni in <strong>Fatte</strong> non vengono condivise. La condivisione è testo, non un file.</div>

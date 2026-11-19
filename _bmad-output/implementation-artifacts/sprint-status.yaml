@@ -164,7 +164,9 @@ development_status:
   13-3-token-focus-ring-e-ordine-traversal: done
   # Story 13.4 avviata su approvazione dell'utente; nessuna build o test eseguiti dall'agente.
   # Semantiche TalkBack aggiornate e test aggiunti; la storia resta in-progress. Build/test non eseguiti; focus trap non verificato.
-  13-4-semantica-talkback-per-checkbox-chip-sezioni-e-dialog: in-progress
-  13-5-mockup-allineati-badge-urgenza-target-48dp-stato-focus-dark: backlog
+  # Riconciliazione 2026-11-19: la 13.4 passa da in-progress a done su dichiarazione dell'utente. La spec storica resta in-review. Nessuna verifica tecnica eseguita per la 13.4.
+  13-4-semantica-talkback-per-checkbox-chip-sezioni-e-dialog: done
+  # Story 13.5: mockup aggiornati e riletti staticamente. Verifica nel browser, build e test non eseguiti.
+  13-5-mockup-allineati-badge-urgenza-target-48dp-stato-focus-dark: review
   epic-13-retrospective: optional
-last_updated: 11-18-2026
+last_updated: 11-19-2026

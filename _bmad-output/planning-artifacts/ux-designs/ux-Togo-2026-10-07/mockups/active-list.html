@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="it" id="scuro">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -26,28 +26,28 @@
     .device-frame {
       width: 412px;
       height: 915px;
-      background: #FFFFFF;
+      background: var(--surface-base);
       border-radius: 40px;
       box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45), 0 0 0 10px #1E293B;
       position: relative;
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      border: 3px solid #0F172A;
+      border: 3px solid var(--border-crisp);
     }
 
     /* System Status Bar */
     .status-bar {
       height: 38px;
-      background: #FFFFFF;
+      background: var(--surface-base);
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 0 24px;
       font-size: 13px;
       font-weight: 700;
-      color: #0F172A;
-      border-bottom: 1px solid #F1F5F9;
+      color: var(--ink-primary);
+      border-bottom: 1px solid var(--surface-subtle);
       z-index: 10;
     }
 
@@ -60,12 +60,12 @@
 
     /* App Bar: history + page arrows + title + share + settings */
     .app-bar {
-      background: #FFFFFF;
+      background: var(--surface-base);
       padding: 8px 12px;
       display: flex;
       align-items: center;
       gap: 2px;
-      border-bottom: 2px solid #0F172A;
+      border-bottom: 2px solid var(--border-crisp);
       z-index: 10;
       min-height: 64px;
     }
@@ -88,7 +88,7 @@
       font-size: 20px;
       font-weight: 900;
       letter-spacing: -0.3px;
-      color: #0F172A;
+      color: var(--ink-primary);
       line-height: 1.1;
       white-space: nowrap;
     }
@@ -96,7 +96,7 @@
     .app-title-group .subtitle {
       font-size: 11px;
       font-weight: 800;
-      color: #475569;
+      color: var(--ink-secondary);
       margin-top: 2px;
       display: flex;
       align-items: center;
@@ -106,8 +106,8 @@
     }
 
     .badge-counter {
-      background: #0F172A;
-      color: #FFFFFF;
+      background: var(--badge-bg);
+      color: var(--badge-ink);
       font-size: 10px;
       font-weight: 800;
       padding: 1px 6px;
@@ -116,16 +116,16 @@
     }
 
     .icon-btn {
-      width: 48px;
-      height: 48px;
-      background: #F8FAFC;
-      border: 2px solid #0F172A;
+      width: var(--touch-target-min);
+      height: var(--touch-target-min);
+      background: var(--surface-subtle);
+      border: 2px solid var(--border-crisp);
       border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      color: #0F172A;
+      color: var(--ink-primary);
       font-weight: 700;
       transition: all 0.15s ease;
       box-shadow: 2px 2px 0px #0F172A;
@@ -138,12 +138,12 @@
     }
 
     .icon-btn.arrow {
-      background: #FFFFFF;
+      background: var(--surface-base);
     }
 
     .icon-btn.disabled {
-      color: #94A3B8;
-      border-color: #CBD5E1;
+      color: var(--ink-muted);
+      border-color: var(--border-hairline);
       box-shadow: none;
       cursor: default;
     }
@@ -153,13 +153,13 @@
       flex: 1;
       overflow-y: auto;
       padding: 16px 16px 100px 16px;
-      background: #F8FAFC;
+      background: var(--surface-subtle);
     }
 
     /* Category Section */
     .category-group {
-      background: #FFFFFF;
-      border: 2px solid #0F172A;
+      background: var(--surface-card);
+      border: 2px solid var(--border-crisp);
       border-radius: 16px;
       margin-bottom: 16px;
       box-shadow: 3px 3px 0px #0F172A;
@@ -167,15 +167,15 @@
     }
 
     .category-header {
-      background: #F1F5F9;
+      background: var(--surface-subtle);
       padding: 10px 14px;
       font-size: 14px;
       font-weight: 800;
-      color: #0F172A;
+      color: var(--ink-primary);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 2px solid #0F172A;
+      border-bottom: 2px solid var(--border-crisp);
       letter-spacing: -0.2px;
       text-transform: uppercase;
     }
@@ -190,8 +190,8 @@
       width: 10px;
       height: 10px;
       border-radius: 50%;
-      background: #0F172A;
-      border: 1px solid #0F172A;
+      background: var(--ink-primary);
+      border: 1px solid var(--border-crisp);
     }
 
     .item-list {
@@ -204,8 +204,8 @@
       justify-content: space-between;
       padding: 12px 14px;
       min-height: 56px;
-      border-bottom: 1.5px solid #E2E8F0;
-      background: #FFFFFF;
+      border-bottom: 1.5px solid var(--border-hairline);
+      background: var(--surface-card);
     }
 
     .item-row:last-child {
@@ -219,44 +219,6 @@
       flex: 1;
     }
 
-    .checkbox-touch {
-      width: 48px;
-      height: 48px;
-      margin: -8px -6px -8px -8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-    }
-
-    .custom-checkbox {
-      width: 24px;
-      height: 24px;
-      border: 2.2px solid #0F172A;
-      border-radius: 6px;
-      background: #FFFFFF;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.1s ease;
-    }
-
-    .custom-checkbox.checked {
-      background: #0F172A;
-    }
-
-    .custom-checkbox.checked svg {
-      stroke: #FFFFFF;
-      display: block;
-    }
-
-    .custom-checkbox svg {
-      display: none;
-      width: 16px;
-      height: 16px;
-      stroke-width: 3.5;
-    }
-
     .item-details {
       display: flex;
       flex-direction: column;
@@ -265,19 +227,19 @@
     .item-name {
       font-size: 16px;
       font-weight: 700;
-      color: #0F172A;
+      color: var(--ink-primary);
       line-height: 1.25;
     }
 
     .item-struck .item-name {
       text-decoration: line-through;
-      color: #94A3B8;
+      color: var(--ink-struck);
       font-weight: 600;
     }
 
     .qty-badge {
-      background: #0F172A;
-      color: #FFFFFF;
+      background: var(--badge-bg);
+      color: var(--badge-ink);
       font-size: 13px;
       font-weight: 800;
       padding: 5px 11px;
@@ -287,14 +249,14 @@
     }
 
     .qty-badge.muted {
-      background: #CBD5E1;
-      color: #475569;
+      background: var(--surface-subtle);
+      color: var(--ink-secondary);
     }
 
     /* Presi Section (Collapsible) */
     .presi-container {
-      background: #F1F5F9;
-      border: 2px dashed #0F172A;
+      background: var(--surface-subtle);
+      border: 2px dashed var(--border-crisp);
       border-radius: 16px;
       margin-top: 20px;
       padding: 4px;
@@ -311,15 +273,15 @@
     .presi-title {
       font-size: 15px;
       font-weight: 800;
-      color: #334155;
+      color: var(--ink-primary);
       display: flex;
       align-items: center;
       gap: 8px;
     }
 
     .presi-badge {
-      background: #334155;
-      color: #FFFFFF;
+      background: var(--badge-bg);
+      color: var(--badge-ink);
       font-size: 11px;
       font-weight: 800;
       padding: 2px 7px;
@@ -329,9 +291,9 @@
     .conclude-btn {
       width: 100%;
       height: 52px;
-      background: #0F172A;
-      color: #FFFFFF;
-      border: 2px solid #0F172A;
+      background: var(--accent-action);
+      color: var(--badge-ink);
+      border: 2px solid var(--border-crisp);
       border-radius: 12px;
       font-size: 15px;
       font-weight: 800;
@@ -355,14 +317,9 @@
 
     /* Focus visibile per tastiera / D-pad / Switch Access */
     .icon-btn:focus-visible, .checkbox-touch:focus-visible, .conclude-btn:focus-visible, .voice-main-btn:focus-visible {
-      outline: 3px solid #2563EB;
+      outline: 3px solid var(--accent-highlight);
       outline-offset: 2px;
     }
-    .category-header:focus-visible, .presi-header:focus-visible {
-      outline: 3px solid #2563EB;
-      outline-offset: 2px;
-    }
-
     /* Bottom Actions Bar */
     .bottom-bar {
       position: absolute;
@@ -370,8 +327,8 @@
       left: 0;
       right: 0;
       height: 84px;
-      background: #FFFFFF;
-      border-top: 2px solid #0F172A;
+      background: var(--surface-base);
+      border-top: 2px solid var(--border-crisp);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -386,15 +343,15 @@
       transform: translateX(-50%);
       width: 68px;
       height: 68px;
-      background: #0F172A;
-      border: 3px solid #FFFFFF;
+      background: var(--accent-action);
+      border: 3px solid var(--fab-border);
       box-shadow: 0 4px 14px rgba(15, 23, 42, 0.4), 0 0 0 2px #0F172A;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      color: #FFFFFF;
+      color: var(--badge-ink);
       transition: transform 0.1s ease;
     }
 
@@ -411,21 +368,21 @@
       transform: translateX(-50%);
       font-size: 11px;
       font-weight: 800;
-      color: #0F172A;
+      color: var(--ink-primary);
       letter-spacing: 0.2px;
     }
 
     .quick-add-btn {
       min-width: 48px;
       min-height: 48px;
-      background: #FFFFFF;
-      border: 2px solid #0F172A;
+      background: var(--surface-base);
+      border: 2px solid var(--border-crisp);
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      color: #0F172A;
+      color: var(--ink-primary);
       font-weight: 800;
       box-shadow: 2px 2px 0px #0F172A;
     }
@@ -439,7 +396,7 @@
     .quick-add-label {
       font-size: 12px;
       font-weight: 800;
-      color: #0F172A;
+      color: var(--ink-primary);
       display: flex;
       align-items: center;
       gap: 6px;
@@ -449,6 +406,7 @@
       width: 80px;
     }
   </style>
+  <link rel="stylesheet" href="mockups.css">
 </head>
 <body>
 
@@ -471,7 +429,7 @@
             <polyline points="12 6 12 12 16 14"/>
           </svg>
         </button>
-        <button class="icon-btn arrow disabled" title="Nessuna pagina a sinistra" aria-label="Nessuna pagina a sinistra" disabled>
+        <button class="icon-btn arrow disabled" title="Nessuna pagina a sinistra" aria-label="Nessuna pagina a sinistra" aria-disabled="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
       </div>
@@ -506,20 +464,21 @@
     <div class="content-scroll">
       
       <!-- Categoria 1: Ortofrutta -->
-      <div class="category-group">
-        <div class="category-header">
-          <div class="category-tag">
-            <div class="category-dot"></div>
+      <details class="category-group" open>
+        <summary class="category-header">
+          <span class="category-tag">
+            <span class="category-dot"></span>
             <span>Ortofrutta</span>
-          </div>
-          <span style="font-size: 12px; font-weight: 800; color: #475569;">2 VOCI</span>
-        </div>
+          </span>
+          <span style="font-size: 12px; font-weight: 800; color: var(--ink-secondary);">2 VOCI</span>
+        </summary>
         <ul class="item-list">
           <li class="item-row">
             <div class="item-left">
-              <div class="checkbox-touch">
-                <div class="custom-checkbox"></div>
-              </div>
+              <label class="checkbox-touch">
+                <input type="checkbox" aria-label="Mele Gala">
+                <span class="custom-checkbox" aria-hidden="true"></span>
+              </label>
               <div class="item-details">
                 <span class="item-name">Mele Gala</span>
               </div>
@@ -528,9 +487,10 @@
           </li>
           <li class="item-row">
             <div class="item-left">
-              <div class="checkbox-touch">
-                <div class="custom-checkbox"></div>
-              </div>
+              <label class="checkbox-touch">
+                <input type="checkbox" aria-label="Banane">
+                <span class="custom-checkbox" aria-hidden="true"></span>
+              </label>
               <div class="item-details">
                 <span class="item-name">Banane</span>
               </div>
@@ -538,23 +498,24 @@
             <span class="qty-badge">6 pz</span>
           </li>
         </ul>
-      </div>
+      </details>
 
       <!-- Categoria 2: Banco Frigo / Latticini -->
-      <div class="category-group">
-        <div class="category-header">
-          <div class="category-tag">
-            <div class="category-dot"></div>
+      <details class="category-group" open>
+        <summary class="category-header">
+          <span class="category-tag">
+            <span class="category-dot"></span>
             <span>Banco Frigo / Latticini</span>
-          </div>
-          <span style="font-size: 12px; font-weight: 800; color: #475569;">2 VOCI</span>
-        </div>
+          </span>
+          <span style="font-size: 12px; font-weight: 800; color: var(--ink-secondary);">2 VOCI</span>
+        </summary>
         <ul class="item-list">
           <li class="item-row">
             <div class="item-left">
-              <div class="checkbox-touch">
-                <div class="custom-checkbox"></div>
-              </div>
+              <label class="checkbox-touch">
+                <input type="checkbox" aria-label="Latte parzialmente scremato">
+                <span class="custom-checkbox" aria-hidden="true"></span>
+              </label>
               <div class="item-details">
                 <span class="item-name">Latte parzialmente scremato</span>
               </div>
@@ -563,9 +524,10 @@
           </li>
           <li class="item-row">
             <div class="item-left">
-              <div class="checkbox-touch">
-                <div class="custom-checkbox"></div>
-              </div>
+              <label class="checkbox-touch">
+                <input type="checkbox" aria-label="Mozzarella di bufala">
+                <span class="custom-checkbox" aria-hidden="true"></span>
+              </label>
               <div class="item-details">
                 <span class="item-name">Mozzarella di bufala</span>
               </div>
@@ -573,23 +535,24 @@
             <span class="qty-badge">250 g</span>
           </li>
         </ul>
-      </div>
+      </details>
 
       <!-- Categoria 3: Dispensa -->
-      <div class="category-group">
-        <div class="category-header">
-          <div class="category-tag">
-            <div class="category-dot"></div>
+      <details class="category-group" open>
+        <summary class="category-header">
+          <span class="category-tag">
+            <span class="category-dot"></span>
             <span>Dispensa</span>
-          </div>
-          <span style="font-size: 12px; font-weight: 800; color: #475569;">1 VOCE</span>
-        </div>
+          </span>
+          <span style="font-size: 12px; font-weight: 800; color: var(--ink-secondary);">1 VOCE</span>
+        </summary>
         <ul class="item-list">
           <li class="item-row">
             <div class="item-left">
-              <div class="checkbox-touch">
-                <div class="custom-checkbox"></div>
-              </div>
+              <label class="checkbox-touch">
+                <input type="checkbox" aria-label="Pasta spaghetti n.5">
+                <span class="custom-checkbox" aria-hidden="true"></span>
+              </label>
               <div class="item-details">
                 <span class="item-name">Pasta spaghetti n.5</span>
               </div>
@@ -597,27 +560,26 @@
             <span class="qty-badge">1 kg</span>
           </li>
         </ul>
-      </div>
+      </details>
 
       <!-- Sezione Presi (Collapsible Section, Option B) -->
-      <div class="presi-container">
-        <div class="presi-header">
-          <div class="presi-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#334155" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      <details class="presi-container" open>
+        <summary class="presi-header">
+          <span class="presi-title">
+            <svg class="section-chevron" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
             <span>PRESI</span>
             <span class="presi-badge">2</span>
-          </div>
-          <span style="font-size: 12px; font-weight: 700; color: #64748B;">Tocca per nascondere</span>
-        </div>
+          </span>
+          <span style="font-size: 12px; font-weight: 700; color: var(--ink-secondary);">Mostra o nascondi</span>
+        </summary>
 
         <ul class="item-list" style="margin-top: 4px;">
-          <li class="item-row item-struck" style="background: #F8FAFC; border-radius: 8px; margin-bottom: 4px;">
+          <li class="item-row item-struck" style="background: var(--surface-subtle); border-radius: 8px; margin-bottom: 4px;">
             <div class="item-left">
-              <div class="checkbox-touch">
-                <div class="custom-checkbox checked">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
-                </div>
-              </div>
+              <label class="checkbox-touch">
+                <input type="checkbox" aria-label="Parmigiano Reggiano 24m" checked>
+                <span class="custom-checkbox" aria-hidden="true"></span>
+              </label>
               <div class="item-details">
                 <span class="item-name">Parmigiano Reggiano 24m</span>
               </div>
@@ -625,13 +587,12 @@
             <span class="qty-badge muted">300 g</span>
           </li>
 
-          <li class="item-row item-struck" style="background: #F8FAFC; border-radius: 8px;">
+          <li class="item-row item-struck" style="background: var(--surface-subtle); border-radius: 8px;">
             <div class="item-left">
-              <div class="checkbox-touch">
-                <div class="custom-checkbox checked">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
-                </div>
-              </div>
+              <label class="checkbox-touch">
+                <input type="checkbox" aria-label="Caffè macinato" checked>
+                <span class="custom-checkbox" aria-hidden="true"></span>
+              </label>
               <div class="item-details">
                 <span class="item-name">Caffè macinato</span>
               </div>
@@ -647,7 +608,7 @@
           </svg>
           Concludi spesa
         </button>
-      </div>
+      </details>
 
     </div>
 
@@ -677,7 +638,7 @@
 
       <!-- Right spacer for balanced ergonomics -->
       <div class="spacer-side" style="display: flex; justify-content: flex-end; align-items: center;">
-        <span style="font-size: 11px; font-weight: 800; color: #64748B;">OFFLINE ✓</span>
+        <span style="font-size: 11px; font-weight: 800; color: var(--ink-secondary);">OFFLINE ✓</span>
       </div>
     </div>
   </div>

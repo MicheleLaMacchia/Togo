@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="it" id="scuro">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -25,27 +25,27 @@
     .device-frame {
       width: 412px;
       height: 915px;
-      background: #FFFFFF;
+      background: var(--surface-base);
       border-radius: 40px;
       box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45), 0 0 0 10px #1E293B;
       position: relative;
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      border: 3px solid #0F172A;
+      border: 3px solid var(--border-crisp);
     }
 
     .status-bar {
       height: 38px;
-      background: #FFFFFF;
+      background: var(--surface-base);
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 0 24px;
       font-size: 13px;
       font-weight: 700;
-      color: #0F172A;
-      border-bottom: 1px solid #F1F5F9;
+      color: var(--ink-primary);
+      border-bottom: 1px solid var(--surface-subtle);
       z-index: 10;
     }
 
@@ -56,12 +56,12 @@
     }
 
     .app-bar {
-      background: #FFFFFF;
+      background: var(--surface-base);
       padding: 8px 12px;
       display: flex;
       align-items: center;
       gap: 2px;
-      border-bottom: 2px solid #0F172A;
+      border-bottom: 2px solid var(--border-crisp);
       z-index: 10;
       min-height: 64px;
     }
@@ -84,14 +84,14 @@
       font-size: 20px;
       font-weight: 900;
       letter-spacing: -0.3px;
-      color: #0F172A;
+      color: var(--ink-primary);
       line-height: 1.1;
     }
 
     .app-title-group .subtitle {
       font-size: 11px;
       font-weight: 800;
-      color: #475569;
+      color: var(--ink-secondary);
       margin-top: 2px;
       display: flex;
       align-items: center;
@@ -100,8 +100,8 @@
     }
 
     .badge-counter {
-      background: #0F172A;
-      color: #FFFFFF;
+      background: var(--badge-bg);
+      color: var(--badge-ink);
       font-size: 10px;
       font-weight: 800;
       padding: 1px 6px;
@@ -110,16 +110,16 @@
     }
 
     .icon-btn {
-      width: 44px;
-      height: 44px;
-      background: #F8FAFC;
-      border: 2px solid #0F172A;
+      width: var(--touch-target-min);
+      height: var(--touch-target-min);
+      background: var(--surface-subtle);
+      border: 2px solid var(--border-crisp);
       border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      color: #0F172A;
+      color: var(--ink-primary);
       font-weight: 700;
       box-shadow: 2px 2px 0px #0F172A;
     }
@@ -131,12 +131,12 @@
     }
 
     .icon-btn.arrow {
-      background: #FFFFFF;
+      background: var(--surface-base);
     }
 
     .icon-btn.disabled {
-      color: #94A3B8;
-      border-color: #CBD5E1;
+      color: var(--ink-muted);
+      border-color: var(--border-hairline);
       box-shadow: none;
       cursor: default;
     }
@@ -145,12 +145,12 @@
       flex: 1;
       overflow: hidden;
       padding: 16px 16px 104px 16px;
-      background: #F8FAFC;
+      background: var(--surface-subtle);
     }
 
     .category-group {
-      background: #FFFFFF;
-      border: 2px solid #0F172A;
+      background: var(--surface-card);
+      border: 2px solid var(--border-crisp);
       border-radius: 16px;
       margin-bottom: 14px;
       box-shadow: 3px 3px 0px #0F172A;
@@ -158,15 +158,15 @@
     }
 
     .category-header {
-      background: #F1F5F9;
+      background: var(--surface-subtle);
       padding: 10px 14px;
       font-size: 13px;
       font-weight: 800;
-      color: #0F172A;
+      color: var(--ink-primary);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 2px solid #0F172A;
+      border-bottom: 2px solid var(--border-crisp);
       text-transform: uppercase;
     }
 
@@ -180,7 +180,7 @@
       width: 10px;
       height: 10px;
       border-radius: 50%;
-      background: #0F172A;
+      background: var(--ink-primary);
     }
 
     .action-row {
@@ -190,44 +190,12 @@
       gap: 10px;
       padding: 11px 14px 11px 19px;
       min-height: 56px;
-      border-bottom: 1.5px solid #E2E8F0;
-      background: #FFFFFF;
+      border-bottom: 1.5px solid var(--border-hairline);
+      background: var(--surface-card);
     }
 
     .action-row:last-child {
       border-bottom: none;
-    }
-
-    .action-row::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 4px;
-      background: #CBD5E1;
-    }
-
-    .action-row.urgent::before {
-      background: #B45309;
-    }
-
-    .checkbox-touch {
-      width: 40px;
-      height: 40px;
-      margin: -7px -5px -7px -8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .custom-checkbox {
-      width: 23px;
-      height: 23px;
-      border: 2.2px solid #0F172A;
-      border-radius: 6px;
-      background: #FFFFFF;
     }
 
     .action-details {
@@ -238,46 +206,8 @@
     .action-name {
       font-size: 15px;
       font-weight: 700;
-      color: #0F172A;
+      color: var(--ink-primary);
       line-height: 1.3;
-    }
-
-    .badge-row {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 5px;
-      margin-top: 6px;
-    }
-
-    .badge {
-      font-size: 10px;
-      font-weight: 800;
-      line-height: 1.2;
-      padding: 3px 7px;
-      border-radius: 4px;
-      letter-spacing: 0.2px;
-      white-space: nowrap;
-    }
-
-    .urgency-urgent {
-      background: #FEF3C7;
-      color: #92400E;
-      border: 1px solid #B45309;
-      text-transform: uppercase;
-    }
-
-    .urgency-relaxed {
-      background: #F1F5F9;
-      color: #334155;
-      border: 1px solid #CBD5E1;
-      text-transform: uppercase;
-    }
-
-    .area-badge {
-      background: #F8FAFC;
-      color: #475569;
-      border: 1px solid #CBD5E1;
     }
 
     .scrim {
@@ -293,8 +223,8 @@
       right: 0;
       bottom: 0;
       height: 68%;
-      background: #FFFFFF;
-      border-top: 2px solid #0F172A;
+      background: var(--surface-base);
+      border-top: 2px solid var(--border-crisp);
       border-radius: 24px 24px 0 0;
       padding: 10px 20px 20px;
       z-index: 40;
@@ -308,7 +238,7 @@
       width: 42px;
       height: 4px;
       border-radius: 999px;
-      background: #CBD5E1;
+      background: var(--border-crisp);
       margin: 0 auto 12px;
       flex-shrink: 0;
     }
@@ -325,22 +255,22 @@
       font-size: 20px;
       line-height: 1.15;
       font-weight: 900;
-      color: #0F172A;
+      color: var(--ink-primary);
       letter-spacing: -0.3px;
     }
 
     .close-btn {
-      width: 44px;
-      height: 44px;
+      width: var(--touch-target-min);
+      height: var(--touch-target-min);
       flex-shrink: 0;
-      border: 2px solid #0F172A;
+      border: 2px solid var(--border-crisp);
       border-radius: 10px;
-      background: #F8FAFC;
+      background: var(--surface-subtle);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      color: #0F172A;
+      color: var(--ink-primary);
       box-shadow: 2px 2px 0px #0F172A;
     }
 
@@ -353,7 +283,7 @@
     .field-label {
       font-size: 11px;
       font-weight: 800;
-      color: #475569;
+      color: var(--ink-secondary);
       letter-spacing: 0.6px;
       text-transform: uppercase;
       margin-bottom: 6px;
@@ -362,22 +292,21 @@
     .text-input {
       width: 100%;
       height: 48px;
-      border: 2px solid #0F172A;
+      border: 2px solid var(--border-crisp);
       border-radius: 10px;
       padding: 0 12px;
       font-family: inherit;
       font-size: 16px;
       font-weight: 600;
-      color: #0F172A;
-      background: #FFFFFF;
-      outline: none;
+      color: var(--ink-primary);
+      background: var(--surface-base);
       box-shadow: 2px 2px 0px #0F172A;
     }
 
     .field-help {
       font-size: 11px;
       font-weight: 600;
-      color: #64748B;
+      color: var(--ink-secondary);
       margin-top: 6px;
       line-height: 1.35;
     }
@@ -393,12 +322,11 @@
     }
 
     .chip {
-      min-height: 38px;
       padding: 0 12px;
-      border: 1.5px solid #CBD5E1;
+      border: 1.5px solid var(--border-hairline);
       border-radius: 999px;
-      background: #FFFFFF;
-      color: #0F172A;
+      background: var(--surface-base);
+      color: var(--ink-primary);
       font-family: inherit;
       font-size: 12px;
       font-weight: 800;
@@ -408,22 +336,10 @@
       cursor: pointer;
     }
 
-    .chip.selected {
-      border: 2px solid #0F172A;
-      background: #0F172A;
-      color: #FFFFFF;
-    }
-
-    .chip.urgent.selected {
-      background: #FEF3C7;
-      color: #92400E;
-      border-color: #B45309;
-    }
-
-    .chip.exceptional.selected {
-      background: #DBEAFE;
-      color: #1E40AF;
-      border-color: #2563EB;
+    .chip:has(> input:checked) {
+      border: 2px solid var(--border-crisp);
+      background: var(--accent-action);
+      color: var(--badge-ink);
     }
 
     .chip .dot {
@@ -437,10 +353,10 @@
     .sheet-note {
       margin-top: 12px;
       padding: 9px 11px;
-      border: 1.5px solid #CBD5E1;
+      border: 1.5px solid var(--border-hairline);
       border-radius: 8px;
-      background: #F8FAFC;
-      color: #475569;
+      background: var(--surface-subtle);
+      color: var(--ink-secondary);
       font-size: 11px;
       font-weight: 600;
       line-height: 1.35;
@@ -468,20 +384,21 @@
 
     .btn-primary {
       flex: 1;
-      background: #0F172A;
-      color: #FFFFFF;
-      border: 2px solid #0F172A;
+      background: var(--accent-action);
+      color: var(--badge-ink);
+      border: 2px solid var(--border-crisp);
       box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.25);
     }
 
     .btn-secondary {
       width: 112px;
-      background: #FFFFFF;
-      color: #0F172A;
-      border: 2px solid #0F172A;
+      background: var(--surface-base);
+      color: var(--ink-primary);
+      border: 2px solid var(--border-crisp);
       box-shadow: 2px 2px 0px #0F172A;
     }
   </style>
+  <link rel="stylesheet" href="mockups.css">
 </head>
 <body>
 
@@ -494,7 +411,7 @@
       </div>
     </div>
 
-    <div class="app-bar">
+    <div class="app-bar" inert>
       <div class="header-side">
         <button class="icon-btn arrow" aria-label="Torna a Spesa" title="Torna a Spesa">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="15 18 9 12 15 6"/></svg>
@@ -508,7 +425,7 @@
         </div>
       </div>
       <div class="header-side">
-        <button class="icon-btn disabled" aria-label="Nessuna pagina a destra" title="Nessuna pagina a destra" disabled>
+        <button class="icon-btn disabled" aria-label="Nessuna pagina a destra" title="Nessuna pagina a destra" aria-disabled="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
         <button class="icon-btn" aria-label="Condividi" title="Condividi">
@@ -523,22 +440,28 @@
       </div>
     </div>
 
-    <div class="content-scroll">
+    <div class="content-scroll" inert>
       <div class="category-group">
         <div class="category-header">
           <div class="category-tag"><div class="category-dot"></div><span>Casa</span></div>
-          <span style="font-size: 11px; font-weight: 800; color: #475569;">2 AZIONI</span>
+          <span style="font-size: 11px; font-weight: 800; color: var(--ink-secondary);">2 AZIONI</span>
         </div>
         <ul style="list-style:none;">
-          <li class="action-row">
-            <div class="checkbox-touch"><div class="custom-checkbox"></div></div>
+          <li class="action-row urgency-relaxed">
+            <label class="checkbox-touch">
+              <input type="checkbox" aria-label="Comprare le lampadine">
+              <span class="custom-checkbox" aria-hidden="true"></span>
+            </label>
             <div class="action-details">
               <div class="action-name">Comprare le lampadine</div>
               <div class="badge-row"><span class="badge urgency-relaxed">A tempo perso</span><span class="badge area-badge">Casa</span></div>
             </div>
           </li>
-          <li class="action-row">
-            <div class="checkbox-touch"><div class="custom-checkbox"></div></div>
+          <li class="action-row urgency-exceptional">
+            <label class="checkbox-touch">
+              <input type="checkbox" aria-label="Riordinare il garage">
+              <span class="custom-checkbox" aria-hidden="true"></span>
+            </label>
             <div class="action-details">
               <div class="action-name">Riordinare il garage</div>
               <div class="badge-row"><span class="badge urgency-exceptional">Eccezionale</span><span class="badge area-badge">Casa</span></div>
@@ -550,18 +473,24 @@
       <div class="category-group">
         <div class="category-header">
           <div class="category-tag"><div class="category-dot"></div><span>Salute</span></div>
-          <span style="font-size: 11px; font-weight: 800; color: #475569;">2 AZIONI</span>
+          <span style="font-size: 11px; font-weight: 800; color: var(--ink-secondary);">2 AZIONI</span>
         </div>
         <ul style="list-style:none;">
-          <li class="action-row urgent">
-            <div class="checkbox-touch"><div class="custom-checkbox"></div></div>
+          <li class="action-row urgency-urgent">
+            <label class="checkbox-touch">
+              <input type="checkbox" aria-label="Chiamare il dentista">
+              <span class="custom-checkbox" aria-hidden="true"></span>
+            </label>
             <div class="action-details">
               <div class="action-name">Chiamare il dentista</div>
               <div class="badge-row"><span class="badge urgency-urgent">Urgente</span><span class="badge area-badge">Salute</span></div>
             </div>
           </li>
-          <li class="action-row">
-            <div class="checkbox-touch"><div class="custom-checkbox"></div></div>
+          <li class="action-row urgency-relaxed">
+            <label class="checkbox-touch">
+              <input type="checkbox" aria-label="Prenotare le analisi">
+              <span class="custom-checkbox" aria-hidden="true"></span>
+            </label>
             <div class="action-details">
               <div class="action-name">Prenotare le analisi</div>
               <div class="badge-row"><span class="badge urgency-relaxed">A tempo perso</span><span class="badge area-badge">Salute</span></div>
@@ -573,11 +502,11 @@
 
     <div class="scrim"></div>
 
-    <div class="sheet">
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="titolo-dialogo">
       <div class="sheet-handle"></div>
 
       <div class="sheet-title-row">
-        <h2>Aggiungi cosa da fare</h2>
+        <h2 id="titolo-dialogo">Aggiungi cosa da fare</h2>
         <button class="close-btn" aria-label="Chiudi" title="Chiudi">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
@@ -588,26 +517,50 @@
       <div class="field-help">Testo libero: niente prodotto, marca o quantità.</div>
 
       <div class="field-group">
-        <div class="field-label">Urgenza</div>
-        <div class="chip-row">
-          <button class="chip urgent selected"><span class="dot"></span>Urgente</button>
-          <button class="chip"><span class="dot"></span>A tempo perso</button>
-          <button class="chip exceptional"><span class="dot"></span>Eccezionale</button>
+        <div class="field-label" id="urgenza">Urgenza</div>
+        <div class="chip-row" role="radiogroup" aria-labelledby="urgenza">
+          <label class="chip urgency-urgent">
+            <input type="radio" name="urgenza" value="Urgente" checked>
+            <span class="dot" aria-hidden="true"></span><span>Urgente</span>
+          </label>
+          <label class="chip urgency-relaxed">
+            <input type="radio" name="urgenza" value="A tempo perso">
+            <span class="dot" aria-hidden="true"></span><span>A tempo perso</span>
+          </label>
+          <label class="chip urgency-exceptional">
+            <input type="radio" name="urgenza" value="Eccezionale">
+            <span class="dot" aria-hidden="true"></span><span>Eccezionale</span>
+          </label>
         </div>
       </div>
 
       <div class="field-group">
-        <div class="field-label">Ambito</div>
-        <div class="chip-row">
-          <button class="chip">Casa</button>
-          <button class="chip">Pratiche</button>
-          <button class="chip selected">Salute</button>
-          <button class="chip">Lavoro</button>
-          <button class="chip">Altro</button>
+        <div class="field-label" id="ambito">Ambito</div>
+        <div class="chip-row" role="radiogroup" aria-labelledby="ambito">
+          <label class="chip">
+            <input type="radio" name="ambito" value="Casa">
+            <span>Casa</span>
+          </label>
+          <label class="chip">
+            <input type="radio" name="ambito" value="Pratiche">
+            <span>Pratiche</span>
+          </label>
+          <label class="chip">
+            <input type="radio" name="ambito" value="Salute" checked>
+            <span>Salute</span>
+          </label>
+          <label class="chip">
+            <input type="radio" name="ambito" value="Lavoro">
+            <span>Lavoro</span>
+          </label>
+          <label class="chip">
+            <input type="radio" name="ambito" value="Altro">
+            <span>Altro</span>
+          </label>
         </div>
       </div>
 
-      <div class="sheet-note">L'azione sarà salvata in <strong>Salute → Urgente</strong>. Se esiste già, compare un errore e non viene duplicata.</div>
+      <div class="sheet-note">L'azione usa l'ambito e l'urgenza selezionati. Se esiste già, compare un errore.</div>
 
       <div class="sheet-actions">
         <button class="btn btn-secondary">Annulla</button>

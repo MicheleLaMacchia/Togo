@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="it" id="scuro">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -25,27 +25,27 @@
     .device-frame {
       width: 412px;
       height: 915px;
-      background: #FFFFFF;
+      background: var(--surface-base);
       border-radius: 40px;
       box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45), 0 0 0 10px #1E293B;
       position: relative;
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      border: 3px solid #0F172A;
+      border: 3px solid var(--border-crisp);
     }
 
     .status-bar {
       height: 38px;
-      background: #FFFFFF;
+      background: var(--surface-base);
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 0 24px;
       font-size: 13px;
       font-weight: 700;
-      color: #0F172A;
-      border-bottom: 1px solid #F1F5F9;
+      color: var(--ink-primary);
+      border-bottom: 1px solid var(--surface-subtle);
       z-index: 10;
     }
 
@@ -57,12 +57,12 @@
 
     /* Header: history (Spesa only), arrows, title, share, settings */
     .app-bar {
-      background: #FFFFFF;
+      background: var(--surface-base);
       padding: 8px 12px;
       display: flex;
       align-items: center;
       gap: 2px;
-      border-bottom: 2px solid #0F172A;
+      border-bottom: 2px solid var(--border-crisp);
       z-index: 10;
       min-height: 64px;
     }
@@ -85,7 +85,7 @@
       font-size: 20px;
       font-weight: 900;
       letter-spacing: -0.3px;
-      color: #0F172A;
+      color: var(--ink-primary);
       line-height: 1.1;
       white-space: nowrap;
     }
@@ -93,7 +93,7 @@
     .app-title-group .subtitle {
       font-size: 11px;
       font-weight: 800;
-      color: #475569;
+      color: var(--ink-secondary);
       margin-top: 2px;
       display: flex;
       align-items: center;
@@ -103,8 +103,8 @@
     }
 
     .badge-counter {
-      background: #0F172A;
-      color: #FFFFFF;
+      background: var(--badge-bg);
+      color: var(--badge-ink);
       font-size: 10px;
       font-weight: 800;
       padding: 1px 6px;
@@ -113,16 +113,16 @@
     }
 
     .icon-btn {
-      width: 48px;
-      height: 48px;
-      background: #F8FAFC;
-      border: 2px solid #0F172A;
+      width: var(--touch-target-min);
+      height: var(--touch-target-min);
+      background: var(--surface-subtle);
+      border: 2px solid var(--border-crisp);
       border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      color: #0F172A;
+      color: var(--ink-primary);
       font-weight: 700;
       box-shadow: 2px 2px 0px #0F172A;
     }
@@ -134,12 +134,12 @@
     }
 
     .icon-btn.arrow {
-      background: #FFFFFF;
+      background: var(--surface-base);
     }
 
     .icon-btn.disabled {
-      color: #94A3B8;
-      border-color: #CBD5E1;
+      color: var(--ink-muted);
+      border-color: var(--border-hairline);
       box-shadow: none;
       cursor: default;
     }
@@ -149,12 +149,12 @@
       flex: 1;
       overflow-y: auto;
       padding: 16px 16px 88px 16px;
-      background: #F8FAFC;
+      background: var(--surface-subtle);
     }
 
     .category-group {
-      background: #FFFFFF;
-      border: 2px solid #0F172A;
+      background: var(--surface-card);
+      border: 2px solid var(--border-crisp);
       border-radius: 16px;
       margin-bottom: 12px;
       box-shadow: 3px 3px 0px #0F172A;
@@ -162,15 +162,15 @@
     }
 
     .category-header {
-      background: #F1F5F9;
+      background: var(--surface-subtle);
       padding: 10px 14px;
       font-size: 13px;
       font-weight: 800;
-      color: #0F172A;
+      color: var(--ink-primary);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 2px solid #0F172A;
+      border-bottom: 2px solid var(--border-crisp);
       letter-spacing: -0.2px;
       text-transform: uppercase;
     }
@@ -185,8 +185,8 @@
       width: 10px;
       height: 10px;
       border-radius: 50%;
-      background: #0F172A;
-      border: 1px solid #0F172A;
+      background: var(--ink-primary);
+      border: 1px solid var(--border-crisp);
     }
 
     .item-list {
@@ -201,71 +201,12 @@
       gap: 10px;
       padding: 10px 14px 10px 19px;
       min-height: 56px;
-      border-bottom: 1.5px solid #E2E8F0;
-      background: #FFFFFF;
+      border-bottom: 1.5px solid var(--border-hairline);
+      background: var(--surface-card);
     }
 
     .action-row:last-child {
       border-bottom: none;
-    }
-
-    .action-row::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 4px;
-      background: #CBD5E1;
-    }
-
-    .action-row.urgent::before {
-      background: #B45309;
-    }
-
-    .action-row.relaxed::before {
-      background: #CBD5E1;
-    }
-
-    .action-row.exceptional::before {
-      background: #2563EB;
-    }
-
-    .checkbox-touch {
-      width: 48px;
-      height: 48px;
-      margin: -7px -5px -7px -8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .custom-checkbox {
-      width: 26px;
-      height: 26px;
-      border: 2.2px solid #0F172A;
-      border-radius: 6px;
-      background: #FFFFFF;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .custom-checkbox.checked {
-      background: #0F172A;
-    }
-
-    .custom-checkbox svg {
-      display: none;
-      width: 15px;
-      height: 15px;
-      stroke: #FFFFFF;
-      stroke-width: 3.5;
-    }
-
-    .custom-checkbox.checked svg {
-      display: block;
     }
 
     .action-details {
@@ -276,69 +217,20 @@
     .action-name {
       font-size: 15px;
       font-weight: 700;
-      color: #0F172A;
+      color: var(--ink-primary);
       line-height: 1.3;
-    }
-
-    .badge-row {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 5px;
-      margin-top: 6px;
-    }
-
-    .badge {
-      font-size: 10px;
-      font-weight: 800;
-      line-height: 1.2;
-      padding: 3px 7px;
-      border-radius: 4px;
-      letter-spacing: 0.2px;
-      white-space: nowrap;
-    }
-
-    .urgency-urgent {
-      background: #FEF3C7;
-      color: #92400E;
-      border: 1px solid #B45309;
-      text-transform: uppercase;
-    }
-
-    .urgency-relaxed {
-      background: #F1F5F9;
-      color: #334155;
-      border: 1px solid #CBD5E1;
-      text-transform: uppercase;
-    }
-
-    .urgency-exceptional {
-      background: #DBEAFE;
-      color: #1E40AF;
-      border: 1px solid #2563EB;
-      text-transform: uppercase;
-    }
-
-    .area-badge {
-      background: #F8FAFC;
-      color: #475569;
-      border: 1px solid #CBD5E1;
     }
 
     .struck .action-name {
       text-decoration: line-through;
-      color: #94A3B8;
+      color: var(--ink-struck);
       font-weight: 600;
-    }
-
-    .struck .badge {
-      opacity: 0.55;
     }
 
     /* Fatte section */
     .fatte-container {
-      background: #F1F5F9;
-      border: 2px dashed #0F172A;
+      background: var(--surface-subtle);
+      border: 2px dashed var(--border-crisp);
       border-radius: 16px;
       margin-top: 14px;
       padding: 4px;
@@ -355,7 +247,7 @@
     .fatte-title {
       font-size: 14px;
       font-weight: 800;
-      color: #334155;
+      color: var(--ink-primary);
       display: flex;
       align-items: center;
       gap: 8px;
@@ -364,8 +256,8 @@
     }
 
     .fatte-badge {
-      background: #334155;
-      color: #FFFFFF;
+      background: var(--badge-bg);
+      color: var(--badge-ink);
       font-size: 11px;
       font-weight: 800;
       padding: 2px 7px;
@@ -375,11 +267,11 @@
     .fatte-hint {
       font-size: 11px;
       font-weight: 700;
-      color: #64748B;
+      color: var(--ink-secondary);
     }
 
     .fatte-container .action-row {
-      background: #F8FAFC;
+      background: var(--surface-subtle);
       border-radius: 8px;
       margin-bottom: 4px;
       border-bottom: none;
@@ -392,9 +284,9 @@
     .conclude-btn {
       width: 100%;
       height: 52px;
-      background: #0F172A;
-      color: #FFFFFF;
-      border: 2px solid #0F172A;
+      background: var(--accent-action);
+      color: var(--badge-ink);
+      border: 2px solid var(--border-crisp);
       border-radius: 12px;
       font-size: 14px;
       font-weight: 800;
@@ -418,14 +310,9 @@
 
     /* Focus visibile per tastiera / D-pad / Switch Access */
     .icon-btn:focus-visible, .checkbox-touch:focus-visible, .conclude-btn:focus-visible, .fab:focus-visible {
-      outline: 3px solid #2563EB;
+      outline: 3px solid var(--accent-highlight);
       outline-offset: 2px;
     }
-    .category-header:focus-visible, .fatte-header:focus-visible {
-      outline: 3px solid #2563EB;
-      outline-offset: 2px;
-    }
-
     /* FAB */
     .fab {
       position: absolute;
@@ -434,9 +321,9 @@
       width: 64px;
       height: 64px;
       border-radius: 50%;
-      background: #0F172A;
-      color: #FFFFFF;
-      border: 3px solid #FFFFFF;
+      background: var(--accent-action);
+      color: var(--badge-ink);
+      border: 3px solid var(--fab-border);
       box-shadow: 0 5px 16px rgba(15, 23, 42, 0.42), 0 0 0 2px #0F172A;
       display: flex;
       align-items: center;
@@ -452,6 +339,7 @@
     }
 
   </style>
+  <link rel="stylesheet" href="mockups.css">
 </head>
 <body>
 
@@ -477,7 +365,7 @@
       </div>
 
       <div class="header-side">
-        <button class="icon-btn arrow disabled" aria-label="Nessuna pagina a destra" title="Nessuna pagina a destra" disabled>
+        <button class="icon-btn arrow disabled" aria-label="Nessuna pagina a destra" title="Nessuna pagina a destra" aria-disabled="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
         <button class="icon-btn" aria-label="Condividi" title="Condividi">
@@ -500,118 +388,113 @@
 
     <div class="content-scroll">
       <!-- Casa -->
-      <div class="category-group">
-        <div class="category-header">
-          <div class="category-tag">
-            <div class="category-dot"></div>
+      <details class="category-group" open>
+        <summary class="category-header">
+          <span class="category-tag">
+            <span class="category-dot"></span>
             <span>Casa</span>
-          </div>
-          <span style="font-size: 11px; font-weight: 800; color: #475569;">2 AZIONI</span>
-        </div>
+          </span>
+          <span style="font-size: 11px; font-weight: 800; color: var(--ink-secondary);">2 AZIONI</span>
+        </summary>
         <ul class="item-list">
-          <li class="action-row relaxed">
-            <div class="checkbox-touch">
-              <div class="custom-checkbox">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
-              </div>
-            </div>
-            <div class="action-details">
-              <div class="action-name">Comprare le lampadine</div>
-              <div class="badge-row">
+          <li class="action-row urgency-relaxed">
+            <label class="checkbox-touch">
+              <input type="checkbox" aria-label="Comprare le lampadine">
+              <span class="custom-checkbox" aria-hidden="true"></span>
+            </label>
+            <button class="action-details action-edit" type="button">
+              <span class="action-name">Comprare le lampadine</span>
+              <span class="badge-row">
                 <span class="badge urgency-relaxed">A tempo perso</span>
                 <span class="badge area-badge">Casa</span>
-              </div>
-            </div>
+              </span>
+            </button>
           </li>
-          <li class="action-row exceptional">
-            <div class="checkbox-touch">
-              <div class="custom-checkbox">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
-              </div>
-            </div>
-            <div class="action-details">
-              <div class="action-name">Riordinare il garage</div>
-              <div class="badge-row">
+          <li class="action-row urgency-exceptional">
+            <label class="checkbox-touch">
+              <input type="checkbox" aria-label="Riordinare il garage">
+              <span class="custom-checkbox" aria-hidden="true"></span>
+            </label>
+            <button class="action-details action-edit" type="button">
+              <span class="action-name">Riordinare il garage</span>
+              <span class="badge-row">
                 <span class="badge urgency-exceptional">Eccezionale</span>
                 <span class="badge area-badge">Casa</span>
-              </div>
-            </div>
+              </span>
+            </button>
           </li>
         </ul>
-      </div>
+      </details>
 
       <!-- Pratiche -->
-      <div class="category-group">
-        <div class="category-header">
-          <div class="category-tag">
-            <div class="category-dot"></div>
+      <details class="category-group" open>
+        <summary class="category-header">
+          <span class="category-tag">
+            <span class="category-dot"></span>
             <span>Pratiche</span>
-          </div>
-          <span style="font-size: 11px; font-weight: 800; color: #475569;">1 AZIONE</span>
-        </div>
+          </span>
+          <span style="font-size: 11px; font-weight: 800; color: var(--ink-secondary);">1 AZIONE</span>
+        </summary>
         <ul class="item-list">
-          <li class="action-row urgent">
-            <div class="checkbox-touch">
-              <div class="custom-checkbox">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
-              </div>
-            </div>
-            <div class="action-details">
-              <div class="action-name">Pagare la bolletta</div>
-              <div class="badge-row">
+          <li class="action-row urgency-urgent">
+            <label class="checkbox-touch">
+              <input type="checkbox" aria-label="Pagare la bolletta">
+              <span class="custom-checkbox" aria-hidden="true"></span>
+            </label>
+            <button class="action-details action-edit" type="button">
+              <span class="action-name">Pagare la bolletta</span>
+              <span class="badge-row">
                 <span class="badge urgency-urgent">Urgente</span>
                 <span class="badge area-badge">Pratiche</span>
-              </div>
-            </div>
+              </span>
+            </button>
           </li>
         </ul>
-      </div>
+      </details>
 
       <!-- Salute -->
-      <div class="category-group">
-        <div class="category-header">
-          <div class="category-tag">
-            <div class="category-dot"></div>
+      <details class="category-group" open>
+        <summary class="category-header">
+          <span class="category-tag">
+            <span class="category-dot"></span>
             <span>Salute</span>
-          </div>
-          <span style="font-size: 11px; font-weight: 800; color: #475569;">1 AZIONE</span>
-        </div>
+          </span>
+          <span style="font-size: 11px; font-weight: 800; color: var(--ink-secondary);">1 AZIONE</span>
+        </summary>
         <ul class="item-list">
-          <li class="action-row urgent">
-            <div class="checkbox-touch">
-              <div class="custom-checkbox">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
-              </div>
-            </div>
-            <div class="action-details">
-              <div class="action-name">Chiamare il dentista</div>
-              <div class="badge-row">
+          <li class="action-row urgency-urgent">
+            <label class="checkbox-touch">
+              <input type="checkbox" aria-label="Chiamare il dentista">
+              <span class="custom-checkbox" aria-hidden="true"></span>
+            </label>
+            <button class="action-details action-edit" type="button">
+              <span class="action-name">Chiamare il dentista</span>
+              <span class="badge-row">
                 <span class="badge urgency-urgent">Urgente</span>
                 <span class="badge area-badge">Salute</span>
-              </div>
-            </div>
+              </span>
+            </button>
           </li>
         </ul>
-      </div>
+      </details>
 
       <!-- Fatte -->
-      <div class="fatte-container">
-        <div class="fatte-header">
-          <div class="fatte-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#334155" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      <details class="fatte-container" open>
+        <summary class="fatte-header">
+          <span class="fatte-title">
+            <svg class="section-chevron" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
             <span>Fatte</span>
             <span class="fatte-badge">2</span>
-          </div>
-          <span class="fatte-hint">Tocca per nascondere</span>
-        </div>
+          </span>
+          <span class="fatte-hint">Mostra o nascondi</span>
+        </summary>
 
         <ul class="item-list" style="margin-top: 4px;">
-          <li class="action-row relaxed struck">
-            <div class="checkbox-touch">
-              <div class="custom-checkbox checked">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
-              </div>
-            </div>
+          <li class="action-row urgency-relaxed struck">
+            <label class="checkbox-touch">
+              <input type="checkbox" aria-label="Fare la spesa" checked>
+              <span class="custom-checkbox" aria-hidden="true"></span>
+            </label>
             <div class="action-details">
               <div class="action-name">Fare la spesa</div>
               <div class="badge-row">
@@ -620,12 +503,11 @@
               </div>
             </div>
           </li>
-          <li class="action-row relaxed struck">
-            <div class="checkbox-touch">
-              <div class="custom-checkbox checked">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
-              </div>
-            </div>
+          <li class="action-row urgency-relaxed struck">
+            <label class="checkbox-touch">
+              <input type="checkbox" aria-label="Ritirare il pacco" checked>
+              <span class="custom-checkbox" aria-hidden="true"></span>
+            </label>
             <div class="action-details">
               <div class="action-name">Ritirare il pacco</div>
               <div class="badge-row">
@@ -640,7 +522,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
           Concludi attività
         </button>
-      </div>
+      </details>
     </div>
 
     <button class="fab" aria-label="Aggiungi cosa da fare" title="Aggiungi cosa da fare">

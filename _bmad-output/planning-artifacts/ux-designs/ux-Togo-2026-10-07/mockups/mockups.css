@@ -1,0 +1,238 @@
+:root {
+  color-scheme: light;
+  --touch-target-min: 48px;
+  --surface-base: #FFFFFF;
+  --surface-subtle: #F8FAFC;
+  --surface-card: #FFFFFF;
+  --ink-primary: #0F172A;
+  --ink-secondary: #475569;
+  --ink-muted: #94A3B8;
+  --ink-inverse: #FFFFFF;
+  --ink-struck: #1F2937;
+  --border-crisp: #0F172A;
+  --border-hairline: #CBD5E1;
+  --accent-action: #0F172A;
+  --accent-success: #15803D;
+  --accent-highlight: #2563EB;
+  --fab-border: var(--surface-base);
+  --badge-bg: #0F172A;
+  --badge-ink: #FFFFFF;
+  --focus-ring: #2563EB;
+  --urgency-urgent-bg: #FEF3C7;
+  --urgency-urgent-ink: #92400E;
+  --urgency-urgent-border: #B45309;
+  --urgency-relaxed-bg: #F1F5F9;
+  --urgency-relaxed-ink: #334155;
+  --urgency-relaxed-border: #CBD5E1;
+  --urgency-exceptional-bg: #DBEAFE;
+  --urgency-exceptional-ink: #1E40AF;
+  --urgency-exceptional-border: #2563EB;
+}
+
+/* Aggiungere #scuro all'indirizzo del mockup per aprire la variante scura. */
+:root#scuro:target {
+  color-scheme: dark;
+  --surface-base: #0B0F17;
+  --surface-subtle: #131B2E;
+  --surface-card: #131B2E;
+  --ink-primary: #F8FAFC;
+  --ink-secondary: #94A3B8;
+  --ink-muted: #CBD5E1;
+  --ink-inverse: #0F172A;
+  --ink-struck: #CBD5E1;
+  --border-crisp: #64748B;
+  --border-hairline: #1F2937;
+  --accent-action: #0F172A;
+  --accent-success: #15803D;
+  --accent-highlight: #60A5FA;
+  --fab-border: var(--border-crisp);
+  --badge-bg: #0F172A;
+  --badge-ink: #FFFFFF;
+  --focus-ring: #60A5FA;
+  --urgency-urgent-bg: #422006;
+  --urgency-urgent-ink: #FDE68A;
+  --urgency-urgent-border: #B45309;
+  --urgency-relaxed-bg: #1E293B;
+  --urgency-relaxed-ink: #CBD5E1;
+  --urgency-relaxed-border: #475569;
+  --urgency-exceptional-bg: #172554;
+  --urgency-exceptional-ink: #BFDBFE;
+  --urgency-exceptional-border: #2563EB;
+}
+
+:where(button, summary, input[type="text"], .checkbox-touch, .chip, .choice) {
+  min-inline-size: var(--touch-target-min);
+  min-block-size: var(--touch-target-min);
+}
+
+.device-frame {
+  color: var(--ink-primary);
+}
+
+:root#scuro:target .parsed-header {
+  color: var(--ink-primary);
+}
+
+.icon-btn,
+.close-btn,
+.edit-icon-btn {
+  flex-shrink: 0;
+}
+
+:is(button, summary, input[type="text"]):focus-visible,
+:is(.checkbox-touch, .chip, .choice):has(> input:focus-visible) {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}
+
+summary:focus-visible {
+  outline-offset: -4px;
+}
+
+details:not([open]) > summary .section-chevron {
+  transform: rotate(-90deg);
+}
+
+.checkbox-touch,
+.chip,
+.choice {
+  position: relative;
+}
+
+.chip,
+.choice {
+  border-color: var(--border-crisp);
+}
+
+.checkbox-touch {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 var(--touch-target-min);
+  width: var(--touch-target-min);
+  height: var(--touch-target-min);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+:is(.checkbox-touch, .chip, .choice) > input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.custom-checkbox {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--border-crisp);
+  border-radius: 4px;
+  background: var(--surface-card);
+}
+
+.checkbox-touch > input:checked + .custom-checkbox {
+  background: var(--accent-action);
+}
+
+.checkbox-touch > input:checked + .custom-checkbox::after {
+  content: "";
+  width: 7px;
+  height: 12px;
+  border: solid var(--badge-ink);
+  border-width: 0 2px 2px 0;
+  transform: translateY(-1px) rotate(45deg);
+}
+
+.urgency-urgent {
+  --urgency-bg: var(--urgency-urgent-bg);
+  --urgency-ink: var(--urgency-urgent-ink);
+  --urgency-border: var(--urgency-urgent-border);
+}
+
+.urgency-relaxed {
+  --urgency-bg: var(--urgency-relaxed-bg);
+  --urgency-ink: var(--urgency-relaxed-ink);
+  --urgency-border: var(--urgency-relaxed-border);
+}
+
+.urgency-exceptional {
+  --urgency-bg: var(--urgency-exceptional-bg);
+  --urgency-ink: var(--urgency-exceptional-ink);
+  --urgency-border: var(--urgency-exceptional-border);
+}
+
+.badge-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.badge {
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 16px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.area-badge {
+  background: var(--surface-subtle);
+  color: var(--ink-secondary);
+  border: 1px solid var(--border-hairline);
+}
+
+.badge:is(.urgency-urgent, .urgency-relaxed, .urgency-exceptional),
+.chip:is(.urgency-urgent, .urgency-relaxed, .urgency-exceptional):has(> input:checked) {
+  background: var(--urgency-bg);
+  color: var(--urgency-ink);
+  border-color: var(--urgency-border);
+}
+
+.badge:is(.urgency-urgent, .urgency-relaxed, .urgency-exceptional) {
+  border: 1px solid var(--urgency-border);
+  text-transform: uppercase;
+}
+
+.action-row {
+  position: relative;
+}
+
+.action-row::before {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 4px;
+  border-radius: 4px 0 0 4px;
+  background: var(--urgency-border);
+  content: "";
+}
+
+.action-edit {
+  min-width: var(--touch-target-min);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
