@@ -221,18 +221,41 @@ class ImportShoppingListUseCase(
 
         for (section in parsed.sections) {
             val level1 = level1s.firstOrNull { sameName(it.name, section.name) }
-                ?: return ImportPreviewResult.Error(
-                    "La categoria di primo livello \"${section.name}\" non esiste nel catalogo. " +
-                        "Controlla che il testo provenga dall'export di TOGO."
-                )
+            if (level1 == null) {
+                for (level2 in section.level2s) {
+                    for (level3 in level2.level3s) {
+                        for (item in level3.items) {
+                            val legacyItem = resolveLegacyCategoryItem(item, knownBrands, knownVariants)
+                                ?: return ImportPreviewResult.Error(
+                                    "Riga ${item.lineNumber}: la categoria legacy \"${section.name}\" " +
+                                        "non esiste e il prodotto \"${item.description}\" non è riconoscibile " +
+                                        "nel catalogo aggiornato."
+                                )
+                            planned += legacyItem
+                        }
+                    }
+                }
+                continue
+            }
 
             for (level2 in section.level2s) {
                 val parent2 = level2s.firstOrNull {
                     it.level1Id == level1.id && sameName(it.name, level2.name)
-                } ?: return ImportPreviewResult.Error(
-                    "La sottocategoria \"${level2.name}\" non esiste in " +
-                        "\"${level1.name}\". Controlla che il testo provenga dall'export di TOGO."
-                )
+                }
+                if (parent2 == null) {
+                    for (level3 in level2.level3s) {
+                        for (item in level3.items) {
+                            val legacyItem = resolveLegacyCategoryItem(item, knownBrands, knownVariants)
+                                ?: return ImportPreviewResult.Error(
+                                    "Riga ${item.lineNumber}: la sottocategoria legacy \"${level2.name}\" " +
+                                        "non esiste in \"${level1.name}\" e il prodotto " +
+                                        "\"${item.description}\" non è riconoscibile nel catalogo aggiornato."
+                                )
+                            planned += legacyItem
+                        }
+                    }
+                    continue
+                }
 
                 for (level3 in level2.level3s) {
                     val existingLevel3 = level3s.firstOrNull {
@@ -245,7 +268,26 @@ class ImportShoppingListUseCase(
                     }.orEmpty()
 
                     for (item in level3.items) {
-                        val resolved = resolveItem(
+                        val exactSynonym = catalogRepository.getByExactSynonym(item.description)
+                        val synonymBelongsToAnotherCategory = exactSynonym != null &&
+                            existingLevel3 != null && exactSynonym.level3Id != existingLevel3.id
+                        val movedLegacyProduct = if (existingLevel3 == null || synonymBelongsToAnotherCategory) {
+                            resolveLegacyCategoryItem(item, knownBrands, knownVariants)
+                        } else {
+                            null
+                        }
+                        if (movedLegacyProduct != null) {
+                            planned += movedLegacyProduct
+                            continue
+                        }
+                        val resolved = exactSynonym?.let { exact ->
+                            ResolvedLine(
+                                product = exact,
+                                productName = exact.name,
+                                brand = null,
+                                variant = "Bio".takeIf { containsBioTerm(item.description) },
+                            )
+                        } ?: resolveItem(
                             item = item,
                             products = products,
                             knownBrands = knownBrands,
@@ -323,6 +365,8 @@ class ImportShoppingListUseCase(
                             existingItem.copy(
                                 quantity = item.quantity,
                                 unit = item.unit,
+                                brand = item.brand ?: existingItem.brand,
+                                variant = item.variant ?: existingItem.variant,
                                 updatedAt = System.currentTimeMillis(),
                             )
                         )
@@ -476,28 +520,100 @@ class ImportShoppingListUseCase(
         if (words.isEmpty()) {
             return ResolvedLine(null, item.description, null, null)
         }
+        val hasBio = words.any(::isBioTerm)
+        val searchableWords = words.filterNot(::isBioTerm)
+        val effectiveWords = searchableWords.ifEmpty { words }
 
         val productMatch = products
             .mapNotNull { product ->
                 val nameWords = splitWords(product.name)
-                if (nameWords.isEmpty() || nameWords.size > words.size) return@mapNotNull null
-                if (startsWith(words, nameWords)) product to nameWords.size else null
+                if (nameWords.isEmpty() || nameWords.size > effectiveWords.size) return@mapNotNull null
+                if (startsWith(effectiveWords, nameWords)) product to nameWords.size else null
             }
             .maxByOrNull { it.second }
 
         if (productMatch != null) {
             val (product, matchedWords) = productMatch
-            val remainder = words.drop(matchedWords)
+            val remainder = effectiveWords.drop(matchedWords)
             val attributes = splitAttributes(remainder, knownBrands)
             return ResolvedLine(
                 product = product,
                 productName = product.name,
                 brand = attributes.brand,
-                variant = attributes.variant,
+                variant = listOfNotNull(attributes.variant, "Bio".takeIf { hasBio })
+                    .joinToString(" ").ifBlank { null },
             )
         }
 
-        return splitUnknownProduct(words, knownBrands, knownVariants)
+        val unknown = splitUnknownProduct(effectiveWords, knownBrands, knownVariants)
+        return if (hasBio) unknown.copy(
+            variant = listOfNotNull(unknown.variant, "Bio").joinToString(" "),
+        ) else unknown
+    }
+
+    private fun containsBioTerm(value: String): Boolean = splitWords(value).any(::isBioTerm)
+
+    private fun isBioTerm(word: String): Boolean =
+        ProductNameNormalizer.normalize(word) in
+            setOf("bio", "biologico", "biologica", "biologici", "biologiche")
+
+    /**
+     * Risolve una riga proveniente da un percorso di categoria legacy.
+     * Cerca il prodotto per nome/sinonimo nell'intero catalogo e usa il percorso
+     * attuale del prodotto, evitando di ricrearlo sotto la vecchia categoria.
+     */
+    private suspend fun resolveLegacyCategoryItem(
+        item: ParsedItem,
+        knownBrands: List<String>,
+        knownVariants: List<String>,
+    ): PlannedImportItem? {
+        val expressionWords = splitWords(item.description)
+        val hasBio = expressionWords.any(::isBioTerm)
+        val baseDescription = expressionWords.filterNot(::isBioTerm).joinToString(" ")
+        val searchDescription = baseDescription.ifBlank { item.description }
+
+        val exact = catalogRepository.getByExactSynonym(item.description)
+            ?: catalogRepository.getByExactSynonym(searchDescription)
+        val candidates = exact?.let(::listOf)
+            ?: catalogRepository.search(searchDescription).first()
+        if (candidates.isEmpty()) return null
+
+        val resolved = if (exact != null && !startsWith(splitWords(searchDescription), splitWords(exact.name))) {
+            ResolvedLine(exact, exact.name, null, null)
+        } else {
+            resolveItem(
+                item = item.copy(description = searchDescription),
+                products = candidates,
+                knownBrands = knownBrands,
+                knownVariants = knownVariants,
+            )
+        }
+        val product = resolved.product ?: candidates.firstOrNull { candidate ->
+            startsWith(splitWords(searchDescription), splitWords(candidate.name))
+        } ?: return null
+        val level1Name = product.level1Name ?: return null
+        val level2Name = product.level2Name ?: return null
+        val level2Id = product.level2Id ?: return null
+        val level3Name = product.level3Name ?: return null
+        val variant = listOfNotNull(
+            resolved.variant,
+            "Bio".takeIf { hasBio },
+        ).joinToString(" ").ifBlank { null }
+
+        return PlannedImportItem(
+            level2Id = level2Id,
+            level2Name = level2Name,
+            level3Id = product.level3Id,
+            level3Name = level3Name,
+            level1Name = level1Name,
+            productId = product.id,
+            productName = product.name,
+            quantity = item.quantity,
+            unit = item.unit ?: StandardUnit.PIECE,
+            brand = resolved.brand,
+            variant = variant,
+            lineNumber = item.lineNumber,
+        )
     }
 
     /**

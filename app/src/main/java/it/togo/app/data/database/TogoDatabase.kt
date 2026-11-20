@@ -58,13 +58,9 @@ abstract class TogoDatabase : RoomDatabase() {
                     TogoDatabase::class.java,
                     "togo.db"
                 )
-                    // Story 1.4: catalogo precompilato copiato dagli asset al primo avvio (AD-3).
-                    // La migrazione 4→5 applica il mapping
-                    // `tools/togo_catalog_migration_mapping_v2.csv` ai DB già
-                    // esistenti: rimappa i riferimenti utente, sostituisce i soli
-                    // prodotti predefiniti e lascia intatti quelli creati dall'utente.
-                    // Un DB dev senza catalogo (es. Story 1.3) viene popolato dalla
-                    // stessa migrazione perché il conteggio canonico non è 748.
+                    // Il catalogo precompilato viene copiato dagli asset al primo avvio.
+                    // Il passaggio Room 4→5 è mantenuto come no-op: questa tassonomia
+                    // vale per nuove installazioni e non aggiorna i cataloghi installati.
                     //
                     // Story 7.1 (2026-10-22): `CanonicalProductEntity.id` usa
                     // `autoGenerate`, quindi l'identity hash dello schema Room cambia
@@ -79,7 +75,7 @@ abstract class TogoDatabase : RoomDatabase() {
                         MIGRATION_1_2,
                         MIGRATION_2_3,
                         MIGRATION_3_4,
-                        migration4To5(context.applicationContext),
+                        migration4To5,
                         // Story 8.1: crea ACTION_ITEM senza toccare catalogo
                         // e dati utente. Con questa migrazione registrata il
                         // percorso 5→6 non passa dal fallback distruttivo.

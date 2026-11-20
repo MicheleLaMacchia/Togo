@@ -347,7 +347,71 @@ class ImportShoppingListUseCaseTest {
         val result = createUseCase().preview(text)
 
         assertTrue(result is ImportPreviewResult.Error)
-        assertTrue((result as ImportPreviewResult.Error).message.contains("primo livello"))
+        assertTrue((result as ImportPreviewResult.Error).message.contains("non è riconoscibile"))
+    }
+
+    @Test
+    fun `vecchio percorso categoria risolve il prodotto nel nuovo reparto e conserva Bio`() = runTest {
+        val strawberry = CanonicalProduct(
+            id = 55,
+            name = "Fragola",
+            level3Id = 200,
+            level3Name = "Frutti di bosco",
+            level2Id = 20,
+            level2Name = "Frutta fresca",
+            level1Name = "Ortofrutta",
+        )
+        val catalog = FakeCatalogRepository(initialProducts = listOf(strawberry))
+        val shopping = FakeShoppingListRepository()
+        val useCase = createUseCase(catalog = catalog, shopping = shopping)
+        val text = """
+            [ORTOFRUTTA]
+            + FRUTTA
+            - FRUTTA SECCA
+              Fragola Biologica 2 pz
+        """.trimIndent()
+
+        val preview = useCase.preview(text) as ImportPreviewResult.Ready
+        val planned = preview.plan.items.single()
+        assertEquals(strawberry.id, planned.productId)
+        assertEquals("Ortofrutta", planned.level1Name)
+        assertEquals("Frutta fresca", planned.level2Name)
+        assertEquals("Bio", planned.variant)
+
+        useCase.execute(preview.plan)
+        assertEquals("Bio", shopping.items.single().variant)
+    }
+
+    @Test
+    fun `sinonimo esatto legacy usa il prodotto e il percorso canonici`() = runTest {
+        val canonical = CanonicalProduct(
+            id = 77,
+            name = "Bistecchiera",
+            level3Id = 300,
+            level3Name = "Padelle e bistecchiere",
+            level2Id = 30,
+            level2Name = "Cottura",
+            level1Name = "Cucina e tavola",
+        )
+        val catalog = FakeCatalogRepository(
+            initialProducts = listOf(canonical),
+            exactSynonyms = mapOf("padella griglia" to canonical),
+        )
+        val text = """
+            [PASTA, RISO E CEREALI]
+            + PASTA SECCA
+            - SPAGHETTI
+              padella griglia 1 pz
+        """.trimIndent()
+
+        val preview = createUseCase(catalog = catalog).preview(text) as ImportPreviewResult.Ready
+        val planned = preview.plan.items.single()
+
+        assertEquals(canonical.id, planned.productId)
+        assertEquals("Cucina e tavola", planned.level1Name)
+        assertEquals("Cottura", planned.level2Name)
+        assertEquals("Padelle e bistecchiere", planned.level3Name)
+        assertEquals(canonical.level3Id, planned.level3Id)
     }
 
     @Test
@@ -475,6 +539,7 @@ class ImportShoppingListUseCaseTest {
 
     private inner class FakeCatalogRepository(
         initialProducts: List<CanonicalProduct> = emptyList(),
+        private val exactSynonyms: Map<String, CanonicalProduct> = emptyMap(),
     ) : CatalogRepository {
 
         val level3s = mutableListOf(level3)
@@ -487,6 +552,9 @@ class ImportShoppingListUseCaseTest {
 
         override suspend fun getById(id: Long): CanonicalProduct? =
             products.firstOrNull { it.id == id }
+
+        override suspend fun getByExactSynonym(term: String): CanonicalProduct? =
+            exactSynonyms.entries.firstOrNull { it.key.equals(term, ignoreCase = true) }?.value
 
         override fun getTaxonomy(): Flow<List<TaxonomyLevel>> =
             flowOf(listOf(level1, level2) + level3s)

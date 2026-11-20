@@ -1,18 +1,14 @@
 #!/usr/bin/env python3
 """
-Genera il catalogo Togo applicando il mapping di migrazione v2.
+Genera il catalogo preinstallato secondo la proposta tassonomica approvata.
 
 Fonti:
-  - tools/togo_catalog_migration_mapping_v2.csv
-    (1.470 righe prodotto -> 748 prodotti canonici; le righe
-    MERGE_ID_REFERENCE_REVIEW vengono fuse nel relativo survivor)
+  - proposta-tassonomia-prodotti.md
+    (sezioni 3, 7, 8, 9 e 10)
 
 Output:
   - app/src/main/assets/catalog.db
       asset Room con tassonomia, prodotti canonici e sinonimi.
-  - app/src/main/assets/catalog_migration_v2.sql
-      script idempotente usato dalla migrazione Room 4->5 per rimappare
-      i riferimenti utente e sostituire il catalogo sui database esistenti.
   - catalogo.md
       report leggibile con tutte le categorie L1/L2/L3 e tutti i prodotti.
 
@@ -21,50 +17,27 @@ Uso:
 """
 from __future__ import annotations
 
-import csv
 import sqlite3
 import sys
+import re
 import unicodedata
 from collections import OrderedDict
 from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-MAPPING_PATH = ROOT / "tools" / "togo_catalog_migration_mapping_v2.csv"
+PROPOSAL_PATH = ROOT / "proposta-tassonomia-prodotti.md"
 ASSET_PATH = ROOT / "app" / "src" / "main" / "assets" / "catalog.db"
-MIGRATION_SQL_PATH = ROOT / "app" / "src" / "main" / "assets" / "catalog_migration_v2.sql"
 CATALOG_MD_PATH = ROOT / "catalogo.md"
 
-EXPECTED_HEADERS = [
-    "original_id",
-    "original_name",
-    "proposed_canonical_name",
-    "proposed_survivor_id",
-    "action",
-    "old_l1",
-    "old_l2",
-    "old_l3",
-    "category_conflict_in_group",
-]
-KEEP = "KEEP"
-MERGE = "MERGE_ID_REFERENCE_REVIEW"
-EXPECTED_L1_ORDER = [
-    "Ortofrutta",
-    "Panetteria",
-    "Carne",
-    "Pesce",
-    "Bevande",
-    "Banco Frigo",
-    "Dispensa",
-    "Non alimentare",
-]
-NON_FOOD_L1 = "Non alimentare"
-EXPECTED_L1 = 8
-EXPECTED_L2 = 37
-EXPECTED_L3 = 98
-EXPECTED_PRODUCTS = 748
-EXPECTED_FOOD = 608
-EXPECTED_NON_FOOD = 140
+EXPECTED_L1 = 22
+EXPECTED_L2 = 100
+EXPECTED_L3 = 455
+EXPECTED_PRODUCTS = 892
+EXPECTED_EMPTY_L3 = 64
+PROPOSAL_TAXONOMY: list[tuple[str, str, str]] = []
+PROPOSAL_EXCLUDED_IDS: set[int] = set()
+PROPOSAL_RETIRED_IDS: set[int] = set()
 
 # Schema identico all'asset Room di partenza (user_version = 1).
 # Le migrazioni Room 1->2, 2->3, 3->4 e 4->5 portano il DB alla versione 5.
@@ -139,194 +112,209 @@ def fail(message: str) -> None:
     raise SystemExit(f"ERRORE: {message}")
 
 
-def parse_int(value: str, field: str, line_no: int) -> int:
-    try:
-        return int(value)
-    except ValueError:
-        fail(f"riga {line_no}: {field} non intero: {value!r}")
-
-
 def normalize_term(text: str) -> str:
     """Minuscolo + accent-fold, la stessa normalizzazione usata da Kotlin."""
     decomposed = unicodedata.normalize("NFKD", text.strip().lower())
     return "".join(ch for ch in decomposed if not unicodedata.combining(ch))
 
 
-def sql_quote(text: str) -> str:
-    if "\n" in text or "\r" in text:
-        fail(f"valore SQL con newline non supportato: {text!r}")
-    return "'" + text.replace("'", "''") + "'"
+def _proposal_section(source: str, number: int) -> str:
+    match = re.search(
+        rf"^## {number}\. .*?(?=^## {number + 1}\. |^## Appendice|\Z)",
+        source,
+        flags=re.MULTILINE | re.DOTALL,
+    )
+    if match is None:
+        fail(f"sezione {number} non trovata in {PROPOSAL_PATH.name}")
+    return match.group(0)
+
+
+def _table_cells(line: str) -> list[str]:
+    return [cell.strip() for cell in line.strip().strip("|").split("|")]
 
 
 def read_mapping() -> list[dict[str, object]]:
-    if not MAPPING_PATH.exists():
-        fail(f"mapping non trovato: {MAPPING_PATH}")
+    """Legge tassonomia e assegnazioni direttamente dalla proposta."""
+    global PROPOSAL_TAXONOMY, PROPOSAL_EXCLUDED_IDS, PROPOSAL_RETIRED_IDS
+    if not PROPOSAL_PATH.exists():
+        fail(f"proposta non trovata: {PROPOSAL_PATH}")
+    source = PROPOSAL_PATH.read_text(encoding="utf-8")
+    tree_section = _proposal_section(source, 3)
+    keep_section = _proposal_section(source, 7)
+    additions_section = _proposal_section(source, 8)
+    exclusion_section = _proposal_section(source, 9)
+    bio_section = _proposal_section(source, 10)
 
-    with MAPPING_PATH.open(encoding="utf-8-sig", newline="") as f:
-        reader = csv.DictReader(f)
-        if reader.fieldnames != EXPECTED_HEADERS:
-            fail(f"intestazioni inattese: {reader.fieldnames}")
-
-        rows: list[dict[str, object]] = []
-        seen_ids: set[int] = set()
-        for line_no, raw in enumerate(reader, start=2):
-            row = {key: (raw.get(key) or "").strip() for key in EXPECTED_HEADERS}
-            original_id = parse_int(str(row["original_id"]), "original_id", line_no)
-            survivor_id = parse_int(
-                str(row["proposed_survivor_id"]), "proposed_survivor_id", line_no
-            )
-            if original_id in seen_ids:
-                fail(f"riga {line_no}: original_id duplicato {original_id}")
-            seen_ids.add(original_id)
-
-            action = str(row["action"])
-            if action not in (KEEP, MERGE):
-                fail(f"riga {line_no}: action inattesa {action!r}")
-            if action == KEEP and survivor_id != original_id:
-                fail(f"riga {line_no}: KEEP con survivor diverso da original_id")
-            if action == KEEP and row["original_name"] != row["proposed_canonical_name"]:
-                fail(f"riga {line_no}: KEEP con nome canonico diverso dal nome originale")
-            if action == MERGE and survivor_id == original_id:
-                fail(f"riga {line_no}: MERGE con survivor uguale a original_id")
-
-            for field in ("original_name", "proposed_canonical_name", "old_l1", "old_l2", "old_l3"):
-                if not row[field]:
-                    fail(f"riga {line_no}: {field} vuoto")
-            if row["category_conflict_in_group"] not in ("YES", "NO", ""):
-                fail(
-                    f"riga {line_no}: category_conflict_in_group inatteso "
-                    f"{row['category_conflict_in_group']!r}"
+    taxonomy: list[tuple[str, str, str]] = []
+    current_l1: str | None = None
+    for line in tree_section.splitlines():
+        if line.startswith("### "):
+            current_l1 = line[4:].strip()
+        elif line.startswith("|"):
+            cells = _table_cells(line)
+            if len(cells) == 2 and cells[0] != "L2" and not cells[0].startswith("---"):
+                if not current_l1:
+                    fail("riga L2 trovata prima del primo L1")
+                taxonomy.extend(
+                    (current_l1, cells[0], l3.strip())
+                    for l3 in cells[1].split(";")
+                    if l3.strip()
                 )
+    if not taxonomy:
+        fail("albero tassonomico vuoto")
+    if len(set(taxonomy)) != len(taxonomy):
+        fail("triplette L1/L2/L3 duplicate nella sezione 3")
+    PROPOSAL_TAXONOMY = taxonomy
 
-            row["original_id"] = original_id
-            row["proposed_survivor_id"] = survivor_id
-            rows.append(row)
+    products: list[dict[str, object]] = []
+    current_l1 = None
+    kept_ids: set[int] = set()
+    for line in keep_section.splitlines():
+        if line.startswith("### "):
+            current_l1 = line[4:].strip()
+        elif line.startswith("|"):
+            cells = _table_cells(line)
+            if len(cells) == 5 and cells[0] != "L2" and cells[2].isdigit():
+                product_id = int(cells[2])
+                if product_id in kept_ids:
+                    fail(f"ID mantenuto duplicato nella sezione 7: {product_id}")
+                kept_ids.add(product_id)
+                products.append({
+                    "id": product_id,
+                    "name": cells[3],
+                    "path": (current_l1, cells[0], cells[1]),
+                    "aliases": [],
+                })
 
-    if not rows:
-        fail("mapping vuoto")
+    additions: list[tuple[str, str, str, str]] = []
+    current_l1 = None
+    for line in additions_section.splitlines():
+        if line.startswith("### "):
+            current_l1 = line[4:].strip()
+        elif line.startswith("|"):
+            cells = _table_cells(line)
+            if len(cells) == 3 and cells[0] != "L2" and not cells[0].startswith("---"):
+                if current_l1 is not None:
+                    additions.append((current_l1, cells[0], cells[1], cells[2]))
 
-    # Ogni survivor deve essere una riga KEEP e ogni MERGE deve puntare a un KEEP.
-    survivors = {int(r["original_id"]): r for r in rows if r["action"] == KEEP}
-    for row in rows:
-        survivor_id = int(row["proposed_survivor_id"])
-        survivor = survivors.get(survivor_id)
-        if survivor is None:
-            fail(f"survivor {survivor_id} non trovato per original_id {row['original_id']}")
-        if row["proposed_canonical_name"] != survivor["proposed_canonical_name"]:
-            fail(
-                f"proposed_canonical_name incoerente per original_id {row['original_id']}: "
-                f"{row['proposed_canonical_name']!r} != {survivor['proposed_canonical_name']!r}"
-            )
+    excluded_ids = {
+        int(cells[0])
+        for line in exclusion_section.splitlines()
+        if line.startswith("|")
+        for cells in [_table_cells(line)]
+        if len(cells) == 2 and cells[0].isdigit()
+    }
+    retired_ids = {
+        int(cells[0])
+        for line in bio_section.splitlines()
+        if line.startswith("|")
+        for cells in [_table_cells(line)]
+        if len(cells) == 3 and cells[0].isdigit()
+    }
+    if kept_ids & excluded_ids or kept_ids & retired_ids or excluded_ids & retired_ids:
+        fail("un ID originale compare in più insiemi tra mantenuti, esclusi e Bio ritirati")
+    if (len(kept_ids), len(excluded_ids), len(retired_ids)) != (607, 16, 125):
+        fail("conteggi inattesi negli insiemi di ID mantenuti, esclusi o Bio ritirati")
+    if len(kept_ids | excluded_ids | retired_ids) != 748:
+        fail("gli ID originali non sono partizionati in modo univoco")
+    PROPOSAL_EXCLUDED_IDS = excluded_ids
+    PROPOSAL_RETIRED_IDS = retired_ids
 
-    # I nomi canonici devono essere univoci anche dopo accent-fold.
-    normalized_names: dict[str, int] = {}
-    for survivor in survivors.values():
-        name = str(survivor["proposed_canonical_name"])
-        normalized = normalize_term(name)
-        if normalized in normalized_names:
-            fail(
-                f"nome canonico duplicato dopo normalizzazione: {name!r} "
-                f"(id {survivor['original_id']} e {normalized_names[normalized]})"
-            )
-        normalized_names[normalized] = int(survivor["original_id"])
+    used_ids = kept_ids | excluded_ids | retired_ids
+    next_id = max(used_ids) + 1
+    names = {str(product["name"]).casefold() for product in products}
+    for l1, l2, l3, name in additions:
+        path = (l1, l2, l3)
+        if path not in set(taxonomy):
+            fail(f"nuovo prodotto fuori albero tassonomico: {path}")
+        if name.casefold() in names:
+            fail(f"nome prodotto duplicato: {name}")
+        names.add(name.casefold())
+        products.append({"id": next_id, "name": name, "path": path, "aliases": []})
+        next_id += 1
 
-    return rows
+    if len(kept_ids) != 607 or len(additions) != 285:
+        fail(f"conteggi proposta inattesi: {len(kept_ids)} mantenuti, {len(additions)} nuovi")
+    if len(products) != EXPECTED_PRODUCTS:
+        fail(f"prodotti attesi {EXPECTED_PRODUCTS}, trovati {len(products)}")
+
+    by_name = {str(p["name"]).casefold(): p for p in products}
+    # Sinonimi espliciti della tabella introduttiva della sezione 8.
+    for line in additions_section.splitlines():
+        if not line.startswith("|"):
+            continue
+        cells = _table_cells(line)
+        if len(cells) == 2 and cells[0] not in ("Prodotto canonico", "---") and not cells[0].startswith("---"):
+            product = by_name.get(cells[0].casefold())
+            if product is None:
+                fail(f"sinonimo assegnato a prodotto assente: {cells[0]}")
+            product["aliases"].extend(alias.strip() for alias in cells[1].split(";") if alias.strip())
+
+    # Le espressioni Bio storiche risolvono il prodotto base e restano attributi
+    # di acquisto nel flusso di importazione; non creano ID canonici separati.
+    bio_forms = ("Bio", "Biologico", "Biologica", "Biologici", "Biologiche")
+    for product in products:
+        name = str(product["name"])
+        product["aliases"].extend(
+            [f"{name} {form}" for form in bio_forms]
+            + [f"{form} {name}" for form in bio_forms]
+        )
+
+    if len({int(p["id"]) for p in products}) != len(products):
+        fail("collisione tra ID mantenuti e nuovi")
+    return products
 
 
 def build_taxonomy(rows: list[dict[str, object]]) -> dict[str, object]:
     l1_names: list[str] = []
     l2_keys: list[tuple[str, str]] = []
-    l3_keys: list[tuple[str, str, str]] = []
-
-    for row in rows:
-        l1 = str(row["old_l1"])
-        l2 = str(row["old_l2"])
-        l3 = str(row["old_l3"])
+    l3_keys = list(PROPOSAL_TAXONOMY)
+    for l1, l2, _ in l3_keys:
         if l1 not in l1_names:
             l1_names.append(l1)
         if (l1, l2) not in l2_keys:
             l2_keys.append((l1, l2))
-        if (l1, l2, l3) not in l3_keys:
-            l3_keys.append((l1, l2, l3))
-
-    if l1_names != EXPECTED_L1_ORDER:
-        fail(f"ordine L1 inatteso: {l1_names}")
-    if len(l1_names) != EXPECTED_L1:
-        fail(f"L1 attesi {EXPECTED_L1}, trovati {len(l1_names)}")
-    if len(l2_keys) != EXPECTED_L2:
-        fail(f"L2 attesi {EXPECTED_L2}, trovati {len(l2_keys)}")
-    if len(l3_keys) != EXPECTED_L3:
-        fail(f"L3 attesi {EXPECTED_L3}, trovati {len(l3_keys)}")
-
+    if (len(l1_names), len(l2_keys), len(l3_keys)) != (EXPECTED_L1, EXPECTED_L2, EXPECTED_L3):
+        fail(f"dimensione tassonomia inattesa: {len(l1_names)}/{len(l2_keys)}/{len(l3_keys)}")
     l1_ids = {name: index + 1 for index, name in enumerate(l1_names)}
     l2_ids = {key: index + 1 for index, key in enumerate(l2_keys)}
     l3_ids = {key: index + 1 for index, key in enumerate(l3_keys)}
-
     l2_sort: dict[tuple[str, str], int] = {}
     l2_counter: dict[str, int] = {}
     for l1, l2 in l2_keys:
         l2_counter[l1] = l2_counter.get(l1, 0) + 1
         l2_sort[(l1, l2)] = l2_counter[l1]
-
     l3_sort: dict[tuple[str, str, str], int] = {}
     l3_counter: dict[tuple[str, str], int] = {}
     for l1, l2, l3 in l3_keys:
         parent = (l1, l2)
         l3_counter[parent] = l3_counter.get(parent, 0) + 1
         l3_sort[(l1, l2, l3)] = l3_counter[parent]
-
     return {
         "l1_names": l1_names,
         "l1_ids": l1_ids,
         "l1_rows": [(l1_ids[name], name, index + 1) for index, name in enumerate(l1_names)],
-        "l2_rows": [
-            (l2_ids[(l1, l2)], l1_ids[l1], l2, l2_sort[(l1, l2)])
-            for l1, l2 in l2_keys
-        ],
-        "l3_rows": [
-            (l3_ids[(l1, l2, l3)], l2_ids[(l1, l2)], l3, l3_sort[(l1, l2, l3)])
-            for l1, l2, l3 in l3_keys
-        ],
+        "l2_rows": [(l2_ids[(l1, l2)], l1_ids[l1], l2, l2_sort[(l1, l2)]) for l1, l2 in l2_keys],
+        "l3_rows": [(l3_ids[(l1, l2, l3)], l2_ids[(l1, l2)], l3, l3_sort[(l1, l2, l3)]) for l1, l2, l3 in l3_keys],
         "l2_ids": l2_ids,
         "l3_ids": l3_ids,
     }
 
 
-def build_products(
-    rows: list[dict[str, object]], taxonomy: dict[str, object]
-) -> list[dict[str, object]]:
+def build_products(rows: list[dict[str, object]], taxonomy: dict[str, object]) -> list[dict[str, object]]:
     l3_ids: dict[tuple[str, str, str], int] = taxonomy["l3_ids"]  # type: ignore[assignment]
-    survivors = sorted(
-        (r for r in rows if r["action"] == KEEP),
-        key=lambda r: int(r["proposed_survivor_id"]),
-    )
     products: list[dict[str, object]] = []
-    by_survivor: dict[int, dict[str, object]] = {}
-    for row in survivors:
-        path = (
-            str(row["old_l1"]),
-            str(row["old_l2"]),
-            str(row["old_l3"]),
-        )
-        product = {
-            "id": int(row["proposed_survivor_id"]),
-            "name": str(row["proposed_canonical_name"]),
+    for row in rows:
+        path = row["path"]
+        if path not in l3_ids:
+            fail(f"categoria prodotto non trovata: {path}")
+        products.append({
+            "id": int(row["id"]),
+            "name": str(row["name"]),
             "level3_id": l3_ids[path],
             "path": path,
-            "aliases": [],
-        }
-        products.append(product)
-        by_survivor[int(row["proposed_survivor_id"])] = product
-
-    if len(products) != EXPECTED_PRODUCTS:
-        fail(f"prodotti attesi {EXPECTED_PRODUCTS}, trovati {len(products)}")
-
-    for row in sorted(rows, key=lambda r: int(r["original_id"])):
-        if row["action"] == KEEP:
-            continue
-        survivor_id = int(row["proposed_survivor_id"])
-        by_survivor[survivor_id]["aliases"].append(str(row["original_name"]))  # type: ignore[union-attr]
-
+            "aliases": list(row["aliases"]),
+        })
     return products
 
 
@@ -404,95 +392,6 @@ def create_database(
         conn.close()
 
 
-def write_migration_sql(
-    rows: list[dict[str, object]],
-    taxonomy: dict[str, object],
-    products: list[dict[str, object]],
-    synonyms: dict[str, int],
-) -> None:
-    """Scrive lo script SQL eseguito dalla migrazione Room 4->5.
-
-    Lo script è idempotente sul catalogo: elimina solo i prodotti predefiniti
-    (is_user_defined = 0), rimappa i riferimenti utente tramite una tabella
-    temporanea e reinserisce il nuovo catalogo. I prodotti creati dall'utente
-    restano intatti.
-    """
-    lines: list[str] = []
-    lines.append("DROP TABLE IF EXISTS CATALOG_REMAP_V2")
-    lines.append(
-        "CREATE TEMP TABLE CATALOG_REMAP_V2 "
-        "(old_id INTEGER PRIMARY KEY, new_id INTEGER NOT NULL)"
-    )
-
-    for row in sorted(rows, key=lambda r: int(r["original_id"])):
-        lines.append(
-            "INSERT INTO CATALOG_REMAP_V2 (old_id, new_id) VALUES "
-            f"({int(row['original_id'])}, {int(row['proposed_survivor_id'])})"
-        )
-
-    lines.extend(
-        [
-            "UPDATE SHOPPING_ITEM SET productId = "
-            "(SELECT new_id FROM CATALOG_REMAP_V2 WHERE old_id = SHOPPING_ITEM.productId) "
-            "WHERE productId IN (SELECT old_id FROM CATALOG_REMAP_V2) "
-            "AND productId IN (SELECT id FROM CANONICAL_PRODUCT WHERE is_user_defined = 0)",
-            "UPDATE HISTORICAL_ITEM SET productId = "
-            "(SELECT new_id FROM CATALOG_REMAP_V2 WHERE old_id = HISTORICAL_ITEM.productId) "
-            "WHERE productId IN (SELECT old_id FROM CATALOG_REMAP_V2) "
-            "AND productId IN (SELECT id FROM CANONICAL_PRODUCT WHERE is_user_defined = 0)",
-            "UPDATE LEARNED_RULE SET productId = "
-            "(SELECT new_id FROM CATALOG_REMAP_V2 WHERE old_id = LEARNED_RULE.productId) "
-            "WHERE productId IN (SELECT old_id FROM CATALOG_REMAP_V2) "
-            "AND productId IN (SELECT id FROM CANONICAL_PRODUCT WHERE is_user_defined = 0)",
-            "DELETE FROM SYNONYM WHERE product_id IN "
-            "(SELECT id FROM CANONICAL_PRODUCT WHERE is_user_defined = 0)",
-            "DELETE FROM CANONICAL_PRODUCT WHERE is_user_defined = 0",
-        ]
-    )
-
-    # Ripristina la tassonomia anche su un DB dev che non aveva il catalogo.
-    # INSERT OR IGNORE lascia intatte le righe già presenti e le categorie
-    # create dall'utente (che hanno ID successivi a quelli predefiniti).
-    for row in taxonomy["l1_rows"]:  # type: ignore[union-attr]
-        taxonomy_id, name, sort_order = row
-        lines.append(
-            "INSERT OR IGNORE INTO TAXONOMY_LEVEL_1 (id, name, sortOrder) VALUES "
-            f"({taxonomy_id}, {sql_quote(str(name))}, {sort_order})"
-        )
-    for row in taxonomy["l2_rows"]:  # type: ignore[union-attr]
-        taxonomy_id, level1_id, name, sort_order = row
-        lines.append(
-            "INSERT OR IGNORE INTO TAXONOMY_LEVEL_2 (id, level1_id, name, sortOrder) VALUES "
-            f"({taxonomy_id}, {level1_id}, {sql_quote(str(name))}, {sort_order})"
-        )
-    for row in taxonomy["l3_rows"]:  # type: ignore[union-attr]
-        taxonomy_id, level2_id, name, sort_order = row
-        lines.append(
-            "INSERT OR IGNORE INTO TAXONOMY_LEVEL_3 "
-            "(id, level2_id, name, sortOrder, is_user_defined) VALUES "
-            f"({taxonomy_id}, {level2_id}, {sql_quote(str(name))}, {sort_order}, 0)"
-        )
-
-    for product in products:
-        lines.append(
-            "INSERT INTO CANONICAL_PRODUCT (id, level3_id, name, is_user_defined) VALUES "
-            f"({int(product['id'])}, {int(product['level3_id'])}, "
-            f"{sql_quote(str(product['name']))}, 0)"
-        )
-
-    for term, product_id in sorted(synonyms.items(), key=lambda kv: (kv[1], kv[0])):
-        lines.append(
-            "INSERT INTO SYNONYM (product_id, term) VALUES "
-            f"({product_id}, {sql_quote(term)})"
-        )
-
-    lines.append("DROP TABLE CATALOG_REMAP_V2")
-    for line in lines:
-        if "\n" in line or "\r" in line:
-            fail("statement SQL con newline inatteso")
-    MIGRATION_SQL_PATH.write_text("\n".join(lines) + "\n", encoding="utf-8")
-
-
 def format_int(value: int) -> str:
     return f"{value:,}".replace(",", ".")
 
@@ -516,7 +415,7 @@ def read_catalog(conn: sqlite3.Connection) -> list[dict[str, object]]:
     return [dict(row) for row in rows]
 
 
-def write_catalog_md(source_rows: int, merged_rows: int) -> None:
+def write_catalog_md(source_rows: int) -> None:
     conn = sqlite3.connect(str(ASSET_PATH))
     try:
         rows = read_catalog(conn)
@@ -549,7 +448,7 @@ def write_catalog_md(source_rows: int, merged_rows: int) -> None:
         "# Catalogo prodotti Togo",
         "",
         "> Documento generato automaticamente dal database `app/src/main/assets/catalog.db`.",
-        "> Fonte: `tools/togo_catalog_migration_mapping_v2.csv`.",
+        "> Fonte: `proposta-tassonomia-prodotti.md` (sezioni 3, 7 e 8).",
         f"> Data di generazione: **{date_text}**.",
         "",
         "## Riepilogo",
@@ -562,9 +461,8 @@ def write_catalog_md(source_rows: int, merged_rows: int) -> None:
         f"| **Totale categorie** | **{format_int(n_l1 + n_l2 + n_l3)}** |",
         f"| **Prodotti censiti** | **{format_int(total_products)}** |",
         "",
-        f"> Il mapping di origine contiene {format_int(source_rows)} nomi prodotto; "
-        f"{format_int(merged_rows)} confezioni/varianti sono state fuse nei "
-        f"{format_int(total_products)} prodotti canonici e restano ricercabili come sinonimi.",
+        f"> Il seed contiene {format_int(source_rows)} assegnazioni prodotto canoniche; "
+        f"{format_int(n_l3)} categorie L3, incluse quelle senza prodotti predefiniti.",
         "",
         "I prodotti sono elencati in ordine alfabetico all'interno di ogni categoria di livello 3. "
         "Gli ID corrispondono a `CANONICAL_PRODUCT.id`.",
@@ -670,32 +568,6 @@ def verify_database(
             if counts[key] != expected:
                 fail(f"{key} attesi {expected}, trovati {counts[key]}")
 
-        food = conn.execute(
-            """
-            SELECT COUNT(*) FROM CANONICAL_PRODUCT cp
-            JOIN TAXONOMY_LEVEL_3 t3 ON t3.id = cp.level3_id
-            JOIN TAXONOMY_LEVEL_2 t2 ON t2.id = t3.level2_id
-            JOIN TAXONOMY_LEVEL_1 t1 ON t1.id = t2.level1_id
-            WHERE t1.name != ?
-            """,
-            (NON_FOOD_L1,),
-        ).fetchone()[0]
-        non_food = conn.execute(
-            """
-            SELECT COUNT(*) FROM CANONICAL_PRODUCT cp
-            JOIN TAXONOMY_LEVEL_3 t3 ON t3.id = cp.level3_id
-            JOIN TAXONOMY_LEVEL_2 t2 ON t2.id = t3.level2_id
-            JOIN TAXONOMY_LEVEL_1 t1 ON t1.id = t2.level1_id
-            WHERE t1.name = ?
-            """,
-            (NON_FOOD_L1,),
-        ).fetchone()[0]
-        if (food, non_food) != (EXPECTED_FOOD, EXPECTED_NON_FOOD):
-            fail(
-                f"alimentari/non alimentari attesi "
-                f"{EXPECTED_FOOD}/{EXPECTED_NON_FOOD}, trovati {food}/{non_food}"
-            )
-
         invalid = conn.execute(
             """
             SELECT COUNT(*) FROM CANONICAL_PRODUCT
@@ -704,6 +576,14 @@ def verify_database(
         ).fetchone()[0]
         if invalid:
             fail(f"prodotti seed invalidi: {invalid}")
+
+        forbidden_ids = PROPOSAL_EXCLUDED_IDS | PROPOSAL_RETIRED_IDS
+        present_forbidden = conn.execute(
+            "SELECT id FROM CANONICAL_PRODUCT WHERE id IN (" +
+            ",".join(str(product_id) for product_id in sorted(forbidden_ids)) + ")"
+        ).fetchall()
+        if present_forbidden:
+            fail(f"ID esclusi o Bio ritirati presenti nel seed: {[row[0] for row in present_forbidden]}")
 
         duplicates = conn.execute(
             "SELECT COUNT(*) FROM (SELECT name FROM CANONICAL_PRODUCT "
@@ -745,8 +625,8 @@ def verify_database(
               AND NOT EXISTS (SELECT 1 FROM CANONICAL_PRODUCT cp WHERE cp.level3_id = t3.id)
             """
         ).fetchone()[0]
-        if empty_l3:
-            fail(f"categorie L3 senza prodotti: {empty_l3}")
+        if empty_l3 != EXPECTED_EMPTY_L3:
+            fail(f"categorie L3 vuote attese {EXPECTED_EMPTY_L3}, trovate {empty_l3}")
 
         integrity = conn.execute("PRAGMA integrity_check").fetchone()[0]
         if integrity != "ok":
@@ -770,7 +650,7 @@ def verify_database(
         print(
             f"  tassonomia: {counts['L1']} L1, {counts['L2']} L2, {counts['L3']} L3"
         )
-        print(f"  prodotti: {counts['products']} ({food} alimentari, {non_food} non alimentari)")
+        print(f"  prodotti: {counts['products']}")
         print(f"  sinonimi: {counts['synonyms']}")
         print("  schema/indici: OK")
         print(f"  user_version: {user_version}")
@@ -785,14 +665,9 @@ def main() -> int:
     synonyms = build_synonyms(products)
 
     create_database(taxonomy, products, synonyms)
-    write_migration_sql(rows, taxonomy, products, synonyms)
-    write_catalog_md(
-        source_rows=len(rows),
-        merged_rows=sum(1 for row in rows if row["action"] == MERGE),
-    )
+    write_catalog_md(source_rows=len(rows))
     verify_database(taxonomy, products, synonyms)
 
-    print(f"SQL migrazione: {MIGRATION_SQL_PATH} ({MIGRATION_SQL_PATH.stat().st_size / 1024:.1f} KB)")
     print(f"Report: {CATALOG_MD_PATH} ({CATALOG_MD_PATH.stat().st_size / 1024:.1f} KB)")
     return 0
 

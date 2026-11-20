@@ -12,21 +12,19 @@ import java.sql.DriverManager
  *
  * Apre il file SQLite generato da `tools/generate_catalog.py` con sqlite-jdbc
  * (nessuna dipendenza da Room/Android, quindi eseguibile come unit test JVM)
- * e controlla gli AC di seed applicando il mapping v2:
- *  - 748 prodotti canonici (608 alimentari, 140 non alimentari)
- *  - 8 L1, 37 L2, 98 L3, nessuna L3 vuota
+ * e controlla gli AC di seed secondo la proposta tassonomica:
+ *  - 892 prodotti canonici (607 mantenuti e 285 nuovi)
+ *  - 22 L1, 100 L2, 455 L3, 64 L3 senza prodotti predefiniti
  *  - ogni prodotto: level3_id NOT NULL, name non vuoto, is_user_defined = 0
  *  - nomi duplicati globali == 0
  *  - sinonimi: nessun orfano, ogni prodotto ne ha almeno uno
  *  - schema: 8 tabelle presenti, user_version = 1
- *  - ordine tassonomia L1: Ortofrutta -> ... -> Banco Frigo -> Dispensa -> Non alimentare
+ *  - ordine tassonomia L1 come nella sezione 3 della proposta
  *  - ricerca (SQL condiviso [CatalogQueries.SEARCH]): match accent-fold su sinonimo
- *  - i nomi delle confezioni fuse restano ricercabili come alias
+ *  - i sinonimi approvati e le espressioni Bio risolvono al prodotto base
  *
- * Il DB di asset è l'unica parte che NON viene verificata da un build KSP/Room su
- * questa macchina (SDK assente); Room validerebbe lo schema al primo open su device.
- * L'asset resta `user_version = 1`: Room applica le migrazioni 1→2→3→4→5 al primo
- * avvio, mentre sui DB esistenti la 4→5 applica il mapping del catalogo.
+ * L'asset resta user_version = 1 per la verifica dello schema Room.
+ * Il seed vale per le nuove installazioni; il generatore non produce migrazioni.
  */
 class CatalogAssetTest {
 
@@ -52,33 +50,28 @@ class CatalogAssetTest {
         }
     }
 
-    private fun countByAisle(conn: Connection, isNonFood: Boolean): Int {
-        conn.createStatement().use { st ->
-            st.executeQuery(
-                """
-                SELECT COUNT(*) FROM CANONICAL_PRODUCT cp
-                JOIN TAXONOMY_LEVEL_3 t3 ON cp.level3_id = t3.id
-                JOIN TAXONOMY_LEVEL_2 t2 ON t3.level2_id = t2.id
-                JOIN TAXONOMY_LEVEL_1 t1 ON t2.level1_id = t1.id
-                WHERE t1.name ${if (isNonFood) "=" else "!="} 'Non alimentare'
-                """.trimIndent()
-            ).use { rs -> rs.next(); return rs.getInt(1) }
-        }
-    }
-
     @Test
-    fun `asset catalog contains the 748 canonical products from mapping v2`() {
+    fun `asset catalog contains maintained and proposed products`() {
         withDb { conn ->
-            val food = countByAisle(conn, isNonFood = false)
-            val nonFood = countByAisle(conn, isNonFood = true)
-            assertEquals("prodotti alimentari", 608, food)
-            assertEquals("prodotti non alimentari", 140, nonFood)
-            assertEquals("totale prodotti canonici", 748, food + nonFood)
+            conn.createStatement().use { st ->
+                st.executeQuery("SELECT COUNT(*) FROM CANONICAL_PRODUCT").use { rs ->
+                    rs.next()
+                    assertEquals("prodotti canonici", 892, rs.getInt(1))
+                }
+                st.executeQuery("SELECT COUNT(*) FROM CANONICAL_PRODUCT WHERE id <= 1460").use { rs ->
+                    rs.next()
+                    assertEquals("ID mantenuti", 607, rs.getInt(1))
+                }
+                st.executeQuery("SELECT COUNT(*) FROM CANONICAL_PRODUCT WHERE name LIKE '% Bio' OR name LIKE '% Biologico' OR name LIKE '% Biologica' OR name LIKE '% Biologici' OR name LIKE '% Biologiche'").use { rs ->
+                    rs.next()
+                    assertEquals("nessun prodotto Bio canonico separato", 0, rs.getInt(1))
+                }
+            }
         }
     }
 
     @Test
-    fun `taxonomy contains every mapping category and no empty level 3`() {
+    fun `taxonomy contains all proposal categories and the declared empty leaves`() {
         withDb { conn ->
             fun count(table: String): Int = conn.createStatement().use { st ->
                 st.executeQuery("SELECT COUNT(*) FROM $table").use { rs ->
@@ -86,9 +79,9 @@ class CatalogAssetTest {
                     rs.getInt(1)
                 }
             }
-            assertEquals("categorie L1", 8, count("TAXONOMY_LEVEL_1"))
-            assertEquals("categorie L2", 37, count("TAXONOMY_LEVEL_2"))
-            assertEquals("categorie L3", 98, count("TAXONOMY_LEVEL_3"))
+            assertEquals("categorie L1", 22, count("TAXONOMY_LEVEL_1"))
+            assertEquals("categorie L2", 100, count("TAXONOMY_LEVEL_2"))
+            assertEquals("categorie L3", 455, count("TAXONOMY_LEVEL_3"))
 
             conn.createStatement().use { st ->
                 st.executeQuery(
@@ -101,7 +94,7 @@ class CatalogAssetTest {
                     """.trimIndent()
                 ).use { rs ->
                     rs.next()
-                    assertEquals("nessuna categoria L3 vuota", 0, rs.getInt(1))
+                    assertEquals("categorie L3 vuote previste", 64, rs.getInt(1))
                 }
             }
         }
@@ -186,7 +179,7 @@ class CatalogAssetTest {
     }
 
     @Test
-    fun `taxonomy level 1 order follows aisle anchors`() {
+    fun `taxonomy level 1 order follows the proposal`() {
         withDb { conn ->
             val order = mutableListOf<String>()
             conn.createStatement().use { st ->
@@ -195,8 +188,13 @@ class CatalogAssetTest {
                 }
             }
             val expected = listOf(
-                "Ortofrutta", "Panetteria", "Carne", "Pesce",
-                "Bevande", "Banco Frigo", "Dispensa", "Non alimentare"
+                "Ortofrutta", "Pane, pizza e pasticceria", "Carne e salumi", "Pesce e frutti di mare",
+                "Latte, uova e gastronomia", "Surgelati", "Dispensa", "Bevande",
+                "Pulizia e consumabili casa", "Cucina e tavola", "Casa e arredamento",
+                "Igiene e cura della persona", "Salute e benessere", "Infanzia", "Animali",
+                "Ferramenta, manutenzione e giardino", "Elettronica e ufficio",
+                "Cartoleria, scuola e creatività", "Abbigliamento e accessori",
+                "Sport, viaggi e mobilità", "Giochi, cultura, feste e regali", "Altri acquisti"
             )
             assertEquals("ordine L1 completo", expected, order)
         }
@@ -245,14 +243,11 @@ class CatalogAssetTest {
     }
 
     @Test
-    fun `merged package names remain searchable as aliases`() {
+    fun `proposal synonyms and Bio expressions resolve to base products`() {
         withDb { conn ->
-            val names = runSearch(conn, "Lasagne in confezione da 500 g")
-            assertTrue("l'alias della confezione deve restituire risultati: $names", names.isNotEmpty())
-            assertTrue(
-                "la confezione 'Lasagne in confezione da 500 g' deve portare a 'Lasagne': $names",
-                names.any { it == "Lasagne" }
-            )
+            assertTrue("padella griglia deve trovare Bistecchiera", runSearch(conn, "padella griglia").contains("Bistecchiera"))
+            assertTrue("Fragola Bio deve trovare Fragola", runSearch(conn, "Fragola Biologica").contains("Fragola"))
+            assertTrue("Spritz Hugo pronto deve trovare Hugo pronto da bere", runSearch(conn, "Spritz Hugo pronto").contains("Hugo pronto da bere"))
         }
     }
 }
