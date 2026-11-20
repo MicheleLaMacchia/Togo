@@ -2,6 +2,7 @@ package it.togo.app.presentation.activelist
 
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.TaxonomyLevel
+import it.togo.app.domain.catalog.TaxonomyAlphabeticalOrder
 import it.togo.app.domain.repository.CatalogRepository
 import kotlinx.coroutines.flow.first
 
@@ -36,7 +37,7 @@ suspend fun buildSharedListText(
         l2?.let { level1Map[it.level1Id] }
     }
 
-    level1Map.values.sortedBy { it.sortOrder }.forEach l1@{ l1 ->
+    level1Map.values.sortedWith(TaxonomyAlphabeticalOrder.comparator { it.name }).forEach l1@{ l1 ->
         val l1Items = itemsByL1[l1] ?: return@l1
         sb.appendLine("[${l1.name.uppercase()}]")
 
@@ -46,7 +47,8 @@ suspend fun buildSharedListText(
             l3?.let { level2Map[it.level2Id] }
         }
 
-        level2Map.values.filter { it.level1Id == l1.id }.sortedBy { it.sortOrder }.forEach l2@{ l2 ->
+        level2Map.values.filter { it.level1Id == l1.id }
+            .sortedWith(TaxonomyAlphabeticalOrder.comparator { it.name }).forEach l2@{ l2 ->
             val l2Items = itemsByL2[l2] ?: return@l2
             sb.appendLine("+ ${l2.name.uppercase()}")
 
@@ -55,7 +57,8 @@ suspend fun buildSharedListText(
                 product?.level3Id?.let { level3Map[it] }
             }
 
-            level3Map.values.filter { it.level2Id == l2.id }.sortedBy { it.sortOrder }.forEach l3@{ l3 ->
+            level3Map.values.filter { it.level2Id == l2.id }
+                .sortedWith(TaxonomyAlphabeticalOrder.comparator { it.name }).forEach l3@{ l3 ->
                 val l3Items = itemsByL3[l3] ?: return@l3
                 sb.appendLine("- ${l3.name.uppercase()}")
                 l3Items.forEach { item ->

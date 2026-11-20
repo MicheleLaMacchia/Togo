@@ -36,7 +36,7 @@ class CategorySelectionWizardTest {
     }
 
     @Test
-    fun `getLevel1Options ritorna L1 ordinati per sortOrder`(): Unit = runBlocking(Dispatchers.IO) {
+    fun `getLevel1Options ritorna L1 in ordine alfabetico`(): Unit = runBlocking(Dispatchers.IO) {
         val options = wizard.getLevel1Options()
         assertEquals(2, options.size)
         assertEquals("Alimentari", options[0].name)
@@ -58,14 +58,14 @@ class CategorySelectionWizardTest {
     }
 
     @Test
-    fun `getLevel3Options ritorna solo figli di L2 specifico`(): Unit = runBlocking(Dispatchers.IO) {
+    fun `getLevel3Options ritorna figli di L2 specifico in ordine alfabetico`(): Unit = runBlocking(Dispatchers.IO) {
         // Di default include anche l'opzione user-defined (99) sotto L2=20
         val options = wizard.getLevel3Options(20L)
         assertEquals(3, options.size)
         assertTrue(options.all { it.level2Id == 20L })
         assertEquals("Latticini", options[0].name)
-        assertEquals("Yogurt", options[1].name)
-        assertTrue(options[2].isUserDefined)
+        assertEquals("User Custom", options[1].name)
+        assertEquals("Yogurt", options[2].name)
     }
 
     @Test

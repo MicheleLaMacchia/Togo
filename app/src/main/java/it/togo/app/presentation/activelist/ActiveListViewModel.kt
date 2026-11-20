@@ -12,6 +12,7 @@ import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.model.TaxonomyLevel
+import it.togo.app.domain.catalog.TaxonomyAlphabeticalOrder
 import it.togo.app.domain.parser.ParsedCommand
 import it.togo.app.domain.product.ProductUnitResolver
 import it.togo.app.domain.repository.CatalogRepository
@@ -89,9 +90,12 @@ class ActiveListViewModel(
         viewModelScope.launch {
             catalogRepository.getTaxonomy()
                 .onEach { levels ->
-                    val l1 = levels.filterIsInstance<TaxonomyLevel.Level1>().sortedBy { it.sortOrder }
-                    val l2 = levels.filterIsInstance<TaxonomyLevel.Level2>().sortedBy { it.sortOrder }
-                    val l3 = levels.filterIsInstance<TaxonomyLevel.Level3>().sortedBy { it.sortOrder }
+                    val l1 = levels.filterIsInstance<TaxonomyLevel.Level1>()
+                        .sortedWith(TaxonomyAlphabeticalOrder.comparator { it.name })
+                    val l2 = levels.filterIsInstance<TaxonomyLevel.Level2>()
+                        .sortedWith(TaxonomyAlphabeticalOrder.comparator { it.name })
+                    val l3 = levels.filterIsInstance<TaxonomyLevel.Level3>()
+                        .sortedWith(TaxonomyAlphabeticalOrder.comparator { it.name })
                     taxonomyCache.value = TaxonomyCache(l1, l2, l3)
                 }
                 .launchIn(viewModelScope)

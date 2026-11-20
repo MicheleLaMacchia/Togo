@@ -12,6 +12,7 @@ import it.togo.app.domain.model.ProductAttribute
 import it.togo.app.domain.model.ShoppingItem
 import it.togo.app.domain.model.StandardUnit
 import it.togo.app.domain.model.TaxonomyLevel
+import it.togo.app.domain.catalog.TaxonomyAlphabeticalOrder
 import it.togo.app.domain.model.UserAttributeType
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.ShoppingListRepository
@@ -219,11 +220,11 @@ class ImportShoppingListUseCase(
         val planned = mutableListOf<PlannedImportItem>()
         val productsByLevel3 = mutableMapOf<Long, List<CanonicalProduct>>()
 
-        for (section in parsed.sections) {
+        for (section in parsed.sections.sortedWith(TaxonomyAlphabeticalOrder.comparator { it.name })) {
             val level1 = level1s.firstOrNull { sameName(it.name, section.name) }
             if (level1 == null) {
-                for (level2 in section.level2s) {
-                    for (level3 in level2.level3s) {
+                for (level2 in section.level2s.sortedWith(TaxonomyAlphabeticalOrder.comparator { it.name })) {
+                    for (level3 in level2.level3s.sortedWith(TaxonomyAlphabeticalOrder.comparator { it.name })) {
                         for (item in level3.items) {
                             val legacyItem = resolveLegacyCategoryItem(item, knownBrands, knownVariants)
                                 ?: return ImportPreviewResult.Error(
@@ -238,12 +239,12 @@ class ImportShoppingListUseCase(
                 continue
             }
 
-            for (level2 in section.level2s) {
+            for (level2 in section.level2s.sortedWith(TaxonomyAlphabeticalOrder.comparator { it.name })) {
                 val parent2 = level2s.firstOrNull {
                     it.level1Id == level1.id && sameName(it.name, level2.name)
                 }
                 if (parent2 == null) {
-                    for (level3 in level2.level3s) {
+                    for (level3 in level2.level3s.sortedWith(TaxonomyAlphabeticalOrder.comparator { it.name })) {
                         for (item in level3.items) {
                             val legacyItem = resolveLegacyCategoryItem(item, knownBrands, knownVariants)
                                 ?: return ImportPreviewResult.Error(
@@ -257,7 +258,7 @@ class ImportShoppingListUseCase(
                     continue
                 }
 
-                for (level3 in level2.level3s) {
+                for (level3 in level2.level3s.sortedWith(TaxonomyAlphabeticalOrder.comparator { it.name })) {
                     val existingLevel3 = level3s.firstOrNull {
                         it.level2Id == parent2.id && sameName(it.name, level3.name)
                     }

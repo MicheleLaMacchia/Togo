@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.LearnedRule
 import it.togo.app.domain.model.TaxonomyLevel
+import it.togo.app.domain.catalog.ProductNameNormalizer
 import it.togo.app.domain.repository.CatalogRepository
 import it.togo.app.domain.repository.LearnedRulesRepository
 import it.togo.app.domain.usecase.LearnedRuleManager
@@ -78,7 +79,17 @@ class LearnedRulesViewModel(
 
                 val categoryOptions = level3ById.values
                     .filterNot { it.isUserDefined }
-                    .sortedWith(compareBy({ it.sortOrder }, { it.name }))
+                    .sortedBy { level3 ->
+                        val level2 = level2ById[level3.level2Id]
+                        val level1 = level2?.let { level1ById[it.level1Id] }
+                        ProductNameNormalizer.normalize(
+                            listOfNotNull(
+                                level1?.name,
+                                level2?.name,
+                                level3.name,
+                            ).joinToString(" "),
+                        )
+                    }
                     .map { level3 ->
                         val level2 = level2ById[level3.level2Id]
                         val level1 = level2?.let { level1ById[it.level1Id] }

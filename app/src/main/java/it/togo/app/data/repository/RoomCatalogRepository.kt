@@ -9,6 +9,8 @@ import it.togo.app.domain.model.CanonicalProduct
 import it.togo.app.domain.model.CatalogCategoryResult
 import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.repository.CatalogRepository
+import it.togo.app.domain.catalog.ProductNameNormalizer
+import it.togo.app.domain.catalog.TaxonomyAlphabeticalOrder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -46,10 +48,16 @@ class RoomCatalogRepository(
                 .filter { it.productCount > 0 }
                 .map { row -> row to CatalogQueries.normalize(row.name) }
                 .filter { (_, name) -> name.contains(normalized) }
-                // Le categorie che iniziano con il termine vengono prima
-                // (es. "pasta" -> "Pasta secca", non "Formaggi a pasta morbida").
-                // A parità di gruppo resta l'ordine tassonomico della query.
-                .sortedBy { (_, name) -> if (name.startsWith(normalized)) 0 else 1 }
+                // Anche i risultati categoria restano in ordine alfabetico per percorso.
+                .sortedWith(
+                    compareBy<Pair<it.togo.app.data.database.entity.TaxonomyLevel3PathRow, String>> {
+                        ProductNameNormalizer.normalize(
+                            listOfNotNull(it.first.level1Name, it.first.level2Name, it.first.name)
+                                .joinToString(" "),
+                        )
+                    }
+                        .thenBy { it.first.name },
+                )
                 .map { (row, _) -> row.toCategoryResult() }
                 .toList()
         }
@@ -143,6 +151,7 @@ class RoomCatalogRepository(
     override suspend fun getLevel3ByLevel2(level2Id: Long): List<TaxonomyLevel.Level3> =
         withContext(Dispatchers.IO) {
             catalogDao.getLevel3ByLevel2(level2Id).first().map { it.toDomain() }
+                .sortedWith(TaxonomyAlphabeticalOrder.comparator { it.name })
         }
 
     override suspend fun insertLevel3(name: String, level2Id: Long): TaxonomyLevel.Level3 =
@@ -161,8 +170,7 @@ class RoomCatalogRepository(
         }
 
     /**
-     * Tassonomia piatta e ordinata per corsia: combina i tre livelli,
-     * rispettando l'ordine L1 -> L2 -> L3 (AD-3: catalogo preinstallato).
+     * Tassonomia piatta con ogni livello ordinato alfabeticamente nel proprio gruppo.
      */
     override fun getTaxonomy(): Flow<List<TaxonomyLevel>> =
         combine(
@@ -171,15 +179,21 @@ class RoomCatalogRepository(
             catalogDao.getLevel3()
         ) { level1s, level2s, level3s ->
             val result = mutableListOf<TaxonomyLevel>()
-            level1s.forEach { l1 ->
-                result.add(l1.toDomain())
-                level2s.filter { it.level1Id == l1.id }.forEach { l2 ->
-                    result.add(l2.toDomain())
-                    level3s.filter { it.level2Id == l2.id }.forEach { l3 ->
-                        result.add(l3.toDomain())
+            level1s.map { it.toDomain() }
+                .sortedWith(TaxonomyAlphabeticalOrder.comparator { it.name })
+                .forEach { l1 ->
+                    result.add(l1)
+                    level2s.filter { it.level1Id == l1.id }
+                        .map { it.toDomain() }
+                        .sortedWith(TaxonomyAlphabeticalOrder.comparator { it.name })
+                        .forEach { l2 ->
+                            result.add(l2)
+                            level3s.filter { it.level2Id == l2.id }
+                                .map { it.toDomain() }
+                                .sortedWith(TaxonomyAlphabeticalOrder.comparator { it.name })
+                                .forEach { l3 -> result.add(l3) }
+                        }
                     }
-                }
-            }
             result
         }
 }

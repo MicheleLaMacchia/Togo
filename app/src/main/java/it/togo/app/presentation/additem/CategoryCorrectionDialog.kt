@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import it.togo.app.domain.model.TaxonomyLevel
+import it.togo.app.domain.catalog.TaxonomyAlphabeticalOrder
 import it.togo.app.ui.theme.togoColors
 import it.togo.app.ui.theme.togoSpacing
 import it.togo.app.ui.theme.togoTypography
@@ -58,20 +59,20 @@ fun CategoryCorrectionDialog(
 
     val level1Options = remember(taxonomy) {
         taxonomy.filterIsInstance<TaxonomyLevel.Level1>()
-            .sortedWith(compareBy({ it.sortOrder }, { it.name }))
+            .sortedWith(TaxonomyAlphabeticalOrder.comparator { it.name })
             .map { it.id to it.name }
     }
     val level2Options = remember(taxonomy, level1Id) {
         taxonomy.filterIsInstance<TaxonomyLevel.Level2>()
             .filter { level1Id == null || it.level1Id == level1Id }
-            .sortedWith(compareBy({ it.sortOrder }, { it.name }))
+            .sortedWith(TaxonomyAlphabeticalOrder.comparator { it.name })
             .map { it.id to it.name }
     }
     val level3Options = remember(taxonomy, level2Id) {
         taxonomy.filterIsInstance<TaxonomyLevel.Level3>()
             .filter { !it.isUserDefined }
             .filter { level2Id == null || it.level2Id == level2Id }
-            .sortedWith(compareBy({ it.sortOrder }, { it.name }))
+            .sortedWith(TaxonomyAlphabeticalOrder.comparator { it.name })
             .map { it.id to it.name }
     }
 

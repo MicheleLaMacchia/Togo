@@ -2,6 +2,7 @@ package it.togo.app.domain.wizard
 
 import it.togo.app.domain.model.TaxonomyLevel
 import it.togo.app.domain.repository.CatalogRepository
+import it.togo.app.domain.catalog.TaxonomyAlphabeticalOrder
 import kotlinx.coroutines.flow.firstOrNull
 
 /**
@@ -14,34 +15,34 @@ class CategorySelectionWizard(
     private val catalogRepository: CatalogRepository
 ) {
 
-    /** Recupera tutti i Livello 1 ordinati per sortOrder */
+    /** Recupera tutti i Livello 1 in ordine alfabetico */
     suspend fun getLevel1Options(): List<TaxonomyLevel.Level1> =
         getTaxonomySnapshot()
             .filter { it is TaxonomyLevel.Level1 }
             .map { it as TaxonomyLevel.Level1 }
-            .sortedBy { it.sortOrder }
+            .sortedWith(TaxonomyAlphabeticalOrder.comparator { it.name })
 
-    /** Recupera Livello 2 figli di un Level1 ordinati per sortOrder */
+    /** Recupera Livello 2 figli di un Level1 in ordine alfabetico */
     suspend fun getLevel2Options(level1Id: Long): List<TaxonomyLevel.Level2> =
         getTaxonomySnapshot()
             .filter { it is TaxonomyLevel.Level2 && (it as TaxonomyLevel.Level2).level1Id == level1Id }
             .map { it as TaxonomyLevel.Level2 }
-            .sortedBy { it.sortOrder }
+            .sortedWith(TaxonomyAlphabeticalOrder.comparator { it.name })
 
-    /** Recupera Livello 3 figli di un Level2 (include user-defined per "Nuovo...") ordinati per sortOrder */
+    /** Recupera Livello 3 figli di un Level2 (include user-defined per "Nuovo...") in ordine alfabetico */
     suspend fun getLevel3Options(level2Id: Long, includeUserDefined: Boolean = true): List<TaxonomyLevel.Level3> =
         getTaxonomySnapshot()
             .filter { it is TaxonomyLevel.Level3 && (it as TaxonomyLevel.Level3).level2Id == level2Id }
             .map { it as TaxonomyLevel.Level3 }
             .filter { includeUserDefined || !it.isUserDefined }
-            .sortedBy { it.sortOrder }
+            .sortedWith(TaxonomyAlphabeticalOrder.comparator { it.name })
 
     /** Crea opzione "Nuovo L3" per UI (non persistito, solo marker) */
     fun createNewLevel3Option(level2Id: Long): TaxonomyLevel.Level3 =
         TaxonomyLevel.Level3(
             id = -1L, // Marker per "nuovo"
             name = "+ Nuovo...",
-            sortOrder = Int.MAX_VALUE, // Sempre ultimo
+            sortOrder = Int.MAX_VALUE,
             level2Id = level2Id,
             isUserDefined = true
         )
